@@ -1,0 +1,170 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
+    //id 'com.google.firebase.firebase-perf'
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def getGitCommitHash = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
+def getGitCommitCount = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-list', '--count', 'HEAD'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim().toInteger()
+}
+
+android {
+    namespace "com.synapse.social.studioasinc"
+    compileSdk 36
+
+    useLibrary 'org.apache.http.legacy'
+
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.synapse.social.studioasinc"
+        minSdk 23
+        targetSdk 36
+        versionCode getGitCommitCount() + 1
+        versionName "debug-${getGitCommitHash()}"
+        multiDexEnabled true
+
+        // Enable vector drawable support
+        vectorDrawables.useSupportLibrary = true
+
+        // Enable Java 8 features
+        compileOptions {
+            coreLibraryDesugaringEnabled true
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    lintOptions {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+
+    packagingOptions {
+        resources.excludes.add("META-INF/*")
+        resources.excludes.add("META-INF/DEPENDENCIES")
+    }
+}
+
+dependencies {
+    // AndroidX Core & UI Components
+    // Keeping user's beta version as it's newer than stable
+    implementation 'androidx.core:core-ktx:1.17.0-beta01'
+    // Keeping user's version as it's very recent
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.activity:activity-ktx:1.9.0'
+    implementation 'androidx.fragment:fragment-ktx:1.7.1'
+    // Keeping user's alpha version as it's newer than stable
+    implementation 'com.google.android.material:material:1.14.0-alpha03'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
+
+    // Common UI components
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    // AndroidX Architecture Components
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.7'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.7.7'
+    implementation 'androidx.work:work-runtime-ktx:2.9.0'
+    implementation 'androidx.paging:paging-runtime-ktx:3.3.0'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
+
+    // Firebase
+    // Updated Firebase BOM to the latest stable version
+    implementation platform('com.google.firebase:firebase-bom:33.1.0')
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-database-ktx'
+    implementation 'com.google.firebase:firebase-storage-ktx'
+    implementation 'com.google.firebase:firebase-appcheck-playintegrity'
+    implementation 'com.google.firebase:firebase-perf-ktx'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+
+    // Image Loading
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
+
+    // Networking
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // UI Components (Non-AndroidX)
+    implementation 'de.hdodenhof:circleimageview:3.1.0'
+    implementation 'com.airbnb.android:lottie:6.3.0'
+
+    // Local AARs
+    implementation files('libs/android-image-cropper-2.8.0.aar')
+    implementation files('libs/ucrop-2.2.8.aar')
+
+    // Kotlin
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3'
+
+    // Desugaring for Java 8+ APIs
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    implementation 'androidx.test.ext:junit:1.2.1' // Updated
+    implementation 'androidx.test.espresso:espresso-core:3.6.1' // Updated
+}
+
