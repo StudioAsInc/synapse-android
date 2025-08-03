@@ -47,8 +47,8 @@ android {
 
     defaultConfig {
         applicationId "com.synapse.social.studioasinc"
-        minSdk 23
-        targetSdk 36
+        minSdk 21
+        targetSdk 32
         versionCode getGitCommitCount() + 1
         versionName "debug-${getGitCommitHash()}"
         multiDexEnabled true
@@ -109,7 +109,7 @@ dependencies {
     implementation 'androidx.activity:activity-ktx:1.9.0'
     implementation 'androidx.fragment:fragment-ktx:1.7.1'
     // Keeping user's alpha version as it's newer than stable
-    implementation 'com.google.android.material:material:1.14.0-alpha03'
+    implementation 'com.google.android.material:material:1.13.0-alpha09'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.multidex:multidex:2.0.1'
 
