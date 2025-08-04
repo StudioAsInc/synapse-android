@@ -18,6 +18,7 @@
   
 </div>
 
+
 ---
 
 ## Introduction
@@ -60,3 +61,5 @@ Special thanks to the open-source community for providing the foundational tools
   [Star us on GitHub](https://github.com/StudioAsInc/Synapse) • [Follow on Social Media](https://dl-synapse.pages.dev) • [Contact Us](mailto:mashikahamed0@gmail.com)
   
 </div>
+
+End
