@@ -3,7 +3,6 @@ package com.synapse.social.studioasinc;
 import android.Manifest;
 import android.animation.*;
 import android.app.*;
-import android.app.AlertDialog;
 import android.content.*;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,7 +12,6 @@ import android.content.res.*;
 import android.graphics.*;
 import android.graphics.Typeface;
 import android.graphics.drawable.*;
-// Removed: import android.media.MediaPlayer; // Not used
 import android.net.*;
 import android.net.Uri;
 import android.os.*;
@@ -28,14 +26,7 @@ import android.view.*;
 import android.view.View;
 import android.view.View.*;
 import android.view.animation.*;
-// Removed: import android.webkit.*; // Not used anymore
 import android.widget.*;
-import android.widget.EditText;
-import android.widget.HorizontalScrollView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import androidx.annotation.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.*;
@@ -48,12 +39,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.*;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.RecyclerView.Adapter;
-import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
 import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
@@ -74,23 +60,16 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.browser.customtabs.CustomTabsIntent;
-import com.google.firebase.database.Query; // Added this import based on previous fix
+import com.google.firebase.database.Query;
 
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
 import com.synapse.social.studioasinc.styling.TextStylingUtil;
 
 import java.io.*;
 import java.text.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import android.os.Handler;
@@ -98,10 +77,13 @@ import android.os.Looper;
 
 
 public class HomeActivity extends AppCompatActivity {
-	
-	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
-	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
-	
+
+    // Initialize FirebaseDatabase instance and references here.
+    private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
+	private DatabaseReference udb = _firebase.getReference("skyline/users");
+    private DatabaseReference postsRef = _firebase.getReference("skyline/posts");
+    private DatabaseReference storiesDbRef = _firebase.getReference("skyline/stories"); // Reference for stories
+
 	private HashMap<String, Object> createPostMap = new HashMap<>();
 	private HashMap<String, Object> postLikeCountCache = new HashMap<>();
 	private HashMap<String, Object> UserInfoCacheMap = new HashMap<>();
@@ -114,6 +96,7 @@ public class HomeActivity extends AppCompatActivity {
 	private LinearLayout body;
 	private LinearLayout middleLayout;
 	private LinearLayout bottomSpc;
+    private ImageView miniPostLayoutImagePost;
 	private CoordinatorLayout m_coordinator_layout;
 	private LinearLayout noInternetBody;
 	private LinearLayout loadingBody;
@@ -149,7 +132,6 @@ public class HomeActivity extends AppCompatActivity {
 	private CardView miniPostLayoutProfileCard;
 	private EditText miniPostLayoutTextPostInput;
 	private ImageView miniPostLayoutProfileImage;
-	private ImageView miniPostLayoutImagePost;
 	private ImageView miniPostLayoutVideoPost;
 	private ImageView miniPostLayoutTextPost;
 	private ImageView miniPostLayoutMoreButton;
@@ -173,15 +155,8 @@ public class HomeActivity extends AppCompatActivity {
 	private Intent intent = new Intent();
 	private Vibrator vbr;
 	private FirebaseAuth auth;
-	private DatabaseReference udb = _firebase.getReference("skyline/users");
 	private ChildEventListener _udb_child_listener;
-	private RequestNetwork req;
-	private RequestNetwork.RequestListener _req_request_listener;
 	private Calendar cc = Calendar.getInstance();
-	
-	private OnSuccessListener<FileDownloadTask.TaskSnapshot> _post_image_storage_db_download_success_listener;
-	private OnSuccessListener _post_image_storage_db_delete_success_listener;
-	private OnFailureListener _post_image_storage_db_failure_listener;
 	
 	class c {
 		Context co;
@@ -203,8 +178,16 @@ public class HomeActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
+
+        // Ensure FirebaseApp is initialized. If SynapseApp handles it, this might be redundant,
+        // but harmless. Keeping it for robustness if SynapseApp's `initializeApp` path changes.
+        FirebaseApp.initializeApp(this); 
+        
+        // Ensure data persistence is enabled for posts and stories
+        postsRef.keepSynced(true); 
+        storiesDbRef.keepSynced(true); // Keep stories synced
+
 		setContentView(R.layout.home);
-		FirebaseApp.initializeApp(this);
 		initialize(_savedInstanceState);
 		
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
@@ -284,12 +267,12 @@ public class HomeActivity extends AppCompatActivity {
 		loading_bar = findViewById(R.id.loading_bar);
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		auth = FirebaseAuth.getInstance();
-		req = new RequestNetwork(this);
 		
 		swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
 			@Override
 			public void onRefresh() {
 				_loadPosts(currentPostFilter); 
+                _loadStories(); // Also refresh stories
 			}
 		});
 		
@@ -379,7 +362,7 @@ public class HomeActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View _view) {
 				if (miniPostLayoutTextPostInput.getText().toString().trim().equals("")) {
-					SketchwareUtil.showMessage(getApplicationContext(), getResources().getString(R.string.please_enter_text));
+					Toast.makeText(getApplicationContext(), getResources().getString(R.string.please_enter_text), Toast.LENGTH_SHORT).show(); // Replaced SketchwareUtil.showMessage
 				} else {
 					if (!(miniPostLayoutTextPostInput.getText().toString().length() > 1500)) {
 						String uniqueKey = udb.push().getKey();
@@ -401,11 +384,11 @@ public class HomeActivity extends AppCompatActivity {
 							@Override
 							public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 								if (databaseError == null) {
-									SketchwareUtil.showMessage(getApplicationContext(), getResources().getString(R.string.post_publish_success));
+									Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show(); // Replaced SketchwareUtil.showMessage
 									currentPostFilter = "PUBLIC"; 
-									_loadPosts(currentPostFilter);
+									_loadPosts(currentPostFilter); // Refresh posts after new post
 								} else {
-									SketchwareUtil.showMessage(getApplicationContext(), databaseError.getMessage());
+									Toast.makeText(getApplicationContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show(); // Replaced SketchwareUtil.showMessage
 								}
 							}
 						});
@@ -485,6 +468,7 @@ public class HomeActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View _view) {
 				_loadPosts(currentPostFilter);
+                _loadStories(); // Also retry stories
 			}
 		});
 		
@@ -517,83 +501,39 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		};
 		udb.addChildEventListener(_udb_child_listener);
-		
-		_req_request_listener = new RequestNetwork.RequestListener() {
-			@Override
-			public void onResponse(String _param1, String _param2, HashMap<String, Object> _param3) {
-				try{
-					DatabaseReference getReference = FirebaseDatabase.getInstance().getReference().child("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-					getReference.addListenerForSingleValueEvent(new ValueEventListener() {
-						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-							if(dataSnapshot.exists()) {
-								swipeLayout.setVisibility(View.VISIBLE);
-								noInternetBody.setVisibility(View.GONE);
-								loadingBody.setVisibility(View.GONE);
-								
-								if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-									Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(miniPostLayoutProfileImage);
-									Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(bottom_profile_ic);
-								} else {
-									miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-									bottom_profile_ic.setImageResource(R.drawable.ic_account_circle_48px); 
-								}
-								SynapseApp.setUserStatus(); 
-							} else {
-								swipeLayout.setVisibility(View.GONE);
-								noInternetBody.setVisibility(View.VISIBLE);
-								loadingBody.setVisibility(View.GONE);
-							}
-						}
-						@Override
-						public void onCancelled(@NonNull DatabaseError databaseError) {
-							swipeLayout.setVisibility(View.GONE);
-							noInternetBody.setVisibility(View.VISIBLE);
-							loadingBody.setVisibility(View.GONE);
-						}
-					});
-				}catch(Exception e){
-					SketchwareUtil.showMessage(getApplicationContext(), "Something went wrong during network check/user data fetch: " + e.getMessage());
-					swipeLayout.setVisibility(View.GONE);
-					noInternetBody.setVisibility(View.VISIBLE);
-					loadingBody.setVisibility(View.GONE);
-				}
-			}
-			
-			@Override
-			public void onErrorResponse(String _param1, String _param2) {
-				swipeLayout.setVisibility(View.GONE);
-				noInternetBody.setVisibility(View.VISIBLE);
-				loadingBody.setVisibility(View.GONE);
-				SketchwareUtil.showMessage(getApplicationContext(), "Network Error: " + _param2);
-			}
-		};
-		
-		_post_image_storage_db_delete_success_listener = new OnSuccessListener() {
-			@Override
-			public void onSuccess(Object _param1) {
-				
-			}
-		};
-		
-		_post_image_storage_db_failure_listener = new OnFailureListener() {
-			@Override
-			public void onFailure(Exception _param1) {
-				final String _message = _param1.getMessage();
-				
-			}
-		};
 	}
 	
 	private void initializeLogic() {
 		_loadPosts(currentPostFilter); 
-		req.startRequestNetwork(RequestNetworkController.POST, "https://google.com", "get", _req_request_listener); 
-		
-		{
-			HashMap<String, Object> _item = new HashMap<>();
-			_item.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-			storiesList.add(_item);
-		}
+        _loadStories(); // Load stories when logic is initialized
+
+		// Fetch user's own profile data for avatar display
+		DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		getReference.addValueEventListener(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				if(dataSnapshot.exists()) {
+					if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+						Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(miniPostLayoutProfileImage);
+						Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(bottom_profile_ic);
+					} else {
+						miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+						bottom_profile_ic.setImageResource(R.drawable.ic_account_circle_48px); 
+					}
+					SynapseApp.setUserStatus(); 
+				} else {
+					miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+					bottom_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
+				}
+			}
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
+				Toast.makeText(getApplicationContext(), "Error fetching user profile: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+				miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+				bottom_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
+			}
+		});
+
 		noInternetBodySubtitle.setText(getResources().getString(R.string.reasons_may_be).concat("\n\n".concat(getResources().getString(R.string.err_no_internet).concat("\n".concat(getResources().getString(R.string.err_app_maintenance).concat("\n".concat(getResources().getString(R.string.err_problem_on_our_side))))))));
 		_viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
 		_viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
@@ -620,7 +560,7 @@ public class HomeActivity extends AppCompatActivity {
 		storiesView.setAdapter(new StoriesViewAdapter(storiesList));
 		storiesView.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL, false));
 		PublicPostsList.setLayoutManager(new LinearLayoutManager(this));
-		PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList)); 
+		PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList));
 		_ImgRound(bottom_profile_ic, 360);
 		_viewGraphics(miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
 	//  app_name_bar.setTypeface(Typeface.createFromAsset(getAssets(),"font/product_sans_bold.ttf"), 1);
@@ -666,13 +606,63 @@ public class HomeActivity extends AppCompatActivity {
 		_view.setBackground(RE);
 	}
 	
+    // New method to load stories
+    private void _loadStories() {
+        // You might want a loading indicator for stories too, similar to posts,
+        // but for now, we'll just fetch and update.
+        storiesDbRef.orderByChild("publish_date") // Assuming stories also have a publish_date to sort by
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        storiesList.clear();
+                        // Add "My Story" placeholder first
+                        HashMap<String, Object> myStoryPlaceholder = new HashMap<>();
+                        myStoryPlaceholder.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+                        storiesList.add(myStoryPlaceholder);
+
+                        if (dataSnapshot.exists()) {
+                            for (DataSnapshot storySnap : dataSnapshot.getChildren()) {
+                                GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+                                HashMap<String, Object> storyMap = storySnap.getValue(_ind);
+                                if (storyMap != null) {
+                                    // Filter out the current user's own story if it's already in the list
+                                    // or handle it differently. For simplicity, just add others.
+                                    if (!storyMap.containsKey("uid") || !storyMap.get("uid").equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                                        storiesList.add(storyMap);
+                                    }
+                                }
+                            }
+                        }
+                        // Notify adapter that data has changed
+                        if (storiesView.getAdapter() != null) {
+                            storiesView.getAdapter().notifyDataSetChanged();
+                        } else {
+                            storiesView.setAdapter(new StoriesViewAdapter(storiesList));
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Toast.makeText(getApplicationContext(), "Error loading stories: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                        // Even on error, ensure "My Story" is still present and adapter notified.
+                        if (storiesView.getAdapter() != null) {
+                            storiesView.getAdapter().notifyDataSetChanged();
+                        } else {
+                            storiesView.setAdapter(new StoriesViewAdapter(storiesList));
+                        }
+                    }
+                });
+    }
+
 	public void _loadPosts(final String filterType) {
-		swipeLayout.setRefreshing(true);
-		PublicPostsList.setVisibility(View.GONE);
-		PublicPostsListNotFound.setVisibility(View.GONE);
-		loadingBody.setVisibility(View.VISIBLE);
-		
-		final DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("skyline/posts");
+		swipeLayout.setRefreshing(true); // Always show refresh indicator when starting to load posts
+
+        // Initially hide lists and show loading only if no data is present immediately from cache.
+        // Or, more simply, just allow them to be hidden by _finalizePostDisplay if data is empty.
+        // PublicPostsList.setVisibility(View.GONE);
+        // PublicPostsListNotFound.setVisibility(View.GONE);
+        // loadingBody.setVisibility(View.VISIBLE); // Let finalize handle visibility based on data presence
+
 		Query query = null;
 		String notFoundMessage = "There are no public posts available at the moment."; 
 		
@@ -683,7 +673,7 @@ public class HomeActivity extends AppCompatActivity {
 				_fetchAndDisplayPosts(query, notFoundMessage);
 				break;
 			case "LOCAL":
-				FirebaseDatabase.getInstance().getReference("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+				udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
 				.addListenerForSingleValueEvent(new ValueEventListener() {
 					@Override
 					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -692,26 +682,19 @@ public class HomeActivity extends AppCompatActivity {
 							Query localPostsQuery = postsRef.orderByChild("post_region").equalTo(userRegion);
 							_fetchAndDisplayPosts(localPostsQuery, "No regional posts found for your area.");
 						} else {
-							PublicPostsList.setVisibility(View.GONE);
-							PublicPostsListNotFound.setText("No regional posts found or your region is not set.");
-							PublicPostsListNotFound.setVisibility(View.VISIBLE);
-							loadingBody.setVisibility(View.GONE);
-							swipeLayout.setRefreshing(false);
+							// If no region or user data, display specific message
+							_finalizePostDisplay("No regional posts found or your region is not set.", false);
 						}
 					}
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						SketchwareUtil.showMessage(getApplicationContext(), "Error fetching user region: " + databaseError.getMessage());
-						PublicPostsList.setVisibility(View.GONE);
-						PublicPostsListNotFound.setText("Error loading regional posts.");
-						PublicPostsListNotFound.setVisibility(View.VISIBLE);
-						loadingBody.setVisibility(View.GONE);
-						swipeLayout.setRefreshing(false);
+						Toast.makeText(getApplicationContext(), "Error fetching user region, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+						_finalizePostDisplay("Error loading regional posts (showing cached if available).", false);
 					}
 				});
 				break;
 			case "FOLLOWED":
-				FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+				_firebase.getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid())
 				.addListenerForSingleValueEvent(new ValueEventListener() {
 					@Override
 					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -729,31 +712,41 @@ public class HomeActivity extends AppCompatActivity {
 							
 							final int[] completedQueries = {0};
 							final int totalQueries = followedUids.size();
-							
+                            // Executor service to handle concurrent fetching of followed user posts
+                            ExecutorService fetchExecutor = Executors.newFixedThreadPool(Math.min(followedUids.size(), 5)); // Limit concurrent fetches
+                            Handler mainHandler = new Handler(Looper.getMainLooper());
+
 							for (String uid : followedUids) {
-								postsRef.orderByChild("uid").equalTo(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-									@Override
-									public void onDataChange(@NonNull DataSnapshot userPostsSnapshot) {
-										for (DataSnapshot postSnap : userPostsSnapshot.getChildren()) {
-											GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-											HashMap<String, Object> _map = postSnap.getValue(_ind);
-											if (_map != null) {
-												PostsList.add(_map);
-											}
-										}
-										completedQueries[0]++;
-										if (completedQueries[0] == totalQueries) {
-											_finalizePostDisplay("No posts from followed users found.", true);
-										}
-									}
-									@Override
-									public void onCancelled(@NonNull DatabaseError databaseError) {
-										completedQueries[0]++;
-										if (completedQueries[0] == totalQueries) {
-											_finalizePostDisplay("Error loading followed users' posts: " + databaseError.getMessage(), true);
-										}
-									}
-								});
+                                fetchExecutor.execute(() -> {
+                                    postsRef.orderByChild("uid").equalTo(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot userPostsSnapshot) {
+                                            mainHandler.post(() -> {
+                                                for (DataSnapshot postSnap : userPostsSnapshot.getChildren()) {
+                                                    GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+                                                    HashMap<String, Object> _map = postSnap.getValue(_ind);
+                                                    if (_map != null) {
+                                                        PostsList.add(_map);
+                                                    }
+                                                }
+                                                completedQueries[0]++;
+                                                if (completedQueries[0] == totalQueries) {
+                                                    _finalizePostDisplay("No posts from followed users found.", true);
+                                                }
+                                            });
+                                        }
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                                            mainHandler.post(() -> {
+                                                completedQueries[0]++;
+                                                Toast.makeText(getApplicationContext(), "Error loading followed users' posts, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                                                if (completedQueries[0] == totalQueries) {
+                                                    _finalizePostDisplay("Error loading followed users' posts (showing cached if available).", true);
+                                                }
+                                            });
+                                        }
+                                    });
+                                });
 							}
 						} else {
 							_finalizePostDisplay("You are not following any users yet. Follow users to see their posts here.", false);
@@ -761,13 +754,13 @@ public class HomeActivity extends AppCompatActivity {
 					}
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						SketchwareUtil.showMessage(getApplicationContext(), "Error fetching followed users: " + databaseError.getMessage());
-						_finalizePostDisplay("Error loading followed users' posts.", false);
+						Toast.makeText(getApplicationContext(), "Error fetching followed users keys, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+						_finalizePostDisplay("Error loading followed users' posts (showing cached if available).", false);
 					}
 				});
 				break;
 			case "FAVORITE":
-				FirebaseDatabase.getInstance().getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+				_firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid())
 				.addListenerForSingleValueEvent(new ValueEventListener() {
 					@Override
 					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -785,29 +778,39 @@ public class HomeActivity extends AppCompatActivity {
 							
 							final int[] completedQueries = {0};
 							final int totalQueries = favoritePostKeys.size();
+
+                            ExecutorService fetchExecutor = Executors.newFixedThreadPool(Math.min(favoritePostKeys.size(), 5)); // Limit concurrent fetches
+                            Handler mainHandler = new Handler(Looper.getMainLooper());
 							
 							for (String key : favoritePostKeys) {
-								postsRef.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
-									@Override
-									public void onDataChange(@NonNull DataSnapshot postSnapshot) {
-										GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-										HashMap<String, Object> _map = postSnapshot.getValue(_ind);
-										if (_map != null) {
-											PostsList.add(_map);
-										}
-										completedQueries[0]++;
-										if (completedQueries[0] == totalQueries) {
-											_finalizePostDisplay("You have no saved posts yet.", true);
-										}
-									}
-									@Override
-									public void onCancelled(@NonNull DatabaseError databaseError) {
-										completedQueries[0]++;
-										if (completedQueries[0] == totalQueries) {
-											_finalizePostDisplay("Error loading saved posts: " + databaseError.getMessage(), true);
-										}
-									}
-								});
+                                fetchExecutor.execute(() -> {
+                                    postsRef.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot postSnapshot) {
+                                            mainHandler.post(() -> {
+                                                GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+                                                HashMap<String, Object> _map = postSnapshot.getValue(_ind);
+                                                if (_map != null) {
+                                                    PostsList.add(_map);
+                                                }
+                                                completedQueries[0]++;
+                                                if (completedQueries[0] == totalQueries) {
+                                                    _finalizePostDisplay("You have no saved posts yet.", true);
+                                                }
+                                            });
+                                        }
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                                            mainHandler.post(() -> {
+                                                completedQueries[0]++;
+                                                Toast.makeText(getApplicationContext(), "Error loading saved posts, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                                                if (completedQueries[0] == totalQueries) {
+                                                    _finalizePostDisplay("Error loading saved posts (showing cached if available).", true);
+                                                }
+                                            });
+                                        }
+                                    });
+                                });
 							}
 						} else {
 							_finalizePostDisplay("You have no saved posts yet.", false);
@@ -815,8 +818,8 @@ public class HomeActivity extends AppCompatActivity {
 					}
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						SketchwareUtil.showMessage(getApplicationContext(), "Error fetching favorite posts keys: " + databaseError.getMessage());
-						_finalizePostDisplay("Error loading saved posts.", false);
+						Toast.makeText(getApplicationContext(), "Error fetching favorite posts keys, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+						_finalizePostDisplay("Error loading saved posts (showing cached if available).", false);
 					}
 				});
 				break;
@@ -851,15 +854,22 @@ public class HomeActivity extends AppCompatActivity {
 			
 			@Override
 			public void onCancelled(DatabaseError _databaseError) {
-				SketchwareUtil.showMessage(getApplicationContext(), "Error fetching posts: " + _databaseError.getMessage());
-				_finalizePostDisplay(notFoundMessage, false);
+				Toast.makeText(getApplicationContext(), "Failed to fetch latest posts, showing cached data. Error: " + _databaseError.getMessage(), Toast.LENGTH_LONG).show();
+				_finalizePostDisplay(notFoundMessage, false); 
 			}
 		});
 	}
 	
 	private void _finalizePostDisplay(String notFoundMessage, boolean sortAndNotify) {
 		if (sortAndNotify) {
-			SketchwareUtil.sortListMap(PostsList, "publish_date", false, false);
+			Collections.sort(PostsList, new Comparator<HashMap<String, Object>>() {
+				@Override
+				public int compare(HashMap<String, Object> o1, HashMap<String, Object> o2) {
+					long date1 = Long.parseLong(o1.get("publish_date").toString());
+					long date2 = Long.parseLong(o2.get("publish_date").toString());
+					return Long.compare(date2, date1); // Descending order
+				}
+			});
 		}
 		
 		if (PublicPostsList.getAdapter() == null || !(PublicPostsList.getAdapter() instanceof PublicPostsListAdapter)) {
@@ -876,8 +886,9 @@ public class HomeActivity extends AppCompatActivity {
 			PublicPostsList.setVisibility(View.VISIBLE);
 			PublicPostsListNotFound.setVisibility(View.GONE);
 		}
-		loadingBody.setVisibility(View.GONE);
-		swipeLayout.setRefreshing(false);
+		loadingBody.setVisibility(View.GONE); // Hide loading spinner once data or not-found message is shown
+		swipeLayout.setRefreshing(false); // Stop swipe refresh animation
+		noInternetBody.setVisibility(View.GONE); // Ensure no internet body is hidden if data is loading/showing
 	}
 	
 	public void _setTime(final double _currentTime, final TextView _txt) {
@@ -952,12 +963,6 @@ public class HomeActivity extends AppCompatActivity {
 		_imageview.setBackground(gd);
 	}
 	
-	public void _DeleteFirebaseStorage(final String _deletingURL) {
-		if (_deletingURL != null && !_deletingURL.isEmpty() && _firebase_storage != null) {
-			_firebase_storage.getReferenceFromUrl(_deletingURL).delete().addOnSuccessListener(_post_image_storage_db_delete_success_listener).addOnFailureListener(_post_image_storage_db_failure_listener);
-		}
-	}
-	
 	public void _OpenWebView(final String _URL) {
 		String AndroidDevelopersBlogURL = _URL;
 		CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
@@ -975,16 +980,16 @@ public class HomeActivity extends AppCompatActivity {
 		}
 		
 		@Override
-		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+		public StoriesViewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 			LayoutInflater _inflater = getLayoutInflater();
 			View _v = _inflater.inflate(R.layout.synapse_story_cv, null);
 			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			_v.setLayoutParams(_lp);
-			return new ViewHolder(_v);
+			return new StoriesViewAdapter.ViewHolder(_v);
 		}
 		
 		@Override
-		public void onBindViewHolder(ViewHolder _holder, final int _position) {
+		public void onBindViewHolder(StoriesViewAdapter.ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
 			
 			final LinearLayout storiesMyStory = _view.findViewById(R.id.storiesMyStory);
@@ -1017,9 +1022,11 @@ public class HomeActivity extends AppCompatActivity {
 			storiesMyStoryRelativeAddBody.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)0, 0x7B000000));
 			storiesMyStoryProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
 			storiesSecondStoryProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
+			
+            // My Story (Position 0 is always the current user's story add button)
 			if (_position == 0) {
 				storiesMyStoryTitle.setText(getResources().getString(R.string.add_story));
-				DatabaseReference getReference = FirebaseDatabase.getInstance().getReference().child("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+				DatabaseReference getReference = _firebase.getReference().child("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 				getReference.addListenerForSingleValueEvent(new ValueEventListener() {
 					@Override
 					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -1029,31 +1036,67 @@ public class HomeActivity extends AppCompatActivity {
 							} else {
 								Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(storiesMyStoryProfileImage);
 							}
-						}
+						} else {
+                            storiesMyStoryProfileImage.setImageResource(R.drawable.avatar);
+                        }
 					}
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						// Handle error
+						Log.e("StoriesAdapter", "Failed to load user avatar for My Story: " + databaseError.getMessage());
+                        storiesMyStoryProfileImage.setImageResource(R.drawable.avatar);
 					}
 				});
 				storiesMyStory.setVisibility(View.VISIBLE);
 				storiesSecondStory.setVisibility(View.GONE);
-			} else {
+			} else { // Other users' stories
 				storiesMyStory.setVisibility(View.GONE);
 				storiesSecondStory.setVisibility(View.VISIBLE);
-				storiesSecondStoryTitle.setText("User Story ".concat(String.valueOf(_position)));
-				storiesSecondStoryProfileImage.setImageResource(R.drawable.avatar); 
+				
+                HashMap<String, Object> storyMap = _data.get(_position);
+                String storyUid = (String) storyMap.get("uid"); // Assuming storyMap has 'uid' of the creator
+
+                // Fetch user info for the story creator (from cache or Firebase)
+                if (UserInfoCacheMap.containsKey("uid-" + storyUid)) {
+                    _displayUserInfoForStory(storyUid, storiesSecondStoryProfileImage, storiesSecondStoryTitle);
+                } else {
+                    udb.child(storyUid).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                // Cache user info
+                                UserInfoCacheMap.put("uid-" + storyUid, storyUid);
+                                UserInfoCacheMap.put("nickname-" + storyUid, dataSnapshot.child("nickname").getValue(String.class));
+                                UserInfoCacheMap.put("username-" + storyUid, dataSnapshot.child("username").getValue(String.class));
+                                UserInfoCacheMap.put("avatar-" + storyUid, dataSnapshot.child("avatar").getValue(String.class));
+                                // Add other info like banned, gender, verify, acc_type if needed for stories here
+
+                                _displayUserInfoForStory(storyUid, storiesSecondStoryProfileImage, storiesSecondStoryTitle);
+                            } else {
+                                storiesSecondStoryProfileImage.setImageResource(R.drawable.avatar);
+                                storiesSecondStoryTitle.setText("Unknown User");
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e("StoriesAdapter", "Failed to load user info for story: " + databaseError.getMessage());
+                            storiesSecondStoryProfileImage.setImageResource(R.drawable.avatar);
+                            storiesSecondStoryTitle.setText("Error User");
+                        }
+                    });
+                }
 			}
 			storiesMyStory.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View _view) {
-					SketchwareUtil.showMessage(getApplicationContext(), "Add story clicked");
+					Toast.makeText(getApplicationContext(), "Add story clicked", Toast.LENGTH_SHORT).show(); 
 				}
 			});
 			storiesSecondStory.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View _view) {
-					SketchwareUtil.showMessage(getApplicationContext(), "Story ".concat(String.valueOf(_position)).concat(" clicked"));
+					// Handle clicking on another user's story
+					Toast.makeText(getApplicationContext(), "Story ".concat(String.valueOf(_position)).concat(" clicked"), Toast.LENGTH_SHORT).show(); 
 				}
 			});
 		}
@@ -1063,11 +1106,31 @@ public class HomeActivity extends AppCompatActivity {
 			return _data.size();
 		}
 		
-		public class ViewHolder extends RecyclerView.ViewHolder {
+		public class ViewHolder extends RecyclerView.ViewHolder { 
 			public ViewHolder(View v) {
 				super(v);
 			}
 		}
+
+        private void _displayUserInfoForStory(String uid, ImageView profileImage, TextView titleTextView) {
+            String avatarUrl = (String) UserInfoCacheMap.get("avatar-" + uid);
+            String nickname = (String) UserInfoCacheMap.get("nickname-" + uid);
+            String username = (String) UserInfoCacheMap.get("username-" + uid);
+
+            if (avatarUrl != null && !avatarUrl.equals("null")) {
+                Glide.with(getApplicationContext()).load(Uri.parse(avatarUrl)).into(profileImage);
+            } else {
+                profileImage.setImageResource(R.drawable.avatar);
+            }
+
+            if (nickname != null && !nickname.equals("null") && !nickname.isEmpty()) {
+                titleTextView.setText(nickname);
+            } else if (username != null && !username.equals("null") && !username.isEmpty()) {
+                titleTextView.setText("@" + username);
+            } else {
+                titleTextView.setText("User Story");
+            }
+        }
 	}
 	
 	public class PublicPostsListAdapter extends RecyclerView.Adapter<PublicPostsListAdapter.ViewHolder> {
@@ -1079,16 +1142,16 @@ public class HomeActivity extends AppCompatActivity {
 		}
 		
 		@Override
-		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+		public PublicPostsListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 			LayoutInflater _inflater = getLayoutInflater();
 			View _v = _inflater.inflate(R.layout.synapse_post_cv, null);
 			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			_v.setLayoutParams(_lp);
-			return new ViewHolder(_v);
+			return new PublicPostsListAdapter.ViewHolder(_v);
 		}
 		
 		@Override
-		public void onBindViewHolder(ViewHolder _holder, final int _position) {
+		public void onBindViewHolder(PublicPostsListAdapter.ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
 			
 			final LinearLayout body = _view.findViewById(R.id.body);
@@ -1111,8 +1174,6 @@ public class HomeActivity extends AppCompatActivity {
 			final ImageView postPrivateStateIcon = _view.findViewById(R.id.postPrivateStateIcon);
 			final TextView postMessageTextMiddle = _view.findViewById(R.id.postMessageTextMiddle);
 			final ImageView postImage = _view.findViewById(R.id.postImage);
-			// Removed: final WebView linkprewebview = _view.findViewById(R.id.linkprewebview);
-			// Removed: final VideoView PostVideoPlayer = _view.findViewById(R.id.PostVideoPlayer);
 			final LinearLayout likeButton = _view.findViewById(R.id.likeButton);
 			final LinearLayout commentsButton = _view.findViewById(R.id.commentsButton);
 			final LinearLayout shareButton = _view.findViewById(R.id.shareButton);
@@ -1135,8 +1196,6 @@ public class HomeActivity extends AppCompatActivity {
 			_viewGraphics(topMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
 			
 			postImage.setVisibility(View.GONE);
-			// Removed: linkprewebview.setVisibility(View.GONE);
-			// Removed: PostVideoPlayer.setVisibility(View.GONE);
 			
 			if (_data.get((int)_position).containsKey("post_text")) {
 				String postText = _data.get((int)_position).get("post_text").toString();
@@ -1144,24 +1203,6 @@ public class HomeActivity extends AppCompatActivity {
 				textStylingUtil.applyStyling(postText, postMessageTextMiddle);
 				postMessageTextMiddle.setVisibility(View.VISIBLE);
 				
-				// Removed URL preview logic as WebView is removed.
-				// Pattern urlPattern = Pattern.compile("https?://(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)");
-				// Matcher matcher = urlPattern.matcher(postText);
-				
-				// if (matcher.find()) {
-				// 	String firstUrl = matcher.group();
-				// 	linkprewebview.setVisibility(View.VISIBLE);
-				// 	linkprewebview.getSettings().setJavaScriptEnabled(true);
-				// 	linkprewebview.getSettings().setDomStorageEnabled(true);
-				// 	linkprewebview.loadUrl(firstUrl);
-				// 	linkprewebview.setWebViewClient(new WebViewClient() {
-				// 		@Override
-				// 		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-				// 			view.loadUrl(url);
-				// 			return true;
-				// 		}
-				// 	});
-				// }
 			} else {
 				postMessageTextMiddle.setVisibility(View.GONE);
 			}
@@ -1207,7 +1248,7 @@ public class HomeActivity extends AppCompatActivity {
 				mExecutorService.execute(new Runnable() {
 					@Override
 					public void run() {
-						DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("skyline/users").child(postUid);
+						DatabaseReference userRef = _firebase.getReference().child("skyline/users").child(postUid);
 						userRef.addListenerForSingleValueEvent(new ValueEventListener() {
 							@Override
 							public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -1228,21 +1269,41 @@ public class HomeActivity extends AppCompatActivity {
 											_displayUserInfoFromCache(postUid, userInfoProfileImage, userInfoUsername, userInfoGenderBadge, userInfoUsernameVerifiedBadge);
 										}
 									});
-								}
+								} else {
+                                    mMainHandler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            userInfoProfileImage.setImageResource(R.drawable.avatar); 
+                                            userInfoUsername.setText("Unknown User");
+                                            userInfoGenderBadge.setVisibility(View.GONE);
+                                            userInfoUsernameVerifiedBadge.setVisibility(View.GONE);
+                                            body.setVisibility(View.GONE); 
+                                        }
+                                    });
+                                }
 							}
 							@Override
 							public void onCancelled(@NonNull DatabaseError databaseError) {
-								// Handle error
+                                mMainHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        userInfoProfileImage.setImageResource(R.drawable.avatar); 
+                                        userInfoUsername.setText("Error User");
+                                        userInfoGenderBadge.setVisibility(View.GONE);
+                                        userInfoUsernameVerifiedBadge.setVisibility(View.GONE);
+                                        body.setVisibility(View.GONE); 
+                                    }
+                                });
 							}
 						});
 					}
 				});
 			}
 			
-			DatabaseReference getLikeCheck = FirebaseDatabase.getInstance().getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-			DatabaseReference getCommentsCount = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(_data.get((int)_position).get("key").toString());
-			DatabaseReference getLikesCount = FirebaseDatabase.getInstance().getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString());
-			DatabaseReference getFavoriteCheck = FirebaseDatabase.getInstance().getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString());
+			DatabaseReference getLikeCheck = _firebase.getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+			DatabaseReference getCommentsCount = _firebase.getReference("skyline/posts-comments").child(_data.get((int)_position).get("key").toString());
+			DatabaseReference getLikesCount = _firebase.getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString());
+			DatabaseReference getFavoriteCheck = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString());
 			
 			getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 				@Override
@@ -1303,7 +1364,7 @@ public class HomeActivity extends AppCompatActivity {
 			likeButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View _view) {
-					DatabaseReference likeRef = FirebaseDatabase.getInstance().getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+					DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 					likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
 						public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
@@ -1353,7 +1414,7 @@ public class HomeActivity extends AppCompatActivity {
 			favoritePostButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View _view) {
-					DatabaseReference favoriteRef = FirebaseDatabase.getInstance().getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString());
+					DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString());
 					favoriteRef.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
 						public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
@@ -1375,22 +1436,27 @@ public class HomeActivity extends AppCompatActivity {
 				}
 			});
 			topMoreButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View _view) {
-					Bundle sendPostKey = new Bundle();
-					sendPostKey.putString("postKey", _data.get((int)_position).get("key").toString());
-					sendPostKey.putString("postPublisherUID", _data.get((int)_position).get("uid").toString());
-					sendPostKey.putString("postType", _data.get((int)_position).get("post_type").toString());
-					
-					if (_data.get((int)_position).containsKey("post_image") && _data.get((int)_position).get("post_image") != null && !_data.get((int)_position).get("post_image").toString().isEmpty()) {
-						sendPostKey.putString("postImg", _data.get((int)_position).get("post_image").toString());
-					}
-					
-					PostMoreBottomSheetDialog postMoreBottomSheetDialog = new PostMoreBottomSheetDialog();
-					postMoreBottomSheetDialog.setArguments(sendPostKey);
-					postMoreBottomSheetDialog.show(getSupportFragmentManager(), postMoreBottomSheetDialog.getTag());
-				}
-			});
+                @Override
+                public void onClick(View _view) {
+                    Bundle sendPostKey = new Bundle();
+                    sendPostKey.putString("postKey", _data.get((int)_position).get("key").toString());
+                    sendPostKey.putString("postPublisherUID", _data.get((int)_position).get("uid").toString());
+                    sendPostKey.putString("postType", _data.get((int)_position).get("post_type").toString());
+                    // Add post text if available
+                    if (_data.get((int)_position).containsKey("post_text") && _data.get((int)_position).get("post_text") != null) {
+                        sendPostKey.putString("postText", _data.get((int)_position).get("post_text").toString());
+                        } else {
+                            sendPostKey.putString("postText", ""); // Empty string if no text
+                            }
+                            // Add post image if available
+                            if (_data.get((int)_position).containsKey("post_image") && _data.get((int)_position).get("post_image") != null && !_data.get((int)_position).get("post_image").toString().isEmpty()) {
+                                sendPostKey.putString("postImg", _data.get((int)_position).get("post_image").toString());
+                                }
+                                PostMoreBottomSheetDialog postMoreBottomSheetDialog = new PostMoreBottomSheetDialog();
+                                postMoreBottomSheetDialog.setArguments(sendPostKey);
+                                postMoreBottomSheetDialog.show(getSupportFragmentManager(), postMoreBottomSheetDialog.getTag());
+                }
+            });
 			likeButton.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)300, (int)1, 0xFFE0E0E0, 0xFFF5F5F5));
 			commentsButton.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)300, (int)1, 0xFFE0E0E0, 0xFFF5F5F5));
 		}
@@ -1400,7 +1466,7 @@ public class HomeActivity extends AppCompatActivity {
 			return _data.size();
 		}
 		
-		public class ViewHolder extends RecyclerView.ViewHolder {
+		public class ViewHolder extends RecyclerView.ViewHolder { 
 			public ViewHolder(View v) {
 				super(v);
 			}

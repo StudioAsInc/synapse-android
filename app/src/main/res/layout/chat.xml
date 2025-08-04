@@ -4,7 +4,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:id="@+id/_main">
 	<com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect
 		android:id="@+id/body"
 		android:layout_width="match_parent"
@@ -321,14 +322,13 @@
 							android:textSize="14sp"
 							android:textColor="#424242"
 							android:maxLength="50" />
-						<com.google.android.material.progressindicator.LinearProgressIndicator
+						<ProgressBar
 							android:id="@+id/img_upload_prog"
 							android:layout_width="match_parent"
 							android:layout_height="20dp"
-							style="@style/Widget.Material3Expressive.LinearProgressIndicator.Wavy"
+							style="?android:progressBarStyleHorizontal"
 							android:indeterminate="false"
-							android:progress="0"
-							app:trackStopIndicatorSize="0dp" />
+							android:progress="0" />
 					</LinearLayout>
 				</LinearLayout>
 				<com.synapse.social.studioasinc.FadeEditText
