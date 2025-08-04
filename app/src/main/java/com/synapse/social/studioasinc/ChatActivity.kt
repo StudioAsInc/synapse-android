@@ -1607,15 +1607,19 @@ class ChatActivity : AppCompatActivity() {
     }
 
     fun _Unblock_this_user() {
-        val blocklistRef = FirebaseDatabase.getInstance().getReference("skyline/blocklist")
-        val myUid = FirebaseAuth.getInstance().currentUser!!.uid
-        val uidToRemove = this.intent.getStringExtra("uid") // Use this.intent
+    val blocklistRef = FirebaseDatabase.getInstance().getReference("skyline/blocklist")
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val uidToRemove = intent.getStringExtra("uid")
 
-        blocklistRef.child(myUid).child(uidToRemove!!).removeValue()
-        // This code will restart the activity
+    if (currentUser != null && uidToRemove != null) {
+        val myUid = currentUser.uid
+        blocklistRef.child(myUid).child(uidToRemove).removeValue()
         finish()
-        startActivity(this.intent) // Use this.intent
+        startActivity(intent)
+    } else {
+        Toast.makeText(this, "User not found or an error occurred", Toast.LENGTH_SHORT).show()
     }
+}
 
     fun _LoadingDialog( _visibility: Boolean) {
         if (_visibility) {
