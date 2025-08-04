@@ -82,7 +82,8 @@ import org.json.*;
 import androidx.core.widget.NestedScrollView;
 import com.google.firebase.database.Query;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+
 
 public class ProfileActivity extends AppCompatActivity {
 	
@@ -428,39 +429,76 @@ class c {
 			}
 		});
 		
-		ProfilePageTabUserInfoFollowButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				DatabaseReference checkUserFollow = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-				checkUserFollow.addListenerForSingleValueEvent(new ValueEventListener() {
-					@Override
-					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-						if(dataSnapshot.exists()) {
-							FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).removeValue();
-							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).removeValue();
-							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) - 1)));
-							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
-							_viewGraphics(ProfilePageTabUserInfoFollowButton, getResources().getColor(R.color.colorPrimary), 0xFF3949AB, 300, 0, Color.TRANSPARENT);
-							ProfilePageTabUserInfoFollowButton.setText(getResources().getString(R.string.follow));
-							ProfilePageTabUserInfoFollowButton.setTextColor(0xFFFFFFFF);
-						} else {
-							FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
-							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).setValue(getIntent().getStringExtra("uid"));
-							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
-							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
-							_viewGraphics(ProfilePageTabUserInfoFollowButton, 0xFFF5F5F5, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
-							ProfilePageTabUserInfoFollowButton.setText(getResources().getString(R.string.unfollow));
-							ProfilePageTabUserInfoFollowButton.setTextColor(0xFF000000);
-						}
-					}
-					
-					@Override
-					public void onCancelled(@NonNull DatabaseError databaseError) {
-						
-					}
-				});
-			}
-		});
+ProfilePageTabUserInfoFollowButton.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View _view) {
+        String targetUid = getIntent().getStringExtra("uid");
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (targetUid == null || currentUser == null) return;
+
+        String currentUid = currentUser.getUid();
+        String cacheKey = "followers_count" + targetUid;
+
+        DatabaseReference checkUserFollow = FirebaseDatabase.getInstance()
+            .getReference("skyline/followers")
+            .child(targetUid)
+            .child(currentUid);
+
+        checkUserFollow.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                double count = 0;
+                if (UserInfoCacheMap.containsKey(cacheKey)) {
+                    try {
+                        count = Double.parseDouble(UserInfoCacheMap.get(cacheKey).toString());
+                    } catch (NumberFormatException e) {
+                        count = 0;
+                    }
+                }
+
+                if (dataSnapshot.exists()) {
+                    FirebaseDatabase.getInstance().getReference("skyline/followers")
+                        .child(targetUid).child(currentUid).removeValue();
+                    FirebaseDatabase.getInstance().getReference("skyline/following")
+                        .child(currentUid).child(targetUid).removeValue();
+
+                    count = Math.max(0, count - 1);
+                    UserInfoCacheMap.put(cacheKey, String.valueOf((long) count));
+                    ProfilePageTabUserInfoFollowersCount.setText(
+                        _getStyledNumber(count) + " " + getResources().getString(R.string.followers)
+                    );
+                    _viewGraphics(ProfilePageTabUserInfoFollowButton,
+                        getResources().getColor(R.color.colorPrimary),
+                        0xFF3949AB, 300, 0, Color.TRANSPARENT);
+                    ProfilePageTabUserInfoFollowButton.setText(getResources().getString(R.string.follow));
+                    ProfilePageTabUserInfoFollowButton.setTextColor(0xFFFFFFFF);
+
+                } else {
+                    FirebaseDatabase.getInstance().getReference("skyline/followers")
+                        .child(targetUid).child(currentUid).setValue(currentUid);
+                    FirebaseDatabase.getInstance().getReference("skyline/following")
+                        .child(currentUid).child(targetUid).setValue(targetUid);
+
+                    count += 1;
+                    UserInfoCacheMap.put(cacheKey, String.valueOf((long) count));
+                    ProfilePageTabUserInfoFollowersCount.setText(
+                        _getStyledNumber(count) + " " + getResources().getString(R.string.followers)
+                    );
+                    _viewGraphics(ProfilePageTabUserInfoFollowButton,
+                        0xFFF5F5F5, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
+                    ProfilePageTabUserInfoFollowButton.setText(getResources().getString(R.string.unfollow));
+                    ProfilePageTabUserInfoFollowButton.setTextColor(0xFF000000);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("FollowCheck", "Firebase error: " + databaseError.getMessage());
+            }
+        });
+    }
+});
 		
 		ProfilePageTabUserInfoChatButton.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -1871,4 +1909,4 @@ class c {
 			}
 		}
 	}
-}
+}
