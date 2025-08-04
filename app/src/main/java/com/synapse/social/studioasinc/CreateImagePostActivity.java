@@ -3,8 +3,10 @@ package com.synapse.social.studioasinc;
 import android.Manifest;
 import android.animation.*;
 import android.app.*;
+import android.app.AlertDialog;
 import android.content.*;
 import android.content.ClipData;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.*;
@@ -44,7 +46,6 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.material.*;
-import com.google.android.material.button.MaterialButtonGroup;
 import com.google.android.material.color.MaterialColors;
 import com.google.firebase.FirebaseApp;
 import com.theartofdev.edmodo.cropper.*;
@@ -67,7 +68,15 @@ import android.provider.MediaStore;
 import com.bumptech.glide.request.RequestOptions;
 import java.net.URL;
 import java.net.MalformedURLException;
-import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textfield.TextInputLayout;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
+import com.google.android.material.textfield.TextInputLayout;
+
+import com.google.android.material.card.*;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import androidx.core.content.ContextCompat;
 
 public class CreateImagePostActivity extends AppCompatActivity {
 	
@@ -149,13 +158,14 @@ public class CreateImagePostActivity extends AppCompatActivity {
 	private Button continueButton;
 	private ImageView urlImagePreviewImage;
 	private RecyclerView imagesView;
-	private MaterialButtonGroup bottomButtons;
+	private LinearLayout bottomButtons;
 	private Button selectGallery;
 	private Button From_url;
 	
 	private Intent intent = new Intent();
 	private Intent IMAGE_PICKER = new Intent(Intent.ACTION_GET_CONTENT);
 	private AlertDialog cd;
+	private AlertDialog.Builder Dialogs;
 	
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -196,6 +206,7 @@ public class CreateImagePostActivity extends AppCompatActivity {
 		From_url = findViewById(R.id.From_url);
 		IMAGE_PICKER.setType("image/*");
 		IMAGE_PICKER.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+		Dialogs = new AlertDialog.Builder(this);
 		
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -404,37 +415,34 @@ public class CreateImagePostActivity extends AppCompatActivity {
 	
 	
 	public void _AddFromUrlDialog() {
-		cd = new AlertDialog.Builder(CreateImagePostActivity.this).create();
-		LayoutInflater cdLI = getLayoutInflater();
-		View cdCV = (View) cdLI.inflate(R.layout.add_image_from_url_dialog, null);
-		cd.setView(cdCV);
-		final LinearLayout add_button = (LinearLayout)
-		cdCV.findViewById(R.id.add_button);
-		final EditText image_url_input = (EditText)
-		cdCV.findViewById(R.id.image_url_input);
-		final TextInputLayout image_url_input_inputlayout = (TextInputLayout)
-		cdCV.findViewById(R.id.image_url_input_inputlayout);
-		cd.setCancelable(true);
-		cd.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-		cd.show();
-		_viewGraphics(add_button, getResources().getColor(R.color.colorPrimary), 0xFF388E3C, 300, 0, Color.TRANSPARENT);
-		add_button.setOnClickListener(new View.OnClickListener() {
+		MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(CreateImagePostActivity.this);
+		Dialogs.setTitle("Add through url");
+		View EdittextDesign = LayoutInflater.from(CreateImagePostActivity.this).inflate(R.layout.single_et, null);
+		Dialogs.setView(EdittextDesign);
+		final EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
+		final TextInputLayout textinputlayout1 = EdittextDesign.findViewById(R.id.textinputlayout1);
+		edittext1.setFocusableInTouchMode(true);
+		Dialogs.setPositiveButton("Add", new DialogInterface.OnClickListener() {
 			@Override
-			public void onClick(View _view) {
-				if (!image_url_input.getText().toString().trim().equals("")) {
-					if (_checkValidUrl(image_url_input.getText().toString().trim())) {
-						_loadCropImage(image_url_input.getText().toString().trim(), true);
-						AddFromUrlStr = image_url_input.getText().toString().trim();
+			public void onClick(DialogInterface _dialog, int _which) {
+				if (!edittext1.getText().toString().trim().equals("")) {
+					if (_checkValidUrl(edittext1.getText().toString().trim())) {
+						AddFromUrlStr = edittext1.getText().toString().trim();
 						cd.dismiss();
 					}
 				}
 			}
 		});
-		((EditText)image_url_input).setMaxLines((int)2);
-		image_url_input_inputlayout.setBoxStrokeColor(0xFF494C54);
-		image_url_input_inputlayout.setBoxBackgroundMode(image_url_input_inputlayout.BOX_BACKGROUND_OUTLINE);
-		image_url_input_inputlayout.setBoxCornerRadii((float) 100,(float) 100,(float) 100,(float) 100);
-		image_url_input_inputlayout.setBoxBackgroundMode(image_url_input_inputlayout.BOX_BACKGROUND_OUTLINE);
+		Dialogs.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface _dialog, int _which) {
+				
+			}
+		});
+		androidx.appcompat.app.AlertDialog edittextDialog = Dialogs.create();
+		
+		edittextDialog.setCancelable(true);
+		edittextDialog.show();
 	}
 	
 	

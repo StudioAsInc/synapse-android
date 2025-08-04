@@ -8,7 +8,7 @@
 	<LinearLayout
 		android:id="@+id/body"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
+		android:layout_height="wrap_content"
 		android:paddingTop="14dp"
 		android:paddingBottom="14dp"
 		android:background="#FFFFFF"
@@ -20,8 +20,8 @@
 			android:layout_height="5dp"
 			android:layout_marginBottom="14dp"
 			android:padding="8dp"
-			android:background="#EEEEEE"
-			android:orientation="horizontal" />
+			android:orientation="horizontal"
+			android:background="@drawable/bsbar" />
 		<LinearLayout
 			android:id="@+id/copyPostText"
 			android:layout_width="match_parent"
