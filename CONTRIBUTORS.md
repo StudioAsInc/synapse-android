@@ -4,9 +4,9 @@ We gratefully acknowledge the individuals and organizations who have contributed
 
 ---
 
-## Core Development Team
+## Development Team
 
-| Contributor       | Role                          |
+| Name       | Role                          |
 |-------------------|-------------------------------|
 | Ashik (StudioAs Inc.)            | Core Team             |
 | No Name (Unepix)       | Core Team |
