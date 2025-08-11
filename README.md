@@ -9,7 +9,7 @@
 > This project is under development. Some features may not be available!
   
   [![License](https://img.shields.io/badge/license-Custom-blue.svg)](#license)
-  [![Release](https://img.shields.io/github/v/release/StudioAsInc/Synapse)](https://github.com/StudioAsInc/Synapse/releases)
+  [![Release](https://img.shields.io/github/v/release/StudioAsInc/synapse-android)](https://github.com/StudioAsInc/synapse-android/releases)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTE.md)
   [![Build Status](https://img.shields.io/badge/build-passing-success.svg)]()
   [![Stars](https://img.shields.io/github/stars/StudioAsInc/Synapse?style=social)](https://github.com/StudioAsInc/Synapse/stargazers)
