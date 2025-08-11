@@ -17,7 +17,7 @@ We gratefully acknowledge all contributors who have helped shape Synapse.
 
 If you've contributed even a small change (.), add your name here:  
 
-- [TheRealAshik2](https://ashik.pages.dev)
+- [Ashik](https://ashik.pages.dev)
 - Unepix
 - Naurto
 - *(Add via pull request)*  
