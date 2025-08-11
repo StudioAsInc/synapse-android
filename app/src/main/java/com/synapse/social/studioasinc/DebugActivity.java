@@ -8,7 +8,6 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.res.*;
 import android.graphics.*;
-import android.graphics.Typeface;
 import android.graphics.drawable.*;
 import android.media.*;
 import android.net.*;
@@ -24,17 +23,17 @@ import android.view.animation.*;
 import android.webkit.*;
 import android.widget.*;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.annotation.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.*;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import com.bumptech.glide.*;
-import com.google.android.material.*;
 import com.google.android.material.color.MaterialColors;
 import com.google.firebase.FirebaseApp;
 import com.theartofdev.edmodo.cropper.*;
@@ -44,18 +43,17 @@ import java.text.*;
 import java.util.*;
 import java.util.regex.*;
 import org.json.*;
-import java.io.*;
-
+import java.io.*;
 
 public class DebugActivity extends AppCompatActivity {
 	
 	private LinearLayout body;
+	private ImageView ic_bug;
 	private TextView title;
 	private TextView subtitle;
-	private ScrollView scroll;
+	private CardView cardview1;
 	private Button clearData_btn;
-	private TextView close;
-	private LinearLayout scroll_in_body;
+	private ScrollView scroll;
 	private TextView error_text;
 	
 	private Vibrator vbr;
@@ -71,25 +69,19 @@ public class DebugActivity extends AppCompatActivity {
 	
 	private void initialize(Bundle _savedInstanceState) {
 		body = findViewById(R.id.body);
+		ic_bug = findViewById(R.id.ic_bug);
 		title = findViewById(R.id.title);
 		subtitle = findViewById(R.id.subtitle);
-		scroll = findViewById(R.id.scroll);
+		cardview1 = findViewById(R.id.cardview1);
 		clearData_btn = findViewById(R.id.clearData_btn);
-		close = findViewById(R.id.close);
-		scroll_in_body = findViewById(R.id.scroll_in_body);
+		scroll = findViewById(R.id.scroll);
 		error_text = findViewById(R.id.error_text);
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		
 		clearData_btn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				clearData();
-			}
-		});
-		
-		close.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
+				//clearData();
 				finishAffinity();
 			}
 		});
@@ -98,7 +90,6 @@ public class DebugActivity extends AppCompatActivity {
 			@Override
 			public boolean onLongClick(View _view) {
 				((ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", error_text.getText().toString()));
-				SketchwareUtil.showMessage(getApplicationContext(), "Error code copied");
 				vbr.vibrate((long)(48));
 				return true;
 			}
@@ -106,22 +97,16 @@ public class DebugActivity extends AppCompatActivity {
 	}
 	
 	private void initializeLogic() {
-		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
 		if (getIntent().hasExtra("error")) {
 			error_text.setText(getIntent().getStringExtra("error"));
 		}
-		_viewGraphics(scroll, 0xFFF5F5F5, 0xFFEEEEEE, 50, 0, Color.TRANSPARENT);
-		_viewGraphics(close, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, 0xFFEEEEEE);
-		title.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/google_bold_old.ttf"), 1);
-		subtitle.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 0);
 	}
 	
 	@Override
 	public void onBackPressed() {
 		finish();
 	}
-	
-
+	
 	public void _stateColor(final int _statusColor, final int _navigationColor) {
 		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		getWindow().setStatusBarColor(_statusColor);
@@ -155,4 +140,4 @@ public class DebugActivity extends AppCompatActivity {
 	{
 	}
 	
-}
+}
