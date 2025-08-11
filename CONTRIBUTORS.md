@@ -8,14 +8,14 @@ We gratefully acknowledge the individuals and organizations who have contributed
 
 | Contributor       | Role                          |
 |-------------------|-------------------------------|
-| Unepix            | Core Architecture (Pre-alpha)             |
-| Ashik Ahmed       | Core Development, updates |
+| Ashik (StudioAs Inc.)            | Core Team             |
+| Unepix       | Core Team |
 
 ---
 
 ## Code Contributions
 
-### Direct Contributors
+### Indirect Contributors
 - **Arabware**  
 - **SketchLearn**  
 - **AndroidBulb**  
