@@ -1,4 +1,4 @@
-# **SYNAPSE ANDROID APPLICATION LICENSE AGREEMENT**  
+# **SYNAPSE LICENSE AGREEMENT**  
 **Effective Date:** 2025  
 **Copyright Holder:** StudioAs Inc.  
 **Primary Contact:** [mashikahamed0@gmail.com](mailto:mashikahamed0@gmail.com)  
