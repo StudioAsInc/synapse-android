@@ -1,6 +1,6 @@
 # Synapse Contributors
 
-We gratefully acknowledge all contributors who have helped shape Synapse into what it is today.
+We gratefully acknowledge all contributors who have helped shape Synapse.
 
 ---
 
@@ -13,14 +13,22 @@ We gratefully acknowledge all contributors who have helped shape Synapse into wh
 
 ---
 
+## Community Contributors
+
+If you've contributed even a small change (.), add your name here:  
+
+- **Your Name Here** *(edit this file via pull request)*  
+
+---
+
 ## Code Contributions
 
 ### Direct Contributors
-- **Ashik Ahmed** (Core, updates)
-- **Unepix** (Initial structure)
+- Ashik Ahmed (Core functionality)
+- Unepix (Backend systems)
 
 ### Indirect Contributors
-We appreciate inspiration and code snippets from:
+We appreciate inspiration from:
 - Arabware
 - SketchLearn  
 - AndroidBulb  
@@ -39,22 +47,12 @@ We appreciate inspiration and code snippets from:
 
 ---
 
-## Knowledge Resources
+## How to Join
 
-Special thanks to:
-- **Stack Overflow** community for technical solutions
-- **GitHub** open-source projects
-- **Medium** technical articles
+1. Make your first contribution (code/docs/tests)
+2. Submit a PR adding your name under "Community Contributors"
+3. Follow our [Contribution Guidelines](CONTRIBUTING.md)
 
----
-
-## Become a Contributor
-
-Interested in contributing? Please review our:
-- [Contribution Guidelines](CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-
-*"Alone we can do so little; together we can do so much."*  
-– Helen Keller
+*"Every big change starts with a small contribution."*
 
 **Last updated:** August 11, 2025
