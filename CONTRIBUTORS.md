@@ -8,7 +8,7 @@ We gratefully acknowledge the individuals and organizations who have contributed
 
 | Name       | Role                          |
 |-------------------|-------------------------------|
-| Ashik (StudioAs Inc.)            | Core Team             |
+| Ashik (StudioAs Inc.)            | Core Team, Owner             |
 | No Name (Unepix)       | Core Team |
 
 ---
