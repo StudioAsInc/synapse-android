@@ -55,35 +55,22 @@ jobs:
           java-version: 17
           distribution: temurin
 
-      - name: Ensure gradlew is executable
-        run: chmod +x ./gradlew
-
       - name: Create google-services.json from secret
         run: |
           mkdir -p app/src/release
-          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/src/release/google-services.json
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/src/release/google-services.json
+          # Verify the file was created properly
+          ls -la app/src/release/
 
-      # Optional: install Android SDK components if your runner does not have them.
-      # Uncomment and adjust platform/build-tools versions as needed.
-      # - name: Install Android SDK components (optional)
-      #   run: |
-      #     yes | sdkmanager --licenses
-      #     sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle-wrapper.properties', '**/*.gradle*', '**/build.gradle*') }}
-          restore-keys: gradle-${{ runner.os }}-
+          cache-disabled: true
 
-      - name: Build Release APK (using wrapper)
+      - name: Build Release APK
         env:
           SKETCHUB_API_KEY: ${{ secrets.SKETCHUB_API_KEY }}
-        run: |
-          ./gradlew --no-daemon --warning-mode all assembleRelease
+        run: gradle assembleRelease
 
       - name: Set short SHA
         id: set_sha
@@ -144,3 +131,4 @@ jobs:
           APK_PATH: ./downloaded-artifact/app-release-${{ needs.build.outputs.short_sha }}.apk
         run: |
           python ./.github/workflows/deploy_artifacts.py
+        continue-on-error: true
