@@ -6,7 +6,7 @@ We gratefully acknowledge the individuals and organizations who have contributed
 
 ## Development Team
 
-| Name/ Studio Name      | Role                          |
+| Name/Studio Name      | Role                          |
 |-------------------|-------------------------------|
 | Ashik            | Core Team, Owner             |
 | Unepix       | Core Team |
