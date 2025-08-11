@@ -16,8 +16,8 @@ We gratefully acknowledge all contributors who have helped shape Synapse into wh
 ## Code Contributions
 
 ### Direct Contributors
-- **Ashik Ahmed** (Core functionality)
-- **Unepix** (Backend systems)
+- **Ashik Ahmed** (Core, updates)
+- **Unepix** (Initial structure)
 
 ### Indirect Contributors
 We appreciate inspiration and code snippets from:
