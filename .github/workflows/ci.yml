@@ -16,6 +16,10 @@ on:
       - 'wip/**'
   workflow_dispatch:
     inputs:
+      custom_title:
+        description: 'Custom title for this workflow run'
+        required: false
+        default: 'Compiler'
       build_type:
         description: 'Build type (debug or release)'
         required: true
@@ -41,6 +45,7 @@ jobs:
       should_continue: ${{ steps.validate.outputs.should_continue }}
       build_type: ${{ github.event.inputs.build_type }}
       whats_new: ${{ github.event.inputs.whats_new }}
+      custom_title: ${{ github.event.inputs.custom_title }}
     steps:
       - name: Validate Confirmation
         id: validate
@@ -73,6 +78,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TOPIC_ID: ${{ secrets.TELEGRAM_TOPIC_ID }}
+          CUSTOM_TITLE: ${{ github.event.inputs.custom_title || 'Compiler' }}
         run: |
           python ./.github/workflows/notify_telegram.py
         continue-on-error: true
@@ -86,6 +92,7 @@ jobs:
       short_sha: ${{ steps.set_sha.outputs.short_sha }}
       build_type: ${{ github.event.inputs.build_type || 'release' }}
       whats_new: ${{ needs.validate_inputs.outputs.whats_new || '' }}
+      custom_title: ${{ needs.validate_inputs.outputs.custom_title || 'Compiler' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -165,6 +172,7 @@ jobs:
           echo "COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')" >> $GITHUB_ENV
           echo "COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s')" >> $GITHUB_ENV
           echo "WHATS_NEW=${{ needs.build.outputs.whats_new }}" >> $GITHUB_ENV
+          echo "CUSTOM_TITLE=${{ needs.build.outputs.custom_title }}" >> $GITHUB_ENV
 
       - name: Restore Telegram session cache
         uses: actions/cache@v4
@@ -183,6 +191,7 @@ jobs:
           APK_PATH: ./downloaded-artifact/${{ needs.build.outputs.build_type == 'debug' && 'app-debug' || 'app-release' }}-${{ needs.build.outputs.short_sha }}.apk
           BUILD_TYPE: ${{ needs.build.outputs.build_type }}
           WHATS_NEW: ${{ needs.build.outputs.whats_new }}
+          CUSTOM_TITLE: ${{ needs.build.outputs.custom_title }}
         run: |
           python ./.github/workflows/deploy_artifacts.py
         continue-on-error: true

@@ -31,53 +31,53 @@ def getGitCommitCount = { ->
 }
 
 android {
-    namespace "com.synapse.social.studioasinc"
-    compileSdk 36
+    namespace = "com.synapse.social.studioasinc"
+    compileSdk = 36
 
     useLibrary 'org.apache.http.legacy'
 
     signingConfigs {
         release {
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
+            storeFile = file(keystoreProperties['storeFile'])
+            storePassword = keystoreProperties['storePassword']
+            keyAlias = keystoreProperties['keyAlias']
+            keyPassword = keystoreProperties['keyPassword']
         }
     }
 
     defaultConfig {
-        applicationId "com.synapse.social.studioasinc"
-        minSdk 24
-        targetSdk 36
-        versionCode 10
-        versionName "1.0.0-alpha04"
-        multiDexEnabled true
+        applicationId = "com.synapse.social.studioasinc"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 10
+        versionName = "1.0.0-alpha04"
+        multiDexEnabled = true
 
         // Enable vector drawable support
         vectorDrawables.useSupportLibrary = true
 
-        // Enable Java 8 features
+        // Enable Java 8+ features
         compileOptions {
-            coreLibraryDesugaringEnabled true
+            coreLibraryDesugaringEnabled = true
         }
     }
 
     buildTypes {
         release {
-            minifyEnabled false
-            shrinkResources false
+            minifyEnabled = false
+            shrinkResources = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            signingConfig = signingConfigs.release
         }
         debug {
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-debug"
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
@@ -85,13 +85,13 @@ android {
     }
 
     buildFeatures {
-        viewBinding true
-        buildConfig true
+        viewBinding = true
+        buildConfig = true
     }
 
     lintOptions {
-        abortOnError false
-        checkReleaseBuilds false
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 
     packagingOptions {
@@ -101,14 +101,15 @@ android {
 }
 
 dependencies {
-    // NOTE: you asked for the most recent — some of these are alpha/beta/rc releases intentionally.
+    // Firebase BoM MUST be before Firebase deps
+    implementation platform('com.google.firebase:firebase-bom:34.1.0')
 
     // AndroidX Core & UI Components
-    implementation 'androidx.core:core-ktx:1.17.0-rc01'            // rc (most recent). 
+    implementation 'androidx.core:core-ktx:1.17.0-rc01'
     implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'androidx.activity:activity-ktx:1.12.0-alpha05' // alpha (most recent)
+    implementation 'androidx.activity:activity-ktx:1.12.0-alpha05'
     implementation 'androidx.fragment:fragment-ktx:1.8.8'
-    implementation 'com.google.android.material:material:1.14.0-alpha03' // alpha (most recent)
+    implementation 'com.google.android.material:material:1.14.0-alpha03'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.multidex:multidex:2.0.1'
 
@@ -126,24 +127,20 @@ dependencies {
     implementation 'androidx.paging:paging-runtime-ktx:3.3.6'
     implementation 'androidx.preference:preference-ktx:1.2.1'
 
-    // Firebase (BOM kept and bumped to the most recent)
-    // Firebase BoM
-implementation platform('com.google.firebase:firebase-bom:34.1.0')
+    // Firebase dependencies (managed by BoM)
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-database-ktx'
+    implementation 'com.google.firebase:firebase-storage-ktx'
+    implementation 'com.google.firebase:firebase-appcheck-playintegrity'
+    implementation 'com.google.firebase:firebase-perf-ktx'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
 
-// Firebase dependencies (versions managed by BoM)
-implementation 'com.google.firebase:firebase-auth-ktx'
-implementation 'com.google.firebase:firebase-database-ktx'
-implementation 'com.google.firebase:firebase-storage-ktx'
-implementation 'com.google.firebase:firebase-appcheck-playintegrity'
-implementation 'com.google.firebase:firebase-perf-ktx'
-implementation 'com.google.firebase:firebase-crashlytics-ktx'
-implementation 'com.google.firebase:firebase-analytics-ktx'
+    // Google Play services
+    implementation 'com.google.android.gms:play-services-auth:21.4.0'
 
-// Google Play services (not managed by BoM)
-implementation 'com.google.android.gms:play-services-auth:21.4.0'
-   
     // Image Loading
-    implementation 'com.github.bumptech.glide:glide:5.0.0-rc01'     // rc
+    implementation 'com.github.bumptech.glide:glide:5.0.0-rc01'
     annotationProcessor 'com.github.bumptech.glide:compiler:5.0.0-rc01'
 
     // Networking
