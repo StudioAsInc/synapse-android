@@ -53,10 +53,8 @@ android {
         versionName = "1.0.0-alpha04"
         multiDexEnabled = true
 
-        // Enable vector drawable support
         vectorDrawables.useSupportLibrary = true
 
-        // Enable Java 8+ features
         compileOptions {
             coreLibraryDesugaringEnabled = true
         }
@@ -101,8 +99,13 @@ android {
 }
 
 dependencies {
-    // Firebase BoM MUST be before Firebase deps
-    implementation platform('com.google.firebase:firebase-bom:34.1.0')
+    // Firebase dependencies with explicit latest stable versions (no BoM)
+    implementation 'com.google.firebase:firebase-auth-ktx:23.2.1'
+    implementation 'com.google.firebase:firebase-database-ktx:21.0.0'
+    implementation 'com.google.firebase:firebase-storage-ktx:21.0.2'
+    implementation 'com.google.firebase:firebase-perf-ktx:21.0.5'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx:19.4.4'
+    implementation 'com.google.firebase:firebase-analytics-ktx:22.5.0'
 
     // AndroidX Core & UI Components
     implementation 'androidx.core:core-ktx:1.17.0-rc01'
@@ -126,15 +129,6 @@ dependencies {
     implementation 'androidx.work:work-runtime-ktx:2.10.3'
     implementation 'androidx.paging:paging-runtime-ktx:3.3.6'
     implementation 'androidx.preference:preference-ktx:1.2.1'
-
-    // Firebase dependencies (managed by BoM)
-    implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation 'com.google.firebase:firebase-database-ktx'
-    implementation 'com.google.firebase:firebase-storage-ktx'
-    implementation 'com.google.firebase:firebase-appcheck-playintegrity'
-    implementation 'com.google.firebase:firebase-perf-ktx'
-    implementation 'com.google.firebase:firebase-crashlytics-ktx'
-    implementation 'com.google.firebase:firebase-analytics-ktx'
 
     // Google Play services
     implementation 'com.google.android.gms:play-services-auth:21.4.0'
