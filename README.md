@@ -6,7 +6,7 @@
   **✨ Express yourself in a better way ✨**  
   *A next-gen, open-source social platform*
 
-  [![License](https://img.shields.io/badge/license-Custom-blue.svg)](#license)
+  [![License](https://img.shields.io/badge/license-Custom-blue.svg)](LICENSE.md)
   [![Release](https://img.shields.io/github/v/release/StudioAsInc/synapse-android?include_prereleases)](https://github.com/StudioAsInc/synapse-android/releases)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTE.md)
   [![Build Status](https://img.shields.io/github/actions/workflow/status/StudioAsInc/synapse-android/android.yml?label=build)](https://github.com/StudioAsInc/synapse-android/actions)
