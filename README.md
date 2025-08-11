@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://i.ibb.co/5XqGfm0w/1753293534403.png" width="120" height="120" style="border-radius:50%">
+  <img src="https://i.postimg.cc/6QMqSrqB/20250810-190421.png" width="120" height="120" style="border-radius:50%">
   
   # Synapse
   
