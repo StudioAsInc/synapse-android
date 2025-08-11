@@ -3,7 +3,7 @@ name: Compiler
 on:
   push:
     paths:
-      - '.github/workflows/android.yml'
+      - '.github/workflows/ci.yml'
       - 'app/**'
       - 'gradle/**'
       - 'build.gradle'
@@ -29,8 +29,7 @@ on:
         required: true
         default: 'NO'
       whats_new:
-        description: 'What's new in this release (for release builds only)'
-        required: false
+        description: "What's new in this release (for release builds only)"
         default: ''
 
 jobs:
@@ -97,7 +96,7 @@ jobs:
           distribution: temurin
 
       - name: Create google-services.json from secret
-        if: ${{ github.event.inputs.build_type == 'release' || github.event_name != 'workflow_dispatch' }}
+        if: ${{ github.event.inputs.build_type == 'release' || github.event_name == 'push' }}
         run: |
           mkdir -p app/src/release
           echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/src/release/google-services.json
