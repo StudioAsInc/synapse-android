@@ -12,9 +12,9 @@
   [![Release](https://img.shields.io/github/v/release/StudioAsInc/synapse-android)](https://github.com/StudioAsInc/synapse-android/releases)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTE.md)
   [![Build Status](https://img.shields.io/badge/build-passing-success.svg)]()
-  [![Stars](https://img.shields.io/github/stars/StudioAsInc/Synapse?style=social)](https://github.com/StudioAsInc/Synapse/stargazers)
+  [![Stars](https://img.shields.io/github/stars/StudioAsInc/Synapse?style=social)](https://github.com/StudioAsInc/synapse-android/stargazers)
   
-  [Website](https://dl-synapse.pages.dev) • [Documentation](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/Synapse/issues) • [Request Feature](https://github.com/StudioAsInc/Synapse/issues)
+  [Website](https://dl-synapse.pages.dev) • [Documentation](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues)
   
 </div>
 
