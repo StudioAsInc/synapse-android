@@ -13,18 +13,15 @@ We gratefully acknowledge the individuals and organizations who have contributed
 
 ---
 
-## Code Contributions
-
-### Indirect Contributors
-- **Arabware**  
-- **SketchLearn**  
-- **AndroidBulb**  
-- **Aauraparty**  
+## Code Contribution
 
 ### Indirect Contributions (Code Snippets/References)
 We appreciate code inspiration from various open-source projects and communities.
 
----
+- **Arabware**  
+- **SketchLearn**  
+- **AndroidBulb**  
+- **Aauraparty**  
 
 ## Design Assets
 
