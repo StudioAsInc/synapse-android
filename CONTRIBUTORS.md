@@ -1,36 +1,41 @@
 # Synapse Contributors
 
-We gratefully acknowledge the individuals and organizations who have contributed to the development of Synapse.
+We gratefully acknowledge all contributors who have helped shape Synapse into what it is today.
 
 ---
 
-## Development Team
+## Core Development Team
 
-| Name/Studio Name      | Role                          |
+| Contributor       | Role                          |
 |-------------------|-------------------------------|
-| Ashik            | Core Team, Owner             |
-| Unepix       | Core Team |
+| Ashik Ahmed       | Project Owner, Core Development |
+| Unepix            | Core Architecture            |
 
 ---
 
-## Code Contribution
-We appreciate code inspiration from various open-source projects and communities.
+## Code Contributions
+
+### Direct Contributors
+- **Ashik Ahmed** (Core functionality)
+- **Unepix** (Backend systems)
 
 ### Indirect Contributors
+We appreciate inspiration and code snippets from:
+- Arabware
+- SketchLearn  
+- AndroidBulb  
+- Aauraparty
 
-- **Arabware**  
-- **SketchLearn**  
-- **AndroidBulb**  
-- **Aauraparty**  
+---
 
-## Design Assets
+## Design & Assets
 
-| Provider          | Contribution Type            |
+| Provider          | Contribution                 |
 |-------------------|------------------------------|
 | Google            | Material Design Components   |
-| Flaticon          | UI Icons                     |
+| Flaticon          | Application Icons            |
 | Icon8             | Graphic Resources            |
-| LottieFiles       | Animation Assets             |
+| LottieFiles       | Animations                   |
 
 ---
 
@@ -38,14 +43,18 @@ We appreciate code inspiration from various open-source projects and communities
 
 Special thanks to:
 - **Stack Overflow** community for technical solutions
-- **GitHub** open-source projects for references
-- Various **Medium** technical publications
+- **GitHub** open-source projects
+- **Medium** technical articles
 
 ---
 
-## How to Contribute
+## Become a Contributor
 
-Want to join this list? See our [Contribution Guidelines](CONTRIBUTING.md) to get started.
+Interested in contributing? Please review our:
+- [Contribution Guidelines](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 
-**Thank you to everyone who has helped make Synapse better!**  
-*Last updated: 11 Aug 2025 4:55 pm*
+*"Alone we can do so little; together we can do so much."*  
+– Helen Keller
+
+**Last updated:** August 11, 2025
