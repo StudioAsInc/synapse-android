@@ -3,59 +3,76 @@
   
   # Synapse
   
-  **Express yourself in a better way**
-  
->
-> This project is under development. Some features may not be available!
-  
+  **✨ Express yourself in a better way ✨**  
+  *A next-gen, open-source social platform*
+
   [![License](https://img.shields.io/badge/license-Custom-blue.svg)](#license)
-  [![Release](https://img.shields.io/github/v/release/StudioAsInc/synapse-android)](https://github.com/StudioAsInc/synapse-android/releases)
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTE.md)
-  [![Build Status](https://img.shields.io/badge/build-passing-success.svg)]()
+  [![Release](https://img.shields.io/github/v/release/StudioAsInc/synapse-android?include_prereleases)](https://github.com/StudioAsInc/synapse-android/releases)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+  [![Build Status](https://img.shields.io/github/actions/workflow/status/StudioAsInc/synapse-android/build.yml?label=build)](https://github.com/StudioAsInc/synapse-android/actions)
   [![Stars](https://img.shields.io/github/stars/StudioAsInc/synapse-android?style=social)](https://github.com/StudioAsInc/synapse-android/stargazers)
-  
-  [Website](https://dl-synapse.pages.dev) • [Documentation](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues/new?template=bug_report.md) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues/new?template=feature_request.md)
-  
+
+  [Website](https://dl-synapse.pages.dev) • [Docs](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues/new?template=bug_report.md) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues/new?template=feature_request.md)
 </div>
 
+---
+
+## 🚀 Introduction  
+**Synapse** is a revolutionary open-source social platform combining speed, privacy, and customization:  
+- **Real-time communication**: Chat, video calls (coming soon), and microblogs  
+- **Zero ads, non-profit model**: Prioritizing users over profits  
+- **25GB+ free storage**: For media, posts, and communities  
+- **Lightweight & optimized**: Runs smoothly on any device  
+
+> 🔧 *Under active development – expect frequent updates!*  
 
 ---
 
-## Introduction
-
-Synapse represents the future of social networking - a lightning-fast, secure, ad free, and completely open-source platform designed for every class of people. Built with modern technologies and a privacy-first approach, Synapse offers users complete control over their social experience without compromising security.
-
-## License
-
-Synapse is released under a custom open-source license that promotes community collaboration while protecting the project's integrity. For complete license terms and conditions, please see the [LICENSE](LICENCE.md) file in the repository.
-
-## Community Support
-- **GitHub Issues** - [Report bugs and request features](https://github.com/StudioAsInc/synapse-android/issues)
-- **Discussions** - [Join community conversations](https://github.com/StudioAsInc/synapse-android/discussions)
-- **Wiki** - [Comprehensive documentation and guides](https://github.com/StudioAsInc/synapse-android/wiki)
-
-## Acknowledgments
-
-Synapse is made possible through the dedication of our development team and the valuable contributions from our open-source community. We extend our gratitude to all contributors, testers, and users who help make Synapse a better platform for everyone.
-
-Special thanks to the open-source community for providing the foundational tools and libraries that make projects like Synapse possible.
-
-## Project Statistics
-
-- **Development span:** 2023 - Now
-- **License Type:** Custom Open Source
-- **Primary Languages:** Java, Kotlin, JavaScript, HTML, CSS, XML
-- **Architecture:** Modular, Scalable, Security-First
-- **Community:** Growing developer and user base
+## 📜 License  
+Synapse uses a [custom open-source license](LICENSE.md) designed to:  
+- Protect project integrity  
+- Encourage community contributions  
+- Ensure long-term sustainability  
 
 ---
+
+## 💬 Community & Support  
+| Channel | Purpose |
+|---------|---------|
+| [GitHub Issues](https://github.com/StudioAsInc/synapse-android/issues) | Report bugs & request features |
+| [Discussions](https://github.com/StudioAsInc/synapse-android/discussions) | Q&A and community talks |
+| [Wiki](https://github.com/StudioAsInc/synapse-android/wiki) | Setup guides & documentation |
+
+---
+
+## 🛠️ Tech Stack  
+**Frontend**: Kotlin/Java (Android), HTML/CSS (Web)  
+**Backend**: Node.js, Firebase (Storage)  
+**Key Features**:  
+- Peer-to-peer video/audio calling (upcoming)  
+- End-to-end encrypted chats  
+- Modular architecture  
+
+---
+
+## 📊 Project Stats  
+- **Active Development**: 2023 – Present  
+- **Codebase**: 87% Java, 11% html, 2% Kotlin  
+- **Contributors**: 3+ (and growing)  
+
+---
+
+## 🙏 Acknowledgments  
+Special thanks to:  
+- Our **core team** at StudioAs Inc.  
+- **Open-source contributors** worldwide  
+- **Early testers** shaping Synapse's future  
 
 <div align="center">
   
-  **A Product of StudioAs Inc.**
-  
-  *Empowering connections through open-source innovation*
-  
-  [Star us on GitHub](https://github.com/StudioAsInc/synapse-android) • [Follow on Social Media](https://web-synapse.pages.dev) • [Contact Us](mailto:mashikahamed0@gmail.com)
-  
+  **A Project by [StudioAs Inc.](https://studioas.dev)**  
+  *"Empowering connections through transparency"*  
+
+  [⭐ Star on GitHub](https://github.com/StudioAsInc/synapse-android) • [Join Our Community](https://web-synapse.pages.dev) • [Contact](mailto:mashikahamed0@gmail.com)  
+
 </div>
