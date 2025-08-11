@@ -14,7 +14,7 @@
   [![Build Status](https://img.shields.io/badge/build-passing-success.svg)]()
   [![Stars](https://img.shields.io/github/stars/StudioAsInc/synapse-android?style=social)](https://github.com/StudioAsInc/synapse-android/stargazers)
   
-  [Website](https://dl-synapse.pages.dev) • [Documentation](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues)
+  [Website](https://dl-synapse.pages.dev) • [Documentation](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues/new?template=bug_report.md) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues)
   
 </div>
 
