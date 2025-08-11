@@ -25,8 +25,6 @@
 
 Synapse represents the future of social networking - a lightning-fast, secure, ad free, and completely open-source platform designed for every class of people. Built with modern technologies and a privacy-first approach, Synapse offers users complete control over their social experience without compromising security.
 
-Developed by StudioAs Inc. The development was started in 2023 and we expect the final release in 2030.
-
 ## License
 
 Synapse is released under a custom open-source license that promotes community collaboration while protecting the project's integrity. For complete license terms and conditions, please see the [LICENSE](LICENCE.md) file in the repository.
