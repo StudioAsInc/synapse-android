@@ -30,9 +30,9 @@ Synapse represents the future of social networking - a lightning-fast, secure, a
 Synapse is released under a custom open-source license that promotes community collaboration while protecting the project's integrity. For complete license terms and conditions, please see the [LICENSE](LICENCE.md) file in the repository.
 
 ## Community Support
-- **GitHub Issues** - [Report bugs and request features](https://github.com/StudioAsInc/Synapse/issues)
-- **Discussions** - [Join community conversations](https://github.com/StudioAsInc/Synapse/discussions)
-- **Wiki** - [Comprehensive documentation and guides](https://github.com/StudioAsInc/Synapse/wiki)
+- **GitHub Issues** - [Report bugs and request features](https://github.com/StudioAsInc/synapse-android/issues)
+- **Discussions** - [Join community conversations](https://github.com/StudioAsInc/synapse-android/discussions)
+- **Wiki** - [Comprehensive documentation and guides](https://github.com/StudioAsInc/synapse-android/wiki)
 
 ## Acknowledgments
 
