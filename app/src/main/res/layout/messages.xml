@@ -4,7 +4,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:id="@+id/_main">
 	<LinearLayout
 		android:id="@+id/body"
 		android:layout_width="match_parent"
@@ -112,17 +113,12 @@
 				android:padding="8dp"
 				android:gravity="center_horizontal|center_vertical"
 				android:orientation="horizontal">
-				<com.google.android.material.progressindicator.CircularProgressIndicator
+				<ProgressBar
 					android:id="@+id/loading_bar"
 					android:layout_width="48dp"
 					android:layout_height="48dp"
 					android:indeterminate="true"
-					style="?attr/circularProgressIndicatorStyle"
-					app:waveSpeed="20dp"
-					app:wavelength="17dp"
-					app:waveAmplitude="2dp"
-					app:indicatorSize="60dp"
-					app:indicatorDirectionCircular="counterclockwise" />
+					style="?android:progressBarStyle" />
 			</LinearLayout>
 		</LinearLayout>
 	</LinearLayout>

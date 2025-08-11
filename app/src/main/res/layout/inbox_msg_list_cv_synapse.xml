@@ -28,7 +28,8 @@
 					android:id="@+id/profileCard"
 					android:layout_width="56dp"
 					android:layout_height="56dp"
-					app:cardElevation="0dp">
+					app:cardElevation="0dp"
+					app:cardCornerRadius="300dp">
 					<ImageView
 						android:id="@+id/profileCardImage"
 						android:focusable="false"
@@ -55,7 +56,7 @@
 							android:layout_width="12dp"
 							android:layout_height="12dp"
 							android:padding="8dp"
-							android:background="#2196F3"
+							android:background="@color/md_theme_primary"
 							android:orientation="vertical" />
 					</LinearLayout>
 				</LinearLayout>
@@ -156,11 +157,11 @@
 						android:paddingTop="2dp"
 						android:paddingRight="7dp"
 						android:paddingBottom="2dp"
-						android:background="#2196F3"
+						android:background="@color/md_theme_primaryContainer"
 						android:gravity="center_horizontal|center_vertical"
 						android:text="0"
 						android:textSize="16sp"
-						android:textColor="#FFFFFF" />
+						android:textColor="@color/md_theme_onSurface" />
 				</LinearLayout>
 			</LinearLayout>
 		</LinearLayout>

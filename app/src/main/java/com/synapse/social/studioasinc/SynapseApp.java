@@ -12,118 +12,182 @@ import androidx.annotation.NonNull;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
-import java.io.*;
-import java.text.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.regex.*;
-import org.json.*;
 
 public class SynapseApp extends Application {
-	
-	private static Context mContext;
-	private Thread.UncaughtExceptionHandler mExceptionHandler;
-	
-	public static FirebaseAuth mAuth;
-	
-	public static DatabaseReference getCheckUserReference;
-	public static DatabaseReference setUserStatusRef;
+    
+    private static Context mContext;
+    private Thread.UncaughtExceptionHandler mExceptionHandler;
+    
+    public static FirebaseAuth mAuth;
+    
+    public static DatabaseReference getCheckUserReference;
+    public static DatabaseReference setUserStatusRef;
     public static DatabaseReference setUserStatusReference;
     
     public static Calendar mCalendar;
-	
-	public static Context getContext() {
-		return mContext;
-	}
-	
-	@Override
-	public void onCreate() {
-		mContext = this;
-		this.mExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
+    
+    public static Context getContext() {
+        return mContext;
+    }
+    
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mContext = this;
+        this.mExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         this.mCalendar = Calendar.getInstance();
-		FirebaseApp.initializeApp(this);
-		
-		this.mAuth = FirebaseAuth.getInstance();
-		this.getCheckUserReference = FirebaseDatabase.getInstance().getReference().child("skyline/users");
-		this.setUserStatusRef = FirebaseDatabase.getInstance().getReference(".info/connected");
-		
-		Thread.setDefaultUncaughtExceptionHandler(
-		new Thread.UncaughtExceptionHandler() {
-			@Override
-			public void uncaughtException(Thread mThread, Throwable mThrowable) {
-				Intent mIntent = new Intent(mContext, DebugActivity.class);
-				mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				mIntent.putExtra("error", Log.getStackTraceString(mThrowable));
-				mContext.startActivity(mIntent);
-				mExceptionHandler.uncaughtException(mThread, mThrowable);
-			}
-		});
-		
-		setUserStatus();
-		super.onCreate();
-	}
-	
-	public static void setUserStatus() {
-		if (mAuth.getCurrentUser() != null) {
-            setUserStatusReference = FirebaseDatabase.getInstance().getReference("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("status");
-			getCheckUserReference.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-					if(dataSnapshot.exists()) {
-						setUserStatusRef.addValueEventListener(new ValueEventListener() {
-							@Override
-							public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-								boolean connected = dataSnapshot.getValue(Boolean.class);
-								if (connected) {
-									setUserStatusReference.setValue("online");
-									setUserStatusReference.onDisconnect().setValue(String.valueOf((long)(mCalendar.getTimeInMillis())));
-								}
-							}
-							@Override
-							public void onCancelled(@NonNull DatabaseError databaseError) {
-								
-							}
-						});
-					}
-				}
-				
-				@Override
-				public void onCancelled(@NonNull DatabaseError databaseError) {
-					
-				}
-			});
-		}
-	}
-	
-	public static void setUserStatusOnline() {
-		if (mAuth.getCurrentUser() != null) {
-			FirebaseDatabase.getInstance().getReference("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("status").setValue("online");
-		}
-	}
-	
-	public static void setUserStatusOffline() {
-		if (mAuth.getCurrentUser() != null) {
-			FirebaseDatabase.getInstance().getReference("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("status").setValue(String.valueOf((long)(mCalendar.getTimeInMillis())));
-		}
-	}
+        
+        // Initialize Firebase with disk persistence
+        FirebaseApp.initializeApp(this);
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        
+        this.mAuth = FirebaseAuth.getInstance();
+        this.getCheckUserReference = FirebaseDatabase.getInstance().getReference("skyline/users");
+        this.setUserStatusRef = FirebaseDatabase.getInstance().getReference(".info/connected");
+        
+        // Keep users data synced for offline use
+        getCheckUserReference.keepSynced(true);
+        
+        // Set up global exception handler
+        Thread.setDefaultUncaughtExceptionHandler(
+            new Thread.UncaughtExceptionHandler() {
+                @Override
+                public void uncaughtException(Thread mThread, Throwable mThrowable) {
+                    Intent mIntent = new Intent(mContext, DebugActivity.class);
+                    mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    mIntent.putExtra("error", Log.getStackTraceString(mThrowable));
+                    mContext.startActivity(mIntent);
+                    mExceptionHandler.uncaughtException(mThread, mThrowable);
+                }
+            });
+        
+        setUserStatus();
+    }
+    
+    public static void setUserStatus() {
+        if (mAuth.getCurrentUser() != null) {
+            setUserStatusReference = FirebaseDatabase.getInstance().getReference("skyline/users")
+                .child(mAuth.getCurrentUser().getUid())
+                .child("status");
+            
+            // Enable offline sync for status reference
+            setUserStatusReference.keepSynced(true);
+            
+            getCheckUserReference.child(mAuth.getCurrentUser().getUid())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            setUserStatusRef.addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                    Boolean connected = dataSnapshot.getValue(Boolean.class);
+                                    if (connected != null && connected) {
+                                        // Set online status and prepare offline handler
+                                        setUserStatusReference.setValue("online");
+                                        setUserStatusReference.onDisconnect()
+                                            .setValue(String.valueOf(mCalendar.getTimeInMillis()))
+                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        Log.d("SynapseApp", "Offline status handler set");
+                                                    }
+                                                }
+                                            });
+                                    }
+                                }
+                                
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+                                    Log.e("SynapseApp", "Connection listener cancelled", databaseError.toException());
+                                }
+                            });
+                        }
+                    }
+                    
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("SynapseApp", "User check cancelled", databaseError.toException());
+                    }
+                });
+        }
+    }
+    
+    public static void setUserStatusOnline() {
+        if (mAuth.getCurrentUser() != null) {
+            DatabaseReference statusRef = FirebaseDatabase.getInstance()
+                .getReference("skyline/users")
+                .child(mAuth.getCurrentUser().getUid())
+                .child("status");
+            
+            // Cancel any pending offline operations
+            statusRef.onDisconnect().cancel();
+            
+            // Set online status
+            statusRef.setValue("online")
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (!task.isSuccessful()) {
+                            Log.e("SynapseApp", "Failed to set online status");
+                            // Retry setting online status
+                            statusRef.setValue("online");
+                        }
+                    }
+                });
+        }
+    }
+    
+    public static void setUserStatusOffline() {
+        if (mAuth.getCurrentUser() != null) {
+            DatabaseReference statusRef = FirebaseDatabase.getInstance()
+                .getReference("skyline/users")
+                .child(mAuth.getCurrentUser().getUid())
+                .child("status");
+            
+            statusRef.setValue(String.valueOf(mCalendar.getTimeInMillis()))
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (!task.isSuccessful()) {
+                            Log.e("SynapseApp", "Failed to set offline status");
+                            // Retry setting offline status
+                            statusRef.setValue(String.valueOf(mCalendar.getTimeInMillis()));
+                        }
+                    }
+                });
+        }
+    }
     
     public static void setUserStatusOfflineListenerCancel() {
-        setUserStatusReference.onDisconnect().cancel();
+        if (setUserStatusReference != null) {
+            setUserStatusReference.onDisconnect().cancel()
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Log.d("SynapseApp", "Offline status handler cancelled");
+                        }
+                    }
+                });
+        }
+    }
+    
+    /**
+     * Enable offline persistence for any database reference
+     * @param ref DatabaseReference to enable offline sync for
+     */
+    public static void enableOfflineSync(DatabaseReference ref) {
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        ref.keepSynced(true);
     }
 }

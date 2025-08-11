@@ -63,6 +63,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.browser.customtabs.CustomTabsIntent;
 import com.google.firebase.database.Query;
+// import androidx.appcompat.widget.Toolbar;
 
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
 import com.synapse.social.studioasinc.styling.TextStylingUtil;
@@ -115,16 +116,16 @@ public class HomeActivity extends AppCompatActivity {
 	private TextView app_name_bar;
 	private LinearLayout topBarSpace;
 	private ImageView imageview1;
-	private LinearLayout bottom_home;
-	private LinearLayout bottom_search;
-	private LinearLayout bottom_videos;
-	private LinearLayout bottom_chats;
-	private LinearLayout bottom_profile;
-	private ImageView bottom_home_ic;
-	private ImageView bottom_search_ic;
-	private ImageView bottom_videos_ic;
-	private ImageView bottom_chats_ic;
-	private ImageView bottom_profile_ic;
+	private LinearLayout nav_feed;
+	private LinearLayout nav_search;
+	private LinearLayout nav_reels;
+	private LinearLayout nav_inbox;
+	private LinearLayout nav_profile;
+	private ImageView nav_feed_ic;
+	private ImageView nav_search_ic;
+	private ImageView nav_reels_ic;
+	private ImageView nav_inbox_ic;
+	private ImageView nav_profile_ic;
 	private LinearLayout miniPostLayoutTop;
 	private LinearLayout miniPostLayoutMiddleSpc;
 	private LinearLayout miniPostLayoutBottom;
@@ -178,6 +179,11 @@ public class HomeActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
+        
+        /* Hide Toolbar
+        Toolbar toolbar = findViewById(R.id._toolbar);
+        setSupportActionBar(toolbar);
+        */
 
         // Ensure FirebaseApp is initialized. If SynapseApp handles it, this might be redundant,
         // but harmless. Keeping it for robustness if SynapseApp's `initializeApp` path changes.
@@ -228,16 +234,16 @@ public class HomeActivity extends AppCompatActivity {
 		app_name_bar = findViewById(R.id.app_name_bar);
 		topBarSpace = findViewById(R.id.topBarSpace);
 		imageview1 = findViewById(R.id.imageview1);
-		bottom_home = findViewById(R.id.bottom_home);
-		bottom_search = findViewById(R.id.bottom_search);
-		bottom_videos = findViewById(R.id.bottom_videos);
-		bottom_chats = findViewById(R.id.bottom_chats);
-		bottom_profile = findViewById(R.id.bottom_profile);
-		bottom_home_ic = findViewById(R.id.bottom_home_ic);
-		bottom_search_ic = findViewById(R.id.bottom_search_ic);
-		bottom_videos_ic = findViewById(R.id.bottom_videos_ic);
-		bottom_chats_ic = findViewById(R.id.bottom_chats_ic);
-		bottom_profile_ic = findViewById(R.id.bottom_profile_ic);
+		nav_feed = findViewById(R.id.nav_feed);
+		nav_search = findViewById(R.id.nav_search);
+		nav_reels = findViewById(R.id.nav_reels);
+		nav_inbox = findViewById(R.id.nav_inbox);
+		nav_profile = findViewById(R.id.nav_profile);
+		nav_feed_ic = findViewById(R.id.nav_feed_ic);
+		nav_search_ic = findViewById(R.id.nav_search_ic);
+		nav_reels_ic = findViewById(R.id.nav_reels_ic);
+		nav_inbox_ic = findViewById(R.id.nav_inbox_ic);
+		nav_profile_ic = findViewById(R.id.nav_profile_ic);
 		miniPostLayoutTop = findViewById(R.id.miniPostLayoutTop);
 		miniPostLayoutMiddleSpc = findViewById(R.id.miniPostLayoutMiddleSpc);
 		miniPostLayoutBottom = findViewById(R.id.miniPostLayoutBottom);
@@ -276,7 +282,7 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		});
 		
-		bottom_search.setOnClickListener(new View.OnClickListener() {
+		nav_search.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), SearchActivity.class);
@@ -285,7 +291,7 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		});
 		
-		bottom_videos.setOnClickListener(new View.OnClickListener() {
+		nav_reels.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), LineVideoPlayerActivity.class);
@@ -294,7 +300,7 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		});
 		
-		bottom_chats.setOnClickListener(new View.OnClickListener() {
+		nav_inbox.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), MessagesActivity.class);
@@ -303,7 +309,7 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		});
 		
-		bottom_profile.setOnClickListener(new View.OnClickListener() {
+		nav_profile.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), ProfileActivity.class);
@@ -515,22 +521,22 @@ public class HomeActivity extends AppCompatActivity {
 				if(dataSnapshot.exists()) {
 					if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
 						Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(miniPostLayoutProfileImage);
-						Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(bottom_profile_ic);
+						Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(nav_profile_ic);
 					} else {
 						miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-						bottom_profile_ic.setImageResource(R.drawable.ic_account_circle_48px); 
+						nav_profile_ic.setImageResource(R.drawable.ic_account_circle_48px); 
 					}
 					SynapseApp.setUserStatus(); 
 				} else {
 					miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-					bottom_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
+					nav_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
 				}
 			}
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				Toast.makeText(getApplicationContext(), "Error fetching user profile: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
 				miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-				bottom_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
+				nav_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
 			}
 		});
 
@@ -561,7 +567,7 @@ public class HomeActivity extends AppCompatActivity {
 		storiesView.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL, false));
 		PublicPostsList.setLayoutManager(new LinearLayoutManager(this));
 		PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList));
-		_ImgRound(bottom_profile_ic, 360);
+		_ImgRound(nav_profile_ic, 360);
 		_viewGraphics(miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
 	//  app_name_bar.setTypeface(Typeface.createFromAsset(getAssets(),"font/product_sans_bold.ttf"), 1);
 	}

@@ -30,7 +30,6 @@ import android.widget.*;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Switch;
 import android.widget.TextView;
 import androidx.annotation.*;
 import androidx.appcompat.app.AppCompatActivity;
@@ -43,11 +42,10 @@ import androidx.recyclerview.widget.*;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.Adapter;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
-import com.bumptech.glide.*;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -154,17 +152,17 @@ public class ChatsettingsActivity extends AppCompatActivity {
 	private LinearLayout linear33;
 	private ImageView imageview16;
 	private LinearLayout linear30;
-	private Switch switch1;
+	private MaterialSwitch switch1;
 	private TextView textview24;
 	private TextView textview25;
 	private ImageView imageview17;
 	private LinearLayout linear32;
-	private Switch switch2;
+	private MaterialSwitch switch2;
 	private TextView textview26;
 	private TextView textview27;
 	private ImageView imageview18;
 	private LinearLayout linear34;
-	private Switch switch3;
+	private MaterialSwitch switch3;
 	private TextView textview29;
 	private TextView textview30;
 	private LinearLayout linear39;
@@ -173,16 +171,16 @@ public class ChatsettingsActivity extends AppCompatActivity {
 	private LinearLayout linear12;
 	private ImageView imageview21;
 	private LinearLayout linear40;
-	private Switch switch5;
+	private MaterialSwitch switch5;
 	private TextView textview35;
 	private ImageView imageview22;
 	private LinearLayout linear42;
-	private Switch switch6;
+	private MaterialSwitch switch6;
 	private TextView textview37;
 	private TextView textview38;
 	private ImageView imageview23;
 	private LinearLayout linear44;
-	private Switch switch7;
+	private MaterialSwitch switch7;
 	private TextView textview39;
 	private TextView textview40;
 	private ImageView imageview10;
@@ -211,7 +209,7 @@ public class ChatsettingsActivity extends AppCompatActivity {
 	private TextView textview45;
 	private ImageView imageview26;
 	private LinearLayout linear51;
-	private Switch switch10;
+	private MaterialSwitch switch10;
 	private TextView textview46;
 	private TextView textview47;
 	private LinearLayout linear53;
@@ -419,7 +417,8 @@ public class ChatsettingsActivity extends AppCompatActivity {
 		inappbrowser_switch_lay.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				
+				intent.setClass(getApplicationContext(), BgWallpapersActivity.class);
+				startActivity(intent);
 			}
 		});
 		

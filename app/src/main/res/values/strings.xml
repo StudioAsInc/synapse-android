@@ -221,4 +221,14 @@
     <string name="placeholder_button_text">Button Text</string>
     <string name="placeholder_title">Title</string>
     <string name="placeholder_subtitle">Subtitle</string>
+    <string name="text_copied_toast">Text copied</string>
+    <string name="no_text_to_copy">No text to copy</string>
+    <string name="share_post_subject">Share post</string>
+    <string name="share_post_chooser_title">Share via</string>
+    <string name="share_error">Error sharing content</string>
+    <!-- New strings to add -->
+    <string name="no_user_data_found">No User Data Found</string>
+    <string name="reasons_no_user_data">Your user profile could not be loaded. This might indicate an issue with your account or a database problem.</string>
+    <string name="error_loading_user_data">Error Loading User Data</string>
+    <string name="disappearing_message_description">For more privacy and storage, new messages will disappear from this chat for everyone after the selected duration except when kept. Anyone in the chat can change this setting. Learn more</string>
 </resources>

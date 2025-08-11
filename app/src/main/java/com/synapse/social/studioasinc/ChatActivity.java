@@ -51,14 +51,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.Adapter;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
-import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
 import com.google.android.material.color.MaterialColors;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -129,7 +127,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
+//import com.onesignal.OneSignal;
 
 public class ChatActivity extends AppCompatActivity {
 	
@@ -164,6 +164,7 @@ public class ChatActivity extends AppCompatActivity {
 	private String path = "";
 	private String imageUrl = "";
 	private String AndroidDevelopersBlogURL = "";
+	private String ONESIGNAL_APP_ID = "";
 	
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
 	
@@ -179,9 +180,9 @@ public class ChatActivity extends AppCompatActivity {
 	private ImageView back;
 	private LinearLayout topProfileLayout;
 	private LinearLayout topProfileLayoutSpace;
-	private ImageView imageview2;
-	private ImageView imageview1;
-	private ImageView more;
+	private ImageView ic_video_call;
+	private ImageView ic_audio_call;
+	private ImageView ic_more;
 	private CardView topProfileCard;
 	private LinearLayout topProfileLayoutRight;
 	private ImageView topProfileLayoutProfileImage;
@@ -272,8 +273,7 @@ public class ChatActivity extends AppCompatActivity {
 		
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
 		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-		} else {
+			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);} else {
 			initializeLogic();
 		}
 	}
@@ -299,9 +299,9 @@ public class ChatActivity extends AppCompatActivity {
 		back = findViewById(R.id.back);
 		topProfileLayout = findViewById(R.id.topProfileLayout);
 		topProfileLayoutSpace = findViewById(R.id.topProfileLayoutSpace);
-		imageview2 = findViewById(R.id.imageview2);
-		imageview1 = findViewById(R.id.imageview1);
-		more = findViewById(R.id.more);
+		ic_video_call = findViewById(R.id.ic_video_call);
+		ic_audio_call = findViewById(R.id.ic_audio_call);
+		ic_more = findViewById(R.id.ic_more);
 		topProfileCard = findViewById(R.id.topProfileCard);
 		topProfileLayoutRight = findViewById(R.id.topProfileLayoutRight);
 		topProfileLayoutProfileImage = findViewById(R.id.topProfileLayoutProfileImage);
@@ -379,7 +379,25 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 		
-		more.setOnClickListener(new View.OnClickListener() {
+		ic_video_call.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				i.setClass(getApplicationContext(), CallActivity.class);
+				i.putExtra("uid", getIntent().getStringExtra("uid"));
+				startActivity(i);
+			}
+		});
+		
+		ic_audio_call.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				i.setClass(getApplicationContext(), CallActivity.class);
+				i.putExtra("uid", getIntent().getStringExtra("uid"));
+				startActivity(i);
+			}
+		});
+		
+		ic_more.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				i.setClass(getApplicationContext(), Chat2ndUserMoreSettingsActivity.class);
@@ -424,7 +442,6 @@ public class ChatActivity extends AppCompatActivity {
 						send_ic.setImageResource(R.drawable.ic_thumb_up_48px);
 						FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
 						_TransitionManager(message_input_overall_container, 125);
-						
 					} else {
 						message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
 						
@@ -454,6 +471,14 @@ public class ChatActivity extends AppCompatActivity {
 						
 						send_ic.setImageResource(R.drawable.ic_send_48px);
 					}
+				}
+				if (_charSeq.length() == 0) {
+					FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
+				} else {
+					typingSnd = new HashMap<>();
+					typingSnd.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+					typingSnd.put("typingMessageStatus", "true");
+					FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").updateChildren(typingSnd);
 				}
 			}
 			
@@ -869,6 +894,23 @@ public class ChatActivity extends AppCompatActivity {
 	}
 	
 	private void initializeLogic() {
+		blocked_txt.setText("You can't reply this conversation. Learn more.");
+		camera_gallery_btn_container_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
+		send_round_btn.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
+		bottomAudioRecorderSend.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
+		message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)95, (int)3, 0xFFC7C7C7, 0xFFFFFFFF));
+		img_container_layout.setVisibility(View.GONE);
+		devider2.setVisibility(View.GONE);
+		devider1.setVisibility(View.GONE);
+		devider.setVisibility(View.GONE);
+		more_send_type_btn.setVisibility(View.GONE);
+		send_type_voice_btn.setVisibility(View.GONE);
+		attachment_btn.setVisibility(View.GONE);
+		message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
+		
+		_ImgRound(topProfileLayoutProfileImage, 100);
+		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
+		_ScrollingText(topProfileLayoutUsername);
 		if (message_et.getText().toString().trim().equals("")) {
 			_TransitionManager(message_input_overall_container, 250);
 			message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
@@ -878,6 +920,7 @@ public class ChatActivity extends AppCompatActivity {
 			message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
 			
 		}
+		ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
 		SecondUserAvatar = "null";
 		ReplyMessageID = "null";
 		path = "";
@@ -930,23 +973,6 @@ public class ChatActivity extends AppCompatActivity {
 				view.setAlpha(percentage); // Adjust opacity based on percentage of visibility
 			}
 		});
-		blocked_txt.setText(Html.fromHtml("<p>You can't reply to this conversation. <a href=\"https://example.com/learn-more\" style=\"color: #2962FF;\"><b>Learn more</b></a></p>"));
-		camera_gallery_btn_container_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
-		send_round_btn.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
-		bottomAudioRecorderSend.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
-		message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)95, (int)3, 0xFFC7C7C7, 0xFFFFFFFF));
-		img_container_layout.setVisibility(View.GONE);
-		devider2.setVisibility(View.GONE);
-		devider1.setVisibility(View.GONE);
-		devider.setVisibility(View.GONE);
-		more_send_type_btn.setVisibility(View.GONE);
-		send_type_voice_btn.setVisibility(View.GONE);
-		attachment_btn.setVisibility(View.GONE);
-		message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-		
-		_ImgRound(topProfileLayoutProfileImage, 100);
-		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
-		_ScrollingText(topProfileLayoutUsername);
 	}
 	
 	@Override
@@ -1005,6 +1031,50 @@ public class ChatActivity extends AppCompatActivity {
 	public void onDestroy() {
 		super.onDestroy();
 		FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
+	}
+	
+	@Override
+	public void onBackPressed() {
+		Intent i = new Intent();
+		
+		if (getIntent().hasExtra("origin")) {
+			String originSimpleName = getIntent().getStringExtra("origin");
+			
+			if (originSimpleName != null && !originSimpleName.trim().isEmpty()) {
+				String packageName = "com.synapse.social.studioasinc";
+				String fullClassName = packageName + "." + originSimpleName.trim();
+				
+				try {
+					Class<?> clazz = Class.forName(fullClassName);
+					i.setClass(getApplicationContext(), clazz);
+					
+					// Special handling for ProfileActivity (requires "uid")
+					if ("ProfileActivity".equals(originSimpleName.trim())) {
+						if (!getIntent().hasExtra("uid")) {
+							Toast.makeText(this, "Error: UID is required for ProfileActivity", Toast.LENGTH_SHORT).show();
+							finish();
+							return;
+						}
+						i.putExtra("uid", getIntent().getStringExtra("uid")); // Pass the UID
+					}
+					
+					// Start the activity
+					startActivity(i);
+					finish();
+					return; // Exit after successful launch
+					
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+					Toast.makeText(this, "Error: Activity not found", Toast.LENGTH_SHORT).show();
+				} catch (Exception e) {
+					e.printStackTrace();
+					Toast.makeText(this, "Error: Failed to start activity", Toast.LENGTH_SHORT).show();
+				}
+			}
+		}
+		
+		// Fallback: Close if no valid origin or if any error occurs
+		finish();
 	}
 	public void _stateColor(final int _statusColor, final int _navigationColor) {
 		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
@@ -1847,10 +1917,19 @@ public class ChatActivity extends AppCompatActivity {
 		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		String uidToRemove = getIntent().getStringExtra("uid");
 		
-		blocklistRef.child(myUid).child(uidToRemove).removeValue();
-		// This code will restart the activity
-		finish();
-		startActivity(intent);
+		blocklistRef.child(myUid).child(uidToRemove).removeValue()
+		.addOnSuccessListener(aVoid -> {
+			// Create a new intent to restart the activity
+			Intent intent = getIntent();
+			// Optional: Add flags to clear the activity stack if needed
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+			finish();
+			startActivity(intent);
+		})
+		.addOnFailureListener(e -> {
+			// Handle any errors here
+			Log.e("UnblockUser", "Failed to unblock user", e);
+		});
 	}
 	
 	
@@ -1939,17 +2018,15 @@ public class ChatActivity extends AppCompatActivity {
 			final TextView date = _view.findViewById(R.id.date);
 			final ImageView message_state = _view.findViewById(R.id.message_state);
 			
-			lottie1.setVisibility(View.GONE);
 			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			_view.setLayoutParams(_lp);
 			Calendar push = Calendar.getInstance();
-			mProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
 			if (_data.get((int)_position).containsKey("typingMessageStatus")) {
 				body.setTranslationY((float)(10));
 				{
 					android.graphics.drawable.GradientDrawable SketchUi = new android.graphics.drawable.GradientDrawable();
 					int d = (int) getApplicationContext().getResources().getDisplayMetrics().density;
-					SketchUi.setColor(0xFFFFFFFF);
+					SketchUi.setColor(0x00000000); // Transparent color (ARGB: 00 for alpha = transparent)
 					SketchUi.setCornerRadius(d*25);
 					messageBG.setBackground(SketchUi);
 				}
@@ -1957,8 +2034,14 @@ public class ChatActivity extends AppCompatActivity {
 				message_layout.setGravity(Gravity.CENTER | Gravity.LEFT);
 				body.setGravity(Gravity.TOP | Gravity.LEFT);
 				message_state.setVisibility(View.GONE);
+				showOldMessagesProgress.setVisibility(View.GONE);
+				my_message_info.setVisibility(View.GONE);
+				message_text.setVisibility(View.GONE);
+				mMessageImageBody.setVisibility(View.GONE);
+				mRepliedMessageLayout.setVisibility(View.GONE);
+				lottie1.setVisibility(View.VISIBLE);
+				mProfileCard.setVisibility(View.VISIBLE);
 				// for test
-				mProfileCard.setVisibility(View.GONE);
 				if (SecondUserAvatar.equals("null_banned")) {
 					mProfileImage.setImageResource(R.drawable.banned_avatar);
 				} else {
@@ -1968,12 +2051,6 @@ public class ChatActivity extends AppCompatActivity {
 						Glide.with(getApplicationContext()).load(Uri.parse(SecondUserAvatar)).into(mProfileImage);
 					}
 				}
-				showOldMessagesProgress.setVisibility(View.GONE);
-				my_message_info.setVisibility(View.GONE);
-				message_text.setVisibility(View.GONE);
-				mMessageImageBody.setVisibility(View.GONE);
-				mRepliedMessageLayout.setVisibility(View.GONE);
-				lottie1.setVisibility(View.VISIBLE);
 			} else {
 				body.setTranslationY((float)(0));
 				if (_data.get((int)_position).get("uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
@@ -1983,7 +2060,7 @@ public class ChatActivity extends AppCompatActivity {
 					message_text.setTextColor(0xFFFFFFFF);
 					message_state.setVisibility(View.VISIBLE);
 					mProfileCard.setVisibility(View.GONE);
-					mRepliedMessageLayoutLeftBar.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFFFFFFFF));
+					mRepliedMessageLayoutLeftBar.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)100, 0xFFFFFFFF));
 					mRepliedMessageLayoutUsername.setTextColor(0xFFEEEEEE);
 					mRepliedMessageLayoutMessage.setTextColor(0xFFEEEEEE);
 					try{
@@ -2076,6 +2153,11 @@ public class ChatActivity extends AppCompatActivity {
 							messageBG.setClickable(true);
 						}
 					}
+				}
+				if (message_text.getText().toString().equals("")) {
+					message_text.setVisibility(View.GONE);
+				} else {
+					message_text.setVisibility(View.VISIBLE);
 				}
 				/*
 _textview_mh(message_text, _data.get((int)_position).get("message_text").toString());

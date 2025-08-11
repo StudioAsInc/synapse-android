@@ -41,7 +41,7 @@
 					android:layout_width="28dp"
 					android:layout_height="28dp"
 					android:padding="3dp"
-					android:src="@drawable/image_ic"
+					android:src="@drawable/ic_video_library_48px"
 					android:scaleType="centerInside"
 					android:focusable="false" />
 				<LinearLayout

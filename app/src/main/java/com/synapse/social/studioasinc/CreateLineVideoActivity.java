@@ -37,8 +37,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import com.bumptech.glide.*;
-import com.google.android.material.*;
 import com.google.android.material.color.MaterialColors;
 import com.google.firebase.FirebaseApp;
 import com.theartofdev.edmodo.cropper.*;
@@ -84,8 +82,7 @@ public class CreateLineVideoActivity extends AppCompatActivity {
 		FirebaseApp.initializeApp(this);
 		
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, 1000);
-		} else {
+			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, 1000);} else {
 			initializeLogic();
 		}
 	}

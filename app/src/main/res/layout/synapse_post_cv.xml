@@ -305,7 +305,8 @@
 				android:layout_height="30dp"
 				android:padding="2dp"
 				android:src="@drawable/add_favorite_post_ic"
-				android:scaleType="centerInside" />
+				android:scaleType="centerInside"
+				android:visibility="gone" />
 		</LinearLayout>
 	</LinearLayout>
 </LinearLayout>

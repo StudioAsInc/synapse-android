@@ -4,7 +4,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:id="@+id/_main">
 	<LinearLayout
 		android:id="@+id/body"
 		android:layout_width="match_parent"
@@ -135,7 +136,7 @@
 						android:layout_height="26dp"
 						android:layout_marginLeft="18dp"
 						android:padding="2dp"
-						android:src="@drawable/default_image"
+						android:src="@drawable/ic_arrow_back_ios_new_48px"
 						android:scaleType="centerCrop" />
 					<LinearLayout
 						android:id="@+id/topLayoutBarMiddleSearchLayout"

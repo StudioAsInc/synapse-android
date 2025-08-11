@@ -46,11 +46,9 @@ import androidx.recyclerview.widget.RecyclerView.Adapter;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
-import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
@@ -82,7 +80,8 @@ import org.json.*;
 import androidx.core.widget.NestedScrollView;
 import com.google.firebase.database.Query;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import androidx.browser.customtabs.CustomTabsIntent;
 
 public class ProfileActivity extends AppCompatActivity {
 	
@@ -96,6 +95,7 @@ public class ProfileActivity extends AppCompatActivity {
 	private String handle = "";
 	private String object_clicked = "";
 	private String nickname = "";
+	private String AndroidDevelopersBlogURL = "";
 	
 	private ArrayList<HashMap<String, Object>> UserPostsList = new ArrayList<>();
 	
@@ -337,7 +337,8 @@ class c {
 		ProfilePageTopBarMenu.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				
+				intent.setClass(getApplicationContext(), ChatsettingsActivity.class);
+				startActivity(intent);
 			}
 		});
 		
@@ -467,6 +468,7 @@ class c {
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), ChatActivity.class);
 				intent.putExtra("uid", getIntent().getStringExtra("uid"));
+				intent.putExtra("origin", "ProfileActivity");
 				intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 				startActivity(intent);
 			}
@@ -728,10 +730,9 @@ class c {
 		ProfilePageTabLayout.setElevation((float)2);
 		ProfilePageTabUserPostsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 		bannedUserInfo.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)28, 0xFF445E91));
-		_ImageColor(bannedUserInfoIc, 0xFFFFFFFF);
 		ProfilePageTabUserInfoBioLayout.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)28, 0xFFF5F5F5));
 		_loadRequest();
-		ProfilePageTabUserInfoNickname.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/ginto650otf.ttf"), 1);
+		ProfilePageTabUserInfoNickname.setTypeface(Typeface.DEFAULT, 1);
 		ProfilePageNoInternetBodyRetry.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)0, 0xFFFFFDE7, 0xFF445E91));
 		if (getIntent().getStringExtra("uid").equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 			ProfilePageTabUserInfoFirstButtons.setVisibility(View.VISIBLE);
@@ -1454,6 +1455,15 @@ class c {
 		_imageview.setBackground(gd);
 	}
 	
+	
+	public void _OpenWebView(final String _URL) {
+		AndroidDevelopersBlogURL = _URL;
+		CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+		builder.setToolbarColor(Color.parseColor("#242D39"));
+		CustomTabsIntent customtabsintent = builder.build();
+		customtabsintent.launchUrl(this, Uri.parse(AndroidDevelopersBlogURL));
+	}
+	
 	public class ProfilePageTabUserPostsRecyclerViewAdapter extends RecyclerView.Adapter<ProfilePageTabUserPostsRecyclerViewAdapter.ViewHolder> {
 		
 		ArrayList<HashMap<String, Object>> _data;
@@ -1495,8 +1505,6 @@ class c {
 			final ImageView postPrivateStateIcon = _view.findViewById(R.id.postPrivateStateIcon);
 			final TextView postMessageTextMiddle = _view.findViewById(R.id.postMessageTextMiddle);
 			final ImageView postImage = _view.findViewById(R.id.postImage);
-			final WebView linkprewebview = _view.findViewById(R.id.linkprewebview);
-			final VideoView PostVideoPlayer = _view.findViewById(R.id.PostVideoPlayer);
 			final LinearLayout likeButton = _view.findViewById(R.id.likeButton);
 			final LinearLayout commentsButton = _view.findViewById(R.id.commentsButton);
 			final LinearLayout shareButton = _view.findViewById(R.id.shareButton);
@@ -1516,9 +1524,6 @@ class c {
 			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			_view.setLayoutParams(_lp);
 			body.setVisibility(View.GONE);
-			userInfoProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
-			_ImageColor(postPrivateStateIcon, 0xFF616161);
-			_viewGraphics(topMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
 			if (_data.get((int)_position).get("post_type").toString().equals("TEXT") || (_data.get((int)_position).get("post_type").toString().equals("IMAGE") || _data.get((int)_position).get("post_type").toString().equals("VIDEO"))) {
 				if (_data.get((int)_position).containsKey("post_text")) {
 					//		postMessageTextMiddle.setText(_data.get((int)_position).get("post_text").toString());		
@@ -1854,8 +1859,7 @@ class c {
 			postImage.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View _view) {
-					intent.putExtra("img", _data.get((int)_position).get("post_image").toString());
-					startActivity(intent);
+					_OpenWebView(_data.get((int)_position).get("post_image").toString());
 				}
 			});
 		}

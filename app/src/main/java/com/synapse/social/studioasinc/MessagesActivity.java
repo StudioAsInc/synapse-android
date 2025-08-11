@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.*;
 import android.graphics.*;
-import android.graphics.Typeface;
 import android.graphics.drawable.*;
 import android.media.*;
 import android.net.*;
@@ -19,13 +18,13 @@ import android.text.*;
 import android.text.style.*;
 import android.util.*;
 import android.view.*;
-import android.view.View;
 import android.view.View.*;
 import android.view.animation.*;
 import android.webkit.*;
 import android.widget.*;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.*;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,13 +39,9 @@ import androidx.recyclerview.widget.RecyclerView.Adapter;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
-import com.bumptech.glide.*;
-import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
 import com.google.android.material.color.MaterialColors;
-import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
 import com.google.firebase.FirebaseApp;
@@ -87,7 +82,8 @@ import android.view.ViewGroup;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
-import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.app.AppCompatDelegate;
+import com.bumptech.glide.Glide;
 
 public class MessagesActivity extends AppCompatActivity {
 	
@@ -118,7 +114,7 @@ public class MessagesActivity extends AppCompatActivity {
 	private TextView noInternetBodyTitle;
 	private TextView noInternetBodySubtitle;
 	private TextView noInternetBodyRetry;
-	private CircularProgressIndicator loading_bar;
+	private ProgressBar loading_bar;
 	
 	private Intent intent = new Intent();
 	private FirebaseAuth auth;
@@ -134,8 +130,6 @@ public class MessagesActivity extends AppCompatActivity {
 	private OnCompleteListener<AuthResult> auth_googleSignInListener;
 	private DatabaseReference main = _firebase.getReference("skyline");
 	private ChildEventListener _main_child_listener;
-	private RequestNetwork req;
-	private RequestNetwork.RequestListener _req_request_listener;
 	private com.google.android.material.bottomsheet.BottomSheetDialog bs;
 	private AlertDialog cd;
 	private AlertDialog.Builder dialog2;
@@ -168,21 +162,13 @@ public class MessagesActivity extends AppCompatActivity {
 		noInternetBodyRetry = findViewById(R.id.noInternetBodyRetry);
 		loading_bar = findViewById(R.id.loading_bar);
 		auth = FirebaseAuth.getInstance();
-		req = new RequestNetwork(this);
 		dialog2 = new AlertDialog.Builder(this);
 		dialog = new AlertDialog.Builder(this);
 		
 		swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
 			@Override
 			public void onRefresh() {
-				_getReference();
-			}
-		});
-		
-		noInternetBodyRetry.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_getReference();
+				_getInboxReference();
 			}
 		});
 		
@@ -224,29 +210,6 @@ public class MessagesActivity extends AppCompatActivity {
 			}
 		};
 		main.addChildEventListener(_main_child_listener);
-		
-		_req_request_listener = new RequestNetwork.RequestListener() {
-			@Override
-			public void onResponse(String _param1, String _param2, HashMap<String, Object> _param3) {
-				final String _tag = _param1;
-				final String _response = _param2;
-				final HashMap<String, Object> _responseHeaders = _param3;
-				swipeLayout.setVisibility(View.VISIBLE);
-				noInternetBody.setVisibility(View.GONE);
-				loadingBody.setVisibility(View.GONE);
-			}
-			
-			@Override
-			public void onErrorResponse(String _param1, String _param2) {
-				final String _tag = _param1;
-				final String _message = _param2;
-				/*
-swipeLayout.setVisibility(View.GONE);
-noInternetBody.setVisibility(View.VISIBLE);
-loadingBody.setVisibility(View.GONE);
-*/
-			}
-		};
 		
 		auth_updateEmailListener = new OnCompleteListener<Void>() {
 			@Override
@@ -339,23 +302,30 @@ loadingBody.setVisibility(View.GONE);
 	}
 	
 	private void initializeLogic() {
-		_viewGraphics(noInternetBodyRetry, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 100, 0, 0xFF1E88E5);
-		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
+		/*
+MessagesPageTabLayout.setTabTextColors(0xFF9E9E9E, getResources().getColor(R.color.colorPrimary));
+MessagesPageTabLayout.setTabRippleColor(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_pressed}}, 
+
+new int[] {0xFFEEEEEE}));
+MessagesPageTabLayout.setSelectedTabIndicatorColor(getResources().getColor(R.color.colorPrimary));
+MessagesPageTabLayout.setElevation((float)2);
+InboxChatMessagesLayout.setVisibility(View.VISIBLE);
+*/
+		/*
+style="?attr/circularProgressIndicatorStyle"
+app:waveSpeed="20dp"
+app:wavelength="17dp"
+app:waveAmplitude="2dp"
+app:indicatorSize="60dp"
+app:indicatorDirectionCircular="counterclockwise"
+*/
 		MessagesPageTabLayout.addTab(MessagesPageTabLayout.newTab().setText("CHATS"));
 		MessagesPageTabLayout.addTab(MessagesPageTabLayout.newTab().setText("CHANNELS"));
 		MessagesPageTabLayout.addTab(MessagesPageTabLayout.newTab().setText("GROUPS"));
-		MessagesPageTabLayout.setTabTextColors(0xFF9E9E9E, getResources().getColor(R.color.colorPrimary));
-		MessagesPageTabLayout.setTabRippleColor(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_pressed}}, 
-		
-		new int[] {0xFFEEEEEE}));
-		MessagesPageTabLayout.setSelectedTabIndicatorColor(getResources().getColor(R.color.colorPrimary));
-		MessagesPageTabLayout.setElevation((float)2);
-		InboxChatMessagesLayout.setVisibility(View.VISIBLE);
 		InboxRecyclerView.setAdapter(new InboxRecyclerViewAdapter(ChatInboxList));
 		InboxRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 		noInternetBodySubtitle.setText(getResources().getString(R.string.reasons_may_be).concat("\n\n".concat(getResources().getString(R.string.err_no_internet).concat("\n".concat(getResources().getString(R.string.err_app_maintenance).concat("\n".concat(getResources().getString(R.string.err_problem_on_our_side))))))));
-		_getReference();
-		InboxRecyclerView.setAdapter(new InboxRecyclerViewAdapter(ChatInboxList));
+		_getInboxReference();
 	}
 	
 	
@@ -370,15 +340,8 @@ loadingBody.setVisibility(View.GONE);
 	@Override
 	public void onResume() {
 		super.onResume();
-		_getReference();
+		_getInboxReference();
 	}
-	public void _stateColor(final int _statusColor, final int _navigationColor) {
-		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-		getWindow().setStatusBarColor(_statusColor);
-		getWindow().setNavigationBarColor(_navigationColor);
-	}
-	
-	
 	public void _ImageColor(final ImageView _image, final int _color) {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
 	}
@@ -391,16 +354,6 @@ loadingBody.setVisibility(View.GONE);
 		GG.setStroke((int) _stroke, _strokeColor);
 		android.graphics.drawable.RippleDrawable RE = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{ _onRipple}), GG, null);
 		_view.setBackground(RE);
-	}
-	
-	
-	public void _getReference() {
-		swipeLayout.setVisibility(View.GONE);
-		noInternetBody.setVisibility(View.GONE);
-		loadingBody.setVisibility(View.VISIBLE);
-		req.startRequestNetwork(RequestNetworkController.POST, "https://google.com", "google", _req_request_listener);
-		_getInboxReference();
-		swipeLayout.setRefreshing(false);
 	}
 	
 	
@@ -538,7 +491,6 @@ loadingBody.setVisibility(View.GONE);
 				userStatusCircleIN.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFF388E3C));
 				unread_messages_count_badge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, getResources().getColor(R.color.colorPrimary)));
 				unread_messages_count_badge.setVisibility(View.GONE);
-				profileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
 				main.setVisibility(View.GONE);
 				if (_data.get((int)_position).get("last_message_text").toString().equals("null")) {
 					last_message.setText(getResources().getString(R.string.m_no_chats));
@@ -553,8 +505,6 @@ loadingBody.setVisibility(View.GONE);
 					}
 					last_message.setTextColor(0xFF616161);
 					push.setTextColor(0xFF616161);
-					last_message.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 0);
-					push.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 0);
 					message_state.setVisibility(View.VISIBLE);
 					unread_messages_count_badge.setVisibility(View.GONE);
 				} else {
@@ -577,15 +527,15 @@ loadingBody.setVisibility(View.GONE);
 												if(dataSnapshot.exists()) {
 													last_message.setTextColor(0xFF000000);
 													push.setTextColor(0xFF000000);
-													last_message.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 1);
-													push.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 1);
+													//	last_message.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 1);
+													//	push.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 1);
 													unread_messages_count_badge.setText(String.valueOf((long)(unReadMessageCount)));
 													unread_messages_count_badge.setVisibility(View.VISIBLE);
 												} else {
 													last_message.setTextColor(0xFF616161);
 													push.setTextColor(0xFF616161);
-													last_message.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 0);
-													push.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 0);
+													//	last_message.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 0);
+													//	push.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/appfont.ttf"), 0);
 													unread_messages_count_badge.setVisibility(View.GONE);
 												}
 											}
@@ -792,7 +742,9 @@ loadingBody.setVisibility(View.GONE);
 					public void onClick(View _view) {
 						intent.setClass(getApplicationContext(), ChatActivity.class);
 						intent.putExtra("uid", _data.get((int)_position).get("uid").toString());
+						intent.putExtra("origin", "MessagesActivity");
 						startActivity(intent);
+						finish();
 					}
 				});
 			}catch(Exception e){

@@ -27,14 +27,14 @@
 				android:layout_height="40dp"
 				android:layout_marginRight="8dp"
 				android:padding="8dp"
-				android:src="@drawable/line_video_player_icons_1"
+				android:src="@drawable/ic_favorite_48px"
 				android:scaleType="centerInside" />
 			<TextView
 				android:id="@+id/title"
 				android:focusable="false"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:textSize="18sp"
+				android:textSize="16sp"
 				android:textStyle="bold"
 				android:textColor="#000000"
 				tools:replace="android:text"

@@ -33,11 +33,9 @@ import androidx.cardview.widget.CardView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.firebase.FirebaseApp;
@@ -338,6 +336,14 @@ public class Chat2ndUserMoreSettingsActivity extends AppCompatActivity {
 			}
 		});
 		
+		linear23.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				i.setClass(getApplicationContext(), DisappearingMessageSettingsActivity.class);
+				startActivity(i);
+			}
+		});
+		
 		block_btn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -620,4 +626,4 @@ public class Chat2ndUserMoreSettingsActivity extends AppCompatActivity {
 		block.clear();
 	}
 	
-}
+}

@@ -4,7 +4,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:id="@+id/_main">
 	<LinearLayout
 		android:id="@+id/ProfilePageBody"
 		android:layout_width="match_parent"
@@ -654,7 +655,7 @@
 					android:id="@+id/bottom_search_ic"
 					android:layout_width="30dp"
 					android:layout_height="30dp"
-					android:src="@drawable/icon_8"
+					android:src="@drawable/ic_search_48px"
 					android:scaleType="centerInside" />
 			</LinearLayout>
 			<LinearLayout

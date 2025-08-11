@@ -1,4 +1,3 @@
-<!-- res/values/attrs.xml -->
 <resources>
     <declare-styleable name="CustomView">
         <attr name="bgColor" format="color" />

@@ -90,7 +90,7 @@
 									android:layout_height="wrap_content"
 									android:orientation="horizontal">
 									<LinearLayout
-										android:id="@+id/bottom_home"
+										android:id="@+id/nav_feed"
 										android:layout_width="match_parent"
 										android:layout_height="match_parent"
 										android:padding="10dp"
@@ -98,14 +98,14 @@
 										android:orientation="vertical"
 										android:layout_weight="1">
 										<ImageView
-											android:id="@+id/bottom_home_ic"
+											android:id="@+id/nav_feed_ic"
 											android:layout_width="30dp"
 											android:layout_height="30dp"
 											android:src="@drawable/home_24px"
 											android:scaleType="centerCrop" />
 									</LinearLayout>
 									<LinearLayout
-										android:id="@+id/bottom_search"
+										android:id="@+id/nav_search"
 										android:layout_width="match_parent"
 										android:layout_height="match_parent"
 										android:padding="10dp"
@@ -113,28 +113,28 @@
 										android:orientation="vertical"
 										android:layout_weight="1">
 										<ImageView
-											android:id="@+id/bottom_search_ic"
+											android:id="@+id/nav_search_ic"
 											android:layout_width="30dp"
 											android:layout_height="30dp"
 											android:src="@drawable/ic_search_48px"
 											android:scaleType="centerCrop" />
 									</LinearLayout>
 									<LinearLayout
-										android:id="@+id/bottom_videos"
+										android:id="@+id/nav_reels"
 										android:layout_width="match_parent"
 										android:layout_height="match_parent"
 										android:gravity="center_horizontal|center_vertical"
 										android:orientation="vertical"
 										android:layout_weight="1">
 										<ImageView
-											android:id="@+id/bottom_videos_ic"
+											android:id="@+id/nav_reels_ic"
 											android:layout_width="30dp"
 											android:layout_height="30dp"
 											android:src="@drawable/ic_video_library_48px"
 											android:scaleType="centerCrop" />
 									</LinearLayout>
 									<LinearLayout
-										android:id="@+id/bottom_chats"
+										android:id="@+id/nav_inbox"
 										android:layout_width="match_parent"
 										android:layout_height="match_parent"
 										android:padding="10dp"
@@ -142,14 +142,14 @@
 										android:orientation="vertical"
 										android:layout_weight="1">
 										<ImageView
-											android:id="@+id/bottom_chats_ic"
+											android:id="@+id/nav_inbox_ic"
 											android:layout_width="30dp"
 											android:layout_height="30dp"
 											android:src="@drawable/ic_comment_48px"
 											android:scaleType="centerCrop" />
 									</LinearLayout>
 									<LinearLayout
-										android:id="@+id/bottom_profile"
+										android:id="@+id/nav_profile"
 										android:layout_width="match_parent"
 										android:layout_height="wrap_content"
 										android:padding="10dp"
@@ -157,7 +157,7 @@
 										android:orientation="vertical"
 										android:layout_weight="1">
 										<ImageView
-											android:id="@+id/bottom_profile_ic"
+											android:id="@+id/nav_profile_ic"
 											android:layout_width="30dp"
 											android:layout_height="30dp"
 											android:src="@drawable/ic_account_circle_48px"

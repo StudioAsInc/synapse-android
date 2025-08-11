@@ -29,6 +29,7 @@ import android.view.View.*;
 import android.view.animation.*;
 import android.webkit.*;
 import android.widget.*;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -44,14 +45,12 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
 import com.google.android.material.color.MaterialColors;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -102,7 +101,7 @@ public class CreateImagePostNextStepActivity extends AppCompatActivity {
 	private ScrollView scroll;
 	private ImageView back;
 	private LinearLayout topSpc;
-	private TextView continueButton;
+	private Button continueButton;
 	private TextView title;
 	private LinearLayout scrollBody;
 	private LinearLayout PostInfoTop1;
@@ -117,7 +116,6 @@ public class CreateImagePostNextStepActivity extends AppCompatActivity {
 	private ImageView croppedImageView;
 	private LinearLayout post_settings_statistics_top;
 	private LinearLayout post_settings_statistics_middle;
-	private ImageView post_settings_statistics_top_ic;
 	private TextView post_settings_statistics_top_title;
 	private ImageView post_settings_statistics_top_arrow;
 	private LinearLayout post_settings_statistics_hide_views;
@@ -131,7 +129,6 @@ public class CreateImagePostNextStepActivity extends AppCompatActivity {
 	private TextView post_settings_statistics_hide_comments_subtitle;
 	private LinearLayout post_settings_privacy_top;
 	private LinearLayout post_settings_privacy_middle;
-	private ImageView post_settings_privacy_top_ic;
 	private TextView post_settings_privacy_top_title;
 	private ImageView post_settings_privacy_top_arrow;
 	private LinearLayout post_settings_privacy_hide_post;
@@ -181,8 +178,7 @@ public class CreateImagePostNextStepActivity extends AppCompatActivity {
 		
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
 		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-		} else {
+			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);} else {
 			initializeLogic();
 		}
 	}
@@ -217,7 +213,6 @@ public class CreateImagePostNextStepActivity extends AppCompatActivity {
 		croppedImageView = findViewById(R.id.croppedImageView);
 		post_settings_statistics_top = findViewById(R.id.post_settings_statistics_top);
 		post_settings_statistics_middle = findViewById(R.id.post_settings_statistics_middle);
-		post_settings_statistics_top_ic = findViewById(R.id.post_settings_statistics_top_ic);
 		post_settings_statistics_top_title = findViewById(R.id.post_settings_statistics_top_title);
 		post_settings_statistics_top_arrow = findViewById(R.id.post_settings_statistics_top_arrow);
 		post_settings_statistics_hide_views = findViewById(R.id.post_settings_statistics_hide_views);
@@ -231,7 +226,6 @@ public class CreateImagePostNextStepActivity extends AppCompatActivity {
 		post_settings_statistics_hide_comments_subtitle = findViewById(R.id.post_settings_statistics_hide_comments_subtitle);
 		post_settings_privacy_top = findViewById(R.id.post_settings_privacy_top);
 		post_settings_privacy_middle = findViewById(R.id.post_settings_privacy_middle);
-		post_settings_privacy_top_ic = findViewById(R.id.post_settings_privacy_top_ic);
 		post_settings_privacy_top_title = findViewById(R.id.post_settings_privacy_top_title);
 		post_settings_privacy_top_arrow = findViewById(R.id.post_settings_privacy_top_arrow);
 		post_settings_privacy_hide_post = findViewById(R.id.post_settings_privacy_hide_post);
@@ -819,7 +813,6 @@ public class CreateImagePostNextStepActivity extends AppCompatActivity {
 	private void initializeLogic() {
 		_setStatusBarColor(true, 0xFFFFFFFF, 0xFFFFFFFF);
 		_viewGraphics(back, 0xFFFFFFFF, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
-		_viewGraphics(continueButton, 0xFF445E91, 0xFF445E91, 300, 0, Color.TRANSPARENT);
 		cropperImageCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)22, (int)2, 0xFFEEEEEE, 0xFFFFFFFF));
 		postDescription.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
 		post_settings_statistics_middle.setVisibility(View.GONE);

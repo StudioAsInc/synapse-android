@@ -43,11 +43,9 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
 import com.google.android.material.color.MaterialColors;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -182,8 +180,7 @@ public class ProfileEditActivity extends AppCompatActivity {
 		FirebaseApp.initializeApp(this);
 		
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, 1000);
-		} else {
+			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, 1000);} else {
 			initializeLogic();
 		}
 	}
@@ -725,11 +722,11 @@ public class ProfileEditActivity extends AppCompatActivity {
 		mNicknameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
 		mBiographyInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
 		gender.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
-		mTitle.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/product_b.ttf"), 1);
-		gender_title.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/product_b.ttf"), 1);
-		region_title.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/product_b.ttf"), 1);
-		cover_image_history_stage_title.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/product_b.ttf"), 1);
-		profile_image_history_stage_title.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/product_b.ttf"), 1);
+		mTitle.setTypeface(Typeface.DEFAULT, 1);
+		gender_title.setTypeface(Typeface.DEFAULT, 1);
+		region_title.setTypeface(Typeface.DEFAULT, 1);
+		cover_image_history_stage_title.setTypeface(Typeface.DEFAULT, 1);
+		profile_image_history_stage_title.setTypeface(Typeface.DEFAULT, 1);
 		// Logic coding
 		stage1RelativeUpProfileCard.setOnClickListener(new View.OnClickListener() {
 			@Override

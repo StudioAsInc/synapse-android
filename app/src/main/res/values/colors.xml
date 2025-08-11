@@ -2,7 +2,7 @@
     <color name="colorPrimary">#445E91</color>
     <color name="colorPrimaryDark">#445E91</color>
     <color name="colorControlHighlight">#E0E7F5</color>
-    <color name="colorControlNormal">#C5D2EA</color>
+    <color name="colorControlNormal">#445E91</color>
     <color name="colorAccent">#445E91</color>
     <color name="darkPrimaryBackground">#1A2536</color>
     <color name="darkSecondaryBackground">#2D3C5A</color>
