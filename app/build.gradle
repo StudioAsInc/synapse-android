@@ -113,7 +113,7 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
 
     // Common UI components
-    implementation 'androidx.recyclerview:recyclerview:1.4.1'
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
@@ -127,16 +127,21 @@ dependencies {
     implementation 'androidx.preference:preference-ktx:1.2.1'
 
     // Firebase (BOM kept and bumped to the most recent)
-    implementation platform('com.google.firebase:firebase-bom:34.1.0')
-    implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation 'com.google.firebase:firebase-database-ktx'
-    implementation 'com.google.firebase:firebase-storage-ktx'
-    implementation 'com.google.firebase:firebase-appcheck-playintegrity'
-    implementation 'com.google.firebase:firebase-perf-ktx'
-    implementation 'com.google.firebase:firebase-crashlytics-ktx'
-    implementation 'com.google.firebase:firebase-analytics-ktx'
-    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    // Firebase BoM
+implementation platform('com.google.firebase:firebase-bom:34.1.0')
 
+// Firebase dependencies (versions managed by BoM)
+implementation 'com.google.firebase:firebase-auth-ktx'
+implementation 'com.google.firebase:firebase-database-ktx'
+implementation 'com.google.firebase:firebase-storage-ktx'
+implementation 'com.google.firebase:firebase-appcheck-playintegrity'
+implementation 'com.google.firebase:firebase-perf-ktx'
+implementation 'com.google.firebase:firebase-crashlytics-ktx'
+implementation 'com.google.firebase:firebase-analytics-ktx'
+
+// Google Play services (not managed by BoM)
+implementation 'com.google.android.gms:play-services-auth:21.4.0'
+   
     // Image Loading
     implementation 'com.github.bumptech.glide:glide:5.0.0-rc01'     // rc
     annotationProcessor 'com.github.bumptech.glide:compiler:5.0.0-rc01'
