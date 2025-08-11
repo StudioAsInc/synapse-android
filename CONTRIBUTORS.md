@@ -8,8 +8,8 @@ We gratefully acknowledge the individuals and organizations who have contributed
 
 | Contributor       | Role                          |
 |-------------------|-------------------------------|
-| Unepix            | Core Architecture             |
-| Ashik Ahmed       | Core Development, UI/UX, Updates |
+| Unepix            | Core Architecture (Pre-alpha)             |
+| Ashik Ahmed       | Core Development, updates |
 
 ---
 
