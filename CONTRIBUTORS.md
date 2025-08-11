@@ -17,7 +17,10 @@ We gratefully acknowledge all contributors who have helped shape Synapse.
 
 If you've contributed even a small change (.), add your name here:  
 
-- **Your Name Here** *(edit this file via pull request)*  
+- **@TheRealAshik2**
+- Unepix
+- Naurto
+- *(Add via pull request)*  
 
 ---
 
