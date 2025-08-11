@@ -59,16 +59,16 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Create google-services.json from secret
-  run: |
-    mkdir -p app/src/release
-    echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/src/release/google-services.json
+        run: |
+          mkdir -p app/src/release
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/src/release/google-services.json
 
-- name: Debug google-services.json content
-  run: |
-    echo "===== google-services.json ====="
-    cat app/src/release/google-services.json
-    echo "===== JSON Validation ====="
-    python -m json.tool app/src/release/google-services.json
+      - name: Debug google-services.json content
+        run: |
+          echo "===== google-services.json ====="
+          cat app/src/release/google-services.json
+          echo "===== JSON Validation ====="
+          python -m json.tool app/src/release/google-services.json
 
       # Optional: install Android SDK components if your runner does not have them.
       # Uncomment and adjust platform/build-tools versions as needed.
@@ -151,4 +151,3 @@ jobs:
           APK_PATH: ./downloaded-artifact/app-release-${{ needs.build.outputs.short_sha }}.apk
         run: |
           python ./.github/workflows/deploy_artifacts.py
-        continue-on-error: true
