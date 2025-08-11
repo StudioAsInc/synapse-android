@@ -8,7 +8,7 @@
 
   [![License](https://img.shields.io/badge/license-Custom-blue.svg)](#license)
   [![Release](https://img.shields.io/github/v/release/StudioAsInc/synapse-android?include_prereleases)](https://github.com/StudioAsInc/synapse-android/releases)
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTE)
   [![Build Status](https://img.shields.io/github/actions/workflow/status/StudioAsInc/synapse-android/android.yml?label=build)](https://github.com/StudioAsInc/synapse-android/actions)
   [![Stars](https://img.shields.io/github/stars/StudioAsInc/synapse-android?style=social)](https://github.com/StudioAsInc/synapse-android/stargazers)
 
