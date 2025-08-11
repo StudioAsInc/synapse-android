@@ -1,23 +1,19 @@
-name: Android CI
+name: Advanced Android CI/CD
 
 on:
   push:
+    branches: [ main ]
     paths:
       - '.github/workflows/android.yml'
       - 'app/**'
       - 'gradle/**'
       - 'build.gradle'
       - 'gradle.properties'
-      - 'gradlew'
-      - 'gradlew.bat'
-      - 'public-stable-ids.txt'
-      - 'settings.gradle'
-    branches-ignore:
-      - 'wip/**'
   workflow_dispatch:
     inputs:
+      # Core options
       skip_notifications:
-        description: 'Skip sending notifications'
+        description: 'Skip all notifications (Telegram/Slack)'
         type: boolean
         default: true
       skip_apk_sending:
@@ -25,37 +21,39 @@ on:
         type: boolean
         default: false
 
+      # Advanced features (all disabled by default)
+      enable_version_increment:
+        description: 'Auto-increment versionCode'
+        type: boolean
+        default: false
+      enable_tests:
+        description: 'Run unit and UI tests'
+        type: boolean
+        default: false
+      enable_lint:
+        description: 'Run Lint checks'
+        type: boolean
+        default: false
+      enable_signing:
+        description: 'Sign APK before upload'
+        type: boolean
+        default: false
+      enable_github_release:
+        description: 'Create GitHub Release'
+        type: boolean
+        default: false
+      enable_slack_notify:
+        description: 'Send Slack notifications'
+        type: boolean
+        default: false
+      enable_firebase_distro:
+        description: 'Upload to Firebase App Distribution'
+        type: boolean
+        default: false
+
 jobs:
-  notifyTelegram:
-    name: Notify Telegram
-    if: ${{ !inputs.skip_notifications }}
-    runs-on: ${{ vars.IS_USING_HOSTED_RUNNERS == 'true' && 'self-hosted' || 'ubuntu-latest' }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install Dependencies
-        run: |
-          pip install requests
-
-      - name: Send a message to Telegram
-        env:
-          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TOPIC_ID: ${{ secrets.TELEGRAM_TOPIC_ID }}
-        run: |
-          python ./.github/workflows/notify_telegram.py
-        continue-on-error: true
-
   build:
-    name: Build APKs
-    runs-on: ${{ vars.IS_USING_HOSTED_RUNNERS == 'true' && 'self-hosted' || 'ubuntu-latest' }}
-    outputs:
-      short_sha: ${{ steps.set_sha.outputs.short_sha }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -65,81 +63,93 @@ jobs:
           java-version: 17
           distribution: temurin
 
-      - name: Create google-services.json from secret
+      # Conditional: Version code increment
+      - name: Increment Version Code
+        if: ${{ inputs.enable_version_increment }}
         run: |
-          mkdir -p app/src/release
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/src/release/google-services.json
-          # Verify the file was created properly
-          ls -la app/src/release/
+          TIMESTAMP=$(date +%s)
+          sed -i "s/versionCode [0-9]*/versionCode $TIMESTAMP/" app/build.gradle
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          cache-disabled: true
+      # Conditional: Run tests
+      - name: Run Unit Tests
+        if: ${{ inputs.enable_tests }}
+        run: gradle test
 
+      - name: Run Instrumentation Tests
+        if: ${{ inputs.enable_tests }}
+        run: gradle connectedAndroidTest
+
+      # Conditional: Lint checks
+      - name: Run Lint
+        if: ${{ inputs.enable_lint }}
+        run: gradle lintDebug
+
+      # Core build step (always runs)
       - name: Build Release APK
-        env:
-          SKETCHUB_API_KEY: ${{ secrets.SKETCHUB_API_KEY }}
         run: gradle assembleRelease
 
-      - name: Set short SHA
-        id: set_sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+      # Conditional: APK signing
+      - name: Sign APK
+        if: ${{ inputs.enable_signing }}
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
 
-      - name: Rename APK with commit hash
-        run: |
-          mv app/build/outputs/apk/release/app-release.apk \
-             app/build/outputs/apk/release/app-release-${{ steps.set_sha.outputs.short_sha }}.apk
-
-      - name: Upload Release APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: apk-release-${{ steps.set_sha.outputs.short_sha }}
-          path: app/build/outputs/apk/release/app-release-${{ steps.set_sha.outputs.short_sha }}.apk
+          name: app-release
+          path: app/build/outputs/apk/release/app-release.apk
 
-  aggregateAndSend:
-    name: Send APKs to Telegram
-    if: ${{ !inputs.skip_apk_sending }}
-    runs-on: ${{ vars.IS_USING_HOSTED_RUNNERS == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+  notifications:
     needs: build
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
+      # Conditional: Telegram notifications
+      - name: Notify Telegram
+        if: ${{ !inputs.skip_notifications }}
+        uses: ./.github/actions/telegram-notify
         with:
-          name: apk-release-${{ needs.build.outputs.short_sha }}
-          path: ./downloaded-artifact
+          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
 
-      - name: Set up Python 3
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install Dependencies
-        run: |
-          pip install telethon
-
-      - name: Get Git Commit Info
-        run: |
-          echo "COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')" >> $GITHUB_ENV
-          echo "COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s')" >> $GITHUB_ENV
-
-      - name: Restore Telegram session cache
-        uses: actions/cache@v4
-        id: telegram_session_cache
-        with:
-          path: bot_session.session
-          key: telegram-session-${{ runner.os }}-bot_session
-
-      - name: Send APKs to Telegram
+      # Conditional: Slack notifications
+      - name: Notify Slack
+        if: ${{ inputs.enable_slack_notify }}
+        uses: rtCamp/action-slack-notify@v2
         env:
-          API_ID: ${{ secrets.TELEGRAM_API_ID }}
-          API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app-release
+
+      # Conditional: GitHub Release
+      - name: Create GitHub Release
+        if: ${{ inputs.enable_github_release }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: app-release.apk
+
+      # Conditional: Firebase Distribution
+      - name: Deploy to Firebase
+        if: ${{ inputs.enable_firebase_distro }}
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          file: app-release.apk
+
+      # Conditional: Telegram APK Send
+      - name: Send to Telegram
+        if: ${{ !inputs.skip_apk_sending }}
+        run: python ./.github/workflows/deploy_artifacts.py
+        env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TOPIC_ID: ${{ secrets.TELEGRAM_TOPIC_ID }}
-          APK_PATH: ./downloaded-artifact/app-release-${{ needs.build.outputs.short_sha }}.apk
-        run: |
-          python ./.github/workflows/deploy_artifacts.py
-        continue-on-error: true
