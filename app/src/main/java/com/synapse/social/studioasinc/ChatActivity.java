@@ -74,7 +74,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.onesignal.OneSignal.PostNotificationResponseHandler;
+import com.onesignal.PostNotificationResponseHandler;
 import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.theartofdev.edmodo.cropper.*;
