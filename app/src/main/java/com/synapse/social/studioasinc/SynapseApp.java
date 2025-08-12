@@ -18,7 +18,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.onesignal.OSNotification;
+import com.onesignal.OSNotificationReceivedEvent;
 import com.onesignal.OneSignal;
+import com.onesignal.OneSignal.NotificationWillShowInForegroundHandler;
 
 import java.util.Calendar;
 
@@ -53,6 +56,14 @@ public class SynapseApp extends Application {
 
         // OneSignal Initialization
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
+
+        OneSignal.setNotificationWillShowInForegroundHandler(new OneSignal.NotificationWillShowInForegroundHandler() {
+            @Override
+            public void notificationWillShowInForeground(OSNotificationReceivedEvent notificationReceivedEvent) {
+                // Do not display the notification
+                notificationReceivedEvent.complete(null);
+            }
+        });
         
         this.mAuth = FirebaseAuth.getInstance();
         this.getCheckUserReference = FirebaseDatabase.getInstance().getReference("skyline/users");

@@ -74,7 +74,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.onesignal.PostNotificationResponseHandler;
 import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.theartofdev.edmodo.cropper.*;
@@ -1810,7 +1809,6 @@ public class ChatActivity extends AppCompatActivity {
 				ChatInboxSend2.put("last_message_state", "sended");
 				ChatInboxSend2.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
 				FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
-				_sendNotificationToUser(message_et.getText().toString().trim(), getIntent().getStringExtra("uid"));
 				message_et.setText("");
 				devider2.setVisibility(View.GONE);
 				devider1.setVisibility(View.GONE);
@@ -2376,26 +2374,4 @@ _textview_mh(message_text, _data.get((int)_position).get("message_text").toStrin
 		}
 	}
 
-	private void _sendNotificationToUser(final String message, final String toUserId) {
-		try {
-			JSONObject notificationContent = new JSONObject();
-			notificationContent.put("include_external_user_ids", new org.json.JSONArray().put(toUserId));
-			notificationContent.put("headings", new JSONObject().put("en", FirstUserName));
-			notificationContent.put("contents", new JSONObject().put("en", message));
-
-			com.onesignal.OneSignal.postNotification(notificationContent, new PostNotificationResponseHandler() {
-				@Override
-				public void onSuccess(JSONObject response) {
-					android.util.Log.i("OneSignalExample", "postNotification Success: " + response.toString());
-				}
-
-				@Override
-				public void onFailure(JSONObject response) {
-					android.util.Log.e("OneSignalExample", "postNotification Failure: " + response.toString());
-				}
-			});
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
 }
