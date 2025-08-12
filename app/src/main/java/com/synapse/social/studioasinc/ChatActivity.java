@@ -934,7 +934,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatMessagesListRecycler.setLayoutManager(ChatRecyclerLayoutManager);
 		ChatMessagesListRecycler.setAdapter(new ChatMessagesListRecyclerAdapter(ChatMessagesList));
 		if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-			OneSignal.login(FirebaseAuth.getInstance().getCurrentUser().getUid());
+			com.onesignal.OneSignal.login(FirebaseAuth.getInstance().getCurrentUser().getUid());
 		}
 		_getUserReference();
 		ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -2382,7 +2382,7 @@ _textview_mh(message_text, _data.get((int)_position).get("message_text").toStrin
 			notificationContent.put("headings", new JSONObject().put("en", FirstUserName));
 			notificationContent.put("contents", new JSONObject().put("en", message));
 
-			OneSignal.postNotification(notificationContent, null);
+			com.onesignal.OneSignal.postNotification(notificationContent, null);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
