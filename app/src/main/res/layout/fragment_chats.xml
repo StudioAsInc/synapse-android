@@ -1,0 +1,42 @@
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
+	<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+		android:id="@+id/swipeLayout"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="#FFFFFF">
+		<LinearLayout
+			android:id="@+id/swipeBody"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:orientation="vertical">
+			<LinearLayout
+				android:id="@+id/InboxChatMessagesLayout"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:orientation="vertical">
+				<androidx.recyclerview.widget.RecyclerView
+					android:id="@+id/InboxRecyclerView"
+					android:layout_width="match_parent"
+					android:layout_height="match_parent"
+					android:listSelector="@drawable/no_highlight"
+					tools:listitem="@layout/inbox_msg_list_cv_synapse" />
+				<TextView
+					android:id="@+id/noInbox"
+					android:layout_width="match_parent"
+					android:layout_height="match_parent"
+					android:padding="8dp"
+					android:gravity="center_horizontal|center_vertical"
+					android:textSize="18sp"
+					android:textColor="#757575"
+					tools:replace="android:text"
+					android:text="@string/m_no_inbox" />
+			</LinearLayout>
+		</LinearLayout>
+	</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+</LinearLayout>
