@@ -183,8 +183,47 @@ class TextStylingUtil(private val context: Context) {
         textView.text = ssb
     }
 
-    private class CodeBlockSpan(private val backgroundColor: Int, private val cornerRadius: Float, private val padding: Int = 12) : LineBackgroundSpan { /* ... implementation ... */ }
-    private class LinkClickableSpan(private val url: String, private val context: Context) : ClickableSpan() { /* ... implementation ... */ }
+    private class CodeBlockSpan(private val backgroundColor: Int, private val cornerRadius: Float, private val padding: Int = 12) : LineBackgroundSpan {
+        override fun drawBackground(
+            c: Canvas, p: Paint, left: Int, right: Int, top: Int, baseline: Int, bottom: Int,
+            text: CharSequence, start: Int, end: Int, lnum: Int
+        ) {
+            val paint = Paint(p)
+            paint.color = backgroundColor
+            val rect = RectF(
+                (left - padding).toFloat(),
+                top.toFloat(),
+                (right + padding).toFloat(),
+                bottom.toFloat()
+            )
+            c.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
+        }
+    }
+
+    private class LinkClickableSpan(private val url: String, private val context: Context) : ClickableSpan() {
+        override fun onClick(widget: View) {
+            try {
+                val builder = CustomTabsIntent.Builder()
+                val customTabsIntent = builder.build()
+                customTabsIntent.launchUrl(context, Uri.parse(url))
+            } catch (e: Exception) {
+                Log.e(TAG, "Could not open link", e)
+                // Fallback to default browser
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                if (context.packageManager.resolveActivity(intent, 0) != null) {
+                    context.startActivity(intent)
+                } else {
+                    Log.w(TAG, "No activity found to handle URL: $url")
+                }
+            }
+        }
+
+        override fun updateDrawState(ds: TextPaint) {
+            super.updateDrawState(ds)
+            ds.color = Color.parseColor(LINK_COLOR)
+            ds.isUnderlineText = true
+        }
+    }
 
     private class ProfileSpan(private val context: Context, private val matchResult: MatchResult) : ClickableSpan() {
         override fun onClick(view: View) {
