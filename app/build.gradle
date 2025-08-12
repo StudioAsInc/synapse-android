@@ -53,6 +53,10 @@ android {
         versionName = "1.0.0-alpha05"
         multiDexEnabled = true
 
+        buildConfigField "String", "CLOUDINARY_CLOUD_NAME", "\"djw3fgbls\""
+        buildConfigField "String", "CLOUDINARY_API_KEY", "\"577882927131931\""
+        buildConfigField "String", "CLOUDINARY_API_SECRET", "\"M_w_0uQKjnLRUe-u34driUBqUQU\""
+
         vectorDrawables.useSupportLibrary = true
 
         compileOptions {
@@ -102,10 +106,12 @@ dependencies {
     // Firebase dependencies with explicit latest stable versions (no BoM)
     implementation 'com.google.firebase:firebase-auth-ktx:23.2.1'
     implementation 'com.google.firebase:firebase-database-ktx:21.0.0'
-    implementation 'com.google.firebase:firebase-storage-ktx:21.0.2'
     implementation 'com.google.firebase:firebase-perf-ktx:21.0.5'
     implementation 'com.google.firebase:firebase-crashlytics-ktx:19.4.4'
     implementation 'com.google.firebase:firebase-analytics-ktx:22.5.0'
+
+    // Cloudinary
+    implementation 'com.cloudinary:cloudinary-android:2.4.0'
 
     // AndroidX Core & UI Components
     implementation 'androidx.core:core-ktx:1.17.0-rc01'
