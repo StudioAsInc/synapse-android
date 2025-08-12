@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+
 package com.synapse.social.studioasinc.animations.textview
 
 import android.animation.ValueAnimator
@@ -24,94 +25,107 @@ import android.text.style.CharacterStyle
 import android.text.style.UpdateAppearance
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
-import java.lang.Float.max
-import java.lang.Float.min
+import kotlin.math.cos
+import kotlin.math.exp
 
 class TVeffects @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : AppCompatTextView(context, attrs) {
 
-    private var charDelay: Long = 50L
-    private var fadeDuration: Long = 200L
-    private var totalDuration: Long = 0L
-    private var animator: ValueAnimator? = null
-    private var spans: Array<AlphaSpan>? = null
-
-    fun setCharDelay(delay: Long) {
-        charDelay = delay
+    companion object {
+        private const val DEFAULT_CHAR_DELAY = 50L
+        private const val SPRING_DURATION = 1000L
+        private const val DEFAULT_DAMPING = 8.0
+        private const val DEFAULT_FREQUENCY = 30.0
     }
 
-    fun setFadeDuration(duration: Long) {
-        fadeDuration = max(duration, 0)
+    private var charDelay = DEFAULT_CHAR_DELAY
+    private var totalDuration: Long = 0
+    private var animator: ValueAnimator? = null
+    private var dampingFactor = DEFAULT_DAMPING
+    private var springFrequency = DEFAULT_FREQUENCY
+
+    fun setCharDelay(delay: Long) {
+        charDelay = delay.coerceAtLeast(0)
     }
 
     fun setTotalDuration(duration: Long) {
-        totalDuration = max(duration, 0)
+        totalDuration = duration.coerceAtLeast(0)
+    }
+
+    fun setSpringDamping(damping: Double) {
+        dampingFactor = damping.coerceAtLeast(0.1)
+    }
+
+    fun setSpringFrequency(frequency: Double) {
+        springFrequency = frequency.coerceAtLeast(1.0)
     }
 
     fun startTyping(text: CharSequence) {
-        stopAnimation()
-        
+        animator?.cancel()
         if (text.isEmpty()) {
-            setText("")
+            setText(text)
             return
         }
 
-        val delayPerChar = if (totalDuration > 0) totalDuration / text.length else charDelay
-        startTypingInternal(text, delayPerChar)
-    }
-
-    private fun startTypingInternal(text: CharSequence, charDelay: Long) {
         val spannable = SpannableStringBuilder(text)
-        setText(spannable, BufferType.SPANNABLE)
+        val charDelayPerChar = calculateCharDelay(text.length)
+        val spans = createAlphaSpans(spannable, text.length)
+        val totalAnimDuration = (text.length * charDelayPerChar + SPRING_DURATION).coerceAtLeast(0)
 
-        val textLength = text.length
-        spans = Array(textLength) { AlphaSpan(0f) }
-
-        for (i in 0 until textLength) {
-            spannable.setSpan(spans!![i], i, i + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-
-        animator = ValueAnimator.ofFloat(0f, (textLength * charDelay + fadeDuration).toFloat()).apply {
-            duration = (textLength * charDelay + fadeDuration)
-            
+        animator = ValueAnimator.ofFloat(0f, text.length.toFloat()).apply {
+            duration = totalAnimDuration
             addUpdateListener { animation ->
-                val currentTime = animation.animatedValue as Float
-                val fadeDurationF = fadeDuration.toFloat()
-                val charDelayF = charDelay.toFloat()
-                
-                for (i in 0 until textLength) {
-                    val startTime = i * charDelayF
-                    if (currentTime < startTime) break
-                    
-                    val fraction = if (fadeDurationF <= 0f) {
-                        if (currentTime >= startTime) 1f else 0f
-                    } else {
-                        min(1f, max(0f, (currentTime - startTime) / fadeDurationF))
-                    }
-                    
-                    spans!![i].alpha = fraction
-                }
+                val progress = animation.animatedValue as Float
+                updateAlphaForSpans(spans, charDelayPerChar, progress)
                 invalidate()
             }
-            
             start()
         }
     }
 
-    fun stopAnimation() {
-        animator?.let {
-            if (it.isRunning) it.cancel()
-            it.removeAllUpdateListeners()
-        }
-        animator = null
-        spans = null
-    }
-
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        stopAnimation()
+        animator?.cancel()
+        animator = null
+    }
+
+    private fun calculateCharDelay(textLength: Int): Long {
+        return if (totalDuration > 0) totalDuration / textLength else charDelay
+    }
+
+    private fun createAlphaSpans(spannable: SpannableStringBuilder, length: Int): List<AlphaSpan> {
+        return List(length) { index ->
+            AlphaSpan(0f).also {
+                spannable.setSpan(it, index, index + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }.also {
+            setText(spannable)
+        }
+    }
+
+    private fun updateAlphaForSpans(
+        spans: List<AlphaSpan>,
+        charDelay: Long,
+        currentProgress: Float
+    ) {
+        spans.forEachIndexed { index, span ->
+            val elapsed = (currentProgress - index) * charDelay
+            val alpha = when {
+                elapsed < 0 -> 0f
+                elapsed > SPRING_DURATION -> 1f
+                else -> springAlpha(elapsed.toDouble())
+            }
+            if (span.alpha != alpha) {
+                span.alpha = alpha
+            }
+        }
+    }
+
+    private fun springAlpha(elapsedMillis: Double): Float {
+        val t = elapsedMillis / 1000.0
+        return (1 - exp(-dampingFactor * t) * cos(springFrequency * t)).toFloat()
     }
 
     private class AlphaSpan(var alpha: Float) : CharacterStyle(), UpdateAppearance {
