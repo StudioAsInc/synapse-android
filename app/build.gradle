@@ -53,6 +53,11 @@ android {
         versionName = "1.0.0-alpha05"
         multiDexEnabled = true
 
+        manifestPlaceholders = [
+                onesignal_app_id: '044e1911-6911-4871-95f9-d60003002fe2',
+                onesignal_google_project_number: 'unused'
+        ]
+
         vectorDrawables.useSupportLibrary = true
 
         compileOptions {
@@ -155,6 +160,9 @@ dependencies {
 
     // Desugaring for Java 8+ APIs
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+
+    // OneSignal
+    implementation 'com.onesignal:OneSignal:[5.0.0, 5.99.99]'
 
     // Misc / helpers
     implementation 'androidx.graphics:graphics-shapes:1.0.1'

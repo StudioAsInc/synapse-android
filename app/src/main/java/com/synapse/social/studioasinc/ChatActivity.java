@@ -933,6 +933,9 @@ public class ChatActivity extends AppCompatActivity {
 		ChatRecyclerLayoutManager.setStackFromEnd(true);
 		ChatMessagesListRecycler.setLayoutManager(ChatRecyclerLayoutManager);
 		ChatMessagesListRecycler.setAdapter(new ChatMessagesListRecyclerAdapter(ChatMessagesList));
+		if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+			OneSignal.login(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		}
 		_getUserReference();
 		ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
 			@Override
@@ -1806,6 +1809,7 @@ public class ChatActivity extends AppCompatActivity {
 				ChatInboxSend2.put("last_message_state", "sended");
 				ChatInboxSend2.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
 				FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
+				_sendNotificationToUser(message_et.getText().toString().trim(), getIntent().getStringExtra("uid"));
 				message_et.setText("");
 				devider2.setVisibility(View.GONE);
 				devider1.setVisibility(View.GONE);
@@ -2368,6 +2372,19 @@ _textview_mh(message_text, _data.get((int)_position).get("message_text").toStrin
 			public ViewHolder(View v) {
 				super(v);
 			}
+		}
+	}
+
+	private void _sendNotificationToUser(final String message, final String toUserId) {
+		try {
+			JSONObject notificationContent = new JSONObject();
+			notificationContent.put("include_external_user_ids", new org.json.JSONArray().put(toUserId));
+			notificationContent.put("headings", new JSONObject().put("en", FirstUserName));
+			notificationContent.put("contents", new JSONObject().put("en", message));
+
+			OneSignal.postNotification(notificationContent, null);
+		} catch (JSONException e) {
+			e.printStackTrace();
 		}
 	}
 }

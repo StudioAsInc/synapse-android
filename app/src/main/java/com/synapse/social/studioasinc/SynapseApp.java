@@ -18,11 +18,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.onesignal.OneSignal;
 
 import java.util.Calendar;
 
 public class SynapseApp extends Application {
     
+    private static final String ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
     private static Context mContext;
     private Thread.UncaughtExceptionHandler mExceptionHandler;
     
@@ -48,6 +50,9 @@ public class SynapseApp extends Application {
         // Initialize Firebase with disk persistence
         FirebaseApp.initializeApp(this);
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+
+        // OneSignal Initialization
+        OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
         
         this.mAuth = FirebaseAuth.getInstance();
         this.getCheckUserReference = FirebaseDatabase.getInstance().getReference("skyline/users");
