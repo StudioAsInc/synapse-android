@@ -18,11 +18,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.onesignal.OneSignal;
 
 import java.util.Calendar;
 
 public class SynapseApp extends Application {
     
+    private static final String ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
     private static Context mContext;
     private Thread.UncaughtExceptionHandler mExceptionHandler;
     
@@ -55,6 +57,10 @@ public class SynapseApp extends Application {
         
         // Keep users data synced for offline use
         getCheckUserReference.keepSynced(true);
+
+        // OneSignal Initialization
+        OneSignal.initWithContext(this);
+        OneSignal.setAppId(ONESIGNAL_APP_ID);
         
         // Set up global exception handler
         Thread.setDefaultUncaughtExceptionHandler(
@@ -120,8 +126,18 @@ public class SynapseApp extends Application {
                     }
                 });
         }
+        updatePlayerId();
     }
     
+    public static void updatePlayerId() {
+        if (mAuth.getCurrentUser() != null) {
+            String playerId = OneSignal.getDeviceState().getUserId();
+            if (playerId != null) {
+                getCheckUserReference.child(mAuth.getCurrentUser().getUid()).child("oneSignalPlayerId").setValue(playerId);
+            }
+        }
+    }
+
     public static void setUserStatusOnline() {
         if (mAuth.getCurrentUser() != null) {
             DatabaseReference statusRef = FirebaseDatabase.getInstance()

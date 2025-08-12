@@ -164,7 +164,6 @@ public class ChatActivity extends AppCompatActivity {
 	private String path = "";
 	private String imageUrl = "";
 	private String AndroidDevelopersBlogURL = "";
-	private String ONESIGNAL_APP_ID = "";
 	
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
 	
@@ -920,7 +919,6 @@ public class ChatActivity extends AppCompatActivity {
 			message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
 			
 		}
-		ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
 		SecondUserAvatar = "null";
 		ReplyMessageID = "null";
 		path = "";
@@ -1821,6 +1819,7 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap.clear();
 				ChatInboxSend.clear();
 				ChatInboxSend2.clear();
+				NotificationHelper.sendNotification(getIntent().getStringExtra("uid"), FirstUserName, message_et.getText().toString().trim());
 				ReplyMessageID = "null";
 			}
 		} else {
