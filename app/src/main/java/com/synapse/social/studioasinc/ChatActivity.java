@@ -74,6 +74,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.onesignal.OneSignal.PostNotificationResponseHandler;
 import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.theartofdev.edmodo.cropper.*;
@@ -2382,7 +2383,7 @@ _textview_mh(message_text, _data.get((int)_position).get("message_text").toStrin
 			notificationContent.put("headings", new JSONObject().put("en", FirstUserName));
 			notificationContent.put("contents", new JSONObject().put("en", message));
 
-			com.onesignal.OneSignal.postNotification(notificationContent, new com.onesignal.OneSignal.PostNotificationResponseHandler() {
+			com.onesignal.OneSignal.postNotification(notificationContent, new PostNotificationResponseHandler() {
 				@Override
 				public void onSuccess(JSONObject response) {
 					android.util.Log.i("OneSignalExample", "postNotification Success: " + response.toString());
