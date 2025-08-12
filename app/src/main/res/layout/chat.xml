@@ -76,7 +76,7 @@
 							android:text="Name"
 							android:textSize="16sp"
 							android:textStyle="bold"
-							android:textColor="#000000"
+							android:textColor="?attr/colorOnSurface"
 							android:singleLine="true"
 							android:maxWidth="110dp" />
 						<ImageView
@@ -99,7 +99,7 @@
 						android:layout_height="wrap_content"
 						android:text="status"
 						android:textSize="14sp"
-						android:textColor="#000000"
+						android:textColor="?attr/colorOnSurface"
 						android:singleLine="true" />
 				</LinearLayout>
 			</LinearLayout>
@@ -169,7 +169,7 @@
 					android:layout_marginRight="18dp"
 					android:text="This user's account has been suspended."
 					android:textSize="16sp"
-					android:textColor="#000000" />
+					android:textColor="?attr/colorOnSurface" />
 			</LinearLayout>
 			<androidx.recyclerview.widget.RecyclerView
 				android:id="@+id/ChatMessagesListRecycler"
@@ -187,14 +187,14 @@
 				android:gravity="center_horizontal|center_vertical"
 				android:text="No previous conversation"
 				android:textSize="18sp"
-				android:textColor="#757575" />
+				android:textColor="?attr/colorOnSurfaceVariant" />
 		</LinearLayout>
 		<LinearLayout
 			android:id="@+id/bottomSpace"
 			android:layout_width="match_parent"
 			android:layout_height="1dp"
 			android:padding="8dp"
-			android:background="#F5F5F5"
+			android:background="?attr/colorSurfaceVariant"
 			android:orientation="horizontal" />
 		<LinearLayout
 			android:id="@+id/mMessageReplyLayout"
@@ -230,7 +230,7 @@
 						android:layout_height="wrap_content"
 						android:text="Username"
 						android:textSize="14sp"
-						android:textColor="#445E91"
+						android:textColor="?attr/colorPrimary"
 						android:singleLine="true" />
 					<TextView
 						android:id="@+id/mMessageReplyLayoutBodyRightMessage"
@@ -239,7 +239,7 @@
 						android:text="Message"
 						android:textSize="14sp"
 						android:textStyle="bold"
-						android:textColor="#616161"
+						android:textColor="?attr/colorOnSurfaceVariant"
 						android:singleLine="true" />
 				</LinearLayout>
 				<ImageView
@@ -256,7 +256,7 @@
 				android:layout_width="match_parent"
 				android:layout_height="1dp"
 				android:padding="8dp"
-				android:background="#F5F5F5"
+				android:background="?attr/colorSurfaceVariant"
 				android:orientation="horizontal" />
 		</LinearLayout>
 		<LinearLayout
@@ -275,7 +275,7 @@
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:padding="3dp"
-				android:background="#FFFFFF"
+				android:background="?attr/colorSurface"
 				android:gravity="center_horizontal|center_vertical"
 				android:orientation="vertical"
 				android:layout_weight="1"
@@ -322,7 +322,7 @@
 							android:layout_height="wrap_content"
 							android:text="Image.png"
 							android:textSize="14sp"
-							android:textColor="#424242"
+							android:textColor="?attr/colorOnSurfaceVariant"
 							android:maxLength="50" />
 						<ProgressBar
 							android:id="@+id/img_upload_prog"
@@ -342,9 +342,9 @@
 					android:background="@android:color/transparent"
 					android:gravity="center_vertical"
 					android:textSize="18sp"
-					android:textColor="#000000"
+					android:textColor="?attr/colorOnSurface"
 					android:hint="Write a message"
-					android:textColorHint="#607D8B"
+					android:textColorHint="?attr/colorOnSurfaceVariant"
 					android:layout_weight="1"
 					android:maxHeight="180dp" />
 				<LinearLayout
@@ -355,7 +355,7 @@
 					android:paddingTop="12dp"
 					android:paddingRight="22dp"
 					android:paddingBottom="12dp"
-					android:background="#F0F3F8"
+					android:background="?attr/colorSurfaceVariant"
 					android:gravity="center_horizontal|center_vertical"
 					android:orientation="horizontal"
 					android:elevation="1dp">
@@ -372,7 +372,7 @@
 						android:layout_marginLeft="18dp"
 						android:layout_marginRight="18dp"
 						android:padding="8dp"
-						android:background="#BDBDBD"
+						android:background="?attr/colorOutline"
 						android:orientation="horizontal" />
 					<ImageView
 						android:id="@+id/gallery_btn"
@@ -387,7 +387,7 @@
 						android:layout_marginLeft="18dp"
 						android:layout_marginRight="18dp"
 						android:padding="8dp"
-						android:background="#BDBDBD"
+						android:background="?attr/colorOutline"
 						android:orientation="horizontal" />
 					<ImageView
 						android:id="@+id/attachment_btn"
@@ -402,7 +402,7 @@
 						android:layout_marginLeft="18dp"
 						android:layout_marginRight="18dp"
 						android:padding="8dp"
-						android:background="#BDBDBD"
+						android:background="?attr/colorOutline"
 						android:orientation="horizontal" />
 					<ImageView
 						android:id="@+id/send_type_voice_btn"
@@ -417,7 +417,7 @@
 						android:layout_marginLeft="18dp"
 						android:layout_marginRight="18dp"
 						android:padding="8dp"
-						android:background="#BDBDBD"
+						android:background="?attr/colorOutline"
 						android:orientation="horizontal" />
 					<ImageView
 						android:id="@+id/more_send_type_btn"
@@ -433,7 +433,7 @@
 				android:layout_height="wrap_content"
 				android:layout_marginLeft="13dp"
 				android:padding="5dp"
-				android:background="#F0F3F8"
+				android:background="?attr/colorSurfaceVariant"
 				android:gravity="center_horizontal|center_vertical"
 				android:orientation="horizontal">
 				<ImageView
@@ -471,14 +471,14 @@
 				android:gravity="center_horizontal|center_vertical"
 				android:text="00:00"
 				android:textSize="16sp"
-				android:textColor="#000000"
+				android:textColor="?attr/colorOnSurface"
 				android:layout_weight="1" />
 			<ImageView
 				android:id="@+id/bottomAudioRecorderSend"
 				android:layout_width="44dp"
 				android:layout_height="44dp"
 				android:padding="8dp"
-				android:background="#F0F3F8"
+				android:background="?attr/colorSurfaceVariant"
 				android:src="@drawable/icons_3"
 				android:scaleType="fitCenter" />
 		</com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect>
@@ -490,23 +490,23 @@
 			android:paddingTop="15dp"
 			android:paddingRight="10dp"
 			android:paddingBottom="15dp"
-			android:background="@color/colorPrimary"
+			android:background="?attr/colorPrimary"
 			android:gravity="center_horizontal|center_vertical"
 			android:text="Unblock"
 			android:textSize="18sp"
 			android:textStyle="bold"
-			android:textColor="#FFFFFF"
+			android:textColor="?attr/colorOnPrimary"
 			android:visibility="gone" />
 		<TextView
 			android:id="@+id/blocked_txt"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:padding="10dp"
-			android:background="@color/colorPrimary"
+			android:background="?attr/colorPrimary"
 			android:gravity="center_horizontal|bottom"
 			android:text="You can't reply to this conversation. Learn more"
 			android:textSize="14sp"
-			android:textColor="#FFFFFF"
+			android:textColor="?attr/colorOnPrimary"
 			android:visibility="gone" />
 	</com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect>
 </LinearLayout>
