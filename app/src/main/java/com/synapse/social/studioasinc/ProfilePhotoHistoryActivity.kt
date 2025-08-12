@@ -94,7 +94,7 @@ class ProfilePhotoHistoryActivity : AppCompatActivity() {
 
         back.setOnClickListener { onBackPressed() }
         mSwipeLayout.setOnRefreshListener { getReference() }
-        fab.setOnClickListener { addProfilePhotoUrlDialog() }
+        fab.setOnClickListener { filePicker.pickFile("image/*") }
     }
 
     private fun initializeLogic() {
@@ -171,40 +171,6 @@ class ProfilePhotoHistoryActivity : AppCompatActivity() {
         })
     }
 
-    private fun addProfilePhotoUrlDialog() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.profile_photo_history_add_dialog, null)
-        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        val userAvatarUrlInput = dialogView.findViewById<EditText>(R.id.user_avatar_url_input)
-        val addButton = dialogView.findViewById<TextView>(R.id.add_button)
-        val cancelButton = dialogView.findViewById<TextView>(R.id.cancel_button)
-        val pickButton = dialogView.findViewById<Button>(R.id.pick_button)
-
-        pickButton.setOnClickListener {
-            filePicker.pickFile("image/*")
-            dialog.dismiss()
-        }
-
-        addButton.setOnClickListener {
-            val url = userAvatarUrlInput.text.toString().trim()
-            if (url.isNotEmpty() && checkValidUrl(url)) {
-                val profileHistoryKey = maindb.reference.push().key ?: ""
-                mAddProfilePhotoMap["key"] = profileHistoryKey
-                mAddProfilePhotoMap["image_url"] = url
-                mAddProfilePhotoMap["upload_date"] = Calendar.getInstance().timeInMillis.toString()
-                mAddProfilePhotoMap["type"] = "url"
-                maindb.getReference("skyline/profile-history/${auth.currentUser!!.uid}/$profileHistoryKey").updateChildren(mAddProfilePhotoMap)
-                Toast.makeText(applicationContext, "Profile Photo Added", Toast.LENGTH_SHORT).show()
-                getReference()
-                dialog.dismiss()
-            }
-        }
-
-        cancelButton.setOnClickListener { dialog.dismiss() }
-        dialog.setCancelable(true)
-        dialog.show()
-    }
 
     private fun checkValidUrl(url: String): Boolean {
         return try {

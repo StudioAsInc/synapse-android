@@ -88,22 +88,29 @@ object FasterCloudinaryUploader {
 
     fun delete(publicId: String, callback: DeleteCallback) {
         GlobalScope.launch(Dispatchers.IO) {
-            try {
-                val result = MediaManager.get().destroy(publicId)
-                if (result["result"] == "ok") {
-                    launch(Dispatchers.Main) {
-                        callback.onSuccess()
-                    }
-                } else {
-                    launch(Dispatchers.Main) {
-                        callback.onError("Delete failed: ${result["result"]}")
+            MediaManager.get().uploader().destroy(publicId, object : com.cloudinary.android.callback.Callback {
+                override fun onSuccess(resultData: Map<*, *>) {
+                    if (resultData["result"] == "ok") {
+                        launch(Dispatchers.Main) {
+                            callback.onSuccess()
+                        }
+                    } else {
+                        launch(Dispatchers.Main) {
+                            callback.onError("Delete failed: ${resultData["result"]}")
+                        }
                     }
                 }
-            } catch (e: Exception) {
-                launch(Dispatchers.Main) {
-                    callback.onError("Delete failed: ${e.message}")
+
+                override fun onError(error: ErrorInfo) {
+                    launch(Dispatchers.Main) {
+                        callback.onError("Delete failed: ${error.description}")
+                    }
                 }
-            }
+
+                override fun onStart(requestId: String) {}
+                override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {}
+                override fun onReschedule(requestId: String, error: ErrorInfo) {}
+            })
         }
     }
 }

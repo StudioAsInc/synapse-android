@@ -16,6 +16,7 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -142,7 +143,7 @@ class CreateImagePostActivity : AppCompatActivity() {
         val display = windowManager.defaultDisplay
         val screenHeight = display.height
         val desiredHeight = screenHeight / 2 - 24
-        var params = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, desiredHeight)
+        val params = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, desiredHeight)
         cropImageView.layoutParams = params
         urlImagePreview.layoutParams = params
 
@@ -175,10 +176,10 @@ class CreateImagePostActivity : AppCompatActivity() {
                 outStream.close()
                 runOnUiThread {
                     loadingDialog(false)
-                    val intent = Intent(this, CreateImagePostNextStepActivity::class.java)
-                    intent.putExtra("type", "local")
-                    intent.putExtra("path", savedFilePath)
-                    startActivity(intent)
+                    val newIntent = Intent(this, CreateImagePostNextStepActivity::class.java)
+                    newIntent.putExtra("type", "local")
+                    newIntent.putExtra("path", savedFilePath)
+                    startActivity(newIntent)
                     finish()
                 }
             } catch (e: IOException) {

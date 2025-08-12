@@ -180,12 +180,6 @@ class ProfileCoverPhotoHistoryActivity : AppCompatActivity() {
         val userAvatarImage = dialogView.findViewById<ImageView>(R.id.user_avatar_image)
         val addButton = dialogView.findViewById<TextView>(R.id.add_button)
         val cancelButton = dialogView.findViewById<TextView>(R.id.cancel_button)
-        val pickButton = dialogView.findViewById<Button>(R.id.pick_button) // Assuming you add this button to the layout
-
-        pickButton.setOnClickListener {
-            filePicker.pickFile("image/*")
-            dialog.dismiss()
-        }
 
         addButton.setOnClickListener {
             val url = userAvatarUrlInput.text.toString().trim()

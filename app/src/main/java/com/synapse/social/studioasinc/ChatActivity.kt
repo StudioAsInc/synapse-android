@@ -16,6 +16,7 @@ import android.os.Vibrator
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -273,7 +274,7 @@ class ChatActivity : AppCompatActivity() {
         RecyclerView.Adapter<ChatMessagesListRecyclerAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val v = layoutInflater.inflate(R.layout.chat_msg_cv_synapse, parent, false)
+            val v = LayoutInflater.from(parent.context).inflate(R.layout.chat_msg_cv_synapse, parent, false)
             return ViewHolder(v)
         }
 
