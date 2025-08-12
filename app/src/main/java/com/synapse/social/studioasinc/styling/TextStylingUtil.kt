@@ -47,44 +47,36 @@ class TextStylingUtil(private val context: Context) {
 
     private data class StylingMatch(val result: MatchResult, val type: StyleType)
 
-    // Ordered patterns - most specific first
-    private val stylingRules: Map<Pattern, StyleType> = linkedMapOf(
-        // Links must come first to handle nested formatting
-        Pattern.compile("\\[([^\\]]+)\\]\\(([^)]+)\\)") to StyleType.LINK,
-        // Mentions and hashtags
-        Pattern.compile("(?<![^\\s])([@#])([A-Za-z0-9_.-]+)") to StyleType.MENTION_HASHTAG,
-        // Code blocks
-        Pattern.compile("`(.+?)`") to StyleType.HIGHLIGHT,
-        // Headings
-        Pattern.compile("^(#{1,5})\\s+(.+?)(?=\\n|$)", Pattern.MULTILINE) to StyleType.HEADING,
-        // Quotes
-        Pattern.compile("^>\\s+(.+?)(?=\\n|$)", Pattern.MULTILINE) to StyleType.QUOTE,
-        // Combined bold+italic+underline (///text///)
-        Pattern.compile("///(.*?)///") to StyleType.BOLD_ITALIC_UNDERLINE,
-        // Bold (**text**)
-        Pattern.compile("\\*\\*(.*?)\\*\\*") to StyleType.BOLD,
-        // Italic (__text__)
-        Pattern.compile("__(.*?)__") to StyleType.ITALIC,
-        // Strikethrough (~~text~~)
-        Pattern.compile("~~(.*?)~~") to StyleType.STRIKETHROUGH,
-        // Alternate italic (*text*)
-        Pattern.compile("\\*(.*?)\\*") to StyleType.ITALIC,
-        // Underline (_text_)
-        Pattern.compile("_(.*?)_") to StyleType.UNDERLINE,
-        // Superscript (^text^)
-        Pattern.compile("\\^(.*?)\\^") to StyleType.SUPERSCRIPT,
-        // Subscript (~text~)
-        Pattern.compile("~(.*?)~") to StyleType.SUBSCRIPT,
-        // Colored text ({#RRGGBB}(text))
-        Pattern.compile("\\{#([0-9a-fA-F]{6})\\}\\((.*?)\\)") to StyleType.TEXT_COLOR
-    )
+    companion object {
+        private const val TAG = "TextStylingUtil"
+        private const val MENTION_HASHTAG_COLOR = "#445E91"
+        private const val LINK_COLOR = "#445E91"
+        private const val HIGHLIGHT_COLOR = "#E0E0E0"
+
+        private val stylingRules: Map<Pattern, StyleType> = linkedMapOf(
+            Pattern.compile("\\[([^\\]]+)\\]\\(([^)]+)\\)") to StyleType.LINK,
+            Pattern.compile("(?<![^\\s]|^)([@#])([A-Za-z0-9_.-]+)") to StyleType.MENTION_HASHTAG,
+            Pattern.compile("///(.*?)///") to StyleType.BOLD_ITALIC_UNDERLINE,
+            Pattern.compile("\\*\\*(.*?)\\*\\*") to StyleType.BOLD,
+            Pattern.compile("__(.*?)__") to StyleType.ITALIC,
+            Pattern.compile("~~(.*?)~~") to StyleType.STRIKETHROUGH,
+            Pattern.compile("\\*(.*?)\\*") to StyleType.ITALIC,
+            Pattern.compile("_(.*?)_") to StyleType.UNDERLINE,
+            Pattern.compile("`(.+?)`") to StyleType.HIGHLIGHT,
+            Pattern.compile("^(#{1,5})\\s+(.+?)(?=\\n|$)", Pattern.MULTILINE) to StyleType.HEADING,
+            Pattern.compile("^>\\s+(.+?)(?=\\n|$)", Pattern.MULTILINE) to StyleType.QUOTE,
+            Pattern.compile("\\^(.*?)\\^") to StyleType.SUPERSCRIPT,
+            Pattern.compile("~(.*?)~") to StyleType.SUBSCRIPT,
+            Pattern.compile("\\{#([0-9a-fA-F]{6})\\}\\((.*?)\\)") to StyleType.TEXT_COLOR
+        )
+    }
 
     fun applyStyling(text: String, textView: TextView) {
         textView.movementMethod = LinkMovementMethod.getInstance()
         val ssb = SpannableStringBuilder(text)
 
         while (true) {
-            var lastMatch: StylingMatch? = null
+            var earliestMatch: StylingMatch? = null
 
             for ((pattern, type) in stylingRules) {
                 val matcher = pattern.matcher(ssb)
@@ -92,17 +84,16 @@ class TextStylingUtil(private val context: Context) {
                     if (ssb.getSpans(matcher.start(), matcher.end(), ProcessedSpan::class.java).isNotEmpty()) {
                         continue
                     }
-                    if (lastMatch == null || matcher.start() < lastMatch.result.start()) {
-                        lastMatch = StylingMatch(matcher.toMatchResult(), type)
+                    if (earliestMatch == null || matcher.start() < earliestMatch.result.start()) {
+                        earliestMatch = StylingMatch(matcher.toMatchResult(), type)
                     }
                 }
             }
 
-            val matchToProcess = lastMatch ?: break
-
+            val matchToProcess = earliestMatch ?: break
             val result = matchToProcess.result
             val start = result.start()
-            var end = result.end()
+            val end = result.end()
             var finalEnd = end
 
             when (matchToProcess.type) {
@@ -128,9 +119,7 @@ class TextStylingUtil(private val context: Context) {
                     val content = result.group(1)!!
                     ssb.replace(start, end, content)
                     finalEnd = start + content.length
-                    // Apply all three styles
-                    ssb.setSpan(StyleSpan(Typeface.BOLD), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    ssb.setSpan(StyleSpan(Typeface.ITALIC), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    ssb.setSpan(StyleSpan(Typeface.BOLD_ITALIC), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     ssb.setSpan(UnderlineSpan(), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
                 StyleType.STRIKETHROUGH -> {
@@ -143,33 +132,21 @@ class TextStylingUtil(private val context: Context) {
                     val content = result.group(1)!!
                     ssb.replace(start, end, content)
                     finalEnd = start + content.length
-                    ssb.setSpan(CodeBlockSpan(Color.parseColor("#E0E0E0"), 6f), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    ssb.setSpan(CodeBlockSpan(Color.parseColor(HIGHLIGHT_COLOR), 6f), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
                 StyleType.LINK -> {
                     val linkText = result.group(1)!!
                     val linkUrl = result.group(2)!!
                     ssb.replace(start, end, linkText)
                     finalEnd = start + linkText.length
-                    
-                    // Check if the link is inside bold text
-                    val existingSpans = ssb.getSpans(start, finalEnd, StyleSpan::class.java)
-                    val isBold = existingSpans.any { it.style == Typeface.BOLD }
-                    
                     if (Patterns.WEB_URL.matcher(linkUrl).matches()) {
-                        ssb.setSpan(LinkClickableSpan(linkUrl, context, isBold), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        ssb.setSpan(LinkClickableSpan(linkUrl, context), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     }
                 }
                 StyleType.HEADING -> {
                     val headingText = result.group(2)!!
                     val headingLevel = result.group(1)!!.length
-                    val size = when (headingLevel) {
-                        1 -> 1.5f
-                        2 -> 1.4f
-                        3 -> 1.3f
-                        4 -> 1.2f
-                        5 -> 1.1f
-                        else -> 1.0f
-                    }
+                    val size = 2.0f - (headingLevel * 0.2f)
                     ssb.replace(start, end, headingText)
                     finalEnd = start + headingText.length
                     ssb.setSpan(RelativeSizeSpan(size), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -205,19 +182,19 @@ class TextStylingUtil(private val context: Context) {
                         val color = Color.parseColor("#$colorString")
                         ssb.setSpan(ForegroundColorSpan(color), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     } catch (e: IllegalArgumentException) {
-                        Log.w("TextStylingUtil", "Invalid hex color: #$colorString")
+                        Log.w(TAG, "Invalid hex color: #$colorString")
                     }
                 }
                 StyleType.MENTION_HASHTAG -> {
-                    val fullMatch = result.group(0)!!
+                    finalEnd = end
                     val symbol = result.group(1)!!
-                    val span = if (symbol == "@") ProfileSpan(context, fullMatch) else HashtagSpan(fullMatch)
+                    val span = if (symbol == "@") ProfileSpan(context, result) else HashtagSpan(result)
                     ssb.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
             ssb.setSpan(ProcessedSpan(), start, finalEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
-        
+
         ssb.getSpans(0, ssb.length, ProcessedSpan::class.java).forEach { ssb.removeSpan(it) }
         textView.text = ssb
     }
@@ -225,9 +202,8 @@ class TextStylingUtil(private val context: Context) {
     private class CodeBlockSpan(
         private val backgroundColor: Int,
         private val cornerRadius: Float,
-        private val padding: Int = 6
+        private val padding: Int = 12
     ) : LineBackgroundSpan {
-        
         private val rect = RectF()
         private val paint = Paint().apply {
             color = backgroundColor
@@ -235,92 +211,78 @@ class TextStylingUtil(private val context: Context) {
             isAntiAlias = true
         }
 
-        override fun drawBackground(
-            c: Canvas, p: Paint, left: Int, right: Int, top: Int, baseline: Int, bottom: Int,
-            text: CharSequence, start: Int, end: Int, lnum: Int
-        ) {
+        override fun drawBackground(c: Canvas, p: Paint, left: Int, right: Int, top: Int, baseline: Int, bottom: Int, text: CharSequence, start: Int, end: Int, lnum: Int) {
             val textWidth = p.measureText(text, start, end)
-            rect.set(
-                left.toFloat() - padding,
-                top.toFloat(),
-                left.toFloat() + textWidth + padding,
-                bottom.toFloat()
-            )
-
-            // Only round corners for single-line blocks
-            val isSingleLine = lnum == 0 && (end - start == text.length)
-            if (isSingleLine) {
-                c.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
-            } else {
-                c.drawRect(rect, paint)
-            }
+            rect.set(left.toFloat() - padding, top.toFloat(), left.toFloat() + textWidth + padding, bottom.toFloat())
+            c.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
         }
     }
 
-    private class LinkClickableSpan(
-        private val url: String,
-        private val context: Context,
-        private val preserveBold: Boolean = false
-    ) : ClickableSpan() {
-
+    private class LinkClickableSpan(private val url: String, private val context: Context) : ClickableSpan() {
         override fun onClick(view: View) {
             try {
-                CustomTabsIntent.Builder()
-                    .build()
-                    .launchUrl(context, Uri.parse(url))
+                CustomTabsIntent.Builder().build().launchUrl(context, Uri.parse(url))
             } catch (e: Exception) {
+                Log.e(TAG, "Failed to open URL with Custom Tabs. Falling back.", e)
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                 if (intent.resolveActivity(context.packageManager) != null) {
                     context.startActivity(intent)
                 } else {
-                    Log.e("LinkClickableSpan", "No activity found for URL: $url")
+                    Log.e(TAG, "No activity found to handle URL: $url")
                 }
             }
         }
 
         override fun updateDrawState(ds: TextPaint) {
-            ds.color = Color.parseColor("#445E91")
+            ds.color = Color.parseColor(LINK_COLOR)
             ds.isUnderlineText = true
-            if (preserveBold) {
-                ds.typeface = Typeface.create(ds.typeface, Typeface.BOLD)
-            }
         }
     }
 
-    private class ProfileSpan(private val context: Context, private val handle: String) : ClickableSpan() {
+    private class ProfileSpan(private val context: Context, private val matchResult: MatchResult) : ClickableSpan() {
         override fun onClick(view: View) {
-            val username = handle.substring(1)
-            val db = FirebaseDatabase.getInstance().getReference("synapse/username").child(username)
+            val rawUsername = matchResult.group(2) ?: return
+
+            val sanitizedUsername = rawUsername.replace(".", "_")
+                .replace("#", "").replace("$", "")
+                .replace("[", "").replace("]", "")
+
+            if (sanitizedUsername.isBlank()) {
+                Log.w(TAG, "Sanitized username is blank for original mention: '${matchResult.group(0)}'")
+                return
+            }
+
+            val db = FirebaseDatabase.getInstance().getReference("synapse/username").child(sanitizedUsername)
             db.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val uid = snapshot.child("uid").getValue(String::class.java)
                     if (uid != null && uid != "null") {
-                        context.startActivity(
-                            Intent(context, ProfileActivity::class.java)
-                                .putExtra("uid", uid)
-                        )
+                        context.startActivity(Intent(context, ProfileActivity::class.java).putExtra("uid", uid))
+                    } else {
+                        Log.d(TAG, "UID not found for sanitized username: '$sanitizedUsername' (from '${matchResult.group(0)}')")
                     }
                 }
                 override fun onCancelled(error: DatabaseError) {
-                    Log.e("ProfileSpan", "Database error", error.toException())
+                    Log.e(TAG, "DB error for username: '$sanitizedUsername'", error.toException())
                 }
             })
         }
 
         override fun updateDrawState(ds: TextPaint) {
-            ds.color = Color.parseColor("#445E91")
+            ds.color = Color.parseColor(MENTION_HASHTAG_COLOR)
             ds.isUnderlineText = false
-            ds.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            ds.typeface = Typeface.create(ds.typeface, Typeface.BOLD)
         }
     }
 
-    private class HashtagSpan(private val hashtag: String) : ClickableSpan() {
+    private class HashtagSpan(private val matchResult: MatchResult) : ClickableSpan() {
         override fun onClick(view: View) {
-            Log.d("HashtagSpan", "Clicked: $hashtag")
+            val hashtagContent = matchResult.group(2) ?: return
+            Log.d(TAG, "Hashtag clicked: #$hashtagContent")
         }
 
         override fun updateDrawState(ds: TextPaint) {
-            ds.color = Color.parseColor("#445E91")
+            ds.color = Color.parseColor(MENTION_HASHTAG_COLOR)
             ds.isUnderlineText = false
             ds.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         }
