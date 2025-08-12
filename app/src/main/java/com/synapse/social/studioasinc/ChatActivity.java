@@ -2382,7 +2382,17 @@ _textview_mh(message_text, _data.get((int)_position).get("message_text").toStrin
 			notificationContent.put("headings", new JSONObject().put("en", FirstUserName));
 			notificationContent.put("contents", new JSONObject().put("en", message));
 
-			com.onesignal.OneSignal.postNotification(notificationContent, null);
+			com.onesignal.OneSignal.postNotification(notificationContent, new com.onesignal.OneSignal.PostNotificationResponseHandler() {
+				@Override
+				public void onSuccess(JSONObject response) {
+					android.util.Log.i("OneSignalExample", "postNotification Success: " + response.toString());
+				}
+
+				@Override
+				public void onFailure(JSONObject response) {
+					android.util.Log.e("OneSignalExample", "postNotification Failure: " + response.toString());
+				}
+			});
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
