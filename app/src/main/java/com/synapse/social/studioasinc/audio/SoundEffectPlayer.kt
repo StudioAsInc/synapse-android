@@ -22,7 +22,9 @@ class SoundEffectPlayer(private val context: Context) {  // Code by Ashik from S
                 .setAudioAttributes(audioAttributes)
                 .build()
         } else {
-            SoundPool(5, android.media.AudioManager.STREAM_MUSIC, 0)
+            SoundPool.Builder()
+                .setMaxStreams(5)
+                .build()
         }
     }
 
