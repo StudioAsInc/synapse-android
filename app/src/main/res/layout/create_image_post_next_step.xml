@@ -10,7 +10,7 @@
 		android:id="@+id/main"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="#FFFFFF"
+		android:background="?attr/colorSurface"
 		android:orientation="vertical">
 		<LinearLayout
 			android:id="@+id/top"
@@ -20,7 +20,7 @@
 			android:paddingTop="4dp"
 			android:paddingRight="8dp"
 			android:paddingBottom="4dp"
-			android:background="#FFFFFF"
+			android:background="?attr/colorSurface"
 			android:gravity="center_vertical"
 			android:orientation="horizontal"
 			android:elevation="1dp">
@@ -47,7 +47,7 @@
 					android:text="Create a post"
 					android:textSize="20sp"
 					android:textStyle="bold"
-					android:textColor="#000000" />
+					android:textColor="?attr/colorOnSurface" />
 			</LinearLayout>
 			<Button
 				android:id="@+id/continueButton"
@@ -59,7 +59,7 @@
 				android:paddingBottom="8dp"
 				android:text="@string/continue_button"
 				android:textSize="18sp"
-				android:textColor="@color/colorSurface"
+				android:textColor="?attr/colorOnPrimary"
 				style="@style/Widget.Material3.Button" />
 		</LinearLayout>
 		<LinearLayout
@@ -67,7 +67,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="1dp"
 			android:padding="8dp"
-			android:background="#F5F5F5"
+			android:background="?attr/colorSurfaceVariant"
 			android:orientation="horizontal" />
 		<ScrollView
 			android:id="@+id/scroll"
@@ -105,11 +105,11 @@
 						android:layout_marginRight="16dp"
 						android:layout_marginBottom="16dp"
 						android:padding="16dp"
-						android:background="#F5F5F5"
+						android:background="?attr/colorSurfaceVariant"
 						android:textSize="18sp"
-						android:textColor="#000000"
+						android:textColor="?attr/colorOnSurface"
 						android:hint="Write something about this photo"
-						android:textColorHint="#757575"
+						android:textColorHint="?attr/colorOnSurfaceVariant"
 						android:layout_weight="1"
 						android:maxLength="2500" />
 				</LinearLayout>
@@ -124,7 +124,7 @@
 					android:layout_width="match_parent"
 					android:layout_height="1dp"
 					android:padding="8dp"
-					android:background="#ECEFF1"
+					android:background="?attr/colorOutline"
 					android:orientation="horizontal" />
 				<LinearLayout
 					android:id="@+id/post_settings_statistics"
@@ -148,7 +148,7 @@
 							android:text="Statistics settings"
 							android:textSize="18sp"
 							android:textStyle="bold"
-							android:textColor="#000000"
+							android:textColor="?attr/colorOnSurface"
 							android:layout_weight="1" />
 						<ImageView
 							android:id="@+id/post_settings_statistics_top_arrow"
@@ -180,7 +180,7 @@
 								android:gravity="left|center_vertical"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								tools:replace="android:text"
 								android:text="@string/hide_the_number_of_views"
 								android:clickable="false"
@@ -192,7 +192,7 @@
 								android:layout_height="wrap_content"
 								android:text="If enabled, the views count won't be\n shown on this post"
 								android:textSize="14sp"
-								android:textColor="#424242" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<LinearLayout
 							android:id="@+id/post_settings_statistics_hide_likes"
@@ -211,7 +211,7 @@
 								android:gravity="left|center_vertical"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								tools:replace="android:text"
 								android:text="@string/hide_the_number_of_likes"
 								android:clickable="false"
@@ -223,7 +223,7 @@
 								android:layout_height="wrap_content"
 								android:text="If enabled, Likes count won't be\nshown on this post"
 								android:textSize="14sp"
-								android:textColor="#424242" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<LinearLayout
 							android:id="@+id/post_settings_statistics_hide_comments"
@@ -242,7 +242,7 @@
 								android:gravity="left|center_vertical"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								tools:replace="android:text"
 								android:text="@string/hide_the_number_of_comments"
 								android:clickable="false"
@@ -254,7 +254,7 @@
 								android:layout_height="wrap_content"
 								android:text="If enabled, the number of comments\nwon't be shown on this post"
 								android:textSize="14sp"
-								android:textColor="#424242" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 					</LinearLayout>
 				</LinearLayout>
@@ -263,7 +263,7 @@
 					android:layout_width="match_parent"
 					android:layout_height="1dp"
 					android:padding="8dp"
-					android:background="#ECEFF1"
+					android:background="?attr/colorOutline"
 					android:orientation="horizontal" />
 				<LinearLayout
 					android:id="@+id/post_settings_privacy"
@@ -286,7 +286,7 @@
 							android:layout_height="wrap_content"
 							android:textSize="18sp"
 							android:textStyle="bold"
-							android:textColor="#000000"
+							android:textColor="?attr/colorOnSurface"
 							android:layout_weight="1"
 							tools:replace="android:text"
 							android:text="@string/privacy_settings" />
@@ -320,7 +320,7 @@
 								android:gravity="left|center_vertical"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								tools:replace="android:text"
 								android:text="@string/hide_post_from_everyone"
 								android:clickable="false"
@@ -332,7 +332,7 @@
 								android:layout_height="wrap_content"
 								android:text="Only you can see the post."
 								android:textSize="14sp"
-								android:textColor="#424242" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<LinearLayout
 							android:id="@+id/post_settings_privacy_disable_save"
@@ -351,7 +351,7 @@
 								android:gravity="left|center_vertical"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								tools:replace="android:text"
 								android:text="@string/disable_saving_to_favorites"
 								android:clickable="false"
@@ -362,7 +362,7 @@
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:textSize="14sp"
-								android:textColor="#424242"
+								android:textColor="?attr/colorOnSurfaceVariant"
 								tools:replace="android:text"
 								android:text="@string/disable_saving_to_favorites_subtitle" />
 						</LinearLayout>
@@ -383,7 +383,7 @@
 								android:gravity="left|center_vertical"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								tools:replace="android:text"
 								android:text="@string/disable_comments"
 								android:clickable="false"
@@ -394,7 +394,7 @@
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:textSize="14sp"
-								android:textColor="#424242"
+								android:textColor="?attr/colorOnSurfaceVariant"
 								tools:replace="android:text"
 								android:text="@string/disable_comments_subtitle" />
 						</LinearLayout>
@@ -405,7 +405,7 @@
 					android:layout_width="match_parent"
 					android:layout_height="1dp"
 					android:padding="8dp"
-					android:background="#ECEFF1"
+					android:background="?attr/colorOutline"
 					android:orientation="horizontal" />
 			</LinearLayout>
 		</ScrollView>

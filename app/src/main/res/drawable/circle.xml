@@ -8,7 +8,7 @@
 
         <corners android:radius="100dp"/>
 
-        <solid android:color="#212121"/>
+        <solid android:color="@color/drawable_surface"/>
 
     </shape>
 
@@ -22,7 +22,7 @@
 
             <corners android:radius="100dp"/>
 
-            <solid android:color="#CFE0FE"/>
+            <solid android:color="@color/drawable_primary"/>
 
         </shape>
 

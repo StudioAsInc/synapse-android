@@ -1,19 +1,10 @@
 <resources>
-    <color name="colorPrimary">#445E91</color>
-    <color name="colorPrimaryDark">#000000</color>
-    <color name="colorAccent">#445E91</color>
-    <color name="colorControlHighlight">#EEEEEE</color>
-    <color name="colorControlNormal">#EEEEEE</color>
-    <color name="colorBackground">#202125</color>
-    <color name="colorSurface">#445E91</color>
-    <color name="colorError">#CF6679</color>
-    <color name="colorOnPrimary">#000000</color>
-    <color name="colorOnSecondary">#000000</color>
-    <color name="colorOnBackground">#FFFFFF</color>
-    <color name="colorOnSurface">#FFFFFF</color>
-    <color name="colorOnError">#000000</color>
-    <color name="design_dark_default_color_background">#202125</color>
-    <color name="bars_colors">#2E2F33</color>
+    <color name="drawable_surface_variant">#4A4739</color>
+    <color name="drawable_surface">#15130B</color>
+    <color name="drawable_primary">#D9C76F</color>
+    <color name="drawable_outline">#969080</color>
+    <color name="drawable_primary_variant">#524600</color>
+    <color name="drawable_surface_transparent">#F215130B</color>
     <color name="md_theme_primary">#D9C76F</color>
     <color name="md_theme_onPrimary">#393000</color>
     <color name="md_theme_primaryContainer">#524600</color>

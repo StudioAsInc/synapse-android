@@ -2,5 +2,5 @@
 <!-- progress_bar_background.xml -->
    <shape xmlns:android="http://schemas.android.com/apk/res/android">
        <corners android:radius="999dp" /> <!-- Makes it capsule-shaped -->
-       <solid android:color="#F4FAFA" /> <!-- Color for the remaining part -->
+       <solid android:color="@color/drawable_surface_variant" /> <!-- Color for the remaining part -->
    </shape>
