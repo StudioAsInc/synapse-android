@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
 package com.synapse.social.studioasinc.animations.textview
 
 import android.animation.ValueAnimator
