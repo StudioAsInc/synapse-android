@@ -67,6 +67,9 @@ jobs:
         with:
           cache-disabled: true
 
+      - name: Print Android SDK Location
+        run: echo $ANDROID_HOME
+
       - name: Build Release APK
         env:
           SKETCHUB_API_KEY: ${{ secrets.SKETCHUB_API_KEY }}
@@ -132,6 +135,3 @@ jobs:
         run: |
           python ./.github/workflows/deploy_artifacts.py
         continue-on-error: true
-
-- name: Print Android SDK Location
-        run: echo $ANDROID_HOME
