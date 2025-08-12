@@ -1,0 +1,17 @@
+package com.synapse.social.studioasinc.fragments;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import androidx.fragment.app.Fragment;
+import com.synapse.social.studioasinc.R;
+
+public class ChannelsFragment extends Fragment {
+
+  @Override
+  public View onCreateView(
+      LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    return inflater.inflate(R.layout.fragment_channels, container, false);
+  }
+}
