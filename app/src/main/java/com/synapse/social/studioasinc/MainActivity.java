@@ -367,13 +367,13 @@ public class MainActivity extends AppCompatActivity {
                     public void onCancelled(@NonNull DatabaseError error) {
                         Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                         // Handle database error, redirect to AuthActivity
-                        startActivity(new Intent(MainActivity.this, AuthActivity.class));
+                        startActivity(new Intent(MainActivity.this, AuthenticationActivity.class));
                         finish();
                     }
                 });
             } else {
                 // User not logged in, redirect to AuthActivity
-                startActivity(new Intent(MainActivity.this, AuthActivity.class));
+                startActivity(new Intent(MainActivity.this, AuthenticationActivity.class));
                 finish();
             }
         }, 500); // 500ms delay
