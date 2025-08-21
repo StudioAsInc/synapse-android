@@ -1669,7 +1669,9 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onError(String error) {
 				Log.e("GeminiSummary", "Error: " + error);
-				Toast.makeText(getApplicationContext(), "Error getting summary: " + error, Toast.LENGTH_SHORT).show();
+				runOnUiThread(() -> {
+					Toast.makeText(getApplicationContext(), "Error getting summary: " + error, Toast.LENGTH_SHORT).show();
+				});
 			}
 
 			@Override
