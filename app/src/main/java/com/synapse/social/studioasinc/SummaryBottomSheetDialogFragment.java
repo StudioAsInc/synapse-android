@@ -36,7 +36,14 @@ public class SummaryBottomSheetDialogFragment extends BottomSheetDialogFragment 
         TVeffects summaryTextView = view.findViewById(R.id.summary_text);
         if (getArguments() != null) {
             String summaryText = getArguments().getString(ARG_SUMMARY_TEXT);
-            summaryTextView.startTyping(summaryText);
+            if (summaryText != null) {
+                // Calculate duration based on text length, clamped between 1s and 5s
+                long duration = (long) (summaryText.length() * 20); // 20ms per character
+                long clampedDuration = Math.max(1000, Math.min(duration, 5000));
+
+                summaryTextView.setTotalDuration(clampedDuration);
+                summaryTextView.startTyping(summaryText);
+            }
         }
     }
 }
