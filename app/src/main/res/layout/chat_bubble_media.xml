@@ -58,8 +58,8 @@
 						android:id="@+id/mediaGridLayout"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						app:columnCount="2"
-						app:useDefaultMargins="false">
+						android:columnCount="2"
+						android:useDefaultMargins="false">
 						<ImageView
 							android:id="@+id/imageGrid1"
 							android:focusable="false"
