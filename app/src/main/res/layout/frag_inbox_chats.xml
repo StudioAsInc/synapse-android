@@ -105,7 +105,8 @@
 		android:layout_marginBottom="160dp"
 		android:visibility="gone"
 		app:srcCompat="@drawable/ic_account_circle_48px"
-		app:tint="@android:color/white" />
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/fab_channel"
@@ -116,7 +117,8 @@
 		android:layout_marginBottom="230dp"
 		android:visibility="gone"
 		app:srcCompat="@drawable/ic_chat_48px"
-		app:tint="@android:color/white" />
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/fab_community"
@@ -127,7 +129,8 @@
 		android:layout_marginBottom="300dp"
 		android:visibility="gone"
 		app:srcCompat="@drawable/ic_account_circle_48px"
-		app:tint="@android:color/white" />
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/fab_create_group"
@@ -138,7 +141,8 @@
 		android:layout_marginBottom="370dp"
 		android:visibility="gone"
 		app:srcCompat="@drawable/ic_add_48px"
-		app:tint="@android:color/white" />
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/fab_main"
@@ -148,6 +152,7 @@
 		android:layout_gravity="bottom|end"
 		android:layout_margin="16dp"
 		app:srcCompat="@drawable/ic_add_48px"
-		app:tint="@android:color/white" />
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
