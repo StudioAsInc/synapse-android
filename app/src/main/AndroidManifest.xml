@@ -241,19 +241,6 @@
 				android:name="com.google.firebase.components:com.google.firebase.storage.StorageRegistrar"
 				android:value="com.google.firebase.components.ComponentRegistrar" />
 		</service>
-        <service
-            android:name=".service.FirebaseService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@mipmap/ic_launcher" />
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/colorPrimary" />
 		<uses-library
 			android:name="org.apache.http.legacy"
 			android:required="false" />

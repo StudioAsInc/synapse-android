@@ -1,7 +1,6 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
     //id 'com.google.firebase.firebase-perf'
 }
@@ -52,6 +51,7 @@ android {
         versionCode = 11
         versionName = "1.0.0-alpha05"
         multiDexEnabled = true
+        buildConfigField "String", "ONESIGNAL_APP_ID", "\"73f4e224-823c-4613-8534-7ce5b5459424\""
 
         vectorDrawables.useSupportLibrary = true
 
@@ -106,7 +106,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-perf-ktx:21.0.5'
     implementation 'com.google.firebase:firebase-crashlytics-ktx:19.4.4'
     implementation 'com.google.firebase:firebase-analytics-ktx:22.5.0'
-    implementation 'com.google.firebase:firebase-messaging-ktx:24.0.0'
+    implementation 'com.onesignal:OneSignal:[5.0.0, 5.99.99]'
 
     // AndroidX Core & UI Components
     implementation 'androidx.core:core-ktx:1.17.0-rc01'

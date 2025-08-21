@@ -84,7 +84,6 @@ import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
 import com.synapse.social.studioasinc.StorageUtil;
 import com.synapse.social.studioasinc.UploadFiles;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -92,6 +91,11 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import org.json.JSONObject;
 
 
 public class ChatActivity extends AppCompatActivity {
@@ -1306,7 +1310,7 @@ public class ChatActivity extends AppCompatActivity {
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 				_updateInbox(lastMessage);
-
+				_sendPushNotification(getIntent().getStringExtra(UID_KEY), lastMessage, FirstUserName);
 				attactmentmap.clear();
 				rv_attacmentList.getAdapter().notifyDataSetChanged();
 				attachmentLayoutListHolder.setVisibility(View.GONE);
@@ -1343,11 +1347,35 @@ public class ChatActivity extends AppCompatActivity {
 			.updateChildren(ChatSendMap);
 
 			_updateInbox(messageText);
-
+			_sendPushNotification(getIntent().getStringExtra(UID_KEY), messageText, FirstUserName);
 			message_et.setText("");
 			ReplyMessageID = "null";
 			mMessageReplyLayout.setVisibility(View.GONE);
 		}
+	}
+
+	private void _sendPushNotification(String recipientId, String message, String senderName) {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					OkHttpClient client = new OkHttpClient();
+					MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+					JSONObject jsonBody = new JSONObject();
+					jsonBody.put("recipientId", recipientId);
+					jsonBody.put("message", message);
+					jsonBody.put("senderName", senderName);
+					RequestBody body = RequestBody.create(JSON, jsonBody.toString());
+					Request request = new Request.Builder()
+							.url("https://notification-worker.synapse-social.workers.dev")
+							.post(body)
+							.build();
+					client.newCall(request).execute();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
 	}
 
 

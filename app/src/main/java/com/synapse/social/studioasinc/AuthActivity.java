@@ -35,6 +35,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.onesignal.OneSignal;
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
 import com.synapse.social.studioasinc.animations.textview.TVeffects;
 
@@ -284,7 +285,7 @@ public class AuthActivity extends AppCompatActivity {
         aiNameTextView.setTotalDuration(300L);
         aiNameTextView.setFadeDuration(150L);
         aiNameTextView.startTyping("Creating your account...");
-
+        OneSignal.login(fauth.getCurrentUser().getUid());
         Intent intent = new Intent(AuthActivity.this, CompleteProfileActivity.class);
         startActivity(intent);
         finish();
@@ -312,6 +313,7 @@ public class AuthActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     FirebaseUser user = fauth.getCurrentUser();
                     if (user != null) {
+                        OneSignal.login(user.getUid());
                         fetchUsername(user.getUid());
                     }
                 } else {
