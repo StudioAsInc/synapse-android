@@ -134,7 +134,8 @@ import android.text.method.ScrollingMovementMethod;
 
 // Add this import statement at the top of your Activity's logic
 import com.synapse.social.studioasinc.StorageUtil;
-import com.synapse.social.studioasinc.FasterCloudinaryUploader;
+import com.synapse.social.studioasinc.FasterCloudinaryUploader;
+
 
 public class ChatActivity extends AppCompatActivity {
 	
@@ -171,6 +172,7 @@ public class ChatActivity extends AppCompatActivity {
 	private String promt = "";
 	public final int REQ_CD_IMAGE_PICKER = 101;
 	private ChatAdapter chatAdapter;
+	private boolean isLoading = false;
 	
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
@@ -217,7 +219,7 @@ public class ChatActivity extends AppCompatActivity {
 	private LinearLayout toolContainer;
 	private ImageView expand_send_type_btn;
 	private LinearLayout devider_mic_camera;
-	private ImageView gallery_btn;
+	private ImageView galleryBtn;
 	
 	private Intent intent = new Intent();
 	private DatabaseReference main = _firebase.getReference("skyline");
@@ -319,7 +321,7 @@ public class ChatActivity extends AppCompatActivity {
 		toolContainer = findViewById(R.id.toolContainer);
 		expand_send_type_btn = findViewById(R.id.expand_send_type_btn);
 		devider_mic_camera = findViewById(R.id.devider_mic_camera);
-		gallery_btn = findViewById(R.id.gallery_btn);
+		galleryBtn = findViewById(R.id.galleryBtn);
 		auth = FirebaseAuth.getInstance();
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		blocked = getSharedPreferences("block", Activity.MODE_PRIVATE);
@@ -511,7 +513,7 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 		
-		gallery_btn.setOnClickListener(new View.OnClickListener() {
+		galleryBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				StorageUtil.pickMultipleFiles(ChatActivity.this, "*/*", REQ_CD_IMAGE_PICKER);
@@ -860,6 +862,20 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 			message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
 			
 		}
+		ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+			@Override
+			public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+				super.onScrolled(recyclerView, dx, dy);
+				LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+				if (dy < 0) { //check for scroll up
+					if (layoutManager != null && layoutManager.findFirstVisibleItemPosition() == 0) {
+						if (!isLoading) {
+							_getOldChatMessagesRef();
+						}
+					}
+				}
+			}
+		});
 	}
 	
 	@Override
@@ -992,7 +1008,8 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 	
 	
 	public void _messageOverviewPopup(final View _view, final double _position, final ArrayList<HashMap<String, Object>> _data) {
-		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
+		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
+
 		final PopupWindow pop1 = new PopupWindow(pop1V, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
 		pop1.setFocusable(true);
 		pop1.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
@@ -1073,7 +1090,8 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 				MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(ChatActivity.this);
 				Dialogs.setTitle("Edit message");
 				View EdittextDesign = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
-				Dialogs.setView(EdittextDesign);
+				Dialogs.setView(EdittextDesign);
+
 				final EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
 				final TextInputLayout textinputlayout1 = EdittextDesign.findViewById(R.id.textinputlayout1);
 				edittext1.setFocusableInTouchMode(true);
@@ -1409,10 +1427,16 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 	
 	
 	public void _getOldChatMessagesRef() {
+		isLoading = true;
 		ChatMessagesLimit = ChatMessagesLimit + 80;
 		_showLoadMoreIndicator();
 		
-		Query getChatsMessages = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).limitToLast((int)ChatMessagesLimit);
+		Query getChatsMessages = FirebaseDatabase.getInstance()
+		.getReference("skyline/chats")
+		.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+		.child(getIntent().getStringExtra("uid"))
+		.limitToLast((int)ChatMessagesLimit);
+		
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -1420,17 +1444,21 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 				if(dataSnapshot.exists()) {
 					ChatMessagesList.clear();
 					try {
-						GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+						GenericTypeIndicator<HashMap<String, Object>> _ind = 
+						new GenericTypeIndicator<HashMap<String, Object>>() {};
 						for (DataSnapshot _data : dataSnapshot.getChildren()) {
 							ChatMessagesList.add(_data.getValue(_ind));
 						}
 					} catch (Exception _e) {}
 					((ChatAdapter)chatAdapter).notifyDataSetChanged();
 				}
+				isLoading = false;
 			}
+			
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				_hideLoadMoreIndicator();
+				isLoading = false;
 			}
 		});
 	}
@@ -2279,4 +2307,4 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			}
 		}
 	}
-}
+}
