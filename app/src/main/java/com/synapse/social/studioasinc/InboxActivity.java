@@ -48,7 +48,7 @@ import java.util.regex.*;
 import org.json.*;
 
 public class InboxActivity extends AppCompatActivity {
-	
+
 	private LinearLayout parentLayout;
 	private LinearLayout appBar;
 	private LinearLayout contentHolderLayout;
@@ -59,10 +59,10 @@ public class InboxActivity extends AppCompatActivity {
 	private ImageView imageview2;
 	private ViewPager viewpager1;
 	private BottomNavigationView bottomnavigation1;
-	
+
 	private FgFragmentAdapter fg;
 	private Intent intent = new Intent();
-	
+
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
@@ -71,7 +71,7 @@ public class InboxActivity extends AppCompatActivity {
 		FirebaseApp.initializeApp(this);
 		initializeLogic();
 	}
-	
+
 	private void initialize(Bundle _savedInstanceState) {
 		parentLayout = findViewById(R.id.parentLayout);
 		appBar = findViewById(R.id.appBar);
@@ -84,24 +84,24 @@ public class InboxActivity extends AppCompatActivity {
 		viewpager1 = findViewById(R.id.viewpager1);
 		bottomnavigation1 = findViewById(R.id.bottomnavigation1);
 		fg = new FgFragmentAdapter(getApplicationContext(), getSupportFragmentManager());
-		
+
 		viewpager1.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 			@Override
 			public void onPageScrolled(int _position, float _positionOffset, int _positionOffsetPixels) {
-				
+
 			}
-			
+
 			@Override
 			public void onPageSelected(int _position) {
 				bottomnavigation1.getMenu().getItem(_position).setChecked(true);
 			}
-			
+
 			@Override
 			public void onPageScrollStateChanged(int _scrollState) {
-				
+
 			}
 		});
-		
+
 		bottomnavigation1.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
 			@Override
 			public boolean onNavigationItemSelected(MenuItem item) {
@@ -111,7 +111,7 @@ public class InboxActivity extends AppCompatActivity {
 			}
 		});
 	}
-	
+
 	private void initializeLogic() {
 		bottomnavigation1.getMenu().add(0, 0, 0, "Chats").setIcon(R.drawable.icon_message_round);
 		bottomnavigation1.getMenu().add(0, 1, 0, "Calls").setIcon(R.drawable.ic_call_48px);
@@ -120,33 +120,40 @@ public class InboxActivity extends AppCompatActivity {
 		viewpager1.setAdapter(fg);
 		viewpager1.setCurrentItem((int)0);
 	}
-	
+
+	public void openCreateGroupFragment() {
+		getSupportFragmentManager().beginTransaction()
+		.replace(R.id.contentHolderLayout, new CreateGroupFragment())
+		.addToBackStack(null)
+		.commit();
+	}
+
 	public class FgFragmentAdapter extends FragmentStatePagerAdapter {
 		// This class is deprecated, you should migrate to ViewPager2:
 		// https://developer.android.com/reference/androidx/viewpager2/widget/ViewPager2
 		Context context;
 		int tabCount;
-		
+
 		public FgFragmentAdapter(Context context, FragmentManager manager) {
 			super(manager);
 			this.context = context;
 		}
-		
+
 		public void setTabCount(int tabCount) {
 			this.tabCount = tabCount;
 		}
-		
+
 		@Override
 		public int getCount() {
 			return tabCount;
 		}
-		
+
 		@Override
 		public CharSequence getPageTitle(int _position) {
 			return "";
 		}
-		
-		
+
+
 		@Override
 		public Fragment getItem(int _position) {
 			switch (_position) {
@@ -184,13 +191,13 @@ return new UserprofileFragmentActivity();
 }
 */
 		}
-		
+
 	}
-	
+
 	@Override
 	public void onBackPressed() {
 		intent.setClass(getApplicationContext(), HomeActivity.class);
 		startActivity(intent);
 		finish();
 	}
-}
+}
