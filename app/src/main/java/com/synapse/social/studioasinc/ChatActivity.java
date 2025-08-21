@@ -1652,11 +1652,14 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void callGeminiForSummary(String prompt) {
-		gemini.setModel(GEMINI_MODEL);
-		gemini.setTone(GEMINI_TONE);
-		gemini.setShowThinking(true);
-		gemini.setSystemInstruction("You are a text summarizer. Provide a concise summary of the given text.");
-		gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+		Gemini summaryGemini = new Gemini.Builder(this)
+				.model(GEMINI_MODEL)
+				.tone(GEMINI_TONE)
+				.showThinking(true)
+				.systemInstruction("You are a text summarizer. Provide a concise summary of the given text.")
+				.build();
+
+		summaryGemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
 				SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response);

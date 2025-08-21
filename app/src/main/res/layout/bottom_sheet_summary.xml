@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <TextView
+        <com.synapse.social.studioasinc.animations.textview.TVeffects
             android:id="@+id/summary_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

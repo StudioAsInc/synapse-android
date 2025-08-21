@@ -4,12 +4,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.synapse.social.studioasinc.animations.textview.TVeffects;
 
 public class SummaryBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
@@ -33,10 +33,10 @@ public class SummaryBottomSheetDialogFragment extends BottomSheetDialogFragment 
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        TextView summaryTextView = view.findViewById(R.id.summary_text);
+        TVeffects summaryTextView = view.findViewById(R.id.summary_text);
         if (getArguments() != null) {
             String summaryText = getArguments().getString(ARG_SUMMARY_TEXT);
-            summaryTextView.setText(summaryText);
+            summaryTextView.startTyping(summaryText);
         }
     }
 }
