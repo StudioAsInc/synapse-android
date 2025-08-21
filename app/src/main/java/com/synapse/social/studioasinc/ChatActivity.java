@@ -321,7 +321,7 @@ public class ChatActivity extends AppCompatActivity {
 		toolContainer = findViewById(R.id.toolContainer);
 		expand_send_type_btn = findViewById(R.id.expand_send_type_btn);
 		devider_mic_camera = findViewById(R.id.devider_mic_camera);
-		galleryBtn = findViewById(R.id.galleryBtn);
+		galleryBtn = findViewById(R.id.gallery_btn);
 		auth = FirebaseAuth.getInstance();
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		blocked = getSharedPreferences("block", Activity.MODE_PRIVATE);
