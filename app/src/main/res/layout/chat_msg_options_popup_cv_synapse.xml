@@ -182,6 +182,35 @@
 							android:text="@string/m_reply" />
 					</LinearLayout>
 					<LinearLayout
+						android:id="@+id/summary"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:paddingLeft="8dp"
+						android:paddingTop="6dp"
+						android:paddingRight="8dp"
+						android:paddingBottom="6dp"
+						android:background="#FFFFFF"
+						android:gravity="center_vertical"
+						android:orientation="horizontal">
+						<ImageView
+							android:id="@+id/summary_icon"
+							android:focusable="false"
+							android:layout_width="38dp"
+							android:layout_height="38dp"
+							android:padding="8dp"
+							android:src="@drawable/ic_edit_note_48px"
+							android:scaleType="fitCenter" />
+						<TextView
+							android:id="@+id/summary_title"
+							android:focusable="false"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:padding="8dp"
+							android:text="Summary"
+							android:textSize="20sp"
+							android:textColor="#000000" />
+					</LinearLayout>
+					<LinearLayout
 						android:id="@+id/copy"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"

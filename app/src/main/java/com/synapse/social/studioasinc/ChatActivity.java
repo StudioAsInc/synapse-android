@@ -621,6 +621,7 @@ public class ChatActivity extends AppCompatActivity {
 		final LinearLayout main = pop1V.findViewById(R.id.main);
 		final LinearLayout edit = pop1V.findViewById(R.id.edit);
 		final LinearLayout reply = pop1V.findViewById(R.id.reply);
+		final LinearLayout summary = pop1V.findViewById(R.id.summary);
 		final LinearLayout copy = pop1V.findViewById(R.id.copy);
 		final LinearLayout delete = pop1V.findViewById(R.id.delete);
 		pop1.setAnimationStyle(android.R.style.Animation_Dialog);
@@ -650,6 +651,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 		_viewGraphics(edit, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(reply, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
+		_viewGraphics(summary, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(copy, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(delete, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		main.setOnClickListener(new View.OnClickListener() {
@@ -670,6 +672,15 @@ public class ChatActivity extends AppCompatActivity {
 				mMessageReplyLayoutBodyRightMessage.setText(_data.get((int)_position).get(MESSAGE_TEXT_KEY).toString());
 				mMessageReplyLayout.setVisibility(View.VISIBLE);
 				vbr.vibrate((long)(48));
+				pop1.dismiss();
+			}
+		});
+		summary.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				String messageText = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
+				String prompt = "Summarize the following text in a few sentences:\n\n" + messageText;
+				callGeminiForSummary(prompt);
 				pop1.dismiss();
 			}
 		});
@@ -1636,6 +1647,31 @@ public class ChatActivity extends AppCompatActivity {
 				if (showThinking) {
 					runOnUiThread(() -> message_et.setText(gemini.getThinkingText()));
 				}
+			}
+		});
+	}
+
+	private void callGeminiForSummary(String prompt) {
+		gemini.setModel(GEMINI_MODEL);
+		gemini.setTone(GEMINI_TONE);
+		gemini.setShowThinking(true);
+		gemini.setSystemInstruction("You are a text summarizer. Provide a concise summary of the given text.");
+		gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+			@Override
+			public void onSuccess(String response) {
+				SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response);
+				bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
+			}
+
+			@Override
+			public void onError(String error) {
+				Log.e("GeminiSummary", "Error: " + error);
+				Toast.makeText(getApplicationContext(), "Error getting summary: " + error, Toast.LENGTH_SHORT).show();
+			}
+
+			@Override
+			public void onThinking() {
+				// Can show a loading indicator here
 			}
 		});
 	}
