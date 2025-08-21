@@ -134,7 +134,7 @@ import android.text.method.ScrollingMovementMethod;
 
 // Add this import statement at the top of your Activity's logic
 import com.synapse.social.studioasinc.StorageUtil;
-import com.synapse.social.studioasinc.FasterCloudinaryUploader;
+import com.synapse.social.studioasinc.UploadFiles;
 
 
 public class ChatActivity extends AppCompatActivity {
@@ -321,7 +321,7 @@ public class ChatActivity extends AppCompatActivity {
 		toolContainer = findViewById(R.id.toolContainer);
 		expand_send_type_btn = findViewById(R.id.expand_send_type_btn);
 		devider_mic_camera = findViewById(R.id.devider_mic_camera);
-		galleryBtn = findViewById(R.id.gallery_btn);
+		galleryBtn = findViewById(R.id.galleryBtn);
 		auth = FirebaseAuth.getInstance();
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		blocked = getSharedPreferences("block", Activity.MODE_PRIVATE);
@@ -2024,18 +2024,18 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 		String filePath = itemMap.get("localPath").toString();
 		File file = new File(filePath);
 
-		FasterCloudinaryUploader.uploadFile(filePath, file.getName(), new FasterCloudinaryUploader.UploadCallback() {
+		UploadFiles.uploadFile(filePath, file.getName(), new UploadFiles.UploadCallback() {
 			@Override
 			public void onProgress(int percent) {
 				attactmentmap.get(itemPosition).put("uploadProgress", (double) percent);
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			}
 			@Override
-			public void onSuccess(String url, String publicIdWithType) {
+			public void onSuccess(String url, String publicId) {
 				HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
 				mapToUpdate.put("uploadState", "success");
-				mapToUpdate.put("cloudinaryUrl", url);
-				mapToUpdate.put("publicId", publicIdWithType);
+				mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
+				mapToUpdate.put("publicId", publicId);
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 
 				// Set the URL to the 'path' variable instead of message_et
@@ -2344,7 +2344,7 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 
 					if (currentItemData.containsKey("publicId")) {
 						String publicId = currentItemData.get("publicId").toString();
-						FasterCloudinaryUploader.deleteByPublicId(publicId, new FasterCloudinaryUploader.DeleteCallback() {
+						UploadFiles.deleteByPublicId(publicId, new UploadFiles.DeleteCallback() {
 							@Override public void onSuccess() {}
 							@Override public void onFailure(String error) {}
 						});
