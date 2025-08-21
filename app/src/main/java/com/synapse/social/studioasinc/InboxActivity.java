@@ -121,13 +121,6 @@ public class InboxActivity extends AppCompatActivity {
 		viewpager1.setCurrentItem((int)0);
 	}
 
-	public void openCreateGroupFragment() {
-		getSupportFragmentManager().beginTransaction()
-		.replace(R.id.contentHolderLayout, new CreateGroupFragment())
-		.addToBackStack(null)
-		.commit();
-	}
-
 	public class FgFragmentAdapter extends FragmentStatePagerAdapter {
 		// This class is deprecated, you should migrate to ViewPager2:
 		// https://developer.android.com/reference/androidx/viewpager2/widget/ViewPager2

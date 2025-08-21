@@ -159,7 +159,8 @@ public class FragInboxChatsActivity extends Fragment {
 		fab_create_group.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				((InboxActivity)getActivity()).openCreateGroupFragment();
+				Intent intent = new Intent(getActivity(), CreateGroupActivity.class);
+				startActivity(intent);
 			}
 		});
 
