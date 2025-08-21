@@ -390,14 +390,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
     
     private void bindLoadingViewHolder(LoadingViewHolder holder, int position) {
-        if (chatActivity != null) {
-            Toast.makeText(chatActivity, "Loading older messages...", Toast.LENGTH_SHORT).show();
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (chatActivity != null) {
-                    chatActivity._getOldChatMessagesRef();
-                }
-            }, 300);
-        }
+        // The progress bar is displayed, and the loading is handled by the
+        // scroll listener in ChatActivity. No action needed here.
     }
 
     private int dpToPx(int dp) {
