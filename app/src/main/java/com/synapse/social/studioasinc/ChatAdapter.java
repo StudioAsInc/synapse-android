@@ -372,8 +372,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText(linkData.description);
                         if (holder.linkPreviewDomain != null) holder.linkPreviewDomain.setText(linkData.domain);
                         if (linkData.imageUrl != null && !linkData.imageUrl.isEmpty() && holder.linkPreviewImage != null) {
-                            Glide.with(_context).load(linkData.imageUrl).into(holder.linkPreviewImage);
-                            holder.linkPreviewImage.setVisibility(View.VISIBLE);
+                            if (chatActivity != null && !chatActivity.isDestroyed()) {
+                                Glide.with(chatActivity).load(linkData.imageUrl).into(holder.linkPreviewImage);
+                                holder.linkPreviewImage.setVisibility(View.VISIBLE);
+                            }
                         }
                     }
                 }
