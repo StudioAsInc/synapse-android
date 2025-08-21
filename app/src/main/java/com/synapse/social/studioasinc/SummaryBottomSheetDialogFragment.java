@@ -38,6 +38,7 @@ public class SummaryBottomSheetDialogFragment extends BottomSheetDialogFragment 
             String summaryText = getArguments().getString(ARG_SUMMARY_TEXT);
             if (summaryText != null) {
                 summaryTextView.setCharDelay(30);
+
                 summaryTextView.startTyping(summaryText);
             }
         }
