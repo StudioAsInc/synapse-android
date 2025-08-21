@@ -45,7 +45,7 @@ Synapse uses a [custom open-source license](LICENSE.md) designed to:
 
 ---
 
-## 🛠️ Tech Stack  
+## 🛠️ Tech Stacks
 **Frontend**: Kotlin/Java (Android), HTML/CSS (Web)  
 **Backend**: Node.js, Firebase (Storage)  
 **Key Features**:  
