@@ -134,18 +134,17 @@ import android.text.method.ScrollingMovementMethod;
 
 // Add this import statement at the top of your Activity's logic
 import com.synapse.social.studioasinc.StorageUtil;
-import com.synapse.social.studioasinc.FasterCloudinaryUploader;
+import com.synapse.social.studioasinc.UploadFiles;
 
 
 public class ChatActivity extends AppCompatActivity {
-	
+
 	private Timer _timer = new Timer();
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
 	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
-	
+
 	private ProgressDialog SynapseLoadingDialog;
 	private MediaRecorder AudioMessageRecorder;
-	private double ChatMessagesLimit = 0;
 	private HashMap<String, Object> ChatSendMap = new HashMap<>();
 	private HashMap<String, Object> ChatInboxSend = new HashMap<>();
 	private double recordMs = 0;
@@ -155,7 +154,8 @@ public class ChatActivity extends AppCompatActivity {
 	private String ReplyMessageID = "";
 	private String SecondUserName = "";
 	private String FirstUserName = "";
-	private int ChatInitialSize = 0;
+	private String oldestMessageKey = null;
+	private static final int CHAT_PAGE_SIZE = 80;
 	private String object_clicked = "";
 	private String handle = "";
 	private HashMap<String, Object> block = new HashMap<>();
@@ -173,11 +173,11 @@ public class ChatActivity extends AppCompatActivity {
 	public final int REQ_CD_IMAGE_PICKER = 101;
 	private ChatAdapter chatAdapter;
 	private boolean isLoading = false;
-	
+
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
 	private ArrayList<String> fp = new ArrayList<>();
-	
+
 	private LinearLayout parent;
 	private RelativeLayout relativelayout1;
 	private ImageView ivBGimage;
@@ -220,7 +220,7 @@ public class ChatActivity extends AppCompatActivity {
 	private ImageView expand_send_type_btn;
 	private LinearLayout devider_mic_camera;
 	private ImageView galleryBtn;
-	
+
 	private Intent intent = new Intent();
 	private DatabaseReference main = _firebase.getReference("skyline");
 	private ChildEventListener _main_child_listener;
@@ -256,21 +256,21 @@ public class ChatActivity extends AppCompatActivity {
 	private SharedPreferences appSettings;
 	private AlertDialog.Builder Dialogs;
 	private Gemini gemini;
-	
+
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
 		setContentView(R.layout.chat);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
-		
+
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
 		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
 			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);} else {
 			initializeLogic();
 		}
 	}
-	
+
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -278,7 +278,7 @@ public class ChatActivity extends AppCompatActivity {
 			initializeLogic();
 		}
 	}
-	
+
 	private void initialize(Bundle _savedInstanceState) {
 		parent = findViewById(R.id.parent);
 		relativelayout1 = findViewById(R.id.relativelayout1);
@@ -329,14 +329,14 @@ public class ChatActivity extends AppCompatActivity {
 		zorry = new AlertDialog.Builder(this);
 		appSettings = getSharedPreferences("appSettings", Activity.MODE_PRIVATE);
 		Dialogs = new AlertDialog.Builder(this);
-		
+
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				onBackPressed();
 			}
 		});
-		
+
 		topProfileLayout.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -345,7 +345,7 @@ public class ChatActivity extends AppCompatActivity {
 				startActivity(i);
 			}
 		});
-		
+
 		ic_video_call.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -354,7 +354,7 @@ public class ChatActivity extends AppCompatActivity {
 				startActivity(i);
 			}
 		});
-		
+
 		ic_audio_call.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -363,7 +363,7 @@ public class ChatActivity extends AppCompatActivity {
 				startActivity(i);
 			}
 		});
-		
+
 		ic_more.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -372,7 +372,7 @@ public class ChatActivity extends AppCompatActivity {
 				startActivity(i);
 			}
 		});
-		
+
 		mMessageReplyLayoutBodyCancel.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -381,14 +381,14 @@ public class ChatActivity extends AppCompatActivity {
 				vbr.vibrate((long)(48));
 			}
 		});
-		
+
 		message_input_outlined_round.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				message_et.requestFocus();
 			}
 		});
-		
+
 		btn_sendMessage.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View _view) {
@@ -402,7 +402,7 @@ public class ChatActivity extends AppCompatActivity {
 					"Preserve original formatting. Censor profanity by replacing letters with asterisks (e.g., s***t). " +
 					"Keep the language and tone of the input unless asked to change it."
 					);
-					
+
 					// Prepare prompt for grammar correction
 					String prompt = "Fix grammar, punctuation, and clarity without changing meaning. " +
 					"Preserve original formatting (line breaks, lists, markdown). " +
@@ -410,29 +410,29 @@ public class ChatActivity extends AppCompatActivity {
 					"Return ONLY the corrected RAW text.\n```"
 					.concat(message_et.getText().toString())
 					.concat("```");
-					
+
 					// Send prompt
 					gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
 						@Override
 						public void onSuccess(String response) {
 							runOnUiThread(() -> message_et.setText(response));
 						}
-						
+
 						@Override
 						public void onError(String error) {
 							runOnUiThread(() -> message_et.setText("Error: " + error));
 						}
-						
+
 						@Override
 						public void onThinking() {
 							runOnUiThread(() -> message_et.setText(gemini.getThinkingText()));
 						}
 					});
-					
+
 				} else {
 					// If message_et is empty → get text from reply layout and create a reply
 					String replyText = mMessageReplyLayoutBodyRightMessage.getText().toString();
-					
+
 					gemini.setModel("gemini-2.5-flash-lite");
 					gemini.setTone("normal");
 					gemini.setShowThinking(false);
@@ -441,7 +441,7 @@ public class ChatActivity extends AppCompatActivity {
 					"Preserve original formatting. Censor profanity by replacing letters with asterisks (e.g., s***t). " +
 					"Keep the language and tone of the input unless asked to change it."
 					);
-					
+
 					// Prepare prompt for reply generation
 					String prompt = "Read the message inside the backticks and write a natural, context-aware reply " +
 					"in the same language and tone. Keep it concise (1–3 short sentences). " +
@@ -449,18 +449,18 @@ public class ChatActivity extends AppCompatActivity {
 					"Output ONLY the reply text.\n```"
 					.concat(replyText)
 					.concat("```");
-					
+
 					gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
 						@Override
 						public void onSuccess(String response) {
 							runOnUiThread(() -> message_et.setText(response));
 						}
-						
+
 						@Override
 						public void onError(String error) {
 							runOnUiThread(() -> message_et.setText("Error: " + error));
 						}
-						
+
 						@Override
 						public void onThinking() {
 							runOnUiThread(() -> message_et.setText(gemini.getThinkingText()));
@@ -470,14 +470,14 @@ public class ChatActivity extends AppCompatActivity {
 				return true;
 			}
 		});
-		
+
 		btn_sendMessage.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				_send_btn();
 			}
 		});
-		
+
 		message_et.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
@@ -487,7 +487,7 @@ public class ChatActivity extends AppCompatActivity {
 					_setMargin(message_et, 0, 7, 0, 0);
 					FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
 					message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-					
+
 					_TransitionManager(message_input_overall_container, 125);
 					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
 				} else {
@@ -497,68 +497,68 @@ public class ChatActivity extends AppCompatActivity {
 					FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").updateChildren(typingSnd);
 					_TransitionManager(message_input_overall_container, 125);
 					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-					
+
 					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)60, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
 				}
 			}
-			
+
 			@Override
 			public void beforeTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-				
+
 			}
-			
+
 			@Override
 			public void afterTextChanged(Editable _param1) {
-				
+
 			}
 		});
-		
+
 		galleryBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				StorageUtil.pickMultipleFiles(ChatActivity.this, "*/*", REQ_CD_IMAGE_PICKER);
 			}
 		});
-		
+
 		_main_child_listener = new ChildEventListener() {
 			@Override
 			public void onChildAdded(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildChanged(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildMoved(DataSnapshot _param1, String _param2) {
-				
+
 			}
-			
+
 			@Override
 			public void onChildRemoved(DataSnapshot _param1) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError _param1) {
 				final int _errorCode = _param1.getCode();
 				final String _errorMessage = _param1.getMessage();
-				
+
 			}
 		};
 		main.addChildEventListener(_main_child_listener);
-		
+
 		_blocklist_child_listener = new ChildEventListener() {
 			@Override
 			public void onChildAdded(DataSnapshot _param1, String _param2) {
@@ -574,21 +574,21 @@ public class ChatActivity extends AppCompatActivity {
 						blocked_txt.setVisibility(View.GONE);
 					}
 				} else {
-					
+
 				}
 				if (_childKey.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 					if (_childValue.containsKey(getIntent().getStringExtra("uid"))) {
 						message_input_overall_container.setVisibility(View.GONE);
-						
+
 					} else {
 						message_input_overall_container.setVisibility(View.VISIBLE);
-						
+
 					}
 				} else {
-					
+
 				}
 			}
-			
+
 			@Override
 			public void onChildChanged(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
@@ -603,181 +603,180 @@ public class ChatActivity extends AppCompatActivity {
 						blocked_txt.setVisibility(View.GONE);
 					}
 				} else {
-					
+
 				}
 			}
-			
+
 			@Override
 			public void onChildMoved(DataSnapshot _param1, String _param2) {
-				
+
 			}
-			
+
 			@Override
 			public void onChildRemoved(DataSnapshot _param1) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError _param1) {
 				final int _errorCode = _param1.getCode();
 				final String _errorMessage = _param1.getMessage();
-				
+
 			}
 		};
 		blocklist.addChildEventListener(_blocklist_child_listener);
-		
+
 		_upload_selected_img_upload_progress_listener = new OnProgressListener<UploadTask.TaskSnapshot>() {
 			@Override
 			public void onProgress(UploadTask.TaskSnapshot _param1) {
 				double _progressValue = (100.0 * _param1.getBytesTransferred()) / _param1.getTotalByteCount();
-				
+
 			}
 		};
-		
+
 		_upload_selected_img_download_progress_listener = new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
 			@Override
 			public void onProgress(FileDownloadTask.TaskSnapshot _param1) {
 				double _progressValue = (100.0 * _param1.getBytesTransferred()) / _param1.getTotalByteCount();
-				
+
 			}
 		};
-		
+
 		_upload_selected_img_upload_success_listener = new OnCompleteListener<Uri>() {
 			@Override
 			public void onComplete(Task<Uri> _param1) {
 				final String _downloadUrl = _param1.getResult().toString();
-				
+
 			}
 		};
-		
+
 		_upload_selected_img_download_success_listener = new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
 			@Override
 			public void onSuccess(FileDownloadTask.TaskSnapshot _param1) {
 				final long _totalByteCount = _param1.getTotalByteCount();
-				
+
 			}
 		};
-		
+
 		_upload_selected_img_delete_success_listener = new OnSuccessListener() {
 			@Override
 			public void onSuccess(Object _param1) {
-				
+
 			}
 		};
-		
+
 		_upload_selected_img_failure_listener = new OnFailureListener() {
 			@Override
 			public void onFailure(Exception _param1) {
 				final String _message = _param1.getMessage();
-				
+
 			}
 		};
-		
+
 		auth_updateEmailListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_updatePasswordListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_emailVerificationSentListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_deleteUserListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_phoneAuthListener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> task) {
 				final boolean _success = task.isSuccessful();
 				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_updateProfileListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_googleSignInListener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> task) {
 				final boolean _success = task.isSuccessful();
 				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_create_user_listener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_sign_in_listener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_reset_password_listener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
-				
+
 			}
 		};
 	}
-	
+
 	private void initializeLogic() {
 		SecondUserAvatar = "null";
 		ReplyMessageID = "null";
 		path = "";
-		ChatMessagesLimit = 80;
 		block_switch = 0;
 		// Set the Layout Manager
 		LinearLayoutManager ChatRecyclerLayoutManager = new LinearLayoutManager(this);
 		ChatRecyclerLayoutManager.setReverseLayout(false);
 		ChatRecyclerLayoutManager.setStackFromEnd(true);
 		ChatMessagesListRecycler.setLayoutManager(ChatRecyclerLayoutManager);
-		
+
 		// Create, configure, and set the new ChatAdapter
 		chatAdapter = new ChatAdapter(ChatMessagesList);
 		chatAdapter.setChatActivity(this);
@@ -838,15 +837,15 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		.build();
 		_setupSwipeToReply();
 		// --- START: Critical Initialization for Attachment RecyclerView ---
-		
+
 		// 1. Create the adapter for the attachment list, passing it our empty list.
 		Rv_attacmentListAdapter attachmentAdapter = new Rv_attacmentListAdapter(attactmentmap);
 		rv_attacmentList.setAdapter(attachmentAdapter);
-		
+
 		// 2. A RecyclerView must have a LayoutManager to function.
 		//    We set it to a horizontal layout.
 		rv_attacmentList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-		
+
 		// --- END: Critical Initialization ---
 		_getUserReference();
 		toolContainer.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
@@ -856,11 +855,11 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		if (message_et.getText().toString().trim().equals("")) {
 			_TransitionManager(message_input_overall_container, 250);
 			message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-			
+
 		} else {
 			_TransitionManager(message_input_overall_container, 250);
 			message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-			
+
 		}
 		ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
 			@Override
@@ -877,7 +876,7 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 			}
 		});
 	}
-	
+
 	@Override
 	protected void onActivityResult(int _requestCode, int _resultCode, Intent _data) {
 		super.onActivityResult(_requestCode, _resultCode, _data);
@@ -895,21 +894,21 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 					String path = StorageUtil.getPathFromUri(getApplicationContext(), fileUri);
 					if (path != null) resolvedFilePaths.add(path);
 				}
-				
+
 				if (!resolvedFilePaths.isEmpty()) {
 					attachmentLayoutListHolder.setVisibility(View.VISIBLE);
-					
+
 					int startingPosition = attactmentmap.size();
-					
+
 					for (String filePath : resolvedFilePaths) {
 						HashMap<String, Object> itemMap = new HashMap<>();
-						itemMap.put("localPath", filePath); 
+						itemMap.put("localPath", filePath);
 						itemMap.put("uploadState", "pending");
 						attactmentmap.add(itemMap);
 					}
-					
+
 					rv_attacmentList.getAdapter().notifyItemRangeInserted(startingPosition, resolvedFilePaths.size());
-					
+
 					for (int i = 0; i < resolvedFilePaths.size(); i++) {
 						_startUploadForItem(startingPosition + i);
 					}
@@ -917,46 +916,46 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 			}
 		}
 		switch (_requestCode) {
-			
+
 			default:
 			break;
 		}
 	}
-	
-	
+
+
 	@Override
 	public void onPause() {
 		super.onPause();
 		FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
 	}
-	
+
 	@Override
 	public void onStop() {
 		super.onStop();
 		FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
 	}
-	
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 		FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
 	}
-	
+
 	@Override
 	public void onBackPressed() {
 		Intent i = new Intent();
-		
+
 		if (getIntent().hasExtra("origin")) {
 			String originSimpleName = getIntent().getStringExtra("origin");
-			
+
 			if (originSimpleName != null && !originSimpleName.trim().isEmpty()) {
 				String packageName = "com.synapse.social.studioasinc";
 				String fullClassName = packageName + "." + originSimpleName.trim();
-				
+
 				try {
 					Class<?> clazz = Class.forName(fullClassName);
 					i.setClass(getApplicationContext(), clazz);
-					
+
 					// Special handling for ProfileActivity (requires "uid")
 					if ("ProfileActivity".equals(originSimpleName.trim())) {
 						if (!getIntent().hasExtra("uid")) {
@@ -966,12 +965,12 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 						}
 						i.putExtra("uid", getIntent().getStringExtra("uid")); // Pass the UID
 					}
-					
+
 					// Start the activity
 					startActivity(i);
 					finish();
 					return; // Exit after successful launch
-					
+
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
 					Toast.makeText(this, "Error: Activity not found", Toast.LENGTH_SHORT).show();
@@ -981,7 +980,7 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 				}
 			}
 		}
-		
+
 		// Fallback: Close if no valid origin or if any error occurs
 		finish();
 	}
@@ -990,8 +989,8 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		getWindow().setStatusBarColor(_statusColor);
 		getWindow().setNavigationBarColor(_navigationColor);
 	}
-	
-	
+
+
 	public void _viewGraphics(final View _view, final int _onFocus, final int _onRipple, final double _radius, final double _stroke, final int _strokeColor) {
 		android.graphics.drawable.GradientDrawable GG = new android.graphics.drawable.GradientDrawable();
 		GG.setColor(_onFocus);
@@ -1000,13 +999,13 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		android.graphics.drawable.RippleDrawable RE = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{ _onRipple}), GG, null);
 		_view.setBackground(RE);
 	}
-	
-	
+
+
 	public void _ImageColor(final ImageView _image, final int _color) {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
 	}
-	
-	
+
+
 	public void _messageOverviewPopup(final View _view, final double _position, final ArrayList<HashMap<String, Object>> _data) {
 		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
 
@@ -1022,11 +1021,11 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		int[] location = new int[2];
 		View anchorView = _view;
 		anchorView.getLocationOnScreen(location);
-		
+
 		int screenHeight = getApplicationContext().getResources().getDisplayMetrics().heightPixels;
 		int halfScreenHeight = screenHeight / 2;
 		int anchorViewHeight = anchorView.getHeight();
-		
+
 		if (location[1] < halfScreenHeight) {
 			pop1.showAtLocation(anchorView, Gravity.NO_GRAVITY, location[0], location[1] + anchorViewHeight);
 		} else if (location[1] > halfScreenHeight) {
@@ -1100,7 +1099,7 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 				edittext1.setVerticalScrollBarEnabled(true);
 				edittext1.setMovementMethod(new ScrollingMovementMethod());
 				edittext1.setScrollBarStyle(View.SCROLLBARS_INSIDE_INSET);
-				
+
 				Dialogs.setPositiveButton("Chnage", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface _dialog, int _which) {
@@ -1132,27 +1131,27 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 				Dialogs.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface _dialog, int _which) {
-						
+
 					}
 				});
 				androidx.appcompat.app.AlertDialog edittextDialog = Dialogs.create();
-				
+
 				edittextDialog.setCancelable(true);
 				edittextDialog.show();
 			}
 		});
 	}
-	
-	
+
+
 	public void _setMargin(final View _view, final double _r, final double _l, final double _t, final double _b) {
 		float dpRatio = new c(this).getContext().getResources().getDisplayMetrics().density;
 		int right = (int)(_r * dpRatio);
 		int left = (int)(_l * dpRatio);
 		int top = (int)(_t * dpRatio);
 		int bottom = (int)(_b * dpRatio);
-		
+
 		boolean _default = false;
-		
+
 		ViewGroup.LayoutParams p = _view.getLayoutParams();
 		if (p instanceof LinearLayout.LayoutParams) {
 			LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)p;
@@ -1169,10 +1168,10 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 			lp.setMargins(left, top, right, bottom);
 			_view.setLayoutParams(lp);
 		}
-		
-		
+
+
 	}
-	
+
 	class c {
 		Context co;
 		public <T extends Activity> c(T a) {
@@ -1184,19 +1183,19 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		public <T extends DialogFragment> c(T a) {
 			co = a.getActivity();
 		}
-		
+
 		public Context getContext() {
 			return co;
 		}
-		
+
 	}
-	
-	
+
+
 	{
-		
+
 	}
-	
-	
+
+
 	public void _getUserReference() {
 		DatabaseReference getUserReference = FirebaseDatabase.getInstance().getReference("skyline/users").child(getIntent().getStringExtra("uid"));
 		getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1285,10 +1284,10 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 				} else {
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 		DatabaseReference getFirstUserName = FirebaseDatabase.getInstance().getReference("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
@@ -1302,86 +1301,128 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 						FirstUserName = dataSnapshot.child("nickname").getValue(String.class);
 					}
 				} else {
-					
+
 				}
 			}
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
-		
+
 		_getChatMessagesRef();
 	}
-	
-	
+
+
 	public void _getChatMessagesRef() {
-		Query getChatsMessages = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).limitToLast((int)ChatMessagesLimit);
-		getChatsMessages.addValueEventListener(new ValueEventListener() {
+		// Initial load
+		Query getChatsMessages = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).limitToLast(CHAT_PAGE_SIZE);
+		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if(dataSnapshot.exists()) {
 					ChatMessagesListRecycler.setVisibility(View.VISIBLE);
 					noChatText.setVisibility(View.GONE);
 					ChatMessagesList.clear();
-					
-					try {
-						GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-						for (DataSnapshot _data : dataSnapshot.getChildren()) {
-							HashMap<String, Object> _map = _data.getValue(_ind);
-							ChatMessagesList.add(_map);
-						}
-					} catch (Exception _e) {
-						_e.printStackTrace();
+					ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
+					for (DataSnapshot _data : dataSnapshot.getChildren()) {
+						initialMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
 					}
-					
-					if (ChatMessagesList.size() > ChatInitialSize) {
-						ChatMessagesListRecycler.getAdapter().notifyDataSetChanged();
-						ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-					} else {
-						ChatMessagesListRecycler.getAdapter().notifyDataSetChanged();
+
+					if (!initialMessages.isEmpty()) {
+						oldestMessageKey = initialMessages.get(0).get("key").toString();
 					}
-					
-					ChatInitialSize = ChatMessagesList.size();
+
+					ChatMessagesList.addAll(initialMessages);
+					chatAdapter.notifyDataSetChanged();
+					ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+
+					// Now listen for new messages
+					_listenForNewMessages();
 				} else {
 					ChatMessagesListRecycler.setVisibility(View.GONE);
 					noChatText.setVisibility(View.VISIBLE);
 				}
 			}
-			
-			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
-			}
+			@Override public void onCancelled(@NonNull DatabaseError databaseError) {}
 		});
 	}
-	
-	
+
+	private void _listenForNewMessages() {
+		String lastMessageKey = null;
+		if (!ChatMessagesList.isEmpty()) {
+			lastMessageKey = ChatMessagesList.get(ChatMessagesList.size() - 1).get("key").toString();
+		}
+
+		Query newMessagesQuery;
+		if (lastMessageKey != null) {
+			newMessagesQuery = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).orderByKey().startAfter(lastMessageKey);
+		} else {
+			newMessagesQuery = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).orderByKey();
+		}
+
+		newMessagesQuery.addChildEventListener(new ChildEventListener() {
+			@Override
+			public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
+				if (dataSnapshot.exists()) {
+					HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					// Simple check to avoid duplicate additions
+					if (ChatMessagesList.stream().noneMatch(msg -> msg.get("key").equals(newMessage.get("key")))) {
+						ChatMessagesList.add(newMessage);
+						chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+						ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+					}
+				}
+			}
+
+			@Override
+			public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+				// Find message by key and update it
+				if (snapshot.exists()) {
+					HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					String key = updatedMessage.get("key").toString();
+					for (int i = 0; i < ChatMessagesList.size(); i++) {
+						if (ChatMessagesList.get(i).get("key").toString().equals(key)) {
+							ChatMessagesList.set(i, updatedMessage);
+							chatAdapter.notifyItemChanged(i);
+							break;
+						}
+					}
+				}
+			}
+
+			@Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
+			@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
+			@Override public void onCancelled(@NonNull DatabaseError error) {}
+		});
+	}
+
+
 	public void _AudioRecorderStart() {
 		cc = Calendar.getInstance();
 		recordMs = 0;
 		AudioMessageRecorder = new MediaRecorder();
-		
+
 		File getCacheDir = getExternalCacheDir();
 		String getCacheDirName = "audio_records";
 		File getCacheFolder = new File(getCacheDir, getCacheDirName);
 		getCacheFolder.mkdirs();
 		File getRecordFile = new File(getCacheFolder, cc.getTimeInMillis() + ".mp3");
 		String recordFilePath = getRecordFile.getAbsolutePath();
-		
+
 		AudioMessageRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
 		AudioMessageRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
 		AudioMessageRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
 		AudioMessageRecorder.setAudioEncodingBitRate(320000);
 		AudioMessageRecorder.setOutputFile(recordFilePath);
-		
+
 		try {
 			AudioMessageRecorder.prepare();
 			AudioMessageRecorder.start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		vbr.vibrate((long)(48));
 		timer = new TimerTask() {
 			@Override
@@ -1390,16 +1431,16 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 					@Override
 					public void run() {
 						recordMs = recordMs + 500;
-						
+
 					}
 				});
 			}
 		};
 		_timer.scheduleAtFixedRate(timer, (int)(0), (int)(500));
-		
+
 	}
-	
-	
+
+
 	public void _AudioRecorderStop() {
 		if (AudioMessageRecorder != null) {
 			AudioMessageRecorder.stop();
@@ -1409,52 +1450,68 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		vbr.vibrate((long)(48));
 		timer.cancel();
 	}
-	
-	
+
+
 	public String _getDurationString(final long _durationInMillis) {
 		long seconds = _durationInMillis / 1000;
 		long minutes = seconds / 60;
 		long hours = minutes / 60;
 		seconds %= 60;
 		minutes %= 60;
-		
+
 		if (hours > 0) {
 			return String.format("%02d:%02d:%02d", hours, minutes, seconds);
 		} else {
 			return String.format("%02d:%02d", minutes, seconds);
 		}
 	}
-	
-	
+
+
 	public void _getOldChatMessagesRef() {
+		if (isLoading || oldestMessageKey == null) {
+			return;
+		}
 		isLoading = true;
-		ChatMessagesLimit = ChatMessagesLimit + 80;
 		_showLoadMoreIndicator();
-		
+
 		Query getChatsMessages = FirebaseDatabase.getInstance()
 		.getReference("skyline/chats")
 		.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
 		.child(getIntent().getStringExtra("uid"))
-		.limitToLast((int)ChatMessagesLimit);
-		
+		.orderByKey()
+		.endBefore(oldestMessageKey)
+		.limitToLast(CHAT_PAGE_SIZE);
+
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				_hideLoadMoreIndicator();
 				if(dataSnapshot.exists()) {
-					ChatMessagesList.clear();
-					try {
-						GenericTypeIndicator<HashMap<String, Object>> _ind = 
-						new GenericTypeIndicator<HashMap<String, Object>>() {};
-						for (DataSnapshot _data : dataSnapshot.getChildren()) {
-							ChatMessagesList.add(_data.getValue(_ind));
+					ArrayList<HashMap<String, Object>> newMessages = new ArrayList<>();
+					for (DataSnapshot _data : dataSnapshot.getChildren()) {
+						newMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
+					}
+
+					if (!newMessages.isEmpty()) {
+						oldestMessageKey = newMessages.get(0).get("key").toString();
+
+						final LinearLayoutManager layoutManager = (LinearLayoutManager) ChatMessagesListRecycler.getLayoutManager();
+						int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
+						View firstVisibleView = layoutManager.findViewByPosition(firstVisiblePosition);
+						int topOffset = (firstVisibleView != null) ? firstVisibleView.getTop() : 0;
+
+						ChatMessagesList.addAll(0, newMessages);
+						chatAdapter.notifyItemRangeInserted(0, newMessages.size());
+
+						// Restore scroll position to the item that was previously at the top
+						if (firstVisibleView != null) {
+							layoutManager.scrollToPositionWithOffset(firstVisiblePosition + newMessages.size(), topOffset);
 						}
-					} catch (Exception _e) {}
-					((ChatAdapter)chatAdapter).notifyDataSetChanged();
+					}
 				}
 				isLoading = false;
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				_hideLoadMoreIndicator();
@@ -1462,12 +1519,12 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 			}
 		});
 	}
-	
-	
+
+
 	public void _DeleteMessageDialog(final ArrayList<HashMap<String, Object>> _data, final double _position) {
 		// Material Delete Dialog
 		MaterialAlertDialogBuilder zorry = new MaterialAlertDialogBuilder(ChatActivity.this);
-		
+
 		zorry.setTitle("Delete");
 		zorry.setMessage("Are you sure you want to delete this message. Please confirm your decision.");
 		zorry.setIcon(R.drawable.popup_ic_3);
@@ -1481,27 +1538,27 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		zorry.setNegativeButton("No", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface _dialog, int _which) {
-				
+
 			}
 		});
 		zorry.create().show();
 	}
-	
-	
+
+
 	public void _ScrollingText(final TextView _view) {
 		_view.setSingleLine(true);
 		_view.setEllipsize(TextUtils.TruncateAt.MARQUEE);
 		_view.setSelected(true);
 	}
-	
-	
+
+
 	public void _setUserLastSeen(final double _currentTime, final TextView _txt) {
 		Calendar c1 = Calendar.getInstance();
 		Calendar c2 = Calendar.getInstance();
 		c2.setTimeInMillis((long)_currentTime);
-		
+
 		long time_diff = c1.getTimeInMillis() - c2.getTimeInMillis();
-		
+
 		long seconds = time_diff / 1000;
 		long minutes = seconds / 60;
 		long hours = minutes / 60;
@@ -1509,7 +1566,7 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		long weeks = days / 7;
 		long months = days / 30;
 		long years = days / 365;
-		
+
 		if (seconds < 60) {
 			if (seconds < 2) {
 				_txt.setText("1 " + getResources().getString(R.string.status_text_seconds));
@@ -1554,8 +1611,8 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 			}
 		}
 	}
-	
-	
+
+
 	public void _textview_mh(final TextView _txt, final String _value) {
 		_txt.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
 		//_txt.setTextIsSelectable(true);
@@ -1566,11 +1623,11 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?<![^\\s])(([@]{1}|[#]{1})([A-Za-z0-9_-]\\.?)+)(?![^\\s,])|\\*\\*(.*?)\\*\\*|__(.*?)__|~~(.*?)~~|_(.*?)_|\\*(.*?)\\*|///(.*?)///");
 		java.util.regex.Matcher matcher = pattern.matcher(str);
 		int offset = 0;
-		
+
 		while (matcher.find()) {
 			int start = matcher.start() + offset;
 			int end = matcher.end() + offset;
-			
+
 			if (matcher.group(3) != null) {
 				// For mentions or hashtags
 				ProfileSpan span = new ProfileSpan();
@@ -1616,21 +1673,21 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 		_txt.setText(ssb);
 	}
 	private class ProfileSpan extends android.text.style.ClickableSpan{
-		
-		
+
+
 		@Override
 		public void onClick(View view){
-			
+
 			if(view instanceof TextView){
 				TextView tv = (TextView)view;
-				
+
 				if(tv.getText() instanceof Spannable){
 					Spannable sp = (Spannable)tv.getText();
-					
+
 					int start = sp.getSpanStart(this);
 					int end = sp.getSpanEnd(this);
 					object_clicked = sp.subSequence(start,end).toString();
-					handle = object_clicked.replace("@", ""); 
+					handle = object_clicked.replace("@", "");
 					DatabaseReference getReference = FirebaseDatabase.getInstance().getReference()
 					.child("synapse/username")
 					.child(handle);  // This points directly to "synapse/username/[handle]"
@@ -1643,7 +1700,7 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 									intent.putExtra("uid", dataSnapshot.child("uid").getValue(String.class));
 									startActivity(intent);
 								} else {
-									
+
 								}
 							} else {
 							}
@@ -1657,7 +1714,7 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 					});
 				}
 			}
-			
+
 		}
 		@Override
 		public void updateDrawState(TextPaint ds) {
@@ -1666,14 +1723,14 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 			ds.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 		}
 	}
-	
-	
+
+
 	public void _send_btn() {
 		final String messageText = message_et.getText().toString().trim();
-		
+
 		if (!attactmentmap.isEmpty()) {
 			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
-			
+
 			for (HashMap<String, Object> item : attactmentmap) {
 				if ("success".equals(item.get("uploadState"))) {
 					HashMap<String, Object> attachmentData = new HashMap<>();
@@ -1682,11 +1739,11 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 					successfulAttachments.add(attachmentData);
 				}
 			}
-			
+
 			if (!messageText.isEmpty() || !successfulAttachments.isEmpty()) {
 				cc = Calendar.getInstance();
 				String uniqueMessageKey = main.push().getKey();
-				
+
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
 				ChatSendMap.put("TYPE", "ATTACHMENT_MESSAGE");
@@ -1696,22 +1753,22 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put("replied_message_id", ReplyMessageID);
 				ChatSendMap.put("key", uniqueMessageKey);
 				ChatSendMap.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-				
+
 				FirebaseDatabase.getInstance().getReference("skyline/chats")
 				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
 				.child(getIntent().getStringExtra("uid"))
 				.child(uniqueMessageKey)
 				.updateChildren(ChatSendMap);
-				
+
 				FirebaseDatabase.getInstance().getReference("skyline/chats")
 				.child(getIntent().getStringExtra("uid"))
 				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
 				.child(uniqueMessageKey)
 				.updateChildren(ChatSendMap);
-				
+
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 				_updateInbox(lastMessage);
-				
+
 				attactmentmap.clear();
 				rv_attacmentList.getAdapter().notifyDataSetChanged();
 				attachmentLayoutListHolder.setVisibility(View.GONE);
@@ -1721,11 +1778,11 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 			} else {
 				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
 			}
-			
+
 		} else if (!messageText.isEmpty()) {
 			cc = Calendar.getInstance();
 			String uniqueMessageKey = main.push().getKey();
-			
+
 			ChatSendMap = new HashMap<>();
 			ChatSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
 			ChatSendMap.put("TYPE", "MESSAGE");
@@ -1734,21 +1791,21 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 			if (!ReplyMessageID.equals("null")) ChatSendMap.put("replied_message_id", ReplyMessageID);
 			ChatSendMap.put("key", uniqueMessageKey);
 			ChatSendMap.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-			
+
 			FirebaseDatabase.getInstance().getReference("skyline/chats")
 			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
 			.child(getIntent().getStringExtra("uid"))
 			.child(uniqueMessageKey)
 			.updateChildren(ChatSendMap);
-			
+
 			FirebaseDatabase.getInstance().getReference("skyline/chats")
 			.child(getIntent().getStringExtra("uid"))
 			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
 			.child(uniqueMessageKey)
 			.updateChildren(ChatSendMap);
-			
+
 			_updateInbox(messageText);
-			
+
 			message_et.setText("");
 			ReplyMessageID = "null";
 			mMessageReplyLayout.setVisibility(View.GONE);
@@ -1851,9 +1908,9 @@ mMessageReplyLayout.setVisibility(View.GONE);
 
  @Override
 public void onUploadError(String errorMessage) {
-	
-	
-	
+
+
+
 SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 }
 });
@@ -1861,28 +1918,28 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 }
 */
 	}
-	
-	
+
+
 	public void _Block(final String _uid) {
 		block = new HashMap<>();
 		block.put(_uid, "true");
 		blocklist.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(block);
 		block.clear();
 	}
-	
-	
+
+
 	public void _TransitionManager(final View _view, final double _duration) {
 		LinearLayout viewgroup =(LinearLayout) _view;
-		
+
 		android.transition.AutoTransition autoTransition = new android.transition.AutoTransition(); autoTransition.setDuration((long)_duration); android.transition.TransitionManager.beginDelayedTransition(viewgroup, autoTransition);
 	}
-	
-	
+
+
 	public void _Unblock_this_user() {
 		DatabaseReference blocklistRef = FirebaseDatabase.getInstance().getReference("skyline/blocklist");
 		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		String uidToRemove = getIntent().getStringExtra("uid");
-		
+
 		blocklistRef.child(myUid).child(uidToRemove).removeValue()
 		.addOnSuccessListener(aVoid -> {
 			// Create a new intent to restart the activity
@@ -1897,35 +1954,35 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			Log.e("UnblockUser", "Failed to unblock user", e);
 		});
 	}
-	
-	
+
+
 	public void _LoadingDialog(final boolean _visibility) {
 		if (_visibility) {
 			if (SynapseLoadingDialog== null){
 				SynapseLoadingDialog = new ProgressDialog(this);
 				SynapseLoadingDialog.setCancelable(false);
 				SynapseLoadingDialog.setCanceledOnTouchOutside(false);
-				
-				SynapseLoadingDialog.requestWindowFeature(Window.FEATURE_NO_TITLE); 
+
+				SynapseLoadingDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 				SynapseLoadingDialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
-				
+
 			}
 			SynapseLoadingDialog.show();
 			SynapseLoadingDialog.setContentView(R.layout.loading_synapse);
-			
+
 			LinearLayout loading_bar_layout = (LinearLayout)SynapseLoadingDialog.findViewById(R.id.loading_bar_layout);
-			
-			
+
+
 			//loading_bar_layout.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)100, 0xFFFFFFFF));
 		} else {
 			if (SynapseLoadingDialog != null){
 				SynapseLoadingDialog.dismiss();
 			}
 		}
-		
+
 	}
-	
-	
+
+
 	public void _ImgRound(final ImageView _imageview, final double _value) {
 		android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable ();
 		gd.setColor(android.R.color.transparent);
@@ -1933,8 +1990,8 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 		_imageview.setClipToOutline(true);
 		_imageview.setBackground(gd);
 	}
-	
-	
+
+
 	public void _OpenWebView(final String _URL) {
 		AndroidDevelopersBlogURL = _URL;
 		CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
@@ -1942,12 +1999,12 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 		CustomTabsIntent customtabsintent = builder.build();
 		customtabsintent.launchUrl(this, Uri.parse(AndroidDevelopersBlogURL));
 	}
-	
-	
+
+
 	public void _startUploadForItem(final double _position) {
 		// Use the correct parameter name '_position' as defined by your More Block
 		final int itemPosition = (int) _position;
-		
+
 		// Check for internet connection first.
 		if (!SketchwareUtil.isConnected(getApplicationContext())) {
 			HashMap<String, Object> itemMap = attactmentmap.get(itemPosition);
@@ -1955,7 +2012,7 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			return;
 		}
-		
+
 		HashMap<String, Object> itemMap = attactmentmap.get(itemPosition);
 		if (!"pending".equals(itemMap.get("uploadState"))) {
 			return;
@@ -1963,27 +2020,27 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 		itemMap.put("uploadState", "uploading");
 		itemMap.put("uploadProgress", 0.0);
 		rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
-		
+
 		String filePath = itemMap.get("localPath").toString();
 		File file = new File(filePath);
-		
-		FasterCloudinaryUploader.uploadFile(filePath, file.getName(), new FasterCloudinaryUploader.UploadCallback() {
+
+		UploadFiles.uploadFile(filePath, file.getName(), new UploadFiles.UploadCallback() {
 			@Override
 			public void onProgress(int percent) {
 				attactmentmap.get(itemPosition).put("uploadProgress", (double) percent);
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			}
 			@Override
-			public void onSuccess(String url, String publicIdWithType) {
+			public void onSuccess(String url, String publicId) {
 				HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
 				mapToUpdate.put("uploadState", "success");
-				mapToUpdate.put("cloudinaryUrl", url);
-				mapToUpdate.put("publicId", publicIdWithType);
+				mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
+				mapToUpdate.put("publicId", publicId);
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
-				
+
 				// Set the URL to the 'path' variable instead of message_et
 				path = url;
-				
+
 				// Removed Toast and clipboard operations
 			}
 			@Override
@@ -1993,12 +2050,12 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			}
 		});
 	}
-	
-	
+
+
 	public void _updateInbox(final String _lastMessage) {
 		// Using the correct parameter name '_lastMessage' with the underscore prefix.
-		cc = Calendar.getInstance(); 
-		
+		cc = Calendar.getInstance();
+
 		// Update inbox for the current user
 		ChatInboxSend = new HashMap<>();
 		ChatInboxSend.put("uid", getIntent().getStringExtra("uid"));
@@ -2007,7 +2064,7 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 		ChatInboxSend.put("last_message_state", "sended");
 		ChatInboxSend.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
 		FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).updateChildren(ChatInboxSend);
-		
+
 		// Update inbox for the other user
 		ChatInboxSend2 = new HashMap<>();
 		ChatInboxSend2.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
@@ -2017,8 +2074,8 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 		ChatInboxSend2.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
 		FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
 	}
-	
-	
+
+
 	public void _showLoadMoreIndicator() {
 		if (!ChatMessagesList.isEmpty() && !ChatMessagesList.get(0).containsKey("isLoadingMore")) {
 			HashMap<String, Object> loadingMap = new HashMap<>();
@@ -2027,21 +2084,21 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			((ChatAdapter)chatAdapter).notifyItemInserted(0);
 		}
 	}
-	
-	
+
+
 	public void _hideLoadMoreIndicator() {
 		if (!ChatMessagesList.isEmpty() && ChatMessagesList.get(0).containsKey("isLoadingMore")) {
 			ChatMessagesList.remove(0);
 			((ChatAdapter)chatAdapter).notifyItemRemoved(0);
 		}
 	}
-	
-	
+
+
 	public void _showReplyUI(final double _position) {
 		// This is where you trigger your reply UI.
 		HashMap<String, Object> messageData = ChatMessagesList.get((int)_position);
 		ReplyMessageID = messageData.get("key").toString();
-		
+
 		if (messageData.get("uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 			mMessageReplyLayoutBodyRightUsername.setText(FirstUserName);
 		} else {
@@ -2051,8 +2108,8 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 		mMessageReplyLayout.setVisibility(View.VISIBLE);
 		vbr.vibrate((long)(48));
 	}
-	
-	
+
+
 	public void _setupSwipeToReply() {
 		// This helper class handles drawing the swipe background and icon.
 		ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -2060,7 +2117,7 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
 				return false; // We don't want to handle drag & drop
 			}
-			
+
 			@Override
 			public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
 				// This is triggered when the swipe is completed.
@@ -2068,18 +2125,18 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 				// The adapter needs to be notified to redraw the item back to its original state.
 				chatAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
 			}
-			
+
 			@Override
 			public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 				if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
 					View itemView = viewHolder.itemView;
 					Paint p = new Paint();
 					Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_reply);
-					
+
 					if (dX > 0) { // Swiping to the right
 						p.setColor(Color.parseColor("#3498db")); // Blue background
 						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
-						
+
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
 						int iconTop = itemView.getTop() + iconMargin;
 						int iconBottom = iconTop + icon.getIntrinsicHeight();
@@ -2090,7 +2147,7 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 					} else { // Swiping to the left
 						p.setColor(Color.parseColor("#3498db")); // Blue background
 						c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
-						
+
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
 						int iconTop = itemView.getTop() + iconMargin;
 						int iconBottom = iconTop + icon.getIntrinsicHeight();
@@ -2111,12 +2168,12 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
 		itemTouchHelper.attachToRecyclerView(ChatMessagesListRecycler);
 	}
-	
-	
+
+
 	public void _scrollToMessage(final String _messageKey) {
 		int position = -1;
 		for (int i = 0; i < ChatMessagesList.size(); i++) {
-			if (ChatMessagesList.get(i).get("key").toString().equals(_messageKey)) { 
+			if (ChatMessagesList.get(i).get("key").toString().equals(_messageKey)) {
 				position = i;
 				break;
 			}
@@ -2127,15 +2184,15 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			Toast.makeText(getApplicationContext(), "Original message not found", Toast.LENGTH_SHORT).show();
 		}
 	}
-	
+
 	public class ChatMessagesListRecyclerAdapter extends RecyclerView.Adapter<ChatMessagesListRecyclerAdapter.ViewHolder> {
-		
+
 		ArrayList<HashMap<String, Object>> _data;
-		
+
 		public ChatMessagesListRecyclerAdapter(ArrayList<HashMap<String, Object>> _arr) {
 			_data = _arr;
 		}
-		
+
 		@Override
 		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 			LayoutInflater _inflater = getLayoutInflater();
@@ -2144,11 +2201,11 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			_v.setLayoutParams(_lp);
 			return new ViewHolder(_v);
 		}
-		
+
 		@Override
 		public void onBindViewHolder(ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
-			
+
 			final LinearLayout body = _view.findViewById(R.id.body);
 			final androidx.cardview.widget.CardView mProfileCard = _view.findViewById(R.id.mProfileCard);
 			final LinearLayout message_layout = _view.findViewById(R.id.message_layout);
@@ -2168,27 +2225,27 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			final TextView date = _view.findViewById(R.id.date);
 			final ImageView message_state = _view.findViewById(R.id.message_state);
 		}
-		
+
 		@Override
 		public int getItemCount() {
 			return _data.size();
 		}
-		
+
 		public class ViewHolder extends RecyclerView.ViewHolder {
 			public ViewHolder(View v) {
 				super(v);
 			}
 		}
 	}
-	
+
 	public class Rv_attacmentListAdapter extends RecyclerView.Adapter<Rv_attacmentListAdapter.ViewHolder> {
-		
+
 		ArrayList<HashMap<String, Object>> _data;
-		
+
 		public Rv_attacmentListAdapter(ArrayList<HashMap<String, Object>> _arr) {
 			_data = _arr;
 		}
-		
+
 		@Override
 		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 			LayoutInflater _inflater = getLayoutInflater();
@@ -2197,11 +2254,11 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			_v.setLayoutParams(_lp);
 			return new ViewHolder(_v);
 		}
-		
+
 		@Override
 		public void onBindViewHolder(ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
-			
+
 			final androidx.cardview.widget.CardView cardMediaItem = _view.findViewById(R.id.cardMediaItem);
 			final LinearLayout containerLL = _view.findViewById(R.id.containerLL);
 			final RelativeLayout imageWrapperRL = _view.findViewById(R.id.imageWrapperRL);
@@ -2215,10 +2272,10 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			final LinearLayout linear6 = _view.findViewById(R.id.linear6);
 			final ImageView closeIV = _view.findViewById(R.id.closeIV);
 			final TextView textview1 = _view.findViewById(R.id.textview1);
-			
+
 			// Get the data map using the block's parameters
 			HashMap<String, Object> itemData = attactmentmap.get(_position);
-			
+
 			// --- START: ROBUSTNESS FIX ---
 			// Safety Check: Verify that the required "localPath" key exists and is not null.
 			if (!itemData.containsKey("localPath") || itemData.get("localPath") == null) {
@@ -2231,18 +2288,18 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 			_view.setVisibility(View.VISIBLE);
 			_view.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 			// --- END: ROBUSTNESS FIX ---
-			
+
 			// Set the image preview directly by its ID
 			String localPath = itemData.get("localPath").toString();
 			previewIV.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(localPath, 1024, 1024));
-			
+
 			// Get the upload state and progress.
 			String uploadState = itemData.getOrDefault("uploadState", "pending").toString();
 			int progress = 0;
 			if (itemData.containsKey("uploadProgress")) {
 				progress = (int) Double.parseDouble(itemData.get("uploadProgress").toString());
 			}
-			
+
 			// Update the UI by accessing views directly by their ID.
 			switch (uploadState) {
 				case "uploading":
@@ -2252,42 +2309,42 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 				uploadProgressCPI.setProgress(progress);
 				closeIV.setVisibility(View.GONE);
 				break;
-				
+
 				case "success":
 				overlayLL.setVisibility(View.GONE);
 				uploadProgressCPI.setVisibility(View.GONE);
 				closeIV.setVisibility(View.VISIBLE);
 				break;
-				
+
 				case "failed":
 				overlayLL.setVisibility(View.VISIBLE);
 				overlayLL.setBackgroundColor(0x80D32F2F);
 				uploadProgressCPI.setVisibility(View.GONE);
 				closeIV.setVisibility(View.VISIBLE);
 				break;
-				
+
 				default: // "pending" state
 				overlayLL.setVisibility(View.GONE);
 				uploadProgressCPI.setVisibility(View.GONE);
 				closeIV.setVisibility(View.VISIBLE);
 				break;
 			}
-			
+
 			// Set the click listener on the close icon directly by its ID.
 			closeIV.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					if (_position >= attactmentmap.size()) return; // Safety check
-					
+
 					HashMap<String, Object> currentItemData = attactmentmap.get(_position);
-					
+
 					attactmentmap.remove(_position);
 					rv_attacmentList.getAdapter().notifyItemRemoved(_position);
 					rv_attacmentList.getAdapter().notifyItemRangeChanged(_position, attactmentmap.size());
-					
+
 					if (currentItemData.containsKey("publicId")) {
 						String publicId = currentItemData.get("publicId").toString();
-						FasterCloudinaryUploader.deleteByPublicId(publicId, new FasterCloudinaryUploader.DeleteCallback() {
+						UploadFiles.deleteByPublicId(publicId, new UploadFiles.DeleteCallback() {
 							@Override public void onSuccess() {}
 							@Override public void onFailure(String error) {}
 						});
@@ -2295,12 +2352,12 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 				}
 			});
 		}
-		
+
 		@Override
 		public int getItemCount() {
 			return _data.size();
 		}
-		
+
 		public class ViewHolder extends RecyclerView.ViewHolder {
 			public ViewHolder(View v) {
 				super(v);
