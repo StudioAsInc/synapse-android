@@ -116,6 +116,7 @@ public class HomeActivity extends AppCompatActivity {
 	private TextView app_name_bar;
 	private LinearLayout topBarSpace;
 	private ImageView imageview1;
+	private ImageView settings_button;
 	private LinearLayout nav_feed;
 	private LinearLayout nav_search;
 	private LinearLayout nav_reels;
@@ -234,6 +235,7 @@ public class HomeActivity extends AppCompatActivity {
 		app_name_bar = findViewById(R.id.app_name_bar);
 		topBarSpace = findViewById(R.id.topBarSpace);
 		imageview1 = findViewById(R.id.imageview1);
+		settings_button = findViewById(R.id.settings_button);
 		nav_feed = findViewById(R.id.nav_feed);
 		nav_search = findViewById(R.id.nav_search);
 		nav_reels = findViewById(R.id.nav_reels);
@@ -507,6 +509,17 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		};
 		udb.addChildEventListener(_udb_child_listener);
+
+		settings_button.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				FirebaseAuth.getInstance().signOut();
+				Intent intent = new Intent(HomeActivity.this, AuthActivity.class);
+				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+				startActivity(intent);
+				finish();
+			}
+		});
 	}
 	
 	private void initializeLogic() {
