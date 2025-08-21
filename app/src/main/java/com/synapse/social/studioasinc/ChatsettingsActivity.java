@@ -38,13 +38,13 @@ import androidx.cardview.widget.CardView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.gridlayout.*;
 import androidx.recyclerview.widget.*;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.Adapter;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.color.MaterialColors;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 import com.google.firebase.FirebaseApp;
@@ -212,9 +212,9 @@ public class ChatsettingsActivity extends AppCompatActivity {
 	private MaterialSwitch switch10;
 	private TextView textview46;
 	private TextView textview47;
-	private LinearLayout linear53;
+	private LinearLayout premiumFeaturesMainOption;
 	private LinearLayout linear54;
-	private LinearLayout linear55;
+	private CardView linear55;
 	private ImageView imageview27;
 	private LinearLayout linear56;
 	private TextView textview51;
@@ -388,7 +388,7 @@ public class ChatsettingsActivity extends AppCompatActivity {
 		switch10 = findViewById(R.id.switch10);
 		textview46 = findViewById(R.id.textview46);
 		textview47 = findViewById(R.id.textview47);
-		linear53 = findViewById(R.id.linear53);
+		premiumFeaturesMainOption = findViewById(R.id.premiumFeaturesMainOption);
 		linear54 = findViewById(R.id.linear54);
 		linear55 = findViewById(R.id.linear55);
 		imageview27 = findViewById(R.id.imageview27);
@@ -422,9 +422,10 @@ public class ChatsettingsActivity extends AppCompatActivity {
 			}
 		});
 		
-		Language_btn.setOnClickListener(new View.OnClickListener() {
+		premiumFeaturesMainOption.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
+				intent.setClass(getApplicationContext(), LabsActivity.class);
 				startActivity(intent);
 			}
 		});

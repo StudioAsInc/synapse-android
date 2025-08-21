@@ -732,7 +732,7 @@
 							android:layout_height="25dp"
 							android:layout_marginLeft="10dp"
 							android:layout_marginRight="12dp"
-							android:src="@drawable/component_exchange_24px"
+							android:src="@drawable/ic_component_exchange"
 							android:scaleType="fitCenter" />
 						<LinearLayout
 							android:id="@+id/linear42"
@@ -1089,7 +1089,7 @@
 					android:layout_height="wrap_content"
 					android:layout_marginTop="20dp"
 					android:layout_marginBottom="8dp"
-					android:text="Subscriptions &amp; business models"
+					android:text="AI and automations"
 					android:textSize="14sp"
 					android:textColor="#757575" />
 				<LinearLayout
@@ -1100,7 +1100,7 @@
 					android:background="@android:color/transparent"
 					android:orientation="vertical">
 					<LinearLayout
-						android:id="@+id/linear53"
+						android:id="@+id/premiumFeaturesMainOption"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:gravity="center_horizontal|center_vertical"
@@ -1161,12 +1161,13 @@
 								android:textColor="#000000" />
 						</LinearLayout>
 					</LinearLayout>
-					<LinearLayout
+					<androidx.cardview.widget.CardView
 						android:id="@+id/linear55"
 						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
+						android:layout_height="70dp"
 						android:gravity="center_horizontal|center_vertical"
-						android:orientation="horizontal">
+						android:orientation="horizontal"
+						app:cardCornerRadius="20dp">
 						<ImageView
 							android:id="@+id/imageview29"
 							android:layout_width="25dp"
@@ -1186,7 +1187,7 @@
 								android:id="@+id/textview55"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="Gif a friend"
+								android:text="AI Settings"
 								android:textSize="18sp"
 								android:textColor="#000000" />
 							<TextView
@@ -1194,11 +1195,11 @@
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:layout_marginTop="5dp"
-								android:text="Send your friend a gift"
+								android:text="Setup your artificial intelligence settings"
 								android:textSize="14sp"
 								android:textColor="#9E9E9E" />
 						</LinearLayout>
-					</LinearLayout>
+					</androidx.cardview.widget.CardView>
 				</LinearLayout>
 			</LinearLayout>
 		</ScrollView>

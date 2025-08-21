@@ -32,6 +32,7 @@ import androidx.browser.*;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.gridlayout.*;
 import androidx.recyclerview.widget.*;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -41,7 +42,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.color.MaterialColors;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
 import com.google.firebase.FirebaseApp;
@@ -319,12 +319,12 @@ app:waveAmplitude="2dp"
 app:indicatorSize="60dp"
 app:indicatorDirectionCircular="counterclockwise"
 */
+		noInternetBodySubtitle.setText(getResources().getString(R.string.reasons_may_be).concat("\n\n".concat(getResources().getString(R.string.err_no_internet).concat("\n".concat(getResources().getString(R.string.err_app_maintenance).concat("\n".concat(getResources().getString(R.string.err_problem_on_our_side))))))));
 		MessagesPageTabLayout.addTab(MessagesPageTabLayout.newTab().setText("CHATS"));
 		MessagesPageTabLayout.addTab(MessagesPageTabLayout.newTab().setText("CHANNELS"));
 		MessagesPageTabLayout.addTab(MessagesPageTabLayout.newTab().setText("GROUPS"));
 		InboxRecyclerView.setAdapter(new InboxRecyclerViewAdapter(ChatInboxList));
 		InboxRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-		noInternetBodySubtitle.setText(getResources().getString(R.string.reasons_may_be).concat("\n\n".concat(getResources().getString(R.string.err_no_internet).concat("\n".concat(getResources().getString(R.string.err_app_maintenance).concat("\n".concat(getResources().getString(R.string.err_problem_on_our_side))))))));
 		_getInboxReference();
 	}
 	
@@ -462,6 +462,7 @@ app:indicatorDirectionCircular="counterclockwise"
 		public void onBindViewHolder(ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
 			
+			final androidx.cardview.widget.CardView cardview1 = _view.findViewById(R.id.cardview1);
 			final LinearLayout main = _view.findViewById(R.id.main);
 			final LinearLayout body = _view.findViewById(R.id.body);
 			final LinearLayout spcBottom = _view.findViewById(R.id.spcBottom);
@@ -487,28 +488,19 @@ app:indicatorDirectionCircular="counterclockwise"
 				RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 				_view.setLayoutParams(_lp);
 				_viewGraphics(main, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, Color.TRANSPARENT);
-				userStatusCircleBG.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFFFFFFFF));
-				userStatusCircleIN.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFF388E3C));
-				unread_messages_count_badge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, getResources().getColor(R.color.colorPrimary)));
-				unread_messages_count_badge.setVisibility(View.GONE);
-				main.setVisibility(View.GONE);
 				if (_data.get((int)_position).get("last_message_text").toString().equals("null")) {
-					last_message.setText(getResources().getString(R.string.m_no_chats));
+					
 				} else {
-					last_message.setText(_data.get((int)_position).get("last_message_text").toString());
+					
 				}
 				if (_data.get((int)_position).get("last_message_uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 					if (_data.get((int)_position).get("last_message_state").toString().equals("sended")) {
-						message_state.setImageResource(R.drawable.icon_done_round);
+						
 					} else {
-						message_state.setImageResource(R.drawable.icon_done_all_round);
+						
 					}
-					last_message.setTextColor(0xFF616161);
-					push.setTextColor(0xFF616161);
-					message_state.setVisibility(View.VISIBLE);
-					unread_messages_count_badge.setVisibility(View.GONE);
+					
 				} else {
-					message_state.setVisibility(View.GONE);
 					{
 						ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
 						Handler mMainHandler = new Handler(Looper.getMainLooper());
@@ -737,16 +729,7 @@ app:indicatorDirectionCircular="counterclockwise"
 					}
 					
 				}
-				main.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View _view) {
-						intent.setClass(getApplicationContext(), ChatActivity.class);
-						intent.putExtra("uid", _data.get((int)_position).get("uid").toString());
-						intent.putExtra("origin", "MessagesActivity");
-						startActivity(intent);
-						finish();
-					}
-				});
+				
 			}catch(Exception e){
 				
 			}

@@ -303,7 +303,7 @@ public class HomeActivity extends AppCompatActivity {
 		nav_inbox.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), MessagesActivity.class);
+				intent.setClass(getApplicationContext(), InboxActivity.class);
 				startActivity(intent);
 				finish();
 			}
@@ -553,7 +553,6 @@ public class HomeActivity extends AppCompatActivity {
 		PublicPostsBody.setVisibility(View.VISIBLE); 
 		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
 		_viewGraphics(noInternetBodyRetry, 0xFF445E91, 0xFF1976D2, 24, 3, 0xFF1E88E5);
-		miniPostLayoutProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
 		_ImageColor(miniPostLayoutImagePost, 0xFF445E91);
 		_ImageColor(miniPostLayoutVideoPost, 0xFF445E91);
 		_ImageColor(miniPostLayoutTextPost, 0xFF445E91);

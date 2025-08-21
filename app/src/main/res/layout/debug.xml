@@ -76,7 +76,7 @@
 			android:layout_marginRight="4dp"
 			android:layout_marginBottom="14dp"
 			android:padding="16dp"
-			android:text="Clear data"
+			android:text="@string/report_error"
 			android:textSize="16sp"
 			android:textColor="@color/colorControlHighlight"
 			style="@style/Widget.Material3Expressive.Button" />

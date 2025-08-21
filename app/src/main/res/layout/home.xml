@@ -65,7 +65,7 @@
 										android:id="@+id/app_name_bar"
 										android:layout_width="wrap_content"
 										android:layout_height="wrap_content"
-										android:text="Synapse"
+										android:text="@string/app_name"
 										android:textSize="40sp"
 										android:textStyle="bold"
 										android:textColor="@color/colorPrimary"
@@ -77,12 +77,6 @@
 										android:padding="8dp"
 										android:orientation="vertical"
 										android:layout_weight="1" />
-									<ImageView
-										android:id="@+id/imageview1"
-										android:layout_width="25dp"
-										android:layout_height="25dp"
-										android:src="@drawable/menu_24px"
-										android:scaleType="fitCenter" />
 								</LinearLayout>
 								<LinearLayout
 									android:id="@+id/bottomBar"
@@ -187,7 +181,8 @@
 										android:layout_width="38dp"
 										android:layout_height="38dp"
 										android:layout_marginRight="8dp"
-										app:cardElevation="0dp">
+										app:cardElevation="1dp"
+										app:cardCornerRadius="300dp">
 										<ImageView
 											android:id="@+id/miniPostLayoutProfileImage"
 											android:layout_width="wrap_content"
@@ -203,7 +198,7 @@
 										android:background="@android:color/transparent"
 										android:textSize="18sp"
 										android:textColor="#000000"
-										android:hint="What's on your mind\?"
+										android:hint="@string/whats_new_today"
 										android:textColorHint="#757575"
 										android:layout_gravity="center_vertical"
 										android:maxLength="1500" />
@@ -276,7 +271,7 @@
 										android:paddingRight="18dp"
 										android:paddingBottom="8dp"
 										android:background="#757575"
-										android:text="Share"
+										android:text="@string/share"
 										android:textSize="16sp"
 										android:textColor="#FFFFFF"
 										android:fontFamily="@font/product_sans" />

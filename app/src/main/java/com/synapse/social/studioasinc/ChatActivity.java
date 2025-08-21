@@ -35,7 +35,6 @@ import android.webkit.*;
 import android.widget.*;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.*;
 import androidx.appcompat.app.AppCompatActivity;
@@ -46,6 +45,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.gridlayout.*;
 import androidx.recyclerview.widget.*;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -57,7 +57,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.color.MaterialColors;
+import com.google.android.material.button.*;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -74,7 +74,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
+import com.service.studioasinc.AI.Gemini;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
@@ -128,12 +128,15 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import android.text.method.ScrollingMovementMethod;
+//import com.onesignal.OneSignal;
 
-//import com.onesignal.OneSignal;
+
+// Add this import statement at the top of your Activity's logic
+import com.synapse.social.studioasinc.StorageUtil;
+import com.synapse.social.studioasinc.FasterCloudinaryUploader;
 
 public class ChatActivity extends AppCompatActivity {
-	
-	public final int REQ_CD_IMAGE_PICKER = 101;
 	
 	private Timer _timer = new Timer();
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
@@ -165,17 +168,23 @@ public class ChatActivity extends AppCompatActivity {
 	private String imageUrl = "";
 	private String AndroidDevelopersBlogURL = "";
 	private String ONESIGNAL_APP_ID = "";
+	private String promt = "";
+	public final int REQ_CD_IMAGE_PICKER = 101;
+	private ChatAdapter chatAdapter;
 	
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
+	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
+	private ArrayList<String> fp = new ArrayList<>();
 	
-	private CenterCropLinearLayoutNoEffect body;
-	private CenterCropLinearLayoutNoEffect top;
+	private LinearLayout parent;
+	private RelativeLayout relativelayout1;
+	private ImageView ivBGimage;
+	private LinearLayout body;
+	private LinearLayout appBar;
 	private LinearLayout middle;
-	private LinearLayout bottomSpace;
+	private LinearLayout attachmentLayoutListHolder;
 	private LinearLayout mMessageReplyLayout;
 	private LinearLayout message_input_overall_container;
-	private CenterCropLinearLayoutNoEffect bottomAudioRecorder;
-	private TextView unblock_btn;
 	private TextView blocked_txt;
 	private ImageView back;
 	private LinearLayout topProfileLayout;
@@ -191,12 +200,11 @@ public class ChatActivity extends AppCompatActivity {
 	private TextView topProfileLayoutUsername;
 	private ImageView topProfileLayoutGenderBadge;
 	private ImageView topProfileLayoutVerifiedBadge;
-	private LinearLayout bannedUserInfo;
-	private RecyclerView ChatMessagesListRecycler;
 	private TextView noChatText;
-	private ImageView bannedUserInfoIc;
-	private TextView bannedUserInfoText;
-	private CenterCropLinearLayoutNoEffect mMessageReplyLayoutBody;
+	private RecyclerView ChatMessagesListRecycler;
+	private CardView card_attactmentListRVHolder;
+	private RecyclerView rv_attacmentList;
+	private LinearLayout mMessageReplyLayoutBody;
 	private LinearLayout mMessageReplyLayoutSpace;
 	private ImageView mMessageReplyLayoutBodyIc;
 	private LinearLayout mMessageReplyLayoutBodyRight;
@@ -204,29 +212,12 @@ public class ChatActivity extends AppCompatActivity {
 	private TextView mMessageReplyLayoutBodyRightUsername;
 	private TextView mMessageReplyLayoutBodyRightMessage;
 	private LinearLayout message_input_outlined_round;
-	private LinearLayout send_round_btn;
-	private LinearLayout img_container_layout;
+	private MaterialButton btn_sendMessage;
 	private FadeEditText message_et;
-	private LinearLayout camera_gallery_btn_container_round;
-	private CardView imgRoundLayout;
-	private ImageView remove_selected_img_icon;
-	private LinearLayout img_name_container;
-	private ImageView selected_img_preview;
-	private TextView img_name;
-	private ProgressBar img_upload_prog;
+	private LinearLayout toolContainer;
 	private ImageView expand_send_type_btn;
 	private LinearLayout devider_mic_camera;
 	private ImageView gallery_btn;
-	private LinearLayout devider;
-	private ImageView attachment_btn;
-	private LinearLayout devider1;
-	private ImageView send_type_voice_btn;
-	private LinearLayout devider2;
-	private ImageView more_send_type_btn;
-	private ImageView send_ic;
-	private ImageView bottomAudioRecorderCancel;
-	private TextView bottomAudioRecorderTime;
-	private ImageView bottomAudioRecorderSend;
 	
 	private Intent intent = new Intent();
 	private DatabaseReference main = _firebase.getReference("skyline");
@@ -249,7 +240,6 @@ public class ChatActivity extends AppCompatActivity {
 	private DatabaseReference blocklist = _firebase.getReference("skyline/blocklist");
 	private ChildEventListener _blocklist_child_listener;
 	private SharedPreferences blocked;
-	private Intent image_picker = new Intent(Intent.ACTION_GET_CONTENT);
 	private SharedPreferences theme;
 	private AlertDialog cd;
 	private StorageReference upload_selected_img = _firebase_storage.getReference("synapse/chats/images");
@@ -263,6 +253,7 @@ public class ChatActivity extends AppCompatActivity {
 	private AlertDialog.Builder zorry;
 	private SharedPreferences appSettings;
 	private AlertDialog.Builder Dialogs;
+	private Gemini gemini;
 	
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -287,14 +278,15 @@ public class ChatActivity extends AppCompatActivity {
 	}
 	
 	private void initialize(Bundle _savedInstanceState) {
+		parent = findViewById(R.id.parent);
+		relativelayout1 = findViewById(R.id.relativelayout1);
+		ivBGimage = findViewById(R.id.ivBGimage);
 		body = findViewById(R.id.body);
-		top = findViewById(R.id.top);
+		appBar = findViewById(R.id.appBar);
 		middle = findViewById(R.id.middle);
-		bottomSpace = findViewById(R.id.bottomSpace);
+		attachmentLayoutListHolder = findViewById(R.id.attachmentLayoutListHolder);
 		mMessageReplyLayout = findViewById(R.id.mMessageReplyLayout);
 		message_input_overall_container = findViewById(R.id.message_input_overall_container);
-		bottomAudioRecorder = findViewById(R.id.bottomAudioRecorder);
-		unblock_btn = findViewById(R.id.unblock_btn);
 		blocked_txt = findViewById(R.id.blocked_txt);
 		back = findViewById(R.id.back);
 		topProfileLayout = findViewById(R.id.topProfileLayout);
@@ -310,11 +302,10 @@ public class ChatActivity extends AppCompatActivity {
 		topProfileLayoutUsername = findViewById(R.id.topProfileLayoutUsername);
 		topProfileLayoutGenderBadge = findViewById(R.id.topProfileLayoutGenderBadge);
 		topProfileLayoutVerifiedBadge = findViewById(R.id.topProfileLayoutVerifiedBadge);
-		bannedUserInfo = findViewById(R.id.bannedUserInfo);
-		ChatMessagesListRecycler = findViewById(R.id.ChatMessagesListRecycler);
 		noChatText = findViewById(R.id.noChatText);
-		bannedUserInfoIc = findViewById(R.id.bannedUserInfoIc);
-		bannedUserInfoText = findViewById(R.id.bannedUserInfoText);
+		ChatMessagesListRecycler = findViewById(R.id.ChatMessagesListRecycler);
+		card_attactmentListRVHolder = findViewById(R.id.card_attactmentListRVHolder);
+		rv_attacmentList = findViewById(R.id.rv_attacmentList);
 		mMessageReplyLayoutBody = findViewById(R.id.mMessageReplyLayoutBody);
 		mMessageReplyLayoutSpace = findViewById(R.id.mMessageReplyLayoutSpace);
 		mMessageReplyLayoutBodyIc = findViewById(R.id.mMessageReplyLayoutBodyIc);
@@ -323,45 +314,19 @@ public class ChatActivity extends AppCompatActivity {
 		mMessageReplyLayoutBodyRightUsername = findViewById(R.id.mMessageReplyLayoutBodyRightUsername);
 		mMessageReplyLayoutBodyRightMessage = findViewById(R.id.mMessageReplyLayoutBodyRightMessage);
 		message_input_outlined_round = findViewById(R.id.message_input_outlined_round);
-		send_round_btn = findViewById(R.id.send_round_btn);
-		img_container_layout = findViewById(R.id.img_container_layout);
+		btn_sendMessage = findViewById(R.id.btn_sendMessage);
 		message_et = findViewById(R.id.message_et);
-		camera_gallery_btn_container_round = findViewById(R.id.camera_gallery_btn_container_round);
-		imgRoundLayout = findViewById(R.id.imgRoundLayout);
-		remove_selected_img_icon = findViewById(R.id.remove_selected_img_icon);
-		img_name_container = findViewById(R.id.img_name_container);
-		selected_img_preview = findViewById(R.id.selected_img_preview);
-		img_name = findViewById(R.id.img_name);
-		img_upload_prog = findViewById(R.id.img_upload_prog);
+		toolContainer = findViewById(R.id.toolContainer);
 		expand_send_type_btn = findViewById(R.id.expand_send_type_btn);
 		devider_mic_camera = findViewById(R.id.devider_mic_camera);
 		gallery_btn = findViewById(R.id.gallery_btn);
-		devider = findViewById(R.id.devider);
-		attachment_btn = findViewById(R.id.attachment_btn);
-		devider1 = findViewById(R.id.devider1);
-		send_type_voice_btn = findViewById(R.id.send_type_voice_btn);
-		devider2 = findViewById(R.id.devider2);
-		more_send_type_btn = findViewById(R.id.more_send_type_btn);
-		send_ic = findViewById(R.id.send_ic);
-		bottomAudioRecorderCancel = findViewById(R.id.bottomAudioRecorderCancel);
-		bottomAudioRecorderTime = findViewById(R.id.bottomAudioRecorderTime);
-		bottomAudioRecorderSend = findViewById(R.id.bottomAudioRecorderSend);
 		auth = FirebaseAuth.getInstance();
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		blocked = getSharedPreferences("block", Activity.MODE_PRIVATE);
-		image_picker.setType("image/*");
-		image_picker.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
 		theme = getSharedPreferences("theme", Activity.MODE_PRIVATE);
 		zorry = new AlertDialog.Builder(this);
 		appSettings = getSharedPreferences("appSettings", Activity.MODE_PRIVATE);
 		Dialogs = new AlertDialog.Builder(this);
-		
-		unblock_btn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_Unblock_this_user();
-			}
-		});
 		
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -422,7 +387,89 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 		
-		send_round_btn.setOnClickListener(new View.OnClickListener() {
+		btn_sendMessage.setOnLongClickListener(new View.OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View _view) {
+				if (!message_et.getText().toString().isEmpty()) {
+					// Or change settings later
+					gemini.setModel("gemini-2.5-flash-lite");
+					gemini.setTone("normal");
+					gemini.setShowThinking(true);
+					gemini.setSystemInstruction(
+					"You are a concise text assistant. Always return ONLY the transformed text (no explanation, no labels). " +
+					"Preserve original formatting. Censor profanity by replacing letters with asterisks (e.g., s***t). " +
+					"Keep the language and tone of the input unless asked to change it."
+					);
+					
+					// Prepare prompt for grammar correction
+					String prompt = "Fix grammar, punctuation, and clarity without changing meaning. " +
+					"Preserve original formatting (line breaks, lists, markdown). " +
+					"Censor profanity by replacing letters with asterisks. " +
+					"Return ONLY the corrected RAW text.\n```"
+					.concat(message_et.getText().toString())
+					.concat("```");
+					
+					// Send prompt
+					gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+						@Override
+						public void onSuccess(String response) {
+							runOnUiThread(() -> message_et.setText(response));
+						}
+						
+						@Override
+						public void onError(String error) {
+							runOnUiThread(() -> message_et.setText("Error: " + error));
+						}
+						
+						@Override
+						public void onThinking() {
+							runOnUiThread(() -> message_et.setText(gemini.getThinkingText()));
+						}
+					});
+					
+				} else {
+					// If message_et is empty → get text from reply layout and create a reply
+					String replyText = mMessageReplyLayoutBodyRightMessage.getText().toString();
+					
+					gemini.setModel("gemini-2.5-flash-lite");
+					gemini.setTone("normal");
+					gemini.setShowThinking(false);
+					gemini.setSystemInstruction(
+					"You are a concise text assistant. Always return ONLY the transformed text (no explanation, no labels). " +
+					"Preserve original formatting. Censor profanity by replacing letters with asterisks (e.g., s***t). " +
+					"Keep the language and tone of the input unless asked to change it."
+					);
+					
+					// Prepare prompt for reply generation
+					String prompt = "Read the message inside the backticks and write a natural, context-aware reply " +
+					"in the same language and tone. Keep it concise (1–3 short sentences). " +
+					"Do NOT include quotes, extra commentary, or disclaimers. Censor profanity. " +
+					"Output ONLY the reply text.\n```"
+					.concat(replyText)
+					.concat("```");
+					
+					gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+						@Override
+						public void onSuccess(String response) {
+							runOnUiThread(() -> message_et.setText(response));
+						}
+						
+						@Override
+						public void onError(String error) {
+							runOnUiThread(() -> message_et.setText("Error: " + error));
+						}
+						
+						@Override
+						public void onThinking() {
+							runOnUiThread(() -> message_et.setText(gemini.getThinkingText()));
+						}
+					});
+				}
+				return true;
+			}
+		});
+		
+		btn_sendMessage.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				_send_btn();
@@ -433,52 +480,23 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
 				final String _charSeq = _param1.toString();
-				if (img_container_layout.getVisibility() == View.VISIBLE || (file_type_expand == 1)) {
-					if (_charSeq.length() == 0) {
-						message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-						
-						message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)95, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
-						_setMargin(message_et, 0, 7, 0, 0);
-						send_ic.setImageResource(R.drawable.ic_thumb_up_48px);
-						FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
-						_TransitionManager(message_input_overall_container, 125);
-					} else {
-						message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-						
-						_TransitionManager(message_input_overall_container, 125);
-						typingSnd = new HashMap<>();
-						typingSnd.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-						typingSnd.put("typingMessageStatus", "true");
-						FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").updateChildren(typingSnd);
-						_setMargin(message_et, 0, 7, 0, 20);
-						message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)45, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
-						message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-						
-						send_ic.setImageResource(R.drawable.ic_send_48px);
-					}
-				} else {
-					if (_charSeq.length() == 0) {
-						message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
-						_setMargin(message_et, 0, 7, 0, 0);
-						send_ic.setImageResource(R.drawable.ic_thumb_up_48px);
-						FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
-						message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-						
-						_TransitionManager(message_input_overall_container, 125);
-					} else {
-						_TransitionManager(message_input_overall_container, 125);
-						message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-						
-						send_ic.setImageResource(R.drawable.ic_send_48px);
-					}
-				}
 				if (_charSeq.length() == 0) {
 					FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
+					_setMargin(message_et, 0, 7, 0, 0);
+					FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
+					message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
+					
+					_TransitionManager(message_input_overall_container, 125);
+					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
 				} else {
 					typingSnd = new HashMap<>();
 					typingSnd.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
 					typingSnd.put("typingMessageStatus", "true");
 					FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").updateChildren(typingSnd);
+					_TransitionManager(message_input_overall_container, 125);
+					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
+					
+					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)60, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
 				}
 			}
 			
@@ -493,104 +511,10 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 		
-		remove_selected_img_icon.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				img_container_layout.setVisibility(View.GONE);
-				file = "";
-				path = "";
-				filename = "";
-				_TransitionManager(message_input_outlined_round, 125);
-				if (message_et.getText().toString().equals("")) {
-					if (file_type_expand == 1) {
-						message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-						
-					} else {
-						message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-						
-					}
-				} else {
-					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-					
-				}
-				message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)87, (int)3, 0xFFC7C7C7, 0xFFFFFFFF));
-			}
-		});
-		
-		expand_send_type_btn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				if (file_type_expand == 0) {
-					file_type_expand++;
-					devider2.setVisibility(View.VISIBLE);
-					devider1.setVisibility(View.VISIBLE);
-					devider.setVisibility(View.VISIBLE);
-					more_send_type_btn.setVisibility(View.VISIBLE);
-					send_type_voice_btn.setVisibility(View.VISIBLE);
-					attachment_btn.setVisibility(View.VISIBLE);
-					_TransitionManager(camera_gallery_btn_container_round, 200);
-					_ImageColor(expand_send_type_btn, 0xFF2962FF);
-					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-					
-				} else {
-					file_type_expand--;
-					devider2.setVisibility(View.GONE);
-					devider1.setVisibility(View.GONE);
-					devider.setVisibility(View.GONE);
-					more_send_type_btn.setVisibility(View.GONE);
-					send_type_voice_btn.setVisibility(View.GONE);
-					attachment_btn.setVisibility(View.GONE);
-					_TransitionManager(camera_gallery_btn_container_round, 200);
-					_ImageColor(expand_send_type_btn, 0xFF454644);
-					if (message_et.getText().toString().equals("")) {
-						if (img_container_layout.getVisibility() == View.VISIBLE) {
-							message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-							
-						} else {
-							message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-							
-						}
-					} else {
-						message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-						
-					}
-				}
-			}
-		});
-		
 		gallery_btn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				startActivityForResult(image_picker, REQ_CD_IMAGE_PICKER);
-			}
-		});
-		
-		send_type_voice_btn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				if (Build.VERSION.SDK_INT >= 23) {
-					if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_DENIED) {
-						requestPermissions(new String[] {android.Manifest.permission.RECORD_AUDIO}, 1000);
-					} else {
-						_AudioRecorderStart();
-					}
-				} else {
-					_AudioRecorderStart();
-				}
-			}
-		});
-		
-		bottomAudioRecorderCancel.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_AudioRecorderStop();
-			}
-		});
-		
-		bottomAudioRecorderTime.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)Double.parseDouble(message_et.getText().toString()), (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
+				StorageUtil.pickMultipleFiles(ChatActivity.this, "*/*", REQ_CD_IMAGE_PICKER);
 			}
 		});
 		
@@ -653,10 +577,10 @@ public class ChatActivity extends AppCompatActivity {
 				if (_childKey.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 					if (_childValue.containsKey(getIntent().getStringExtra("uid"))) {
 						message_input_overall_container.setVisibility(View.GONE);
-						unblock_btn.setVisibility(View.VISIBLE);
+						
 					} else {
 						message_input_overall_container.setVisibility(View.VISIBLE);
-						unblock_btn.setVisibility(View.GONE);
+						
 					}
 				} else {
 					
@@ -707,9 +631,7 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onProgress(UploadTask.TaskSnapshot _param1) {
 				double _progressValue = (100.0 * _param1.getBytesTransferred()) / _param1.getTotalByteCount();
-				img_upload_prog.setProgress((int)_progressValue);
-				img_upload_prog.setVisibility(View.VISIBLE);
-				_LoadingDialog(true);
+				
 			}
 		};
 		
@@ -725,58 +647,7 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onComplete(Task<Uri> _param1) {
 				final String _downloadUrl = _param1.getResult().toString();
-				_LoadingDialog(false);
-				cc = Calendar.getInstance();
-				String uniqueMessageKey = main.push().getKey();
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-				ChatSendMap.put("TYPE", "MESSAGE");
-				ChatSendMap.put("message_text", message_et.getText().toString().trim());
-				ChatSendMap.put("message_image_uri", _downloadUrl);
-				ChatSendMap.put("message_state", "sended");
-				if (!ReplyMessageID.equals("null")) {
-					ChatSendMap.put("replied_message_id", ReplyMessageID);
-				}
-				ChatSendMap.put("key", uniqueMessageKey);
-				ChatSendMap.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-				FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).child(uniqueMessageKey).updateChildren(ChatSendMap);
-				FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(uniqueMessageKey).updateChildren(ChatSendMap);
-				ChatInboxSend = new HashMap<>();
-				ChatInboxSend.put("uid", getIntent().getStringExtra("uid"));
-				ChatInboxSend.put("TYPE", "MESSAGE");
-				ChatInboxSend.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-				ChatInboxSend.put("last_message_text", message_et.getText().toString().trim());
-				ChatInboxSend.put("last_message_state", "sended");
-				ChatInboxSend.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-				FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).updateChildren(ChatInboxSend);
-				ChatInboxSend2 = new HashMap<>();
-				ChatInboxSend2.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-				ChatInboxSend2.put("TYPE", "MESSAGE");
-				ChatInboxSend2.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-				ChatInboxSend2.put("last_message_text", message_et.getText().toString().trim());
-				ChatInboxSend2.put("last_message_state", "sended");
-				ChatInboxSend2.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-				FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
-				message_et.setText("");
-				filename = "";
-				file = "";
-				devider2.setVisibility(View.GONE);
-				devider1.setVisibility(View.GONE);
-				devider.setVisibility(View.GONE);
-				more_send_type_btn.setVisibility(View.GONE);
-				send_type_voice_btn.setVisibility(View.GONE);
-				attachment_btn.setVisibility(View.GONE);
-				_TransitionManager(camera_gallery_btn_container_round, 200);
-				message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
 				
-				img_container_layout.setVisibility(View.GONE);
-				img_upload_prog.setVisibility(View.GONE);
-				FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
-				ChatSendMap.clear();
-				ChatInboxSend.clear();
-				ChatInboxSend2.clear();
-				ReplyMessageID = "null";
-				mMessageReplyLayout.setVisibility(View.GONE);
 			}
 		};
 		
@@ -791,7 +662,7 @@ public class ChatActivity extends AppCompatActivity {
 		_upload_selected_img_delete_success_listener = new OnSuccessListener() {
 			@Override
 			public void onSuccess(Object _param1) {
-				_LoadingDialog(false);
+				
 			}
 		};
 		
@@ -894,23 +765,92 @@ public class ChatActivity extends AppCompatActivity {
 	}
 	
 	private void initializeLogic() {
-		blocked_txt.setText("You can't reply this conversation. Learn more.");
-		camera_gallery_btn_container_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
-		send_round_btn.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
-		bottomAudioRecorderSend.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
-		message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)95, (int)3, 0xFFC7C7C7, 0xFFFFFFFF));
-		img_container_layout.setVisibility(View.GONE);
-		devider2.setVisibility(View.GONE);
-		devider1.setVisibility(View.GONE);
-		devider.setVisibility(View.GONE);
-		more_send_type_btn.setVisibility(View.GONE);
-		send_type_voice_btn.setVisibility(View.GONE);
-		attachment_btn.setVisibility(View.GONE);
-		message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
+		SecondUserAvatar = "null";
+		ReplyMessageID = "null";
+		path = "";
+		ChatMessagesLimit = 80;
+		block_switch = 0;
+		// Set the Layout Manager
+		LinearLayoutManager ChatRecyclerLayoutManager = new LinearLayoutManager(this);
+		ChatRecyclerLayoutManager.setReverseLayout(false);
+		ChatRecyclerLayoutManager.setStackFromEnd(true);
+		ChatMessagesListRecycler.setLayoutManager(ChatRecyclerLayoutManager);
 		
+		// Create, configure, and set the new ChatAdapter
+		chatAdapter = new ChatAdapter(ChatMessagesList);
+		chatAdapter.setChatActivity(this);
+		ChatMessagesListRecycler.setAdapter(chatAdapter);
+		/* Deprecated Code (Unused)
+ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+    @Override
+    public void onScrolled(@NonNull RecyclerView ChatMessagesListRecycler, int dx, int dy) {
+        super.onScrolled(ChatMessagesListRecycler, dx, dy);
+
+        LinearLayoutManager layoutManager = (LinearLayoutManager) ChatMessagesListRecycler.getLayoutManager();
+
+        int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+        int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
+
+        for (int i = firstVisibleItemPosition; i <= lastVisibleItemPosition; i++) {
+            View childView = layoutManager.findViewByPosition(i);
+            if (childView != null) {
+                float percentage = calculatePercentage(layoutManager, childView);
+                animateView(childView, percentage);
+            }
+        }
+    }
+
+    private float calculatePercentage(LinearLayoutManager layoutManager, View childView) {
+        int itemHeight = childView.getHeight();
+        int parentHeight = layoutManager.getHeight();
+        int top = childView.getTop();
+        int bottom = childView.getBottom();
+
+        if (parentHeight == 0) {
+            return 0f;
+        }
+
+        int visibleHeight = Math.min(bottom, parentHeight) - Math.max(top, 0);
+        int totalHeight = Math.min(itemHeight, parentHeight);
+
+        return (float) visibleHeight / totalHeight;
+    }
+
+    private void animateView(View view, float percentage) {
+        view.setAlpha(percentage); // Adjust opacity based on percentage of visibility
+    }
+});
+*/
+		// Initialize with custom settings
+		gemini = new Gemini.Builder(this)
+		.model("gemini-1.5-flash")
+		.responseType("text")
+		.tone("friendly")
+		.size("medium")
+		.maxTokens(2000)
+		.temperature(0.8)
+		.showThinking(true)
+		.thinkingText("Analyzing your request...")
+		.systemInstruction("Your name is ChatBot, help users with their questions")
+		.responseTextView(message_et)
+		.build();
+		_setupSwipeToReply();
+		// --- START: Critical Initialization for Attachment RecyclerView ---
+		
+		// 1. Create the adapter for the attachment list, passing it our empty list.
+		Rv_attacmentListAdapter attachmentAdapter = new Rv_attacmentListAdapter(attactmentmap);
+		rv_attacmentList.setAdapter(attachmentAdapter);
+		
+		// 2. A RecyclerView must have a LayoutManager to function.
+		//    We set it to a horizontal layout.
+		rv_attacmentList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+		
+		// --- END: Critical Initialization ---
+		_getUserReference();
+		toolContainer.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
+		message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)95, (int)3, 0xFFC7C7C7, 0xFFFFFFFF));
+		message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
 		_ImgRound(topProfileLayoutProfileImage, 100);
-		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
-		_ScrollingText(topProfileLayoutUsername);
 		if (message_et.getText().toString().trim().equals("")) {
 			_TransitionManager(message_input_overall_container, 250);
 			message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
@@ -920,95 +860,48 @@ public class ChatActivity extends AppCompatActivity {
 			message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
 			
 		}
-		ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
-		SecondUserAvatar = "null";
-		ReplyMessageID = "null";
-		path = "";
-		ChatMessagesLimit = 80;
-		file_type_expand = 0;
-		block_switch = 0;
-		bannedUserInfo.setElevation((float)2);
-		LinearLayoutManager ChatRecyclerLayoutManager = new LinearLayoutManager(this);
-		ChatRecyclerLayoutManager.setReverseLayout(false);
-		ChatRecyclerLayoutManager.setStackFromEnd(true);
-		ChatMessagesListRecycler.setLayoutManager(ChatRecyclerLayoutManager);
-		ChatMessagesListRecycler.setAdapter(new ChatMessagesListRecyclerAdapter(ChatMessagesList));
-		_getUserReference();
-		ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
-			@Override
-			public void onScrolled(@NonNull RecyclerView ChatMessagesListRecycler, int dx, int dy) {
-				super.onScrolled(ChatMessagesListRecycler, dx, dy);
-				
-				LinearLayoutManager layoutManager = (LinearLayoutManager) ChatMessagesListRecycler.getLayoutManager();
-				
-				int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-				int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
-				
-				for (int i = firstVisibleItemPosition; i <= lastVisibleItemPosition; i++) {
-					View childView = layoutManager.findViewByPosition(i);
-					if (childView != null) {
-						float percentage = calculatePercentage(layoutManager, childView);
-						animateView(childView, percentage);
-					}
-				}
-			}
-			
-			private float calculatePercentage(LinearLayoutManager layoutManager, View childView) {
-				int itemHeight = childView.getHeight();
-				int parentHeight = layoutManager.getHeight();
-				int top = childView.getTop();
-				int bottom = childView.getBottom();
-				
-				if (parentHeight == 0) {
-					return 0f;
-				}
-				
-				int visibleHeight = Math.min(bottom, parentHeight) - Math.max(top, 0);
-				int totalHeight = Math.min(itemHeight, parentHeight);
-				
-				return (float) visibleHeight / totalHeight;
-			}
-			
-			private void animateView(View view, float percentage) {
-				view.setAlpha(percentage); // Adjust opacity based on percentage of visibility
-			}
-		});
 	}
 	
 	@Override
 	protected void onActivityResult(int _requestCode, int _resultCode, Intent _data) {
 		super.onActivityResult(_requestCode, _resultCode, _data);
-		
-		switch (_requestCode) {
-			case REQ_CD_IMAGE_PICKER:
-			if (_resultCode == Activity.RESULT_OK) {
-				ArrayList<String> _filePath = new ArrayList<>();
-				if (_data != null) {
-					if (_data.getClipData() != null) {
-						for (int _index = 0; _index < _data.getClipData().getItemCount(); _index++) {
-							ClipData.Item _item = _data.getClipData().getItemAt(_index);
-							_filePath.add(FileUtil.convertUriToFilePath(getApplicationContext(), _item.getUri()));
-						}
+		if (_requestCode == REQ_CD_IMAGE_PICKER && _resultCode == Activity.RESULT_OK) {
+			if (_data != null) {
+				ArrayList<String> resolvedFilePaths = new ArrayList<>();
+				if (_data.getClipData() != null) {
+					for (int i = 0; i < _data.getClipData().getItemCount(); i++) {
+						Uri fileUri = _data.getClipData().getItemAt(i).getUri();
+						String path = StorageUtil.getPathFromUri(getApplicationContext(), fileUri);
+						if (path != null) resolvedFilePaths.add(path);
 					}
-					else {
-						_filePath.add(FileUtil.convertUriToFilePath(getApplicationContext(), _data.getData()));
+				} else if (_data.getData() != null) {
+					Uri fileUri = _data.getData();
+					String path = StorageUtil.getPathFromUri(getApplicationContext(), fileUri);
+					if (path != null) resolvedFilePaths.add(path);
+				}
+				
+				if (!resolvedFilePaths.isEmpty()) {
+					attachmentLayoutListHolder.setVisibility(View.VISIBLE);
+					
+					int startingPosition = attactmentmap.size();
+					
+					for (String filePath : resolvedFilePaths) {
+						HashMap<String, Object> itemMap = new HashMap<>();
+						itemMap.put("localPath", filePath); 
+						itemMap.put("uploadState", "pending");
+						attactmentmap.add(itemMap);
+					}
+					
+					rv_attacmentList.getAdapter().notifyItemRangeInserted(startingPosition, resolvedFilePaths.size());
+					
+					for (int i = 0; i < resolvedFilePaths.size(); i++) {
+						_startUploadForItem(startingPosition + i);
 					}
 				}
-				file = _filePath.get((int)(0));
-				path = _filePath.get((int)(0));
-				filename = Uri.parse(file).getLastPathSegment();
-				img_name.setText(filename);
-				selected_img_preview.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(_filePath.get((int)(0)), 1024, 1024));
-				_TransitionManager(message_input_outlined_round, 150);
-				message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-				
-				img_container_layout.setVisibility(View.VISIBLE);
-				img_upload_prog.setVisibility(View.GONE);
 			}
-			else {
-				
-			}
-			break;
+		}
+		switch (_requestCode) {
+			
 			default:
 			break;
 		}
@@ -1185,6 +1078,11 @@ public class ChatActivity extends AppCompatActivity {
 				final TextInputLayout textinputlayout1 = EdittextDesign.findViewById(R.id.textinputlayout1);
 				edittext1.setFocusableInTouchMode(true);
 				edittext1.setText(_data.get((int)_position).get("message_text").toString());
+				edittext1.setMaxLines(10);
+				edittext1.setVerticalScrollBarEnabled(true);
+				edittext1.setMovementMethod(new ScrollingMovementMethod());
+				edittext1.setScrollBarStyle(View.SCROLLBARS_INSIDE_INSET);
+				
 				Dialogs.setPositiveButton("Chnage", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface _dialog, int _which) {
@@ -1288,13 +1186,11 @@ public class ChatActivity extends AppCompatActivity {
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if(dataSnapshot.exists()) {
 					if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
-						bannedUserInfo.setVisibility(View.VISIBLE);
 						topProfileLayoutProfileImage.setImageResource(R.drawable.banned_avatar);
 						SecondUserAvatar = "null_banned";
 						topProfileLayoutStatus.setTextColor(0xFF9E9E9E);
 						topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
 					} else {
-						bannedUserInfo.setVisibility(View.GONE);
 						if (dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
 							topProfileLayoutProfileImage.setImageResource(R.drawable.avatar);
 							SecondUserAvatar = "null";
@@ -1306,9 +1202,17 @@ public class ChatActivity extends AppCompatActivity {
 					if (dataSnapshot.child("nickname").getValue(String.class).equals("null")) {
 						topProfileLayoutUsername.setText("@" + dataSnapshot.child("username").getValue(String.class));
 						SecondUserName = "@" + dataSnapshot.child("username").getValue(String.class);
+						// After setting SecondUserName and FirstUserName...
+						((ChatAdapter)chatAdapter).setSecondUserName(SecondUserName);
+						((ChatAdapter)chatAdapter).setFirstUserName(FirstUserName);
+						((ChatAdapter)chatAdapter).setSecondUserAvatar(SecondUserAvatar);
 					} else {
 						topProfileLayoutUsername.setText(dataSnapshot.child("nickname").getValue(String.class));
 						SecondUserName = dataSnapshot.child("nickname").getValue(String.class);
+						// After setting SecondUserName and FirstUserName...
+						((ChatAdapter)chatAdapter).setSecondUserName(SecondUserName);
+						((ChatAdapter)chatAdapter).setFirstUserName(FirstUserName);
+						((ChatAdapter)chatAdapter).setSecondUserAvatar(SecondUserAvatar);
 					}
 					if (dataSnapshot.child("status").getValue(String.class).equals("online")) {
 						topProfileLayoutStatus.setText(getResources().getString(R.string.online));
@@ -1438,7 +1342,6 @@ public class ChatActivity extends AppCompatActivity {
 	public void _AudioRecorderStart() {
 		cc = Calendar.getInstance();
 		recordMs = 0;
-		bottomAudioRecorder.setVisibility(View.VISIBLE);
 		AudioMessageRecorder = new MediaRecorder();
 		
 		File getCacheDir = getExternalCacheDir();
@@ -1469,7 +1372,7 @@ public class ChatActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						recordMs = recordMs + 500;
-						bottomAudioRecorderTime.setText(_getDurationString((long)recordMs));
+						
 					}
 				});
 			}
@@ -1480,7 +1383,6 @@ public class ChatActivity extends AppCompatActivity {
 	
 	
 	public void _AudioRecorderStop() {
-		bottomAudioRecorder.setVisibility(View.GONE);
 		if (AudioMessageRecorder != null) {
 			AudioMessageRecorder.stop();
 			AudioMessageRecorder.release();
@@ -1508,51 +1410,29 @@ public class ChatActivity extends AppCompatActivity {
 	
 	public void _getOldChatMessagesRef() {
 		ChatMessagesLimit = ChatMessagesLimit + 80;
-		{
-			ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-			Handler mMainHandler = new Handler(Looper.getMainLooper());
-			
-			mExecutorService.execute(new Runnable() {
-				@Override
-				public void run() {
-					Query getChatsMessages = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).limitToLast((int)ChatMessagesLimit);
-					getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
-						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-							mMainHandler.post(new Runnable() {
-								@Override
-								public void run() {
-									if(dataSnapshot.exists()) {
-										ChatMessagesListRecycler.setVisibility(View.VISIBLE);
-										noChatText.setVisibility(View.GONE);
-										ChatMessagesList.clear();
-										try {
-											GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-											for (DataSnapshot _data : dataSnapshot.getChildren()) {
-												HashMap<String, Object> _map = _data.getValue(_ind);
-												ChatMessagesList.add(_map);
-											}
-										} catch (Exception _e) {
-											_e.printStackTrace();
-										}
-										
-										ChatMessagesListRecycler.getAdapter().notifyDataSetChanged();
-									} else {
-										ChatMessagesListRecycler.setVisibility(View.GONE);
-										noChatText.setVisibility(View.VISIBLE);
-									}
-								}
-							});
+		_showLoadMoreIndicator();
+		
+		Query getChatsMessages = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).limitToLast((int)ChatMessagesLimit);
+		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				_hideLoadMoreIndicator();
+				if(dataSnapshot.exists()) {
+					ChatMessagesList.clear();
+					try {
+						GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+						for (DataSnapshot _data : dataSnapshot.getChildren()) {
+							ChatMessagesList.add(_data.getValue(_ind));
 						}
-						
-						@Override
-						public void onCancelled(@NonNull DatabaseError databaseError) {
-							
-						}
-					});
+					} catch (Exception _e) {}
+					((ChatAdapter)chatAdapter).notifyDataSetChanged();
 				}
-			});
-		}
+			}
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
+				_hideLoadMoreIndicator();
+			}
+		});
 	}
 	
 	
@@ -1760,140 +1640,198 @@ public class ChatActivity extends AppCompatActivity {
 	}
 	
 	
-	public void _swipe2rply(final View _view, final double _position, final ArrayList<HashMap<String, Object>> _data) {
-		ReplyMessageID = _data.get((int)_position).get("key").toString();
-		if (_data.get((int)_position).get("uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-			mMessageReplyLayoutBodyRightUsername.setText(FirstUserName);
-		} else {
-			mMessageReplyLayoutBodyRightUsername.setText(SecondUserName);
-		}
-		mMessageReplyLayoutBodyRightMessage.setText(_data.get((int)_position).get("message_text").toString());
-		mMessageReplyLayout.setVisibility(View.VISIBLE);
-		vbr.vibrate((long)(48));
-	}
-	
-	
 	public void _send_btn() {
-		if (path.equals("")) {
-			if (!message_et.getText().toString().trim().equals("")) {
+		final String messageText = message_et.getText().toString().trim();
+		
+		if (!attactmentmap.isEmpty()) {
+			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
+			
+			for (HashMap<String, Object> item : attactmentmap) {
+				if ("success".equals(item.get("uploadState"))) {
+					HashMap<String, Object> attachmentData = new HashMap<>();
+					attachmentData.put("url", item.get("cloudinaryUrl"));
+					attachmentData.put("publicId", item.get("publicId"));
+					successfulAttachments.add(attachmentData);
+				}
+			}
+			
+			if (!messageText.isEmpty() || !successfulAttachments.isEmpty()) {
 				cc = Calendar.getInstance();
 				String uniqueMessageKey = main.push().getKey();
+				
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-				ChatSendMap.put("TYPE", "MESSAGE");
-				ChatSendMap.put("message_text", message_et.getText().toString().trim());
+				ChatSendMap.put("TYPE", "ATTACHMENT_MESSAGE");
+				ChatSendMap.put("message_text", messageText);
+				ChatSendMap.put("attachments", successfulAttachments);
 				ChatSendMap.put("message_state", "sended");
-				if (!ReplyMessageID.equals("null")) {
-					ChatSendMap.put("replied_message_id", ReplyMessageID);
-				}
+				if (!ReplyMessageID.equals("null")) ChatSendMap.put("replied_message_id", ReplyMessageID);
 				ChatSendMap.put("key", uniqueMessageKey);
 				ChatSendMap.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-				FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).child(uniqueMessageKey).updateChildren(ChatSendMap);
-				FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(uniqueMessageKey).updateChildren(ChatSendMap);
-				ChatInboxSend = new HashMap<>();
-				ChatInboxSend.put("uid", getIntent().getStringExtra("uid"));
-				ChatInboxSend.put("TYPE", "MESSAGE");
-				ChatInboxSend.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-				ChatInboxSend.put("last_message_text", message_et.getText().toString().trim());
-				ChatInboxSend.put("last_message_state", "sended");
-				ChatInboxSend.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-				FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).updateChildren(ChatInboxSend);
-				ChatInboxSend2 = new HashMap<>();
-				ChatInboxSend2.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-				ChatInboxSend2.put("TYPE", "MESSAGE");
-				ChatInboxSend2.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-				ChatInboxSend2.put("last_message_text", message_et.getText().toString().trim());
-				ChatInboxSend2.put("last_message_state", "sended");
-				ChatInboxSend2.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-				FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
+				
+				FirebaseDatabase.getInstance().getReference("skyline/chats")
+				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+				.child(getIntent().getStringExtra("uid"))
+				.child(uniqueMessageKey)
+				.updateChildren(ChatSendMap);
+				
+				FirebaseDatabase.getInstance().getReference("skyline/chats")
+				.child(getIntent().getStringExtra("uid"))
+				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+				.child(uniqueMessageKey)
+				.updateChildren(ChatSendMap);
+				
+				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
+				_updateInbox(lastMessage);
+				
+				attactmentmap.clear();
+				rv_attacmentList.getAdapter().notifyDataSetChanged();
+				attachmentLayoutListHolder.setVisibility(View.GONE);
 				message_et.setText("");
-				devider2.setVisibility(View.GONE);
-				devider1.setVisibility(View.GONE);
-				devider.setVisibility(View.GONE);
-				more_send_type_btn.setVisibility(View.GONE);
-				send_type_voice_btn.setVisibility(View.GONE);
-				attachment_btn.setVisibility(View.GONE);
-				mMessageReplyLayout.setVisibility(View.GONE);
-				_TransitionManager(camera_gallery_btn_container_round, 200);
-				message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-				
-				FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
-				ChatSendMap.clear();
-				ChatInboxSend.clear();
-				ChatInboxSend2.clear();
 				ReplyMessageID = "null";
+				mMessageReplyLayout.setVisibility(View.GONE);
+			} else {
+				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
 			}
-		} else {
-			_LoadingDialog(true);
-			ImageUploader.uploadImage(path, new ImageUploader.UploadCallback() {
-				@Override
-				public void onUploadComplete(String imageUrl) {
-					path = "";
-					_LoadingDialog(false);
-					cc = Calendar.getInstance();
-					String uniqueMessageKey = main.push().getKey();
-					ChatSendMap = new HashMap<>();
-					ChatSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-					ChatSendMap.put("TYPE", "MESSAGE");
-					ChatSendMap.put("message_text", message_et.getText().toString().trim());
-					ChatSendMap.put("message_image_uri", imageUrl);
-					ChatSendMap.put("message_state", "sended");
-					if (!ReplyMessageID.equals("null")) {
-						ChatSendMap.put("replied_message_id", ReplyMessageID);
-					}
-					ChatSendMap.put("key", uniqueMessageKey);
-					ChatSendMap.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-					FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).child(uniqueMessageKey).updateChildren(ChatSendMap);
-					FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(uniqueMessageKey).updateChildren(ChatSendMap);
-					ChatInboxSend = new HashMap<>();
-					ChatInboxSend.put("uid", getIntent().getStringExtra("uid"));
-					ChatInboxSend.put("TYPE", "MESSAGE");
-					ChatInboxSend.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-					ChatInboxSend.put("last_message_text", message_et.getText().toString().trim());
-					ChatInboxSend.put("last_message_state", "sended");
-					ChatInboxSend.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-					FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).updateChildren(ChatInboxSend);
-					ChatInboxSend2 = new HashMap<>();
-					ChatInboxSend2.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-					ChatInboxSend2.put("TYPE", "MESSAGE");
-					ChatInboxSend2.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-					ChatInboxSend2.put("last_message_text", message_et.getText().toString().trim());
-					ChatInboxSend2.put("last_message_state", "sended");
-					ChatInboxSend2.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
-					FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
-					message_et.setText("");
-					filename = "";
-					file = "";
-					file_type_expand = 0;
-					devider2.setVisibility(View.GONE);
-					devider1.setVisibility(View.GONE);
-					devider.setVisibility(View.GONE);
-					more_send_type_btn.setVisibility(View.GONE);
-					send_type_voice_btn.setVisibility(View.GONE);
-					attachment_btn.setVisibility(View.GONE);
-					_TransitionManager(camera_gallery_btn_container_round, 200);
-					message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-					
-					img_container_layout.setVisibility(View.GONE);
-					img_upload_prog.setVisibility(View.GONE);
-					FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
-					ChatSendMap.clear();
-					ChatInboxSend.clear();
-					ChatInboxSend2.clear();
-					ReplyMessageID = "null";
-					mMessageReplyLayout.setVisibility(View.GONE);
-				}
-				
-				@Override
-				public void onUploadError(String errorMessage) {
-					
-					
-					
-					SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
-				}
-			});
 			
+		} else if (!messageText.isEmpty()) {
+			cc = Calendar.getInstance();
+			String uniqueMessageKey = main.push().getKey();
+			
+			ChatSendMap = new HashMap<>();
+			ChatSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+			ChatSendMap.put("TYPE", "MESSAGE");
+			ChatSendMap.put("message_text", messageText);
+			ChatSendMap.put("message_state", "sended");
+			if (!ReplyMessageID.equals("null")) ChatSendMap.put("replied_message_id", ReplyMessageID);
+			ChatSendMap.put("key", uniqueMessageKey);
+			ChatSendMap.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
+			
+			FirebaseDatabase.getInstance().getReference("skyline/chats")
+			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+			.child(getIntent().getStringExtra("uid"))
+			.child(uniqueMessageKey)
+			.updateChildren(ChatSendMap);
+			
+			FirebaseDatabase.getInstance().getReference("skyline/chats")
+			.child(getIntent().getStringExtra("uid"))
+			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+			.child(uniqueMessageKey)
+			.updateChildren(ChatSendMap);
+			
+			_updateInbox(messageText);
+			
+			message_et.setText("");
+			ReplyMessageID = "null";
+			mMessageReplyLayout.setVisibility(View.GONE);
 		}
+		/*
+if (path.equals("")) {
+if (!message_et.getText().toString().trim().equals("")) {
+cc = Calendar.getInstance();
+String uniqueMessageKey = main.push().getKey();
+ChatSendMap = new HashMap<>();
+ChatSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+ChatSendMap.put("TYPE", "MESSAGE");
+ChatSendMap.put("message_text", message_et.getText().toString().trim());
+ChatSendMap.put("message_state", "sended");
+if (!ReplyMessageID.equals("null")) {
+ChatSendMap.put("replied_message_id", ReplyMessageID);
+}
+ChatSendMap.put("key", uniqueMessageKey);
+ChatSendMap.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
+FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).child(uniqueMessageKey).updateChildren(ChatSendMap);
+FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(uniqueMessageKey).updateChildren(ChatSendMap);
+ChatInboxSend = new HashMap<>();
+ChatInboxSend.put("uid", getIntent().getStringExtra("uid"));
+ChatInboxSend.put("TYPE", "MESSAGE");
+ChatInboxSend.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+ChatInboxSend.put("last_message_text", message_et.getText().toString().trim());
+ChatInboxSend.put("last_message_state", "sended");
+ChatInboxSend.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
+FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).updateChildren(ChatInboxSend);
+ChatInboxSend2 = new HashMap<>();
+ChatInboxSend2.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+ChatInboxSend2.put("TYPE", "MESSAGE");
+ChatInboxSend2.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+ChatInboxSend2.put("last_message_text", message_et.getText().toString().trim());
+ChatInboxSend2.put("last_message_state", "sended");
+ChatInboxSend2.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
+FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
+mMessageReplyLayout.setVisibility(View.GONE);
+_TransitionManager(toolContainer, 200);
+message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
+
+FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
+ChatSendMap.clear();
+ChatInboxSend.clear();
+ChatInboxSend2.clear();
+ReplyMessageID = "null";
+message_et.setText("");
+}
+} else {
+_LoadingDialog(true);
+ImageUploader.uploadImage(path, new ImageUploader.UploadCallback() {
+	@Override
+	public void onUploadComplete(String imageUrl) {
+path = "";
+_LoadingDialog(false);
+cc = Calendar.getInstance();
+String uniqueMessageKey = main.push().getKey();
+ChatSendMap = new HashMap<>();
+ChatSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+ChatSendMap.put("TYPE", "MESSAGE");
+ChatSendMap.put("message_text", message_et.getText().toString().trim());
+ChatSendMap.put("message_image_uri", imageUrl);
+ChatSendMap.put("message_state", "sended");
+if (!ReplyMessageID.equals("null")) {
+ChatSendMap.put("replied_message_id", ReplyMessageID);
+}
+ChatSendMap.put("key", uniqueMessageKey);
+ChatSendMap.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
+FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).child(uniqueMessageKey).updateChildren(ChatSendMap);
+FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(uniqueMessageKey).updateChildren(ChatSendMap);
+ChatInboxSend = new HashMap<>();
+ChatInboxSend.put("uid", getIntent().getStringExtra("uid"));
+ChatInboxSend.put("TYPE", "MESSAGE");
+ChatInboxSend.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+ChatInboxSend.put("last_message_text", message_et.getText().toString().trim());
+ChatInboxSend.put("last_message_state", "sended");
+ChatInboxSend.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
+FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).updateChildren(ChatInboxSend);
+ChatInboxSend2 = new HashMap<>();
+ChatInboxSend2.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+ChatInboxSend2.put("TYPE", "MESSAGE");
+ChatInboxSend2.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+ChatInboxSend2.put("last_message_text", message_et.getText().toString().trim());
+ChatInboxSend2.put("last_message_state", "sended");
+ChatInboxSend2.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
+FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
+message_et.setText("");
+filename = "";
+file = "";
+_TransitionManager(toolContainer, 200);
+message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
+
+FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("typing-message").removeValue();
+ChatSendMap.clear();
+ChatInboxSend.clear();
+ChatInboxSend2.clear();
+ReplyMessageID = "null";
+mMessageReplyLayout.setVisibility(View.GONE);
+}
+
+ @Override
+public void onUploadError(String errorMessage) {
+	
+	
+	
+SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
+}
+});
+
+}
+*/
 	}
 	
 	
@@ -1977,6 +1915,191 @@ public class ChatActivity extends AppCompatActivity {
 		customtabsintent.launchUrl(this, Uri.parse(AndroidDevelopersBlogURL));
 	}
 	
+	
+	public void _startUploadForItem(final double _position) {
+		// Use the correct parameter name '_position' as defined by your More Block
+		final int itemPosition = (int) _position;
+		
+		// Check for internet connection first.
+		if (!SketchwareUtil.isConnected(getApplicationContext())) {
+			HashMap<String, Object> itemMap = attactmentmap.get(itemPosition);
+			itemMap.put("uploadState", "failed");
+			rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+			return;
+		}
+		
+		HashMap<String, Object> itemMap = attactmentmap.get(itemPosition);
+		if (!"pending".equals(itemMap.get("uploadState"))) {
+			return;
+		}
+		itemMap.put("uploadState", "uploading");
+		itemMap.put("uploadProgress", 0.0);
+		rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+		
+		String filePath = itemMap.get("localPath").toString();
+		File file = new File(filePath);
+		
+		FasterCloudinaryUploader.uploadFile(filePath, file.getName(), new FasterCloudinaryUploader.UploadCallback() {
+			@Override
+			public void onProgress(int percent) {
+				attactmentmap.get(itemPosition).put("uploadProgress", (double) percent);
+				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+			}
+			@Override
+			public void onSuccess(String url, String publicIdWithType) {
+				HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
+				mapToUpdate.put("uploadState", "success");
+				mapToUpdate.put("cloudinaryUrl", url);
+				mapToUpdate.put("publicId", publicIdWithType);
+				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+				
+				// Set the URL to the 'path' variable instead of message_et
+				path = url;
+				
+				// Removed Toast and clipboard operations
+			}
+			@Override
+			public void onFailure(String error) {
+				attactmentmap.get(itemPosition).put("uploadState", "failed");
+				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+			}
+		});
+	}
+	
+	
+	public void _updateInbox(final String _lastMessage) {
+		// Using the correct parameter name '_lastMessage' with the underscore prefix.
+		cc = Calendar.getInstance(); 
+		
+		// Update inbox for the current user
+		ChatInboxSend = new HashMap<>();
+		ChatInboxSend.put("uid", getIntent().getStringExtra("uid"));
+		ChatInboxSend.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+		ChatInboxSend.put("last_message_text", _lastMessage); // <-- CORRECTED
+		ChatInboxSend.put("last_message_state", "sended");
+		ChatInboxSend.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
+		FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).updateChildren(ChatInboxSend);
+		
+		// Update inbox for the other user
+		ChatInboxSend2 = new HashMap<>();
+		ChatInboxSend2.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+		ChatInboxSend2.put("last_message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+		ChatInboxSend2.put("last_message_text", _lastMessage); // <-- CORRECTED
+		ChatInboxSend2.put("last_message_state", "sended");
+		ChatInboxSend2.put("push_date", String.valueOf((long)(cc.getTimeInMillis())));
+		FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
+	}
+	
+	
+	public void _showLoadMoreIndicator() {
+		if (!ChatMessagesList.isEmpty() && !ChatMessagesList.get(0).containsKey("isLoadingMore")) {
+			HashMap<String, Object> loadingMap = new HashMap<>();
+			loadingMap.put("isLoadingMore", true);
+			ChatMessagesList.add(0, loadingMap);
+			((ChatAdapter)chatAdapter).notifyItemInserted(0);
+		}
+	}
+	
+	
+	public void _hideLoadMoreIndicator() {
+		if (!ChatMessagesList.isEmpty() && ChatMessagesList.get(0).containsKey("isLoadingMore")) {
+			ChatMessagesList.remove(0);
+			((ChatAdapter)chatAdapter).notifyItemRemoved(0);
+		}
+	}
+	
+	
+	public void _showReplyUI(final double _position) {
+		// This is where you trigger your reply UI.
+		HashMap<String, Object> messageData = ChatMessagesList.get((int)_position);
+		ReplyMessageID = messageData.get("key").toString();
+		
+		if (messageData.get("uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+			mMessageReplyLayoutBodyRightUsername.setText(FirstUserName);
+		} else {
+			mMessageReplyLayoutBodyRightUsername.setText(SecondUserName);
+		}
+		mMessageReplyLayoutBodyRightMessage.setText(messageData.get("message_text").toString());
+		mMessageReplyLayout.setVisibility(View.VISIBLE);
+		vbr.vibrate((long)(48));
+	}
+	
+	
+	public void _setupSwipeToReply() {
+		// This helper class handles drawing the swipe background and icon.
+		ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+			@Override
+			public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+				return false; // We don't want to handle drag & drop
+			}
+			
+			@Override
+			public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+				// This is triggered when the swipe is completed.
+				_showReplyUI(viewHolder.getAdapterPosition());
+				// The adapter needs to be notified to redraw the item back to its original state.
+				chatAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
+			}
+			
+			@Override
+			public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+				if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+					View itemView = viewHolder.itemView;
+					Paint p = new Paint();
+					Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_reply);
+					
+					if (dX > 0) { // Swiping to the right
+						p.setColor(Color.parseColor("#3498db")); // Blue background
+						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
+						
+						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+						int iconTop = itemView.getTop() + iconMargin;
+						int iconBottom = iconTop + icon.getIntrinsicHeight();
+						int iconLeft = itemView.getLeft() + iconMargin;
+						int iconRight = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
+						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+						icon.draw(c);
+					} else { // Swiping to the left
+						p.setColor(Color.parseColor("#3498db")); // Blue background
+						c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
+						
+						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+						int iconTop = itemView.getTop() + iconMargin;
+						int iconBottom = iconTop + icon.getIntrinsicHeight();
+						int iconRight = itemView.getRight() - iconMargin;
+						int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
+						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+						icon.draw(c);
+					}
+					// Fade out the item as it is swiped away
+					final float alpha = 1.0f - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
+					viewHolder.itemView.setAlpha(alpha);
+					viewHolder.itemView.setTranslationX(dX);
+				} else {
+					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+				}
+			}
+		};
+		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+		itemTouchHelper.attachToRecyclerView(ChatMessagesListRecycler);
+	}
+	
+	
+	public void _scrollToMessage(final String _messageKey) {
+		int position = -1;
+		for (int i = 0; i < ChatMessagesList.size(); i++) {
+			if (ChatMessagesList.get(i).get("key").toString().equals(_messageKey)) { 
+				position = i;
+				break;
+			}
+		}
+		if (position != -1) {
+			ChatMessagesListRecycler.smoothScrollToPosition(position);
+		} else {
+			Toast.makeText(getApplicationContext(), "Original message not found", Toast.LENGTH_SHORT).show();
+		}
+	}
+	
 	public class ChatMessagesListRecyclerAdapter extends RecyclerView.Adapter<ChatMessagesListRecyclerAdapter.ViewHolder> {
 		
 		ArrayList<HashMap<String, Object>> _data;
@@ -1998,7 +2121,6 @@ public class ChatActivity extends AppCompatActivity {
 		public void onBindViewHolder(ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
 			
-			final ProgressBar showOldMessagesProgress = _view.findViewById(R.id.showOldMessagesProgress);
 			final LinearLayout body = _view.findViewById(R.id.body);
 			final androidx.cardview.widget.CardView mProfileCard = _view.findViewById(R.id.mProfileCard);
 			final LinearLayout message_layout = _view.findViewById(R.id.message_layout);
@@ -2006,7 +2128,7 @@ public class ChatActivity extends AppCompatActivity {
 			final LinearLayout menuView_d = _view.findViewById(R.id.menuView_d);
 			final LinearLayout messageBG = _view.findViewById(R.id.messageBG);
 			final LinearLayout my_message_info = _view.findViewById(R.id.my_message_info);
-			final LinearLayout mRepliedMessageLayout = _view.findViewById(R.id.mRepliedMessageLayout);
+			final com.google.android.material.card.MaterialCardView mRepliedMessageLayout = _view.findViewById(R.id.mRepliedMessageLayout);
 			final androidx.cardview.widget.CardView mMessageImageBody = _view.findViewById(R.id.mMessageImageBody);
 			final com.airbnb.lottie.LottieAnimationView lottie1 = _view.findViewById(R.id.lottie1);
 			final TextView message_text = _view.findViewById(R.id.message_text);
@@ -2017,346 +2139,133 @@ public class ChatActivity extends AppCompatActivity {
 			final ImageView mMessageImageView = _view.findViewById(R.id.mMessageImageView);
 			final TextView date = _view.findViewById(R.id.date);
 			final ImageView message_state = _view.findViewById(R.id.message_state);
-			
+		}
+		
+		@Override
+		public int getItemCount() {
+			return _data.size();
+		}
+		
+		public class ViewHolder extends RecyclerView.ViewHolder {
+			public ViewHolder(View v) {
+				super(v);
+			}
+		}
+	}
+	
+	public class Rv_attacmentListAdapter extends RecyclerView.Adapter<Rv_attacmentListAdapter.ViewHolder> {
+		
+		ArrayList<HashMap<String, Object>> _data;
+		
+		public Rv_attacmentListAdapter(ArrayList<HashMap<String, Object>> _arr) {
+			_data = _arr;
+		}
+		
+		@Override
+		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+			LayoutInflater _inflater = getLayoutInflater();
+			View _v = _inflater.inflate(R.layout.chat_attactment, null);
 			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-			_view.setLayoutParams(_lp);
-			Calendar push = Calendar.getInstance();
-			if (_data.get((int)_position).containsKey("typingMessageStatus")) {
-				body.setTranslationY((float)(10));
-				{
-					android.graphics.drawable.GradientDrawable SketchUi = new android.graphics.drawable.GradientDrawable();
-					int d = (int) getApplicationContext().getResources().getDisplayMetrics().density;
-					SketchUi.setColor(0x00000000); // Transparent color (ARGB: 00 for alpha = transparent)
-					SketchUi.setCornerRadius(d*25);
-					messageBG.setBackground(SketchUi);
-				}
-				_setMargin(message_layout, 60, 0, 4, 4);
-				message_layout.setGravity(Gravity.CENTER | Gravity.LEFT);
-				body.setGravity(Gravity.TOP | Gravity.LEFT);
-				message_state.setVisibility(View.GONE);
-				showOldMessagesProgress.setVisibility(View.GONE);
-				my_message_info.setVisibility(View.GONE);
-				message_text.setVisibility(View.GONE);
-				mMessageImageBody.setVisibility(View.GONE);
-				mRepliedMessageLayout.setVisibility(View.GONE);
-				lottie1.setVisibility(View.VISIBLE);
-				mProfileCard.setVisibility(View.VISIBLE);
-				// for test
-				if (SecondUserAvatar.equals("null_banned")) {
-					mProfileImage.setImageResource(R.drawable.banned_avatar);
-				} else {
-					if (SecondUserAvatar.equals("null")) {
-						mProfileImage.setImageResource(R.drawable.avatar);
-					} else {
-						Glide.with(getApplicationContext()).load(Uri.parse(SecondUserAvatar)).into(mProfileImage);
-					}
-				}
-			} else {
-				body.setTranslationY((float)(0));
-				if (_data.get((int)_position).get("uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-					body.setGravity(Gravity.TOP | Gravity.RIGHT);
-					message_layout.setGravity(Gravity.CENTER | Gravity.RIGHT);
-					_setMargin(message_layout, 0, 60, 0, 0);
-					message_text.setTextColor(0xFFFFFFFF);
-					message_state.setVisibility(View.VISIBLE);
-					mProfileCard.setVisibility(View.GONE);
-					mRepliedMessageLayoutLeftBar.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)100, 0xFFFFFFFF));
-					mRepliedMessageLayoutUsername.setTextColor(0xFFEEEEEE);
-					mRepliedMessageLayoutMessage.setTextColor(0xFFEEEEEE);
-					try{
-						// Retrieve corner radius value from settings
-						int cornerRadius = 0; // Default value
-						
-						try {
-							cornerRadius = Integer.parseInt(appSettings.getString("ChatCornerRadius", ""));
-						} catch (Exception e) {
-							try {
-								cornerRadius = (int) Double.parseDouble(appSettings.getString("ChatCornerRadius", ""));
-							} catch (Exception ex) {
-								cornerRadius = 27; // Default radius if parsing fails
-							}
-						}
-						
-						// Apply the retrieved corner radius to the GradientDrawable
-						android.graphics.drawable.GradientDrawable SketchUi = new android.graphics.drawable.GradientDrawable();
-						int d = (int) getApplicationContext().getResources().getDisplayMetrics().density;
-						SketchUi.setColor(0xFF6B4CFF);
-						SketchUi.setCornerRadius(d * cornerRadius);
-						android.graphics.drawable.RippleDrawable SketchUiRD = new android.graphics.drawable.RippleDrawable(
-						new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{0xFFE0E0E0}), SketchUi, null
-						);
-						
-						messageBG.setBackground(SketchUiRD);
-						messageBG.setClickable(true);
-					}catch(Exception e){
-						{
-							android.graphics.drawable.GradientDrawable SketchUi = new android.graphics.drawable.GradientDrawable();
-							int d = (int) getApplicationContext().getResources().getDisplayMetrics().density;
-							SketchUi.setColor(0xFF6B4CFF);
-							SketchUi.setCornerRadius(d*27);
-							android.graphics.drawable.RippleDrawable SketchUiRD = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{0xFFE0E0E0}), SketchUi, null);
-							messageBG.setBackground(SketchUiRD);
-							messageBG.setClickable(true);
-						}
-					}
-				} else {
-					body.setGravity(Gravity.TOP | Gravity.LEFT);
-					message_layout.setGravity(Gravity.CENTER | Gravity.LEFT);
-					_setMargin(message_layout, 60, 0, 4, 0);
-					message_text.setTextColor(0xFF000000);
-					message_state.setVisibility(View.GONE);
-					// for test
-					mProfileCard.setVisibility(View.GONE);
-					mRepliedMessageLayoutLeftBar.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, getResources().getColor(R.color.colorPrimary)));
-					mRepliedMessageLayoutUsername.setTextColor(getResources().getColor(R.color.colorPrimary));
-					mRepliedMessageLayoutMessage.setTextColor(0xFF000000);
-					if (SecondUserAvatar.equals("null")) {
-						mProfileImage.setImageResource(R.drawable.avatar);
-					} else {
-						Glide.with(getApplicationContext()).load(Uri.parse(SecondUserAvatar)).into(mProfileImage);
-					}
-					try{
-						// Retrieve corner radius value from settings
-						int cornerRadius = 0; // Default value
-						
-						try {
-							cornerRadius = Integer.parseInt(appSettings.getString("ChatCornerRadius", ""));
-						} catch (Exception e) {
-							try {
-								cornerRadius = (int) Double.parseDouble(appSettings.getString("ChatCornerRadius", ""));
-							} catch (Exception ex) {
-								cornerRadius = 27; // Default radius if parsing fails
-							}
-						}
-						
-						// Apply the retrieved corner radius to the GradientDrawable
-						android.graphics.drawable.GradientDrawable SketchUi = new android.graphics.drawable.GradientDrawable();
-						int d = (int) getApplicationContext().getResources().getDisplayMetrics().density;
-						SketchUi.setColor(0xFFFFFFFF);
-						SketchUi.setCornerRadius(d * cornerRadius);
-						SketchUi.setStroke(d * 2, 0xFFDFDFDF);
-						android.graphics.drawable.RippleDrawable SketchUiRD = new android.graphics.drawable.RippleDrawable(
-						new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{0xFFE0E0E0}), SketchUi, null
-						);
-						
-						messageBG.setBackground(SketchUiRD);
-						messageBG.setClickable(true);
-					}catch(Exception e){
-						{
-							android.graphics.drawable.GradientDrawable SketchUi = new android.graphics.drawable.GradientDrawable();
-							int d = (int) getApplicationContext().getResources().getDisplayMetrics().density;
-							SketchUi.setColor(0xFFFFFFFF);
-							SketchUi.setCornerRadius(d*27);
-							SketchUi.setStroke(d*2,0xFFDFDFDF);
-							android.graphics.drawable.RippleDrawable SketchUiRD = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{0xFFE0E0E0}), SketchUi, null);
-							messageBG.setBackground(SketchUiRD);
-							messageBG.setClickable(true);
-						}
-					}
-				}
-				if (message_text.getText().toString().equals("")) {
-					message_text.setVisibility(View.GONE);
-				} else {
-					message_text.setVisibility(View.VISIBLE);
-				}
-				/*
-_textview_mh(message_text, _data.get((int)_position).get("message_text").toString());
-*/
-				new TextStylingUtil(message_text.getContext()).applyStyling(_data.get((int)_position).get("message_text").toString(), message_text);
-				push.setTimeInMillis((long)(Double.parseDouble(_data.get((int)_position).get("push_date").toString())));
-				date.setText(new SimpleDateFormat("hh:mm a").format(push.getTime()));
-				if (_data.get((int)_position).containsKey("replied_message_id")) {
-					{
-						ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-						Handler mMainHandler = new Handler(Looper.getMainLooper());
-						
-						mExecutorService.execute(new Runnable() {
-							@Override
-							public void run() {
-								DatabaseReference getRepliedMessageRef = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).child(_data.get((int)_position).get("replied_message_id").toString());
-								getRepliedMessageRef.addListenerForSingleValueEvent(new ValueEventListener() {
-									@Override
-									public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-										mMainHandler.post(new Runnable() {
-											@Override
-											public void run() {
-												if(dataSnapshot.exists()) {
-													if (dataSnapshot.child("uid").getValue(String.class).equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-														mRepliedMessageLayoutUsername.setText(FirstUserName);
-													} else {
-														mRepliedMessageLayoutUsername.setText(SecondUserName);
-													}
-													if (dataSnapshot.child("message_text").getValue(String.class) != null) {
-														mRepliedMessageLayoutMessage.setText(dataSnapshot.child("message_text").getValue(String.class));
-														mRepliedMessageLayout.setVisibility(View.VISIBLE);
-													} else {
-														mRepliedMessageLayout.setVisibility(View.GONE);
-													}
-												} else {
-													mRepliedMessageLayout.setVisibility(View.GONE);
-												}
-											}
-										});
-									}
-									
-									@Override
-									public void onCancelled(@NonNull DatabaseError databaseError) {
-										
-									}
-								});
-							}
+			_v.setLayoutParams(_lp);
+			return new ViewHolder(_v);
+		}
+		
+		@Override
+		public void onBindViewHolder(ViewHolder _holder, final int _position) {
+			View _view = _holder.itemView;
+			
+			final androidx.cardview.widget.CardView cardMediaItem = _view.findViewById(R.id.cardMediaItem);
+			final LinearLayout containerLL = _view.findViewById(R.id.containerLL);
+			final RelativeLayout imageWrapperRL = _view.findViewById(R.id.imageWrapperRL);
+			final ImageView previewIV = _view.findViewById(R.id.previewIV);
+			final LinearLayout overlayLL = _view.findViewById(R.id.overlayLL);
+			final RelativeLayout progressWrapperRL = _view.findViewById(R.id.progressWrapperRL);
+			final com.google.android.material.progressindicator.CircularProgressIndicator uploadProgressCPI = _view.findViewById(R.id.uploadProgressCPI);
+			final LinearLayout topControlsLL = _view.findViewById(R.id.topControlsLL);
+			final LinearLayout linear4 = _view.findViewById(R.id.linear4);
+			final LinearLayout linear5 = _view.findViewById(R.id.linear5);
+			final LinearLayout linear6 = _view.findViewById(R.id.linear6);
+			final ImageView closeIV = _view.findViewById(R.id.closeIV);
+			final TextView textview1 = _view.findViewById(R.id.textview1);
+			
+			// Get the data map using the block's parameters
+			HashMap<String, Object> itemData = attactmentmap.get(_position);
+			
+			// --- START: ROBUSTNESS FIX ---
+			// Safety Check: Verify that the required "localPath" key exists and is not null.
+			if (!itemData.containsKey("localPath") || itemData.get("localPath") == null) {
+				// If the data is invalid, hide this item completely to prevent a crash.
+				_view.setVisibility(View.GONE);
+				_view.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
+				return; // Stop processing this broken item.
+			}
+			// If we pass this check, we can safely proceed.
+			_view.setVisibility(View.VISIBLE);
+			_view.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+			// --- END: ROBUSTNESS FIX ---
+			
+			// Set the image preview directly by its ID
+			String localPath = itemData.get("localPath").toString();
+			previewIV.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(localPath, 1024, 1024));
+			
+			// Get the upload state and progress.
+			String uploadState = itemData.getOrDefault("uploadState", "pending").toString();
+			int progress = 0;
+			if (itemData.containsKey("uploadProgress")) {
+				progress = (int) Double.parseDouble(itemData.get("uploadProgress").toString());
+			}
+			
+			// Update the UI by accessing views directly by their ID.
+			switch (uploadState) {
+				case "uploading":
+				overlayLL.setVisibility(View.VISIBLE);
+				overlayLL.setBackgroundColor(0x80000000);
+				uploadProgressCPI.setVisibility(View.VISIBLE);
+				uploadProgressCPI.setProgress(progress);
+				closeIV.setVisibility(View.GONE);
+				break;
+				
+				case "success":
+				overlayLL.setVisibility(View.GONE);
+				uploadProgressCPI.setVisibility(View.GONE);
+				closeIV.setVisibility(View.VISIBLE);
+				break;
+				
+				case "failed":
+				overlayLL.setVisibility(View.VISIBLE);
+				overlayLL.setBackgroundColor(0x80D32F2F);
+				uploadProgressCPI.setVisibility(View.GONE);
+				closeIV.setVisibility(View.VISIBLE);
+				break;
+				
+				default: // "pending" state
+				overlayLL.setVisibility(View.GONE);
+				uploadProgressCPI.setVisibility(View.GONE);
+				closeIV.setVisibility(View.VISIBLE);
+				break;
+			}
+			
+			// Set the click listener on the close icon directly by its ID.
+			closeIV.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					if (_position >= attactmentmap.size()) return; // Safety check
+					
+					HashMap<String, Object> currentItemData = attactmentmap.get(_position);
+					
+					attactmentmap.remove(_position);
+					rv_attacmentList.getAdapter().notifyItemRemoved(_position);
+					rv_attacmentList.getAdapter().notifyItemRangeChanged(_position, attactmentmap.size());
+					
+					if (currentItemData.containsKey("publicId")) {
+						String publicId = currentItemData.get("publicId").toString();
+						FasterCloudinaryUploader.deleteByPublicId(publicId, new FasterCloudinaryUploader.DeleteCallback() {
+							@Override public void onSuccess() {}
+							@Override public void onFailure(String error) {}
 						});
 					}
-					
-					mRepliedMessageLayout.setVisibility(View.VISIBLE);
-				} else {
-					mRepliedMessageLayout.setVisibility(View.GONE);
-				}
-				if (_data.get((int)_position).containsKey("message_image_uri")) {
-					Glide.with(getApplicationContext()).load(Uri.parse(_data.get((int)_position).get("message_image_uri").toString())).into(mMessageImageView);
-					_setMargin(message_text, 0, 0, 8, 0);
-					mMessageImageBody.setVisibility(View.VISIBLE);
-					mMessageImageView.setOnClickListener(new View.OnClickListener() {
-						@Override
-						public void onClick(View _view) {
-							_OpenWebView(_data.get((int)_position).get("message_image_uri").toString());
-						}
-					});
-				} else {
-					_setMargin(message_text, 0, 0, 0, 0);
-					mMessageImageBody.setVisibility(View.GONE);
-				}
-				if (_data.get((int)_position).get("message_state").toString().equals("sended")) {
-					message_state.setImageResource(R.drawable.icon_done_round);
-					_ImageColor(message_state, 0xFF424242);
-				} else {
-					if (_data.get((int)_position).get("message_state").toString().equals("seen")) {
-						message_state.setImageResource(R.drawable.icon_done_all_round);
-						_ImageColor(message_state, getResources().getColor(R.color.colorPrimary));
-					}
-				}
-				if (_data.size() > 79) {
-					if (_position == 0) {
-						showOldMessagesProgress.setVisibility(View.VISIBLE);
-						loadTimer = new TimerTask() {
-							@Override
-							public void run() {
-								runOnUiThread(new Runnable() {
-									@Override
-									public void run() {
-										_getOldChatMessagesRef();
-										showOldMessagesProgress.setVisibility(View.GONE);
-									}
-								});
-							}
-						};
-						_timer.schedule(loadTimer, (int)(1000));
-					} else {
-						showOldMessagesProgress.setVisibility(View.GONE);
-					}
-				} else {
-					showOldMessagesProgress.setVisibility(View.GONE);
-				}
-				if (_position == 0) {
-					my_message_info.setVisibility(View.GONE);
-					mProfileImage.setVisibility(View.GONE);
-					if (_data.size() == 1) {
-						my_message_info.setVisibility(View.VISIBLE);
-						mProfileImage.setVisibility(View.VISIBLE);
-					} else {
-						if (!_data.get((int)_position).get("uid").toString().equals(_data.get((int)_position + 1).get("uid").toString())) {
-							my_message_info.setVisibility(View.VISIBLE);
-							mProfileImage.setVisibility(View.VISIBLE);
-						}
-					}
-				} else {
-					if (!_data.get((int)_position).get("uid").toString().equals(_data.get((int)_position - 1).get("uid").toString())) {
-						my_message_info.setVisibility(View.GONE);
-						mProfileImage.setVisibility(View.GONE);
-						if (_position == (_data.size() - 1)) {
-							my_message_info.setVisibility(View.VISIBLE);
-							mProfileImage.setVisibility(View.VISIBLE);
-						} else {
-							if (!_data.get((int)_position).get("uid").toString().equals(_data.get((int)_position + 1).get("uid").toString())) {
-								my_message_info.setVisibility(View.VISIBLE);
-								mProfileImage.setVisibility(View.VISIBLE);
-							}
-						}
-					} else {
-						if (_position == (_data.size() - 1)) {
-							my_message_info.setVisibility(View.VISIBLE);
-							mProfileImage.setVisibility(View.VISIBLE);
-						} else {
-							if (_data.get((int)_position).get("uid").toString().equals(_data.get((int)_position - 1).get("uid").toString()) && _data.get((int)_position).get("uid").toString().equals(_data.get((int)_position + 1).get("uid").toString())) {
-								my_message_info.setVisibility(View.GONE);
-								mProfileImage.setVisibility(View.GONE);
-							} else {
-								if (_data.get((int)_position).get("uid").toString().equals(_data.get((int)_position + 1).get("uid").toString())) {
-									my_message_info.setVisibility(View.GONE);
-									mProfileImage.setVisibility(View.GONE);
-								} else {
-									my_message_info.setVisibility(View.VISIBLE);
-									mProfileImage.setVisibility(View.VISIBLE);
-								}
-							}
-						}
-					}
-				}
-				if (!_data.get((int)_position).get("uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-					if (_data.get((int)_position).get("message_state").toString().equals("sended")) {
-						FirebaseDatabase.getInstance().getReference("skyline/chats").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString()).child("message_state").setValue("seen");
-						FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).child(_data.get((int)_position).get("key").toString()).child("message_state").setValue("seen");
-						FirebaseDatabase.getInstance().getReference("skyline/inbox").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("last_message_state").setValue("seen");
-					}
-				}
-				lottie1.setVisibility(View.GONE);
-				message_text.setVisibility(View.VISIBLE);
-			}
-			message_layout.setOnLongClickListener(new View.OnLongClickListener() {
-				@Override
-				public boolean onLongClick(View _view) {
-					_messageOverviewPopup(menuView_d, _position, _data);
-					return true;
 				}
 			});
-			messageBG.setOnLongClickListener(new View.OnLongClickListener() {
-				@Override
-				public boolean onLongClick(View _view) {
-					_messageOverviewPopup(menuView_d, _position, _data);
-					return true;
-				}
-			});
-			message_text.setOnLongClickListener(new View.OnLongClickListener() {
-				@Override
-				public boolean onLongClick(View _view) {
-					_messageOverviewPopup(menuView_d, _position, _data);
-					return true;
-				}
-			});
-			mProfileImage.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View _view) {
-					intent.setClass(getApplicationContext(), ProfileActivity.class);
-					intent.putExtra("uid", getIntent().getStringExtra("uid"));
-					startActivity(intent);
-				}
-			});
-			try{
-				//Retrieve text size from settings
-				try {
-					message_text.setTextSize((int) Integer.parseInt(appSettings.getString("ChatTextSize", "")));
-					mRepliedMessageLayoutMessage.setTextSize((int) Integer.parseInt(appSettings.getString("ChatTextSize", "")));
-				} catch (Exception e) {
-					try {
-						message_text.setTextSize((int) Double.parseDouble(appSettings.getString("ChatTextSize", "")));
-						mRepliedMessageLayoutMessage.setTextSize((int) Double.parseDouble(appSettings.getString("ChatTextSize", "")));
-					} catch (Exception ex) { // Changed variable name to ex
-						message_text.setTextSize((int) 16);
-					}
-				}
-			}catch(Exception e){
-				
-			}
 		}
 		
 		@Override

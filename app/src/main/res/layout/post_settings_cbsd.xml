@@ -68,7 +68,7 @@
 				android:layout_height="34dp"
 				android:layout_marginRight="16dp"
 				android:padding="5dp"
-				android:src="@drawable/ic_reply_48px"
+				android:src="@drawable/ic_reply"
 				android:scaleType="fitCenter" />
 			<TextView
 				android:id="@+id/shareTitle"

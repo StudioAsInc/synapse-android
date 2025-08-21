@@ -139,7 +139,12 @@
 					android:layout_width="48dp"
 					android:layout_height="48dp"
 					android:indeterminate="false"
-					style="?android:progressBarStyle" />
+					style="?attr/circularProgressIndicatorStyle"
+					app:waveSpeed="20dp"
+					app:wavelength="17dp"
+					app:waveAmplitude="2dp"
+					app:indicatorSize="60dp"
+					app:indicatorDirectionCircular="counterclockwise" />
 			</LinearLayout>
 		</LinearLayout>
 		<LinearLayout
@@ -302,7 +307,7 @@
 						android:layout_height="33dp"
 						android:layout_marginLeft="8dp"
 						android:padding="6dp"
-						android:src="@drawable/ic_send_48px"
+						android:src="@drawable/ic_send"
 						android:scaleType="centerInside" />
 				</LinearLayout>
 			</LinearLayout>

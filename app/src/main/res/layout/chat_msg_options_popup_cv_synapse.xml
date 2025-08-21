@@ -168,7 +168,7 @@
 							android:layout_width="38dp"
 							android:layout_height="38dp"
 							android:padding="8dp"
-							android:src="@drawable/ic_reply_48px"
+							android:src="@drawable/ic_reply"
 							android:scaleType="fitCenter" />
 						<TextView
 							android:id="@+id/reply_title"

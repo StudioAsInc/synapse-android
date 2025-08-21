@@ -118,7 +118,12 @@
 					android:layout_width="48dp"
 					android:layout_height="48dp"
 					android:indeterminate="true"
-					style="?android:progressBarStyle" />
+					style="?attr/circularProgressIndicatorStyle"
+					app:waveSpeed="20dp"
+					app:wavelength="17dp"
+					app:waveAmplitude="2dp"
+					app:indicatorSize="60dp"
+					app:indicatorDirectionCircular="counterclockwise" />
 			</LinearLayout>
 		</LinearLayout>
 	</LinearLayout>

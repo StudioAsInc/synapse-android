@@ -231,4 +231,12 @@
     <string name="reasons_no_user_data">Your user profile could not be loaded. This might indicate an issue with your account or a database problem.</string>
     <string name="error_loading_user_data">Error Loading User Data</string>
     <string name="disappearing_message_description">For more privacy and storage, new messages will disappear from this chat for everyone after the selected duration except when kept. Anyone in the chat can change this setting. Learn more</string>
+    <string name="text_loading">...</string>
+    <string name="cant_reply">You can\'t reply to this conversation. Learn more.</string>
+    <string name="ph_name">Name</string>
+    <string name="ph_username">username</string>
+    <string name="write_message">Write a message</string>
+    <string name="ph_message">I\'m also good, man.</string>
+    <string name="age_agreement">I confirm that I\'m at least 12 years of age.</string>
+    <string name="ph_replied_message">I\'m good, you?</string>
 </resources>
