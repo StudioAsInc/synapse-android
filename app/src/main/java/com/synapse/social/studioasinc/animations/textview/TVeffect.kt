@@ -51,7 +51,7 @@ class TVeffects @JvmOverloads constructor(
                 duration = fadeDuration
                 addUpdateListener {
                     span.alpha = it.animatedValue as Float
-                    this@TVeffects.text = spannable
+                    this@TVeffects.invalidate()
                 }
                 start()
             }
