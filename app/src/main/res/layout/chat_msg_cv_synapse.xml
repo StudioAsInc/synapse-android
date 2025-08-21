@@ -102,6 +102,12 @@
 							android:autoLink="all"
 							android:maxLines="2"
 							android:ellipsize="end" />
+						<ImageView
+							android:id="@+id/mRepliedMessageLayoutImage"
+							android:layout_width="50dp"
+							android:layout_height="50dp"
+							android:scaleType="centerCrop"
+							android:visibility="gone" />
 					</LinearLayout>
 				</com.google.android.material.card.MaterialCardView>
 				<androidx.cardview.widget.CardView

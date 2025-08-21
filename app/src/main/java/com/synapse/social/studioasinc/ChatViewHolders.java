@@ -25,7 +25,7 @@ import com.google.android.material.card.MaterialCardView;
 class BaseMessageViewHolder extends RecyclerView.ViewHolder {
     LinearLayout body, message_layout, messageBG, my_message_info, mRepliedMessageLayoutLeftBar;
     CardView mProfileCard;
-    ImageView mProfileImage, message_state;
+    ImageView mProfileImage, message_state, mRepliedMessageLayoutImage;
     TextView date, message_text, mRepliedMessageLayoutUsername, mRepliedMessageLayoutMessage;
     MaterialCardView mRepliedMessageLayout;
 
@@ -46,6 +46,7 @@ class BaseMessageViewHolder extends RecyclerView.ViewHolder {
             mRepliedMessageLayoutUsername = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutUsername);
             mRepliedMessageLayoutMessage = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutMessage);
             mRepliedMessageLayoutLeftBar = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutLeftBar);
+            mRepliedMessageLayoutImage = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutImage);
         }
     }
 }

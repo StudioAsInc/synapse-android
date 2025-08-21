@@ -32,7 +32,7 @@ def getGitCommitCount = { ->
 
 android {
     namespace = "com.synapse.social.studioasinc"
-    compileSdk = 36
+    compileSdk = 32
 
     useLibrary 'org.apache.http.legacy'
 
@@ -48,7 +48,7 @@ android {
     defaultConfig {
         applicationId = "com.synapse.social.studioasinc"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 32
         versionCode = 11
         versionName = "1.0.0-alpha05"
         multiDexEnabled = true
@@ -162,10 +162,7 @@ dependencies {
     implementation 'androidx.collection:collection-jvm:1.5.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:2.2.0"
     implementation 'androidx.browser:browser:1.9.0'
-    
-    implementation 'com.google.genai:google-genai:1.12.0'
-	implementation 'androidx.gridlayout:gridlayout:1.0.0'
-	implementation 'org.jsoup:jsoup:1.21.1'
+    implementation 'androidx.dynamicanimation:dynamicanimation:1.0.0'
 
     // Testing
     testImplementation 'junit:junit:4.13.2'

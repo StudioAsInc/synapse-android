@@ -150,6 +150,7 @@ public class ChatActivity extends AppCompatActivity {
 	public final int REQ_CD_IMAGE_PICKER = 101;
 	private ChatAdapter chatAdapter;
 	private boolean isLoading = false;
+	private String chatId = "";
 
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
@@ -423,6 +424,7 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void initializeLogic() {
+		chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra("uid"));
 		SecondUserAvatar = "null";
 		ReplyMessageID = "null";
 		path = "";
@@ -589,6 +591,14 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}
 		finish();
+	}
+
+	private String getChatId(String uid1, String uid2) {
+		if (uid1.compareTo(uid2) > 0) {
+			return uid1 + "_" + uid2;
+		} else {
+			return uid2 + "_" + uid1;
+		}
 	}
 	public void _stateColor(final int _statusColor, final int _navigationColor) {
 		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
@@ -853,7 +863,7 @@ public class ChatActivity extends AppCompatActivity {
 
 	public void _getChatMessagesRef() {
 		// Initial load
-		Query getChatsMessages = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).limitToLast(CHAT_PAGE_SIZE);
+		Query getChatsMessages = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).limitToLast(CHAT_PAGE_SIZE);
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -893,9 +903,9 @@ public class ChatActivity extends AppCompatActivity {
 
 		Query newMessagesQuery;
 		if (lastMessageKey != null) {
-			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).orderByKey().startAfter(lastMessageKey);
+			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).orderByKey().startAfter(lastMessageKey);
 		} else {
-			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).orderByKey();
+			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).orderByKey();
 		}
 
 		newMessagesQuery.addChildEventListener(new ChildEventListener() {
@@ -1016,8 +1026,7 @@ public class ChatActivity extends AppCompatActivity {
 		_showLoadMoreIndicator();
 
 		Query getChatsMessages = _firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-		.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-		.child(getIntent().getStringExtra(UID_KEY))
+		.child(chatId)
 		.orderByKey()
 		.endBefore(oldestMessageKey)
 		.limitToLast(CHAT_PAGE_SIZE);
@@ -1071,8 +1080,35 @@ public class ChatActivity extends AppCompatActivity {
 		zorry.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface _dialog, int _which) {
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
+				String messageKeyToDelete = _data.get((int)_position).get(KEY_KEY).toString();
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).child(messageKeyToDelete).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+					@Override
+					public void onComplete(@NonNull Task<Void> task) {
+						if (task.isSuccessful()) {
+							// Now find the new last message
+							Query lastMessageQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).orderByKey().limitToLast(1);
+							lastMessageQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+								@Override
+								public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+									if (dataSnapshot.exists()) {
+										for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+											String lastMessageText = snapshot.child("message_text").getValue(String.class);
+											_updateInbox(lastMessageText);
+										}
+									} else {
+										// No messages left, so clear the inbox entry
+										_clearInbox();
+									}
+								}
+
+								@Override
+								public void onCancelled(@NonNull DatabaseError databaseError) {
+									// Handle error
+								}
+							});
+						}
+					}
+				});
 			}
 		});
 		zorry.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -1084,6 +1120,13 @@ public class ChatActivity extends AppCompatActivity {
 		zorry.create().show();
 	}
 
+	private void _clearInbox() {
+		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String otherUid = getIntent().getStringExtra(UID_KEY);
+
+		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(myUid).child(otherUid).removeValue();
+		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(otherUid).child(myUid).removeValue();
+	}
 
 	public void _ScrollingText(final TextView _view) {
 		_view.setSingleLine(true);
@@ -1293,14 +1336,7 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
 
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-				.child(getIntent().getStringExtra(UID_KEY))
-				.child(uniqueMessageKey)
-				.updateChildren(ChatSendMap);
-
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-				.child(getIntent().getStringExtra(UID_KEY))
-				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+				.child(chatId)
 				.child(uniqueMessageKey)
 				.updateChildren(ChatSendMap);
 
@@ -1331,14 +1367,7 @@ public class ChatActivity extends AppCompatActivity {
 			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
 
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-			.child(getIntent().getStringExtra(UID_KEY))
-			.child(uniqueMessageKey)
-			.updateChildren(ChatSendMap);
-
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-			.child(getIntent().getStringExtra(UID_KEY))
-			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+			.child(chatId)
 			.child(uniqueMessageKey)
 			.updateChildren(ChatSendMap);
 
@@ -1561,36 +1590,29 @@ public class ChatActivity extends AppCompatActivity {
 			public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 				if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
 					View itemView = viewHolder.itemView;
-					Paint p = new Paint();
 					Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_reply);
+					int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+					int iconTop = itemView.getTop() + iconMargin;
+					int iconBottom = iconTop + icon.getIntrinsicHeight();
 
 					if (dX > 0) { // Swiping to the right
-						p.setColor(Color.parseColor("#3498db")); // Blue background
-						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
-
-						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
-						int iconTop = itemView.getTop() + iconMargin;
-						int iconBottom = iconTop + icon.getIntrinsicHeight();
 						int iconLeft = itemView.getLeft() + iconMargin;
 						int iconRight = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
 						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
-						icon.draw(c);
-					} else { // Swiping to the left
-						p.setColor(Color.parseColor("#3498db")); // Blue background
-						c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
-
-						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
-						int iconTop = itemView.getTop() + iconMargin;
-						int iconBottom = iconTop + icon.getIntrinsicHeight();
+					} else if (dX < 0){ // Swiping to the left
 						int iconRight = itemView.getRight() - iconMargin;
 						int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
 						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
-						icon.draw(c);
 					}
-					// Fade out the item as it is swiped away
-					final float alpha = 1.0f - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
-					viewHolder.itemView.setAlpha(alpha);
-					viewHolder.itemView.setTranslationX(dX);
+					icon.draw(c);
+
+					// Spring animation for the item
+					new androidx.dynamicanimation.animation.SpringAnimation(itemView, androidx.dynamicanimation.animation.SpringAnimation.TRANSLATION_X)
+					.getSpring()
+					.setStiffness(androidx.dynamicanimation.animation.SpringForce.STIFFNESS_LOW)
+					.setDampingRatio(androidx.dynamicanimation.animation.SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY);
+
+					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 				} else {
 					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 				}

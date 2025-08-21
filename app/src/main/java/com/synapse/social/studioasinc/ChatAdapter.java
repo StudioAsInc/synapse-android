@@ -159,22 +159,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
 
-        if (holder.mProfileCard != null && holder.mProfileImage != null) {
-            if (!isMyMessage) {
-                boolean isFirstOfGroup = (position == 0) || (position - 1 >= 0 && !_data.get(position - 1).get("uid").toString().equals(data.get("uid").toString()));
-                holder.mProfileCard.setVisibility(isFirstOfGroup ? View.VISIBLE : View.GONE);
-                if (isFirstOfGroup) {
-                    if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
-                         Glide.with(_context).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
-                    } else if ("null_banned".equals(secondUserAvatarUrl)) {
-                         holder.mProfileImage.setImageResource(R.drawable.banned_avatar);
-                    } else {
-                         holder.mProfileImage.setImageResource(R.drawable.avatar);
-                    }
-                }
-            } else {
-                holder.mProfileCard.setVisibility(View.GONE);
-            }
+        if (holder.mProfileCard != null) {
+            holder.mProfileCard.setVisibility(View.GONE);
         }
         
         if (holder.mRepliedMessageLayout != null) {
@@ -204,8 +190,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                             holder.mRepliedMessageLayoutUsername.setTextColor(0xFF424242);
                                         }
                                     }
-                                    if(holder.mRepliedMessageLayoutMessage != null) {
-                                        holder.mRepliedMessageLayoutMessage.setText(repliedText != null ? repliedText : "");
+                                    if (snapshot.hasChild("attachments")) {
+                                        ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) snapshot.child("attachments").getValue();
+                                        if (attachments != null && !attachments.isEmpty()) {
+                                            holder.mRepliedMessageLayoutImage.setVisibility(View.VISIBLE);
+                                            Glide.with(_context).load(attachments.get(0).get("url").toString()).into(holder.mRepliedMessageLayoutImage);
+                                            holder.mRepliedMessageLayoutMessage.setText("Photo");
+                                        }
+                                    } else {
+                                        holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
+                                        if(holder.mRepliedMessageLayoutMessage != null) {
+                                            holder.mRepliedMessageLayoutMessage.setText(repliedText != null ? repliedText : "");
+                                        }
                                     }
                                     
                                     if(holder.mRepliedMessageLayoutLeftBar != null) {
@@ -286,26 +282,64 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         String msgText = data.getOrDefault("message_text", "").toString();
         holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
         if (!msgText.isEmpty()) textStylingUtil.applyStyling(msgText, holder.message_text);
-        
+
         ArrayList<ImageView> imageViews = new ArrayList<>(Arrays.asList(holder.imageGrid1, holder.imageGrid2, holder.imageGrid3, holder.imageGrid4));
-        for (ImageView iv : imageViews) { iv.setVisibility(View.GONE); iv.setImageDrawable(null); }
-        if(holder.imageGridMoreOverlay != null) holder.imageGridMoreOverlay.setVisibility(View.GONE);
+        for (ImageView iv : imageViews) {
+            iv.setVisibility(View.GONE);
+            iv.setImageDrawable(null);
+        }
+        if (holder.imageGridMoreOverlay != null) holder.imageGridMoreOverlay.setVisibility(View.GONE);
 
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
         if (attachments != null && !attachments.isEmpty()) {
-            if(holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.VISIBLE);
+            if (holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.VISIBLE);
             int count = attachments.size();
-            int limit = Math.min(count, 4);
-            for (int i = 0; i < limit; i++) {
-                String url = attachments.get(i).get("url").toString();
-                imageViews.get(i).setVisibility(View.VISIBLE);
-                Glide.with(_context).load(url).into(imageViews.get(i));
-                imageViews.get(i).setOnClickListener(v -> chatActivity._OpenWebView(url));
-            }
-            if (count > 4) {
-                if(holder.imageGridMoreOverlay != null) {
-                    holder.imageGridMoreOverlay.setVisibility(View.VISIBLE);
-                    holder.imageGridMoreText.setText("+" + (count - 4));
+
+            if (count == 1) {
+                holder.mediaGridLayout.setColumnCount(1);
+                ImageView iv = imageViews.get(0);
+                iv.setVisibility(View.VISIBLE);
+                ViewGroup.LayoutParams params = iv.getLayoutParams();
+                params.width = dpToPx(250);
+                params.height = dpToPx(250);
+                iv.setLayoutParams(params);
+                Glide.with(_context).load(attachments.get(0).get("url").toString()).into(iv);
+                iv.setOnClickListener(v -> chatActivity._OpenWebView(attachments.get(0).get("url").toString()));
+            } else {
+                holder.mediaGridLayout.setColumnCount(2);
+                int limit = Math.min(count, 4);
+                for (int i = 0; i < limit; i++) {
+                    ImageView iv = imageViews.get(i);
+                    iv.setVisibility(View.VISIBLE);
+                    ViewGroup.LayoutParams params = iv.getLayoutParams();
+                    if (count == 2) {
+                        params.width = dpToPx(125);
+                        params.height = dpToPx(125);
+                    } else if (count == 3) {
+                        if (i == 0) {
+                            params.width = dpToPx(250);
+                            params.height = dpToPx(125);
+                            androidx.gridlayout.widget.GridLayout.LayoutParams gridParams = (androidx.gridlayout.widget.GridLayout.LayoutParams) params;
+                            gridParams.columnSpec = androidx.gridlayout.widget.GridLayout.spec(0, 2);
+                            iv.setLayoutParams(gridParams);
+                        } else {
+                            params.width = dpToPx(125);
+                            params.height = dpToPx(125);
+                        }
+                    } else { // 4 or more
+                        params.width = dpToPx(125);
+                        params.height = dpToPx(125);
+                    }
+                    iv.setLayoutParams(params);
+                    String url = attachments.get(i).get("url").toString();
+                    Glide.with(_context).load(url).into(iv);
+                    iv.setOnClickListener(v -> chatActivity._OpenWebView(url));
+                }
+                if (count > 4) {
+                    if (holder.imageGridMoreOverlay != null) {
+                        holder.imageGridMoreOverlay.setVisibility(View.VISIBLE);
+                        holder.imageGridMoreText.setText("+" + (count - 4));
+                    }
                 }
             }
         }

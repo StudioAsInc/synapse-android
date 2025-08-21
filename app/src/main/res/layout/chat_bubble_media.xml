@@ -56,7 +56,7 @@
 					app:cardCornerRadius="18dp">
 					<androidx.gridlayout.widget.GridLayout
 						android:id="@+id/mediaGridLayout"
-						android:layout_width="250dp"
+						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						app:columnCount="2"
 						app:useDefaultMargins="false">
@@ -96,7 +96,7 @@
 								android:id="@+id/imageGridMoreOverlay"
 								android:layout_width="match_parent"
 								android:layout_height="match_parent"
-								android:background="#000000"
+								android:background="@color/semi_trans_black"
 								android:gravity="center_horizontal|center_vertical"
 								android:visibility="gone">
 								<TextView
