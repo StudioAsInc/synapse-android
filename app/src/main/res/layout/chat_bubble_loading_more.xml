@@ -14,5 +14,5 @@
 		android:layout_width="32dp"
 		android:layout_height="32dp"
 		android:indeterminate="true"
-		style="?android:progressBarStyleHorizontal" />
+		style="?android:attr/progressBarStyle" />
 </LinearLayout>
