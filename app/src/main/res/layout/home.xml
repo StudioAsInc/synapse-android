@@ -77,6 +77,16 @@
 										android:padding="8dp"
 										android:orientation="vertical"
 										android:layout_weight="1" />
+									<ImageView
+										android:id="@+id/settings_button"
+										android:layout_width="32dp"
+										android:layout_height="32dp"
+										android:src="@drawable/baseline_logout_black_48dp"
+										android:scaleType="centerInside"
+										android:layout_marginLeft="8dp"
+										android:clickable="true"
+										android:focusable="true"
+										android:background="?attr/selectableItemBackgroundBorderless" />
 								</LinearLayout>
 								<LinearLayout
 									android:id="@+id/bottomBar"
