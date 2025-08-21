@@ -115,7 +115,7 @@
 		android:layout_marginEnd="16dp"
 		android:layout_marginBottom="230dp"
 		android:visibility="gone"
-		app:srcCompat="@drawable/ic_volume_up_48px"
+		app:srcCompat="@drawable/ic_chat_48px"
 		app:tint="@android:color/white" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -126,7 +126,7 @@
 		android:layout_marginEnd="16dp"
 		android:layout_marginBottom="300dp"
 		android:visibility="gone"
-		app:srcCompat="@drawable/ic_people_48px"
+		app:srcCompat="@drawable/ic_account_circle_48px"
 		app:tint="@android:color/white" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -137,7 +137,7 @@
 		android:layout_marginEnd="16dp"
 		android:layout_marginBottom="370dp"
 		android:visibility="gone"
-		app:srcCompat="@drawable/ic_group_add_48px"
+		app:srcCompat="@drawable/ic_add_48px"
 		app:tint="@android:color/white" />
 
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
