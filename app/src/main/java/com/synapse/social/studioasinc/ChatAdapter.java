@@ -372,8 +372,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText(linkData.description);
                         if (holder.linkPreviewDomain != null) holder.linkPreviewDomain.setText(linkData.domain);
                         if (linkData.imageUrl != null && !linkData.imageUrl.isEmpty() && holder.linkPreviewImage != null) {
-                            Glide.with(_context).load(linkData.imageUrl).into(holder.linkPreviewImage);
-                            holder.linkPreviewImage.setVisibility(View.VISIBLE);
+                            if (chatActivity != null && !chatActivity.isDestroyed()) {
+                                Glide.with(chatActivity).load(linkData.imageUrl).into(holder.linkPreviewImage);
+                                holder.linkPreviewImage.setVisibility(View.VISIBLE);
+                            }
                         }
                     }
                 }
@@ -390,14 +392,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
     
     private void bindLoadingViewHolder(LoadingViewHolder holder, int position) {
-        if (chatActivity != null) {
-            Toast.makeText(chatActivity, "Loading older messages...", Toast.LENGTH_SHORT).show();
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (chatActivity != null) {
-                    chatActivity._getOldChatMessagesRef();
-                }
-            }, 300);
-        }
+        // The progress bar is displayed, and the loading is handled by the
+        // scroll listener in ChatActivity. No action needed here.
     }
 
     private int dpToPx(int dp) {

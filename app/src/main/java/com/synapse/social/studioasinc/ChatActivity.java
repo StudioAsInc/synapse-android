@@ -134,7 +134,7 @@ import android.text.method.ScrollingMovementMethod;
 
 // Add this import statement at the top of your Activity's logic
 import com.synapse.social.studioasinc.StorageUtil;
-import com.synapse.social.studioasinc.UploadFiles;
+import com.synapse.social.studioasinc.FasterCloudinaryUploader;
 
 
 public class ChatActivity extends AppCompatActivity {
@@ -145,7 +145,6 @@ public class ChatActivity extends AppCompatActivity {
 
 	private ProgressDialog SynapseLoadingDialog;
 	private MediaRecorder AudioMessageRecorder;
-	private double ChatMessagesLimit = 0;
 	private HashMap<String, Object> ChatSendMap = new HashMap<>();
 	private HashMap<String, Object> ChatInboxSend = new HashMap<>();
 	private double recordMs = 0;
@@ -155,7 +154,8 @@ public class ChatActivity extends AppCompatActivity {
 	private String ReplyMessageID = "";
 	private String SecondUserName = "";
 	private String FirstUserName = "";
-	private int ChatInitialSize = 0;
+	private String oldestMessageKey = null;
+	private static final int CHAT_PAGE_SIZE = 80;
 	private String object_clicked = "";
 	private String handle = "";
 	private HashMap<String, Object> block = new HashMap<>();
@@ -321,7 +321,7 @@ public class ChatActivity extends AppCompatActivity {
 		toolContainer = findViewById(R.id.toolContainer);
 		expand_send_type_btn = findViewById(R.id.expand_send_type_btn);
 		devider_mic_camera = findViewById(R.id.devider_mic_camera);
-		galleryBtn = findViewById(R.id.galleryBtn);
+		galleryBtn = findViewById(R.id.gallery_btn);
 		auth = FirebaseAuth.getInstance();
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		blocked = getSharedPreferences("block", Activity.MODE_PRIVATE);
@@ -770,7 +770,6 @@ public class ChatActivity extends AppCompatActivity {
 		SecondUserAvatar = "null";
 		ReplyMessageID = "null";
 		path = "";
-		ChatMessagesLimit = 80;
 		block_switch = 0;
 		// Set the Layout Manager
 		LinearLayoutManager ChatRecyclerLayoutManager = new LinearLayoutManager(this);
@@ -1316,43 +1315,85 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 
 
 	public void _getChatMessagesRef() {
-		Query getChatsMessages = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).limitToLast((int)ChatMessagesLimit);
-		getChatsMessages.addValueEventListener(new ValueEventListener() {
+		// Initial load
+		Query getChatsMessages = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).limitToLast(CHAT_PAGE_SIZE);
+		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if(dataSnapshot.exists()) {
 					ChatMessagesListRecycler.setVisibility(View.VISIBLE);
 					noChatText.setVisibility(View.GONE);
 					ChatMessagesList.clear();
-
-					try {
-						GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-						for (DataSnapshot _data : dataSnapshot.getChildren()) {
-							HashMap<String, Object> _map = _data.getValue(_ind);
-							ChatMessagesList.add(_map);
-						}
-					} catch (Exception _e) {
-						_e.printStackTrace();
+					ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
+					for (DataSnapshot _data : dataSnapshot.getChildren()) {
+						initialMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
 					}
 
-					if (ChatMessagesList.size() > ChatInitialSize) {
-						ChatMessagesListRecycler.getAdapter().notifyDataSetChanged();
-						ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-					} else {
-						ChatMessagesListRecycler.getAdapter().notifyDataSetChanged();
+					if (!initialMessages.isEmpty()) {
+						oldestMessageKey = initialMessages.get(0).get("key").toString();
 					}
 
-					ChatInitialSize = ChatMessagesList.size();
+					ChatMessagesList.addAll(initialMessages);
+					chatAdapter.notifyDataSetChanged();
+					ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+
+					// Now listen for new messages
+					_listenForNewMessages();
 				} else {
 					ChatMessagesListRecycler.setVisibility(View.GONE);
 					noChatText.setVisibility(View.VISIBLE);
 				}
 			}
+			@Override public void onCancelled(@NonNull DatabaseError databaseError) {}
+		});
+	}
+
+	private void _listenForNewMessages() {
+		String lastMessageKey = null;
+		if (!ChatMessagesList.isEmpty()) {
+			lastMessageKey = ChatMessagesList.get(ChatMessagesList.size() - 1).get("key").toString();
+		}
+
+		Query newMessagesQuery;
+		if (lastMessageKey != null) {
+			newMessagesQuery = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).orderByKey().startAfter(lastMessageKey);
+		} else {
+			newMessagesQuery = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).orderByKey();
+		}
+
+		newMessagesQuery.addChildEventListener(new ChildEventListener() {
+			@Override
+			public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
+				if (dataSnapshot.exists()) {
+					HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					// Simple check to avoid duplicate additions
+					if (ChatMessagesList.stream().noneMatch(msg -> msg.get("key").equals(newMessage.get("key")))) {
+						ChatMessagesList.add(newMessage);
+						chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+						ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+					}
+				}
+			}
 
 			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-
+			public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+				// Find message by key and update it
+				if (snapshot.exists()) {
+					HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					String key = updatedMessage.get("key").toString();
+					for (int i = 0; i < ChatMessagesList.size(); i++) {
+						if (ChatMessagesList.get(i).get("key").toString().equals(key)) {
+							ChatMessagesList.set(i, updatedMessage);
+							chatAdapter.notifyItemChanged(i);
+							break;
+						}
+					}
+				}
 			}
+
+			@Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
+			@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
+			@Override public void onCancelled(@NonNull DatabaseError error) {}
 		});
 	}
 
@@ -1427,30 +1468,46 @@ ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener()
 
 
 	public void _getOldChatMessagesRef() {
+		if (isLoading || oldestMessageKey == null) {
+			return;
+		}
 		isLoading = true;
-		ChatMessagesLimit = ChatMessagesLimit + 80;
 		_showLoadMoreIndicator();
 
 		Query getChatsMessages = FirebaseDatabase.getInstance()
 		.getReference("skyline/chats")
 		.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
 		.child(getIntent().getStringExtra("uid"))
-		.limitToLast((int)ChatMessagesLimit);
+		.orderByKey()
+		.endBefore(oldestMessageKey)
+		.limitToLast(CHAT_PAGE_SIZE);
 
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				_hideLoadMoreIndicator();
 				if(dataSnapshot.exists()) {
-					ChatMessagesList.clear();
-					try {
-						GenericTypeIndicator<HashMap<String, Object>> _ind =
-						new GenericTypeIndicator<HashMap<String, Object>>() {};
-						for (DataSnapshot _data : dataSnapshot.getChildren()) {
-							ChatMessagesList.add(_data.getValue(_ind));
+					ArrayList<HashMap<String, Object>> newMessages = new ArrayList<>();
+					for (DataSnapshot _data : dataSnapshot.getChildren()) {
+						newMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
+					}
+
+					if (!newMessages.isEmpty()) {
+						oldestMessageKey = newMessages.get(0).get("key").toString();
+
+						final LinearLayoutManager layoutManager = (LinearLayoutManager) ChatMessagesListRecycler.getLayoutManager();
+						int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
+						View firstVisibleView = layoutManager.findViewByPosition(firstVisiblePosition);
+						int topOffset = (firstVisibleView != null) ? firstVisibleView.getTop() : 0;
+
+						ChatMessagesList.addAll(0, newMessages);
+						chatAdapter.notifyItemRangeInserted(0, newMessages.size());
+
+						// Restore scroll position to the item that was previously at the top
+						if (firstVisibleView != null) {
+							layoutManager.scrollToPositionWithOffset(firstVisiblePosition + newMessages.size(), topOffset);
 						}
-					} catch (Exception _e) {}
-					((ChatAdapter)chatAdapter).notifyDataSetChanged();
+					}
 				}
 				isLoading = false;
 			}
@@ -1967,18 +2024,18 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 		String filePath = itemMap.get("localPath").toString();
 		File file = new File(filePath);
 
-		UploadFiles.uploadFile(filePath, file.getName(), new UploadFiles.UploadCallback() {
+		FasterCloudinaryUploader.uploadFile(filePath, file.getName(), new FasterCloudinaryUploader.UploadCallback() {
 			@Override
 			public void onProgress(int percent) {
 				attactmentmap.get(itemPosition).put("uploadProgress", (double) percent);
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			}
 			@Override
-			public void onSuccess(String url, String publicId) {
+			public void onSuccess(String url, String publicIdWithType) {
 				HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
 				mapToUpdate.put("uploadState", "success");
-				mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
-				mapToUpdate.put("publicId", publicId);
+				mapToUpdate.put("cloudinaryUrl", url);
+				mapToUpdate.put("publicId", publicIdWithType);
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 
 				// Set the URL to the 'path' variable instead of message_et
@@ -2287,7 +2344,7 @@ SketchwareUtil.showMessage(getApplicationContext(), "Failed to upload...");
 
 					if (currentItemData.containsKey("publicId")) {
 						String publicId = currentItemData.get("publicId").toString();
-						UploadFiles.deleteByPublicId(publicId, new UploadFiles.DeleteCallback() {
+						FasterCloudinaryUploader.deleteByPublicId(publicId, new FasterCloudinaryUploader.DeleteCallback() {
 							@Override public void onSuccess() {}
 							@Override public void onFailure(String error) {}
 						});
