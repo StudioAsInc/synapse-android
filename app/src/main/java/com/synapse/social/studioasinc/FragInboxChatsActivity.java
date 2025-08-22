@@ -61,7 +61,6 @@ import java.util.regex.*;
 import org.json.*;
 import androidx.core.widget.NestedScrollView;
 import com.google.firebase.database.Query;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import android.os.Handler;
 import android.os.Looper;
@@ -77,7 +76,6 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.appcompat.app.AppCompatDelegate;
 import com.bumptech.glide.Glide;
-
 
 public class FragInboxChatsActivity extends Fragment {
 
@@ -97,9 +95,6 @@ public class FragInboxChatsActivity extends Fragment {
 	private Chip linear31;
 	private Chip linear32;
 	private Chip linear33;
-
-	private FloatingActionButton fab_main, fab_create_group, fab_community, fab_channel, fab_personal_chat;
-	private boolean isFabMenuOpen = false;
 
 	private FirebaseAuth auth;
 	private OnCompleteListener<AuthResult> _auth_create_user_listener;
@@ -138,52 +133,6 @@ public class FragInboxChatsActivity extends Fragment {
 		linear32 = _view.findViewById(R.id.linear32);
 		linear33 = _view.findViewById(R.id.linear33);
 		auth = FirebaseAuth.getInstance();
-
-		fab_main = _view.findViewById(R.id.fab_main);
-		fab_create_group = _view.findViewById(R.id.fab_create_group);
-		fab_community = _view.findViewById(R.id.fab_community);
-		fab_channel = _view.findViewById(R.id.fab_channel);
-		fab_personal_chat = _view.findViewById(R.id.fab_personal_chat);
-
-		fab_main.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				if (!isFabMenuOpen) {
-					showFabMenu();
-				} else {
-					closeFabMenu();
-				}
-			}
-		});
-
-		fab_create_group.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				Intent intent = new Intent(getActivity(), CreateGroupActivity.class);
-				startActivity(intent);
-			}
-		});
-
-		fab_community.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				Toast.makeText(getContext(), "Community clicked", Toast.LENGTH_SHORT).show();
-			}
-		});
-
-		fab_channel.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				Toast.makeText(getContext(), "Channel clicked", Toast.LENGTH_SHORT).show();
-			}
-		});
-
-		fab_personal_chat.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				Toast.makeText(getContext(), "Personal Chat clicked", Toast.LENGTH_SHORT).show();
-			}
-		});
 
 		_main_child_listener = new ChildEventListener() {
 			@Override
@@ -318,22 +267,6 @@ public class FragInboxChatsActivity extends Fragment {
 		inboxListRecyclerView.setAdapter(new InboxListRecyclerViewAdapter(ChatInboxList));
 		inboxListRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 		_getInboxReference();
-	}
-
-	private void showFabMenu() {
-		isFabMenuOpen = true;
-		fab_create_group.show();
-		fab_community.show();
-		fab_channel.show();
-		fab_personal_chat.show();
-	}
-
-	private void closeFabMenu() {
-		isFabMenuOpen = false;
-		fab_create_group.hide();
-		fab_community.hide();
-		fab_channel.hide();
-		fab_personal_chat.hide();
 	}
 
 	public void _ImgRound(final ImageView _imageview, final double _value) {
