@@ -80,6 +80,8 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
+import com.synapse.social.studioasinc.thanos.ThanosSnap;
+import com.synapse.social.studioasinc.thanos.ThanosSnapView;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
@@ -990,7 +992,22 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			}
 
-			@Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
+			@Override
+			public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					String removedKey = snapshot.getKey();
+					if (removedKey != null) {
+						for (int i = 0; i < ChatMessagesList.size(); i++) {
+							if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
+								ChatMessagesList.remove(i);
+								chatAdapter.notifyItemRemoved(i);
+								chatAdapter.notifyItemRangeChanged(i, ChatMessagesList.size());
+								break;
+							}
+						}
+					}
+				}
+			}
 			@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
 			@Override public void onCancelled(@NonNull DatabaseError error) {}
 		});
@@ -1120,23 +1137,49 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _DeleteMessageDialog(final ArrayList<HashMap<String, Object>> _data, final double _position) {
-		// Material Delete Dialog
 		MaterialAlertDialogBuilder zorry = new MaterialAlertDialogBuilder(ChatActivity.this);
-
 		zorry.setTitle("Delete");
-		zorry.setMessage("Are you sure you want to delete this message. Please confirm your decision.");
+		zorry.setMessage("Are you sure you want to delete this message? Please confirm your decision.");
 		zorry.setIcon(R.drawable.popup_ic_3);
 		zorry.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface _dialog, int _which) {
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
+				final int positionInt = (int) _position;
+				if (positionInt >= 0 && positionInt < _data.size()) {
+					RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(positionInt);
+					if (viewHolder != null) {
+						final View viewToSnap = viewHolder.itemView;
+						ThanosSnapView thanosSnapView = new ThanosSnapView(ChatActivity.this);
+						ThanosSnap thanosSnap = new ThanosSnap(viewToSnap, new ThanosSnap.OnAnimationListener() {
+							@Override
+							public void onAnimationStart() {
+								viewToSnap.setVisibility(View.INVISIBLE);
+							}
+
+							@Override
+							public void onAnimationEnd() {
+								String messageKey = _data.get(positionInt).get(KEY_KEY).toString();
+								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(messageKey).removeValue();
+								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(messageKey).removeValue();
+
+								if (positionInt < ChatMessagesList.size()) {
+									ChatMessagesList.remove(positionInt);
+									chatAdapter.notifyItemRemoved(positionInt);
+									chatAdapter.notifyItemRangeChanged(positionInt, ChatMessagesList.size());
+								}
+								((ViewGroup) relativelayout1).removeView(thanosSnapView);
+							}
+						});
+						thanosSnapView.setThanosSnap(thanosSnap);
+						((ViewGroup) relativelayout1).addView(thanosSnapView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+						thanosSnap.start();
+					}
+				}
 			}
 		});
 		zorry.setNegativeButton("No", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface _dialog, int _which) {
-
 			}
 		});
 		zorry.create().show();
