@@ -214,66 +214,184 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
                                         leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
                                         leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
-                                        leftBarDrawable.setCornerRadius(dpToPx(100));
-                                        holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
-                                    }
-                                }
-                            }
-                            @Override
-                            public void onCancelled(DatabaseError error) {
-                                Log.e(TAG, "Failed to load replied message: " + error.getMessage());
-                            }
-                        });
-                }
+private void bindCommonMessageProperties(BaseMessageViewHolder holder, int position) {
+    HashMap<String, Object> data = _data.get(position);
+    boolean isMyMessage = data.get("uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+    if (holder.message_layout != null) {
+        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.message_layout.getLayoutParams();
+        int sideMarginPx = dpToPx(40);
+        int topBottomPaddingPx = dpToPx(2);
+        int innerPaddingPx = dpToPx(8);
+
+        if (isMyMessage) {
+            params.setMargins(sideMarginPx, topBottomPaddingPx, innerPaddingPx, topBottomPaddingPx);
+            holder.body.setGravity(Gravity.TOP | Gravity.RIGHT);
+            holder.message_layout.setGravity(Gravity.RIGHT);
+        } else {
+            params.setMargins(innerPaddingPx, topBottomPaddingPx, sideMarginPx, topBottomPaddingPx);
+            holder.body.setGravity(Gravity.TOP | Gravity.LEFT);
+            holder.message_layout.setGravity(Gravity.LEFT);
+        }
+        holder.message_layout.setLayoutParams(params);
+    }
+    holder.body.setGravity(isMyMessage ? (Gravity.TOP | Gravity.RIGHT) : (Gravity.TOP | Gravity.LEFT));
+
+    if (holder.my_message_info != null && holder.date != null && holder.message_state != null) {
+        boolean showMessageInfo = false;
+        if (position == _data.size() - 1) {
+            showMessageInfo = true;
+        } else if (position + 1 < _data.size()) {
+            if (!_data.get(position + 1).get("uid").toString().equals(data.get("uid").toString()) || _data.get(position+1).containsKey("typingMessageStatus")) {
+                showMessageInfo = true;
             }
         }
-        
-        if (holder.messageBG != null) {
-            int cornerRadius = 27;
-            try { cornerRadius = (int) Double.parseDouble(appSettings.getString("ChatCornerRadius", "27")); } catch (Exception e) {}
-            
-            android.graphics.drawable.GradientDrawable bubbleDrawable = new android.graphics.drawable.GradientDrawable();
-            float density = _context.getResources().getDisplayMetrics().density;
-            bubbleDrawable.setCornerRadius(density * cornerRadius);
+        holder.my_message_info.setVisibility(showMessageInfo ? View.VISIBLE : View.GONE);
 
+        if (showMessageInfo) {
+            Calendar push = Calendar.getInstance();
+            push.setTimeInMillis((long) Double.parseDouble(data.get("push_date").toString()));
+            holder.date.setText(new SimpleDateFormat("hh:mm a").format(push.getTime()));
+
+            holder.message_state.setVisibility(isMyMessage ? View.VISIBLE : View.GONE);
             if (isMyMessage) {
-                bubbleDrawable.setColor(0xFF6B4CFF);
-                if(holder.message_text != null) holder.message_text.setTextColor(Color.WHITE);
-            } else {
-                bubbleDrawable.setColor(Color.WHITE);
-                bubbleDrawable.setStroke((int)(2 * density), 0xFFDFDFDF);
-                if(holder.message_text != null) holder.message_text.setTextColor(Color.BLACK);
-            }
-            holder.messageBG.setBackground(bubbleDrawable);
-        }
-
-        int textSize = 16;
-        try { textSize = (int) Double.parseDouble(appSettings.getString("ChatTextSize", "16")); } catch (Exception e) {}
-        
-        if(holder.message_text != null) holder.message_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
-        if (holder.mRepliedMessageLayoutUsername != null) holder.mRepliedMessageLayoutUsername.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize - 2);
-        if (holder.mRepliedMessageLayoutMessage != null) holder.mRepliedMessageLayoutMessage.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
-
-        if (!isMyMessage && data.containsKey("message_state") && "sended".equals(data.get("message_state").toString())) {
-            String otherUserUid = chatActivity.getIntent().getStringExtra("uid");
-            String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            String messageKey = data.get("key").toString();
-            FirebaseDatabase.getInstance().getReference("skyline/chats").child(otherUserUid).child(myUid).child(messageKey).child("message_state").setValue("seen");
-            FirebaseDatabase.getInstance().getReference("skyline/chats").child(myUid).child(otherUserUid).child(messageKey).child("message_state").setValue("seen");
-            FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
-        }
-        
-        if (holder.messageBG != null) {
-            View.OnLongClickListener longClickListener = v -> {
-                chatActivity._messageOverviewPopup(v, position, _data);
-                return true;
-            };
-            holder.messageBG.setOnLongClickListener(longClickListener);
-            if(holder.message_text != null) {
-                holder.message_text.setOnLongClickListener(longClickListener);
+                String state = data.get("message_state").toString();
+                holder.message_state.setImageResource("seen".equals(state) ? R.drawable.icon_done_all_round : R.drawable.icon_done_round);
+                holder.message_state.setColorFilter("seen".equals(state) ? _context.getResources().getColor(R.color.colorPrimary) : 0xFF424242, PorterDuff.Mode.SRC_ATOP);
             }
         }
     }
+
+    if (holder.mProfileCard != null && holder.mProfileImage != null) {
+        if (!isMyMessage) {
+            boolean isFirstOfGroup = (position == 0) || (position - 1 >= 0 && !_data.get(position - 1).get("uid").toString().equals(data.get("uid").toString()));
+            holder.mProfileCard.setVisibility(isFirstOfGroup ? View.VISIBLE : View.GONE);
+            if (isFirstOfGroup) {
+                if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
+                    Glide.with(_context).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
+                } else if ("null_banned".equals(secondUserAvatarUrl)) {
+                    holder.mProfileImage.setImageResource(R.drawable.banned_avatar);
+                } else {
+                    holder.mProfileImage.setImageResource(R.drawable.avatar);
+                }
+            }
+        } else {
+            holder.mProfileCard.setVisibility(View.GONE);
+        }
+    }
+
+    if (holder.mRepliedMessageLayout != null) {
+        holder.mRepliedMessageLayout.setVisibility(View.GONE);
+        if (data.containsKey("replied_message_id")) {
+            String repliedId = data.get("replied_message_id").toString();
+            if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
+                FirebaseDatabase.getInstance().getReference("skyline/chats")
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                    .child(chatActivity.getIntent().getStringExtra("uid"))
+                    .child(repliedId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            if (snapshot.exists() && holder.mRepliedMessageLayout != null) {
+                                holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
+                                String repliedUid = snapshot.child("uid").getValue(String.class);
+                                String repliedText = snapshot.child("message_text").getValue(String.class);
+
+                                if(holder.mRepliedMessageLayoutUsername != null) {
+                                    holder.mRepliedMessageLayoutUsername.setText(
+                                        repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName
+                                    );
+                                    if (repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                                        holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
+                                    } else {
+                                        holder.mRepliedMessageLayoutUsername.setTextColor(0xFF424242);
+                                    }
+                                }
+                                if(holder.mRepliedMessageLayoutMessage != null) {
+                                    if (repliedText != null && !repliedText.isEmpty()) {
+                                        TextStylingUtil tsu = new TextStylingUtil(_context);
+                                        tsu.applyStyling(repliedText, holder.mRepliedMessageLayoutMessage);
+                                    } else {
+                                        holder.mRepliedMessageLayoutMessage.setText("");
+                                    }
+                                }
+
+                                if(holder.mRepliedMessageLayoutLeftBar != null) {
+                                    android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
+                                    leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+                                    leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
+                                    leftBarDrawable.setCornerRadius(dpToPx(100));
+                                    holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
+                                }
+                            }
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "Failed to load replied message: " + error.getMessage());
+                        }
+                    });
+            }
+        }
+    }
+
+    if (holder.messageBG != null) {
+        int cornerRadius = 27;
+        try { cornerRadius = (int) Double.parseDouble(appSettings.getString("ChatCornerRadius", "27")); } catch (Exception e) {}
+
+        android.graphics.drawable.GradientDrawable bubbleDrawable = new android.graphics.drawable.GradientDrawable();
+        float density = _context.getResources().getDisplayMetrics().density;
+        bubbleDrawable.setCornerRadius(density * cornerRadius);
+
+        if (isMyMessage) {
+            bubbleDrawable.setColor(0xFF6B4CFF);
+            if(holder.message_text != null) holder.message_text.setTextColor(Color.WHITE);
+        } else {
+            bubbleDrawable.setColor(Color.WHITE);
+            bubbleDrawable.setStroke((int)(2 * density), 0xFFDFDFDF);
+            if(holder.message_text != null) holder.message_text.setTextColor(Color.BLACK);
+        }
+        holder.messageBG.setBackground(bubbleDrawable);
+    }
+
+    int textSize = 16;
+    try { textSize = (int) Double.parseDouble(appSettings.getString("ChatTextSize", "16")); } catch (Exception e) {}
+
+    if (holder.message_text != null) {
+        holder.message_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
+        String mainMessage = (String) data.get("message_text");
+        if (mainMessage != null && !mainMessage.isEmpty()) {
+            TextStylingUtil tsu = new TextStylingUtil(_context);
+            tsu.applyStyling(mainMessage, holder.message_text);
+        } else {
+            holder.message_text.setText("");
+        }
+    }
+
+    if (holder.mRepliedMessageLayoutUsername != null) 
+        holder.mRepliedMessageLayoutUsername.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize - 2);
+    if (holder.mRepliedMessageLayoutMessage != null) 
+        holder.mRepliedMessageLayoutMessage.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
+
+    if (!isMyMessage && data.containsKey("message_state") && "sended".equals(data.get("message_state").toString())) {
+        String otherUserUid = chatActivity.getIntent().getStringExtra("uid");
+        String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String messageKey = data.get("key").toString();
+        FirebaseDatabase.getInstance().getReference("skyline/chats").child(otherUserUid).child(myUid).child(messageKey).child("message_state").setValue("seen");
+        FirebaseDatabase.getInstance().getReference("skyline/chats").child(myUid).child(otherUserUid).child(messageKey).child("message_state").setValue("seen");
+        FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
+    }
+
+    if (holder.messageBG != null) {
+        View.OnLongClickListener longClickListener = v -> {
+            chatActivity._messageOverviewPopup(v, position, _data);
+            return true;
+        };
+        holder.messageBG.setOnLongClickListener(longClickListener);
+        if(holder.message_text != null) {
+            holder.message_text.setOnLongClickListener(longClickListener);
+        }
+    }
+}
 
     private void bindTextViewHolder(TextViewHolder holder, int position) {
         bindCommonMessageProperties(holder, position);
