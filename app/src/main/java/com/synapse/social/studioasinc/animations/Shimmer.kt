@@ -25,10 +25,9 @@ class ShimmerFrameLayout @JvmOverloads constructor(
 
     init {
         setWillNotDraw(false)
-        val a = context.obtainStyledAttributes(attrs, R.styleable.ShimmerFrameLayout, 0, 0)
-        val autoStart = a.getBoolean(R.styleable.ShimmerFrameLayout_shimmer_auto_start, false)
-        shimmerDuration = a.getInt(R.styleable.ShimmerFrameLayout_shimmer_duration, 1200).toLong()
-        a.recycle()
+        // Hardcode values to avoid potential issues with attribute resolution
+        val autoStart = false
+        shimmerDuration = 1200L
 
         if (autoStart) {
             post { startShimmer() }
