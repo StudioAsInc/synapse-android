@@ -114,6 +114,7 @@
 						</LinearLayout>
 					</LinearLayout>
 				</com.google.android.material.card.MaterialCardView>
+
 				<TextView
 					android:id="@+id/message_text"
 					android:layout_width="wrap_content"
@@ -124,6 +125,7 @@
 					android:focusable="false"
 					android:autoLink="all"
 					android:textColorLink="#FF0000" />
+
 			</LinearLayout>
 			<LinearLayout
 				android:id="@+id/my_message_info"
