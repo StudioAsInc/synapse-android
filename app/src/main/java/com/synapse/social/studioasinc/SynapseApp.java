@@ -18,7 +18,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.Calendar;
 
@@ -71,34 +70,6 @@ public class SynapseApp extends Application {
             });
         
         setUserStatus();
-        updateFCMToken();
-    }
-
-    private void updateFCMToken() {
-        if (mAuth.getCurrentUser() != null) {
-            FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(new OnCompleteListener<String>() {
-                    @Override
-                    public void onComplete(@NonNull Task<String> task) {
-                        if (!task.isSuccessful()) {
-                            Log.w("SynapseApp", "Fetching FCM registration token failed", task.getException());
-                            return;
-                        }
-
-                        // Get new FCM registration token
-                        String token = task.getResult();
-
-                        // Log and toast
-                        Log.d("SynapseApp", "FCM Token: " + token);
-
-                        // Update token in database
-                        DatabaseReference tokenRef = FirebaseDatabase.getInstance().getReference("skyline/users")
-                            .child(mAuth.getCurrentUser().getUid())
-                            .child("fcmToken");
-                        tokenRef.setValue(token);
-                    }
-                });
-        }
     }
     
     public static void setUserStatus() {

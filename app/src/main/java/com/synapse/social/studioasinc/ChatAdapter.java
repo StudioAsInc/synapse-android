@@ -295,10 +295,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         GridLayout gridLayout = holder.mediaGridLayout;
         if (gridLayout == null) return;
 
-        ViewGroup.LayoutParams cardParams = holder.mediaContainerCard.getLayoutParams();
-        cardParams.width = dpToPx(250);
-        holder.mediaContainerCard.setLayoutParams(cardParams);
-
         gridLayout.removeAllViews();
         gridLayout.setVisibility(View.VISIBLE);
 
@@ -313,41 +309,66 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int totalGridWidth = dpToPx(250);
         int imageSize = totalGridWidth / 2;
 
+        ViewGroup.LayoutParams cardParams = holder.mediaContainerCard.getLayoutParams();
+        cardParams.width = totalGridWidth;
+        holder.mediaContainerCard.setLayoutParams(cardParams);
+
         gridLayout.setColumnCount(colCount);
 
         if (count == 1) {
             gridLayout.setColumnCount(1);
-            String url = attachments.get(0).get("url").toString();
-            ImageView iv = createImageView(url, true);
+            HashMap<String, Object> attachment = attachments.get(0);
+            ImageView iv = createImageView(attachment, totalGridWidth, true);
             gridLayout.addView(iv);
-        } else if (count == 3) {
-            // First image spans 2 columns
-            ImageView iv1 = createImageView(attachments.get(0).get("url").toString(), false);
-            GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
-            params1.width = totalGridWidth;
-            params1.height = imageSize;
-            iv1.setLayoutParams(params1);
-            gridLayout.addView(iv1);
 
-            // Second and third images
-            for (int i = 1; i < 3; i++) {
-                ImageView iv = createImageView(attachments.get(i).get("url").toString(), false);
-                GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
-                params.width = imageSize;
-                params.height = imageSize;
-                iv.setLayoutParams(params);
-                gridLayout.addView(iv);
+        } else if (count == 3) {
+            int portraitIndex = -1;
+            for(int i=0; i < attachments.size(); i++){
+                HashMap<String, Object> attachment = attachments.get(i);
+                double width = ((Number) attachment.get("width")).doubleValue();
+                double height = ((Number) attachment.get("height")).doubleValue();
+                if(height > width){
+                    portraitIndex = i;
+                    break;
+                }
+            }
+
+            if(portraitIndex != -1){
+                // Tall layout
+                ImageView iv1 = createImageView(attachments.get(portraitIndex), imageSize, false);
+                GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 2, 1f), GridLayout.spec(0, 1, 1f));
+                iv1.setLayoutParams(params1);
+                gridLayout.addView(iv1);
+
+                int attachmentIndex = 0;
+                for(int i=0; i<2; i++){
+                    if(attachmentIndex == portraitIndex) attachmentIndex++;
+                    ImageView iv = createImageView(attachments.get(attachmentIndex), imageSize, false);
+                    GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(i, 1, 1f), GridLayout.spec(1, 1, 1f));
+                    iv.setLayoutParams(params);
+                    gridLayout.addView(iv);
+                    attachmentIndex++;
+                }
+
+            } else {
+                // Wide layout
+                ImageView iv1 = createImageView(attachments.get(0), totalGridWidth, false);
+                GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
+                iv1.setLayoutParams(params1);
+                gridLayout.addView(iv1);
+
+                for (int i = 1; i < 3; i++) {
+                    ImageView iv = createImageView(attachments.get(i), imageSize, false);
+                    GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
+                    iv.setLayoutParams(params);
+                    gridLayout.addView(iv);
+                }
             }
         } else { // 2, 4, or >4 images
             int limit = Math.min(count, maxImages);
             for (int i = 0; i < limit; i++) {
-                String url = attachments.get(i).get("url").toString();
                 View viewToAdd;
-                ImageView iv = createImageView(url, false);
-                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-                params.width = imageSize;
-                params.height = imageSize;
-                iv.setLayoutParams(params);
+                ImageView iv = createImageView(attachments.get(i), imageSize, false);
 
                 if (i == maxImages - 1 && count > maxImages) {
                     RelativeLayout overlayContainer = new RelativeLayout(_context);
@@ -355,7 +376,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     overlayContainer.addView(iv);
 
                     View overlay = new View(_context);
-                    overlay.setBackgroundColor(0x40000000); // Black overlay with 25% opacity
+                    overlay.setBackgroundColor(0x40000000);
                     overlayContainer.addView(overlay, new ViewGroup.LayoutParams(imageSize, imageSize));
 
                     TextView moreText = new TextView(_context);
@@ -367,8 +388,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     viewToAdd = overlayContainer;
                     viewToAdd.setOnClickListener(v -> {
                         if (chatActivity != null) {
-                            // Potentially open a gallery view of all images
-                             chatActivity._OpenWebView(url);
+                             chatActivity._OpenWebView(attachments.get(3).get("url").toString());
                         }
                     });
                 } else {
@@ -379,18 +399,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    private ImageView createImageView(String url, boolean adjustBounds) {
+    private ImageView createImageView(HashMap<String, Object> attachment, int width, boolean adjustBounds) {
+        String url = attachment.get("url").toString();
         ImageView imageView = new ImageView(_context);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
         if (adjustBounds) {
             imageView.setAdjustViewBounds(true);
-            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             Glide.with(_context).load(url).into(imageView);
         } else {
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            int imageSize = dpToPx(125);
-            Glide.with(_context).load(url).override(imageSize, imageSize).centerCrop().into(imageView);
+            double imageWidth = ((Number) attachment.get("width")).doubleValue();
+            double imageHeight = ((Number) attachment.get("height")).doubleValue();
+            double ratio = imageHeight / imageWidth;
+            int height = (int) (width * ratio);
+
+            imageView.setLayoutParams(new ViewGroup.LayoutParams(width, height));
+            Glide.with(_context).load(url).override(width, height).into(imageView);
         }
 
         imageView.setOnClickListener(v -> {

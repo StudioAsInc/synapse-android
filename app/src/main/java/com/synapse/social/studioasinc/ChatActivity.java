@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -519,6 +520,13 @@ public class ChatActivity extends AppCompatActivity {
 						HashMap<String, Object> itemMap = new HashMap<>();
 						itemMap.put("localPath", filePath);
 						itemMap.put("uploadState", "pending");
+
+						BitmapFactory.Options options = new BitmapFactory.Options();
+						options.inJustDecodeBounds = true;
+						BitmapFactory.decodeFile(filePath, options);
+						itemMap.put("width", options.outWidth);
+						itemMap.put("height", options.outHeight);
+
 						attactmentmap.add(itemMap);
 					}
 
@@ -1275,6 +1283,8 @@ public class ChatActivity extends AppCompatActivity {
 					HashMap<String, Object> attachmentData = new HashMap<>();
 					attachmentData.put("url", item.get("cloudinaryUrl"));
 					attachmentData.put("publicId", item.get("publicId"));
+					attachmentData.put("width", item.get("width"));
+					attachmentData.put("height", item.get("height"));
 					successfulAttachments.add(attachmentData);
 				} else {
 					allUploadsSuccessful = false;
