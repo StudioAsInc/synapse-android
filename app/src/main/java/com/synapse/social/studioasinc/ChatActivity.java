@@ -1761,7 +1761,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
-	private String getChatId(String uid1, String uid2) {
+	public String getChatId(String uid1, String uid2) {
 		if (uid1.compareTo(uid2) < 0) {
 			return uid1 + "_" + uid2;
 		} else {

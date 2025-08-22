@@ -204,9 +204,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (data.containsKey("replied_message_id")) {
                 String repliedId = data.get("replied_message_id").toString();
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
+                    String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    String theirUid = chatActivity.getIntent().getStringExtra("uid");
+                    String chatId = chatActivity.getChatId(myUid, theirUid);
                     FirebaseDatabase.getInstance().getReference("skyline/chats")
-                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                        .child(chatActivity.getIntent().getStringExtra("uid"))
+                        .child(chatId)
                         .child(repliedId)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
