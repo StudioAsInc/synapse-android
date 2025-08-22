@@ -83,17 +83,23 @@
 						</LinearLayout>
 					</RelativeLayout>
 				</com.google.android.material.card.MaterialCardView>
-				<TextView
-					android:id="@+id/message_text"
-					android:focusable="false"
+				<com.synapse.social.studioasinc.animations.ShimmerFrameLayout
+					android:id="@+id/shimmer_container"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:paddingLeft="8dp"
-					android:paddingTop="6dp"
-					android:paddingRight="8dp"
-					android:textSize="16sp"
-					android:autoLink="all"
-					android:textColorLink="#FFFF00" />
+					app:shimmer_color="#9A9A9A">
+					<TextView
+						android:id="@+id/message_text"
+						android:focusable="false"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:paddingLeft="8dp"
+						android:paddingTop="6dp"
+						android:paddingRight="8dp"
+						android:textSize="16sp"
+						android:autoLink="all"
+						android:textColorLink="#FFFF00" />
+				</com.synapse.social.studioasinc.animations.ShimmerFrameLayout>
 			</LinearLayout>
 			<LinearLayout
 				android:id="@+id/my_message_info"
