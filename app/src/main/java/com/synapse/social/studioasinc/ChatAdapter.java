@@ -323,13 +323,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         } else if (count == 3) {
             int portraitIndex = -1;
-            for(int i=0; i < attachments.size(); i++){
-                HashMap<String, Object> attachment = attachments.get(i);
-                double width = ((Number) attachment.get("width")).doubleValue();
-                double height = ((Number) attachment.get("height")).doubleValue();
-                if(height > width){
-                    portraitIndex = i;
+            boolean canCheckRatios = true;
+            for(HashMap<String, Object> attachment : attachments) {
+                if (attachment.get("width") == null || attachment.get("height") == null) {
+                    canCheckRatios = false;
                     break;
+                }
+            }
+
+            if (canCheckRatios) {
+                for(int i=0; i < attachments.size(); i++){
+                    HashMap<String, Object> attachment = attachments.get(i);
+                    double width = ((Number) attachment.get("width")).doubleValue();
+                    double height = ((Number) attachment.get("height")).doubleValue();
+                    if(height > width){
+                        portraitIndex = i;
+                        break;
+                    }
                 }
             }
 
