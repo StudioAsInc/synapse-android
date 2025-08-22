@@ -523,9 +523,6 @@ public class HomeActivity extends AppCompatActivity {
 	}
 	
 	private void initializeLogic() {
-		_loadPosts(currentPostFilter); 
-        _loadStories(); // Load stories when logic is initialized
-
 		// Fetch user's own profile data for avatar display
 		DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 		getReference.addValueEventListener(new ValueEventListener() {
@@ -603,6 +600,13 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		});
 		zorry.create().show();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		_loadPosts(currentPostFilter);
+		_loadStories();
 	}
 	
 	public void _stateColor(final int _statusColor, final int _navigationColor) {
@@ -1353,9 +1357,11 @@ public class HomeActivity extends AppCompatActivity {
 			getLikesCount.addListenerForSingleValueEvent(new ValueEventListener() {
 				@Override
 				public void onDataChange(DataSnapshot dataSnapshot) {
-					long count = dataSnapshot.getChildrenCount();
-					_setCount(likeButtonCount, count);
-					postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(count)));
+					if (_position < _data.size()) {
+						long count = dataSnapshot.getChildrenCount();
+						_setCount(likeButtonCount, count);
+						postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(count)));
+					}
 				}
 				
 				@Override
@@ -1385,19 +1391,21 @@ public class HomeActivity extends AppCompatActivity {
 					DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 					likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
-							if(dataSnapshot.exists()) {
-								likeRef.removeValue();
-								double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString());
-								postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(currentLikes - 1)));
-								_setCount(likeButtonCount, currentLikes - 1);
-								likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
-							} else {
-								likeRef.setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
-								double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString());
-								postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
-								_setCount(likeButtonCount, currentLikes + 1);
-								likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+							if (_position < _data.size()) {
+								if(dataSnapshot.exists()) {
+									likeRef.removeValue();
+									double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString());
+									postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(currentLikes - 1)));
+									_setCount(likeButtonCount, currentLikes - 1);
+									likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
+								} else {
+									likeRef.setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+									double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString());
+									postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
+									_setCount(likeButtonCount, currentLikes + 1);
+									likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
+								}
 							}
 						}
 						
@@ -1435,13 +1443,15 @@ public class HomeActivity extends AppCompatActivity {
 					DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString());
 					favoriteRef.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
-							if(dataSnapshot.exists()) {
-								favoriteRef.removeValue();
-								favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
-							} else {
-								favoriteRef.setValue(_data.get((int)_position).get("key").toString());
-								favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+							if (_position < _data.size()) {
+								if(dataSnapshot.exists()) {
+									favoriteRef.removeValue();
+									favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
+								} else {
+									favoriteRef.setValue(_data.get((int)_position).get("key").toString());
+									favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
+								}
 							}
 						}
 						
