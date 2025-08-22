@@ -82,7 +82,8 @@ import androidx.core.widget.NestedScrollView;
 import com.google.firebase.database.Query;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.browser.customtabs.CustomTabsIntent;
+
 
 public class ProfileActivity extends AppCompatActivity {
 	
@@ -196,14 +197,44 @@ class c {
 	private ChildEventListener _maindb_child_listener;
 	private TimerTask after;
 	
-	@Override
-	protected void onCreate(Bundle _savedInstanceState) {
-		super.onCreate(_savedInstanceState);
-		setContentView(R.layout.profile);
-		initialize(_savedInstanceState);
-		FirebaseApp.initializeApp(this);
-		initializeLogic();
-	}
+@Override
+protected void onCreate(Bundle _savedInstanceState) {
+    super.onCreate(_savedInstanceState);
+    setContentView(R.layout.profile);
+    initialize(_savedInstanceState);
+    FirebaseApp.initializeApp(this);
+    initializeLogic();
+
+ 
+    String profileUid = getIntent().getStringExtra("uid");
+    String currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+    DatabaseReference checkUserFollow = FirebaseDatabase.getInstance()
+            .getReference("skyline/followers")
+            .child(profileUid)
+            .child(currentUid);
+
+    checkUserFollow.addListenerForSingleValueEvent(new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            if (dataSnapshot.exists()) {
+               
+                btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
+                btnFollow.setText(getResources().getString(R.string.unfollow));
+                btnFollow.setTextColor(0xFF000000);
+            } else {
+               
+                btnFollow.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                btnFollow.setText(getResources().getString(R.string.follow));
+                btnFollow.setTextColor(0xFFFFFFFF);
+            }
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError error) {
+        }
+    });
+}
 	
 	private void initialize(Bundle _savedInstanceState) {
 		ProfilePageBody = findViewById(R.id.ProfilePageBody);
@@ -1725,4 +1756,4 @@ if ( || ( || )) {
 			}
 		}
 	}
-}
+}
