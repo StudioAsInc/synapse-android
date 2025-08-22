@@ -695,7 +695,12 @@ public class ChatActivity extends AppCompatActivity {
 			public void onClick(View _view) {
 				String messageText = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
 				String prompt = "Summarize the following text in a few sentences:\n\n" + messageText;
-				callGeminiForSummary(prompt);
+
+				RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
+				if (viewHolder instanceof BaseMessageViewHolder) {
+					callGeminiForSummary(prompt, (BaseMessageViewHolder) viewHolder);
+				}
+
 				pop1.dismiss();
 			}
 		});
@@ -1674,7 +1679,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 	}
 
-	private void callGeminiForSummary(String prompt) {
+	private void callGeminiForSummary(String prompt, final BaseMessageViewHolder viewHolder) {
 		Gemini summaryGemini = new Gemini.Builder(this)
 				.model(GEMINI_MODEL)
 				.tone(GEMINI_TONE)
@@ -1685,21 +1690,33 @@ public class ChatActivity extends AppCompatActivity {
 		summaryGemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
-				SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response);
-				bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
+				runOnUiThread(() -> {
+					if (viewHolder != null) {
+						viewHolder.stopShimmer();
+					}
+					SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response);
+					bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
+				});
 			}
 
 			@Override
 			public void onError(String error) {
-				Log.e("GeminiSummary", "Error: " + error);
 				runOnUiThread(() -> {
+					if (viewHolder != null) {
+						viewHolder.stopShimmer();
+					}
+					Log.e("GeminiSummary", "Error: " + error);
 					Toast.makeText(getApplicationContext(), "Error getting summary: " + error, Toast.LENGTH_SHORT).show();
 				});
 			}
 
 			@Override
 			public void onThinking() {
-				// Can show a loading indicator here
+				runOnUiThread(() -> {
+					if (viewHolder != null) {
+						viewHolder.startShimmer();
+					}
+				});
 			}
 		});
 	}
