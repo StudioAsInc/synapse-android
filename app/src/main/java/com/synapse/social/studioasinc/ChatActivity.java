@@ -327,14 +327,39 @@ public class ChatActivity extends AppCompatActivity {
 					.concat("```");
 					callGemini(prompt, true);
 				} else {
-					String replyText = mMessageReplyLayoutBodyRightMessage.getText().toString();
-					String prompt = "Read the message inside the backticks and write a natural, context-aware reply " +
-					"in the same language and tone. Keep it concise (1–3 short sentences). " +
-					"Do NOT include quotes, extra commentary, or disclaimers. Censor profanity. " +
-					"Output ONLY the reply text.\n```"
-					.concat(replyText)
-					.concat("```");
-					callGemini(prompt, false);
+					if (ReplyMessageID != null && !ReplyMessageID.equals("null")) {
+						int repliedMessageIndex = -1;
+						for (int i = 0; i < ChatMessagesList.size(); i++) {
+							if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(ReplyMessageID)) {
+								repliedMessageIndex = i;
+								break;
+							}
+						}
+
+						if (repliedMessageIndex != -1) {
+							StringBuilder contextBuilder = new StringBuilder();
+							contextBuilder.append("Here is the recent chat history:\n");
+
+							int startIndex = Math.max(0, repliedMessageIndex - 10);
+							int endIndex = Math.min(ChatMessagesList.size() - 1, repliedMessageIndex + 10);
+
+							for (int i = startIndex; i <= endIndex; i++) {
+								HashMap<String, Object> message = ChatMessagesList.get(i);
+								String sender = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? "Me" : SecondUserName;
+								contextBuilder.append(sender).append(": ").append(message.get(MESSAGE_TEXT_KEY).toString()).append("\n");
+							}
+
+							contextBuilder.append("\nI am replying to the message: '").append(mMessageReplyLayoutBodyRightMessage.getText().toString()).append("'.\n");
+							contextBuilder.append("Please suggest a short, relevant reply to this message based on the context provided.");
+
+							String prompt = contextBuilder.toString();
+							callGemini(prompt, false);
+						}
+					} else {
+						// Fallback for non-reply long-press
+						String prompt = "Suggest a generic, friendly greeting.";
+						callGemini(prompt, false);
+					}
 				}
 				return true;
 			}
