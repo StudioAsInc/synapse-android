@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Synapse — Express yourself in a better way</title>
+	<meta name="description" content="Synapse — A next-gen, open-source social platform. Real-time communication, privacy-first, and 25GB+ free storage.">
+	<meta name="theme-color" content="#445E91">
+	<meta name="color-scheme" content="light dark">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Synapse — Express yourself in a better way">
+	<meta property="og:description" content="A next-gen, open-source social platform. Real-time communication, privacy-first, and 25GB+ free storage.">
+	<meta property="og:image" content="https://i.postimg.cc/6QMqSrqB/20250810-190421.png">
+	<meta property="og:site_name" content="Synapse">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Synapse — Express yourself in a better way">
+	<meta name="twitter:description" content="A next-gen, open-source social platform.">
+	<meta name="twitter:image" content="https://i.postimg.cc/6QMqSrqB/20250810-190421.png">
+	<link rel="icon" type="image/png" href="favicon.png">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<header class="site-header">
+		<div class="container">
+			<a class="brand" href="#hero">
+				<img src="favicon.png" alt="Synapse logo" class="brand-logo" />
+				<span class="brand-name">Synapse</span>
+			</a>
+			<nav class="nav">
+				<a href="#features">Features</a>
+				<a href="#tech">Tech</a>
+				<a href="#community">Community</a>
+				<a href="#footer">Contact</a>
+				<button id="themeToggle" aria-label="Toggle theme">🌙</button>
+			</nav>
+		</div>
+	</header>
+
+	<main>
+		<section id="hero" class="hero">
+			<div class="container">
+				<h1 class="hero-title">Express yourself in a better way</h1>
+				<p class="hero-subtitle">A next-gen, open-source social platform</p>
+				<div class="hero-cta">
+					<a class="btn primary" href="https://dl-synapse.pages.dev" target="_blank" rel="noopener">Website</a>
+					<a class="btn outline" href="https://github.com/StudioAsInc/synapse-android/releases" target="_blank" rel="noopener">Releases</a>
+				</div>
+			</div>
+		</section>
+
+		<section id="features" class="features">
+			<div class="container">
+				<h2>Features</h2>
+				<ul class="feature-list">
+					<li><strong>Real-time communication</strong>: Chat, microblogs, and video calls (coming soon)</li>
+					<li><strong>Zero ads, non-profit</strong>: Built to prioritize users, not profits</li>
+					<li><strong>25GB+ free storage</strong>: For media, posts, and communities</li>
+					<li><strong>Lightweight & optimized</strong>: Runs smoothly on any device</li>
+				</ul>
+			</div>
+		</section>
+
+		<section id="tech" class="tech">
+			<div class="container two-col">
+				<div>
+					<h2>Tech Stack</h2>
+					<ul>
+						<li><strong>Frontend</strong>: Kotlin/Java (Android), HTML/CSS (Web)</li>
+						<li><strong>Backend</strong>: Node.js, Firebase (Storage)</li>
+						<li><strong>Key</strong>: E2E chats, modular architecture, P2P calls (upcoming)</li>
+					</ul>
+				</div>
+				<div class="card">
+					<h3>Docs & Links</h3>
+					<ul class="link-list">
+						<li><a href="https://dl-synapse.pages.dev/docs" target="_blank" rel="noopener">Docs</a></li>
+						<li><a href="https://github.com/StudioAsInc/synapse-android/issues" target="_blank" rel="noopener">Report Bug</a></li>
+						<li><a href="https://github.com/StudioAsInc/synapse-android/issues/new?template=feature_request.md" target="_blank" rel="noopener">Request Feature</a></li>
+						<li><a href="https://github.com/StudioAsInc/synapse-android/discussions" target="_blank" rel="noopener">Discussions</a></li>
+						<li><a href="https://web-synapse.pages.dev" target="_blank" rel="noopener">Join our Community</a></li>
+					</ul>
+				</div>
+			</div>
+		</section>
+
+		<section id="community" class="community">
+			<div class="container">
+				<h2>Community & Support</h2>
+				<div class="table">
+					<div class="row header"><div>Channel</div><div>Purpose</div></div>
+					<div class="row"><div><a href="https://github.com/StudioAsInc/synapse-android/issues" target="_blank" rel="noopener">GitHub Issues</a></div><div>Report bugs & request features</div></div>
+					<div class="row"><div><a href="https://github.com/StudioAsInc/synapse-android/discussions" target="_blank" rel="noopener">Discussions</a></div><div>Q&A and community talks</div></div>
+					<div class="row"><div><a href="https://github.com/StudioAsInc/synapse-android/wiki" target="_blank" rel="noopener">Wiki</a></div><div>Setup guides & documentation</div></div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<footer id="footer" class="site-footer">
+		<div class="container">
+			<p>© <span id="year"></span> Synapse • A Project by <a href="https://studioas.dev" target="_blank" rel="noopener">StudioAs Inc.</a></p>
+			<div class="badges">
+				<a href="https://github.com/StudioAsInc/synapse-android/blob/main/LICENSE.md" class="badge" target="_blank" rel="noopener">License</a>
+				<a href="https://github.com/StudioAsInc/synapse-android" class="badge" target="_blank" rel="noopener">GitHub</a>
+				<a href="https://github.com/StudioAsInc/synapse-android/stargazers" class="badge" target="_blank" rel="noopener">Star</a>
+			</div>
+		</div>
+	</footer>
+
+	<script src="script.js"></script>
+</body>
+</html>

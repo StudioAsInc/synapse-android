@@ -1,0 +1,96 @@
+:root {
+	--primary: #445E91;
+	--on-primary: #FFFFFF;
+	--bg: #FEFBFF;
+	--text: #1B1B1F;
+	--surface: #FFFFFF;
+	--muted: #575E71;
+	--surface-variant: #E0E2EC;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #1A2536;
+		--text: #F0F3F8;
+		--surface: #2D3C5A;
+		--muted: #C2CCE0;
+		--surface-variant: #3A4A6F;
+	}
+}
+
+html { scroll-behavior: smooth; }
+
+/* explicit .dark theme override */
+.dark {
+	--bg: #1A2536;
+	--text: #F0F3F8;
+	--surface: #2D3C5A;
+	--muted: #C2CCE0;
+	--surface-variant: #3A4A6F;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+	font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+	background: var(--bg);
+	color: var(--text);
+	line-height: 1.6;
+}
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+.site-header {
+	position: sticky; top: 0; z-index: 10;
+	background: rgba(255,255,255,0.7);
+	backdrop-filter: blur(8px);
+	border-bottom: 1px solid var(--surface-variant);
+}
+@media (prefers-color-scheme: dark) {
+	.site-header { background: rgba(26,37,54,0.75); }
+}
+.site-header .container { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+.brand-logo { width: 32px; height: 32px; border-radius: 8px; }
+.brand-name { font-weight: 700; font-size: 18px; }
+.nav { display: flex; align-items: center; gap: 18px; }
+.nav a { color: inherit; text-decoration: none; opacity: .9; }
+.nav a:hover { opacity: 1; }
+#themeToggle { background: transparent; border: 1px solid var(--surface-variant); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+
+.hero { padding: 100px 0 72px; background: linear-gradient(180deg, rgba(68,94,145,0.08), transparent 60%), var(--bg); }
+.hero-title { font-size: 44px; line-height: 1.1; margin: 0 0 12px; font-weight: 800; }
+.hero-subtitle { font-size: 18px; color: var(--muted); margin: 0 0 28px; }
+.hero-cta { display: flex; gap: 12px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 18px; border-radius: 12px; text-decoration: none; font-weight: 600; border: 1px solid var(--surface-variant); }
+.btn.primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+.btn.outline { background: transparent; color: var(--text); }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(68,94,145,0.15); }
+
+.features, .tech, .community { padding: 56px 0; }
+.features h2, .tech h2, .community h2 { margin-top: 0; }
+.feature-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px 16px; padding-left: 18px; }
+@media (max-width: 720px) { .feature-list { grid-template-columns: 1fr; } }
+
+.two-col { display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; }
+@media (max-width: 920px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--surface); border: 1px solid var(--surface-variant); border-radius: 16px; padding: 16px; }
+.link-list { list-style: none; padding: 0; margin: 0; }
+.link-list li { margin: 8px 0; }
+.link-list a { color: var(--primary); text-decoration: none; }
+.link-list a:hover { text-decoration: underline; }
+
+.table { display: grid; border: 1px solid var(--surface-variant); border-radius: 12px; overflow: hidden; }
+.row { display: grid; grid-template-columns: 1fr 2fr; border-bottom: 1px solid var(--surface-variant); }
+.row:last-child { border-bottom: 0; }
+.row > div { padding: 12px 14px; }
+.row.header { background: var(--surface); font-weight: 600; }
+
+.site-footer { padding: 28px 0 56px; border-top: 1px solid var(--surface-variant); }
+.site-footer .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.badges { display: flex; gap: 8px; }
+.badge { padding: 6px 10px; border: 1px solid var(--surface-variant); border-radius: 999px; text-decoration: none; color: inherit; font-size: 14px; }
+
+/* Utilities */
+:where(h1, h2, h3) { color: var(--text); }
+:where(p, li) { color: var(--muted); }
