@@ -56,7 +56,7 @@
 				android:gravity="center"
 				android:horizontalSpacing="8dp"
 				android:verticalSpacing="8dp"
-				android:stretchMode="columnWidth"
+				android:stretchMode="spacingWidthUniform"
 				android:numColumns="2"
 				android:clipToPadding="false" />
 		</LinearLayout>

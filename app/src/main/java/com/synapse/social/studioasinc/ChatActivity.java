@@ -424,6 +424,13 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void initializeLogic() {
+		// Load and apply chat background
+		SharedPreferences themePrefs = getSharedPreferences("theme", MODE_PRIVATE);
+		String backgroundUrl = themePrefs.getString("chat_background_url", null);
+		if (backgroundUrl != null && !backgroundUrl.isEmpty()) {
+			Glide.with(this).load(backgroundUrl).into(ivBGimage);
+		}
+
 		SecondUserAvatar = "null";
 		ReplyMessageID = "null";
 		path = "";
