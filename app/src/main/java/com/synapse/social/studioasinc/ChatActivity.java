@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -519,6 +520,13 @@ public class ChatActivity extends AppCompatActivity {
 						HashMap<String, Object> itemMap = new HashMap<>();
 						itemMap.put("localPath", filePath);
 						itemMap.put("uploadState", "pending");
+
+						BitmapFactory.Options options = new BitmapFactory.Options();
+						options.inJustDecodeBounds = true;
+						BitmapFactory.decodeFile(filePath, options);
+						itemMap.put("width", options.outWidth);
+						itemMap.put("height", options.outHeight);
+
 						attactmentmap.add(itemMap);
 					}
 
@@ -1268,17 +1276,22 @@ public class ChatActivity extends AppCompatActivity {
 
 		if (!attactmentmap.isEmpty()) {
 			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
+			boolean allUploadsSuccessful = true;
 
 			for (HashMap<String, Object> item : attactmentmap) {
 				if ("success".equals(item.get("uploadState"))) {
 					HashMap<String, Object> attachmentData = new HashMap<>();
 					attachmentData.put("url", item.get("cloudinaryUrl"));
 					attachmentData.put("publicId", item.get("publicId"));
+					attachmentData.put("width", item.get("width"));
+					attachmentData.put("height", item.get("height"));
 					successfulAttachments.add(attachmentData);
+				} else {
+					allUploadsSuccessful = false;
 				}
 			}
 
-			if (!messageText.isEmpty() || !successfulAttachments.isEmpty()) {
+			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
 				cc = Calendar.getInstance();
 				String uniqueMessageKey = main.push().getKey();
 
@@ -1458,11 +1471,13 @@ public class ChatActivity extends AppCompatActivity {
 		UploadFiles.uploadFile(filePath, file.getName(), new UploadFiles.UploadCallback() {
 			@Override
 			public void onProgress(int percent) {
+				if (itemPosition >= attactmentmap.size()) return;
 				attactmentmap.get(itemPosition).put("uploadProgress", (double) percent);
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			}
 			@Override
 			public void onSuccess(String url, String publicId) {
+				if (itemPosition >= attactmentmap.size()) return;
 				HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
 				mapToUpdate.put("uploadState", "success");
 				mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
@@ -1476,6 +1491,7 @@ public class ChatActivity extends AppCompatActivity {
 			}
 			@Override
 			public void onFailure(String error) {
+				if (itemPosition >= attactmentmap.size()) return;
 				attactmentmap.get(itemPosition).put("uploadState", "failed");
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			}

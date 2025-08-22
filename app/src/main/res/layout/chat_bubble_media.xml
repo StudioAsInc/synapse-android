@@ -56,60 +56,10 @@
 					app:cardCornerRadius="18dp">
 					<androidx.gridlayout.widget.GridLayout
 						android:id="@+id/mediaGridLayout"
-						android:layout_width="250dp"
+						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						app:columnCount="2"
 						app:useDefaultMargins="false">
-						<ImageView
-							android:id="@+id/imageGrid1"
-							android:focusable="false"
-							android:layout_width="125dp"
-							android:layout_height="125dp"
-							android:src="@drawable/avatar"
-							android:scaleType="centerCrop" />
-						<ImageView
-							android:id="@+id/imageGrid2"
-							android:focusable="false"
-							android:layout_width="125dp"
-							android:layout_height="125dp"
-							android:src="@drawable/avatar"
-							android:scaleType="centerCrop" />
-						<ImageView
-							android:id="@+id/imageGrid3"
-							android:focusable="false"
-							android:layout_width="125dp"
-							android:layout_height="125dp"
-							android:src="@drawable/default_image"
-							android:scaleType="centerCrop" />
-						<RelativeLayout
-							android:id="@+id/relativelayout8"
-							android:layout_width="125dp"
-							android:layout_height="125dp">
-							<ImageView
-								android:id="@+id/imageGrid4"
-								android:focusable="false"
-								android:layout_width="match_parent"
-								android:layout_height="match_parent"
-								android:src="@drawable/default_image"
-								android:scaleType="centerCrop" />
-							<LinearLayout
-								android:id="@+id/imageGridMoreOverlay"
-								android:layout_width="match_parent"
-								android:layout_height="match_parent"
-								android:background="#000000"
-								android:gravity="center_horizontal|center_vertical"
-								android:visibility="gone">
-								<TextView
-									android:id="@+id/imageGridMoreText"
-									android:focusable="false"
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:text="+2"
-									android:textSize="24sp"
-									android:textStyle="bold"
-									android:textColor="@android:color/white" />
-							</LinearLayout>
-						</RelativeLayout>
 					</androidx.gridlayout.widget.GridLayout>
 				</androidx.cardview.widget.CardView>
 				<TextView
