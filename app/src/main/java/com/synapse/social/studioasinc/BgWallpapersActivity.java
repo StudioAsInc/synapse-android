@@ -168,6 +168,8 @@ public class BgWallpapersActivity extends AppCompatActivity {
             
             Glide.with(context)
                 .load(wallpaper.get("thumbnailUrl").toString())
+                .placeholder(R.drawable.default_image)
+                .error(R.drawable.default_image)
                 .into(holder.imageview1);
             
             return convertView;
