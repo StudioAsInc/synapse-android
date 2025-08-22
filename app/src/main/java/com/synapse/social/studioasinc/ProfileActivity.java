@@ -84,7 +84,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import androidx.browser.customtabs.CustomTabsIntent;
 
-
 public class ProfileActivity extends AppCompatActivity {
 	
 	private Timer _timer = new Timer();
@@ -184,11 +183,11 @@ class c {
 	public <T extends DialogFragment> c(T a) {
 		co = a.getActivity();
 	}
-	
+
 	public Context getContext() {
 		return co;
 	}
-	
+
 }
 	private RequestNetwork req;
 	private RequestNetwork.RequestListener _req_request_listener;
@@ -197,44 +196,14 @@ class c {
 	private ChildEventListener _maindb_child_listener;
 	private TimerTask after;
 	
-@Override
-protected void onCreate(Bundle _savedInstanceState) {
-    super.onCreate(_savedInstanceState);
-    setContentView(R.layout.profile);
-    initialize(_savedInstanceState);
-    FirebaseApp.initializeApp(this);
-    initializeLogic();
-
- 
-    String profileUid = getIntent().getStringExtra("uid");
-    String currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-    DatabaseReference checkUserFollow = FirebaseDatabase.getInstance()
-            .getReference("skyline/followers")
-            .child(profileUid)
-            .child(currentUid);
-
-    checkUserFollow.addListenerForSingleValueEvent(new ValueEventListener() {
-        @Override
-        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-            if (dataSnapshot.exists()) {
-               
-                btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
-                btnFollow.setText(getResources().getString(R.string.unfollow));
-                btnFollow.setTextColor(0xFF000000);
-            } else {
-               
-                btnFollow.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                btnFollow.setText(getResources().getString(R.string.follow));
-                btnFollow.setTextColor(0xFFFFFFFF);
-            }
-        }
-
-        @Override
-        public void onCancelled(@NonNull DatabaseError error) {
-        }
-    });
-}
+	@Override
+	protected void onCreate(Bundle _savedInstanceState) {
+		super.onCreate(_savedInstanceState);
+		setContentView(R.layout.profile);
+		initialize(_savedInstanceState);
+		FirebaseApp.initializeApp(this);
+		initializeLogic();
+	}
 	
 	private void initialize(Bundle _savedInstanceState) {
 		ProfilePageBody = findViewById(R.id.ProfilePageBody);
@@ -378,10 +347,10 @@ protected void onCreate(Bundle _savedInstanceState) {
 							likeUserProfileButtonLikeCount.setTextColor(0xFFFFFFFF);
 						}
 					}
-					
+
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						
+
 					}
 				});
 				vbr.vibrate((long)(28));
@@ -430,10 +399,10 @@ protected void onCreate(Bundle _savedInstanceState) {
 							btnFollow.setTextColor(0xFF000000);
 						}
 					}
-					
+
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						
+
 					}
 				});
 			}
@@ -793,10 +762,10 @@ if ( || ( || )) {
 				} else {
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 		ProfilePageSwipeLayout.setRefreshing(false);
@@ -828,10 +797,10 @@ if ( || ( || )) {
 					ProfilePageTabUserPostsNoPostsSubtitle.setVisibility(View.VISIBLE);
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 	}
@@ -910,9 +879,9 @@ if ( || ( || )) {
 		int left = (int)(_l * dpRatio);
 		int top = (int)(_t * dpRatio);
 		int bottom = (int)(_b * dpRatio);
-		
+
 		boolean _default = false;
-		
+
 		ViewGroup.LayoutParams p = _view.getLayoutParams();
 		if (p instanceof LinearLayout.LayoutParams) {
 			LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)p;
@@ -940,10 +909,10 @@ if ( || ( || )) {
 				ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(count).concat(" ".concat(getResources().getString(R.string.followers))));
 				UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(count)));
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError databaseError) {
-				
+
 			}
 		});
 		DatabaseReference getFollowingCount = FirebaseDatabase.getInstance().getReference("skyline/following").child(getIntent().getStringExtra("uid"));
@@ -954,10 +923,10 @@ if ( || ( || )) {
 				ProfilePageTabUserInfoFollowingCount.setText(_getStyledNumber(count).concat(" ".concat(getResources().getString(R.string.following))));
 				UserInfoCacheMap.put("following_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(count)));
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError databaseError) {
-				
+
 			}
 		});
 		Query checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
@@ -970,10 +939,10 @@ if ( || ( || )) {
 					// else logic here
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 		Query checkProfileLike = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
@@ -992,10 +961,10 @@ if ( || ( || )) {
 					likeUserProfileButtonLikeCount.setTextColor(0xFF616161);
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 		DatabaseReference getProfileLikesCount = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid"));
@@ -1006,10 +975,10 @@ if ( || ( || )) {
 				likeUserProfileButtonLikeCount.setText(_getStyledNumber(count));
 				UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(count)));
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError databaseError) {
-				
+
 			}
 		});
 	}
@@ -1089,7 +1058,7 @@ if ( || ( || )) {
 			View mProfileImageViewDialogView = (View)getLayoutInflater().inflate(R.layout.dp_preview, null);
 			mProfileImageViewDialog.setView(mProfileImageViewDialogView);
 			mProfileImageViewDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-			
+
 			final LinearLayout body = mProfileImageViewDialogView.findViewById(R.id.body);
 			final CardView avatarCard = mProfileImageViewDialogView.findViewById(R.id.avatarCard);
 			final ImageView avatar = mProfileImageViewDialogView.findViewById(R.id.avatar);
@@ -1142,13 +1111,13 @@ if ( || ( || )) {
 						mProfileImageViewDialog.dismiss();
 					}
 				}
-				
+
 				@Override
 				public void onCancelled(@NonNull DatabaseError databaseError) {
-					
+
 				}
 			});
-			
+
 			mProfileImageViewDialog.setCancelable(true);
 			mProfileImageViewDialog.show();
 		}
@@ -1159,9 +1128,9 @@ if ( || ( || )) {
 		Calendar c1 = Calendar.getInstance();
 		Calendar c2 = Calendar.getInstance();
 		c2.setTimeInMillis((long)_currentTime);
-		
+
 		long time_diff = c1.getTimeInMillis() - c2.getTimeInMillis();
-		
+
 		long seconds = time_diff / 1000;
 		long minutes = seconds / 60;
 		long hours = minutes / 60;
@@ -1169,7 +1138,7 @@ if ( || ( || )) {
 		long weeks = days / 7;
 		long months = days / 30;
 		long years = days / 365;
-		
+
 		if (seconds < 60) {
 			if (seconds < 2) {
 				_txt.setText("1 " + getResources().getString(R.string.status_text_seconds));
@@ -1226,11 +1195,11 @@ if ( || ( || )) {
 		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?<![^\\s])(([@]{1}|[#]{1})([A-Za-z0-9_-]\\.?)+)(?![^\\s,])|\\*\\*(.*?)\\*\\*|__(.*?)__|~~(.*?)~~|_(.*?)_|\\*(.*?)\\*|///(.*?)///");
 		java.util.regex.Matcher matcher = pattern.matcher(str);
 		int offset = 0;
-		
+
 		while (matcher.find()) {
 			int start = matcher.start() + offset;
 			int end = matcher.end() + offset;
-			
+
 			if (matcher.group(3) != null) {
 				// For mentions or hashtags
 				ProfileSpan span = new ProfileSpan();
@@ -1276,17 +1245,17 @@ if ( || ( || )) {
 		_txt.setText(ssb);
 	}
 	private class ProfileSpan extends android.text.style.ClickableSpan{
-		
-		
+
+
 		@Override
 		public void onClick(View view){
-			
+
 			if(view instanceof TextView){
 				TextView tv = (TextView)view;
-				
+
 				if(tv.getText() instanceof Spannable){
 					Spannable sp = (Spannable)tv.getText();
-					
+
 					int start = sp.getSpanStart(this);
 					int end = sp.getSpanEnd(this);
 					object_clicked = sp.subSequence(start,end).toString();
@@ -1317,7 +1286,7 @@ if ( || ( || )) {
 					});
 				}
 			}
-			
+
 		}
 		@Override
 		public void updateDrawState(TextPaint ds) {
@@ -1407,7 +1376,7 @@ if ( || ( || )) {
 			body.setVisibility(View.GONE);
 			if (_data.get((int)_position).get("post_type").toString().equals("TEXT") || (_data.get((int)_position).get("post_type").toString().equals("IMAGE") || _data.get((int)_position).get("post_type").toString().equals("VIDEO"))) {
 				if (_data.get((int)_position).containsKey("post_text")) {
-					//		postMessageTextMiddle.setText(_data.get((int)_position).get("post_text").toString());		
+					//		postMessageTextMiddle.setText(_data.get((int)_position).get("post_text").toString());
 					//postMessageTextMiddle.setText(_data.get((int)_position).get("post_text").toString());
 					_textview_mh(postMessageTextMiddle, _data.get((int)_position).get("post_text").toString());
 					
@@ -1585,7 +1554,7 @@ if ( || ( || )) {
 					}
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						
+
 					}
 				});
 				
@@ -1594,20 +1563,20 @@ if ( || ( || )) {
 			DatabaseReference getCommentsCount = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(_data.get((int)_position).get("key").toString());
 			DatabaseReference getLikesCount = FirebaseDatabase.getInstance().getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString());
 			DatabaseReference getFavoriteCheck = FirebaseDatabase.getInstance().getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString());
-			
+
 			getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 					if(dataSnapshot.exists()) {
 						likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
 					} else {
 						likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
 					}
 				}
-				
+
 				@Override
 				public void onCancelled(@NonNull DatabaseError databaseError) {
-					
+
 				}
 			});
 			getCommentsCount.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1616,10 +1585,10 @@ if ( || ( || )) {
 					long count = dataSnapshot.getChildrenCount();
 					_setCount(commentsButtonCount, count);
 				}
-				
+
 				@Override
 				public void onCancelled(DatabaseError databaseError) {
-					
+
 				}
 			});
 			getLikesCount.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1629,25 +1598,25 @@ if ( || ( || )) {
 					_setCount(likeButtonCount, count);
 					postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(count)));
 				}
-				
+
 				@Override
 				public void onCancelled(DatabaseError databaseError) {
-					
+
 				}
 			});
 			getFavoriteCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 					if(dataSnapshot.exists()) {
 						favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
 					} else {
 						favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
 					}
 				}
-				
+
 				@Override
 				public void onCancelled(@NonNull DatabaseError databaseError) {
-					
+
 				}
 			});
 			
@@ -1657,7 +1626,7 @@ if ( || ( || )) {
 					DatabaseReference getLikeCheck = FirebaseDatabase.getInstance().getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 					getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 							if(dataSnapshot.exists()) {
 								getLikeCheck.removeValue();
 								postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString()) - 1)));
@@ -1670,10 +1639,10 @@ if ( || ( || )) {
 								likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
 							}
 						}
-						
+
 						@Override
 						public void onCancelled(@NonNull DatabaseError databaseError) {
-							
+
 						}
 					});
 					vbr.vibrate((long)(24));
@@ -1705,7 +1674,7 @@ if ( || ( || )) {
 					DatabaseReference getFavoriteCheck = FirebaseDatabase.getInstance().getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString());
 					getFavoriteCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 							if(dataSnapshot.exists()) {
 								getFavoriteCheck.removeValue();
 								favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
@@ -1714,10 +1683,10 @@ if ( || ( || )) {
 								favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
 							}
 						}
-						
+
 						@Override
 						public void onCancelled(@NonNull DatabaseError databaseError) {
-							
+
 						}
 					});
 					vbr.vibrate((long)(24));

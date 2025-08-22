@@ -22,12 +22,15 @@ class ShimmerFrameLayout @JvmOverloads constructor(
     private var isShimmering = false
     private var shimmerDuration = 1200L
     private var shader: Shader? = null
+    private var shimmerColor = Color.parseColor("#44FFFFFF")
 
     init {
         setWillNotDraw(false)
-        // Hardcode values to avoid potential issues with attribute resolution
-        val autoStart = false
-        shimmerDuration = 1200L
+        val a = context.obtainStyledAttributes(attrs, R.styleable.ShimmerFrameLayout, 0, 0)
+        shimmerDuration = a.getInt(R.styleable.ShimmerFrameLayout_shimmer_duration, 1200).toLong()
+        shimmerColor = a.getColor(R.styleable.ShimmerFrameLayout_shimmer_color, shimmerColor)
+        val autoStart = a.getBoolean(R.styleable.ShimmerFrameLayout_shimmer_auto_start, false)
+        a.recycle()
 
         if (autoStart) {
             post { startShimmer() }
@@ -36,10 +39,10 @@ class ShimmerFrameLayout @JvmOverloads constructor(
     }
 
     private fun createShader(): Shader {
-        // A simple linear gradient for the shimmer effect
+        val transparentColor = Color.TRANSPARENT
         return LinearGradient(
             0f, 0f, width.toFloat(), 0f,
-            intArrayOf(Color.parseColor("#00FFFFFF"), Color.parseColor("#88FFFFFF"), Color.parseColor("#00FFFFFF")),
+            intArrayOf(transparentColor, shimmerColor, transparentColor),
             floatArrayOf(0f, 0.5f, 1f),
             Shader.TileMode.CLAMP
         )
