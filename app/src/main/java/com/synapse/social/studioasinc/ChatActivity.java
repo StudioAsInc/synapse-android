@@ -780,22 +780,21 @@ public class ChatActivity extends AppCompatActivity {
 				edittext1.setMovementMethod(new ScrollingMovementMethod());
 				edittext1.setScrollBarStyle(View.SCROLLBARS_INSIDE_INSET);
 
-				Dialogs.setPositiveButton("Chnage", new DialogInterface.OnClickListener() {
+				Dialogs.setPositiveButton("Change", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface _dialog, int _which) {
-						if (!(edittext1.getText().toString().length() == 0)) {
-							ChatSendMap = new HashMap<>();
-							ChatSendMap.put(UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
-							ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-							ChatSendMap.put("message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-							ChatSendMap.put(MESSAGE_TEXT_KEY, edittext1.getText().toString().trim());
-							ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-							ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+						if (!edittext1.getText().toString().trim().isEmpty()) {
+							HashMap<String, Object> updateMap = new HashMap<>();
+							updateMap.put(MESSAGE_TEXT_KEY, edittext1.getText().toString().trim());
+							updateMap.put("edited_at", String.valueOf(Calendar.getInstance().getTimeInMillis()));
+
 							String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+							String messageKey = _data.get((int)_position).get(KEY_KEY).toString();
+
 							_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
 									.child(chatId)
-									.child(_data.get((int)_position).get(KEY_KEY).toString())
-									.updateChildren(ChatSendMap);
+									.child(messageKey)
+									.updateChildren(updateMap);
 						} else {
 							SketchwareUtil.showMessage(getApplicationContext(), "Can't be empty");
 						}
