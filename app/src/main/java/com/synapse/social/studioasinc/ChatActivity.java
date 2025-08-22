@@ -161,7 +161,7 @@ public class ChatActivity extends AppCompatActivity {
 	private LinearLayout body;
 	private LinearLayout appBar;
 	private LinearLayout middle;
-	private LinearLayout attachmentLayoutListHolder;
+	private RelativeLayout attachmentLayoutListHolder;
 	private LinearLayout mMessageReplyLayout;
 	private LinearLayout message_input_overall_container;
 	private TextView blocked_txt;
