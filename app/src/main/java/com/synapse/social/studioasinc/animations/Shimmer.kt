@@ -1,0 +1,1 @@
+// This class can make implementation shimmering in any layout --> LinearLayout, TextView... etc more
