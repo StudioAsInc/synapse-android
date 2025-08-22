@@ -464,6 +464,12 @@ public class ChatActivity extends AppCompatActivity {
 			Glide.with(this).load(backgroundUrl).into(ivBGimage);
 		}
 
+		// Load draft message
+		SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra("uid"));
+		String draftText = drafts.getString(chatId, "");
+		message_et.setText(draftText);
+
 		SecondUserAvatar = "null";
 		ReplyMessageID = "null";
 		path = "";
@@ -591,6 +597,17 @@ public class ChatActivity extends AppCompatActivity {
 		super.onPause();
 		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
 		_firebase.getReference("skyline/typing_status").child(chatId).child(auth.getCurrentUser().getUid()).removeValue();
+
+		// Save draft message
+		SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = drafts.edit();
+		String draftText = message_et.getText().toString();
+		if (draftText.isEmpty()) {
+			editor.remove(chatId);
+		} else {
+			editor.putString(chatId, draftText);
+		}
+		editor.apply();
 	}
 
 	@Override
@@ -869,13 +886,41 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _getUserReference() {
-		DatabaseReference getUserReference = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(getIntent().getStringExtra(UID_KEY));
-		getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
+		DatabaseReference secondUserRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(getIntent().getStringExtra(UID_KEY));
+		secondUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if (dataSnapshot.exists()) {
-					updateUserProfile(dataSnapshot);
-					updateUserBadges(dataSnapshot);
+			public void onDataChange(@NonNull DataSnapshot secondUserData) {
+				if (secondUserData.exists()) {
+					// Update the header UI and set the second user's name variable
+					updateUserProfile(secondUserData);
+					updateUserBadges(secondUserData);
+
+					// Now, fetch the first user's name
+					DatabaseReference firstUserRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+					firstUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+						@Override
+						public void onDataChange(@NonNull DataSnapshot firstUserData) {
+							if (firstUserData.exists()) {
+								FirstUserName = "null".equals(firstUserData.child("nickname").getValue(String.class))
+										? "@" + firstUserData.child("username").getValue(String.class)
+										: firstUserData.child("nickname").getValue(String.class);
+							}
+
+							// Now that both names are fetched, set them on the adapter
+							chatAdapter.setFirstUserName(FirstUserName);
+							chatAdapter.setSecondUserName(SecondUserName);
+
+							// Finally, load the chat messages
+							_getChatMessagesRef();
+						}
+
+						@Override
+						public void onCancelled(@NonNull DatabaseError databaseError) {
+							Log.e("ChatActivity", "Failed to get first user name: " + databaseError.getMessage());
+							// Still try to load messages, though replies might show wrong names
+							_getChatMessagesRef();
+						}
+					});
 				}
 			}
 
@@ -884,25 +929,6 @@ public class ChatActivity extends AppCompatActivity {
 				Log.e("ChatActivity", "Failed to get user reference: " + databaseError.getMessage());
 			}
 		});
-
-		DatabaseReference getFirstUserName = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-		getFirstUserName.addListenerForSingleValueEvent(new ValueEventListener() {
-			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if (dataSnapshot.exists()) {
-					FirstUserName = dataSnapshot.child("nickname").getValue(String.class).equals("null")
-					? "@" + dataSnapshot.child("username").getValue(String.class)
-					: dataSnapshot.child("nickname").getValue(String.class);
-				}
-			}
-
-			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-				Log.e("ChatActivity", "Failed to get first user name: " + databaseError.getMessage());
-			}
-		});
-
-		_getChatMessagesRef();
 	}
 
 
@@ -1455,6 +1481,9 @@ public class ChatActivity extends AppCompatActivity {
 			ReplyMessageID = "null";
 			mMessageReplyLayout.setVisibility(View.GONE);
 
+			// Clear draft
+			SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
+			drafts.edit().remove(chatId).apply();
 
 		} else if (!messageText.isEmpty()) {
 			cc = Calendar.getInstance();
@@ -1480,6 +1509,10 @@ public class ChatActivity extends AppCompatActivity {
 			message_et.setText("");
 			ReplyMessageID = "null";
 			mMessageReplyLayout.setVisibility(View.GONE);
+
+			// Clear draft
+			SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
+			drafts.edit().remove(chatId).apply();
 		}
 	}
 
@@ -1900,9 +1933,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 		topProfileLayoutUsername.setText(SecondUserName);
 
-		((ChatAdapter) chatAdapter).setSecondUserName(SecondUserName);
-		((ChatAdapter) chatAdapter).setFirstUserName(FirstUserName);
-		((ChatAdapter) chatAdapter).setSecondUserAvatar(SecondUserAvatar);
+		chatAdapter.setSecondUserAvatar(SecondUserAvatar);
 
 		String status = dataSnapshot.child("status").getValue(String.class);
 		if ("online".equals(status)) {
