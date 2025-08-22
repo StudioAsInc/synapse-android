@@ -54,9 +54,11 @@ class TextViewHolder extends BaseMessageViewHolder { public TextViewHolder(View 
 
 class MediaViewHolder extends BaseMessageViewHolder {
     GridLayout mediaGridLayout;
+    CardView mediaContainerCard;
     public MediaViewHolder(View view) {
         super(view);
         mediaGridLayout = view.findViewById(R.id.mediaGridLayout);
+        mediaContainerCard = view.findViewById(R.id.mediaContainerCard);
     }
 }
 

@@ -295,6 +295,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         GridLayout gridLayout = holder.mediaGridLayout;
         if (gridLayout == null) return;
 
+        ViewGroup.LayoutParams cardParams = holder.mediaContainerCard.getLayoutParams();
+        cardParams.width = dpToPx(250);
+        holder.mediaContainerCard.setLayoutParams(cardParams);
+
         gridLayout.removeAllViews();
         gridLayout.setVisibility(View.VISIBLE);
 
