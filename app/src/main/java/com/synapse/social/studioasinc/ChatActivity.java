@@ -60,6 +60,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.dynamicanimation.animation.SpringAnimation;
+import androidx.dynamicanimation.animation.SpringForce;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -1670,36 +1672,53 @@ public class ChatActivity extends AppCompatActivity {
 			public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 				if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
 					View itemView = viewHolder.itemView;
+					float translationX = dX;
+					float swipeThreshold = recyclerView.getWidth() * 0.3f;
+
+					// Spring animation for the item view
+					SpringAnimation springAnim = new SpringAnimation(itemView, SpringAnimation.TRANSLATION_X);
+					SpringForce spring = new SpringForce();
+					spring.setFinalPosition(0f);
+					spring.setStiffness(SpringForce.STIFFNESS_LOW);
+					spring.setDampingRatio(SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY);
+					springAnim.setSpring(spring);
+
+					if (Math.abs(dX) < swipeThreshold) {
+						itemView.setTranslationX(translationX);
+					} else {
+						springAnim.start();
+					}
+
+					// Draw background and icon
 					Paint p = new Paint();
 					Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_reply);
+					int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+					int iconTop = itemView.getTop() + iconMargin;
+					int iconBottom = iconTop + icon.getIntrinsicHeight();
 
 					if (dX > 0) { // Swiping to the right
-						p.setColor(Color.parseColor("#3498db")); // Blue background
+						p.setColor(Color.parseColor("#3498db"));
 						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
 
-						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
-						int iconTop = itemView.getTop() + iconMargin;
-						int iconBottom = iconTop + icon.getIntrinsicHeight();
 						int iconLeft = itemView.getLeft() + iconMargin;
 						int iconRight = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
 						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
 						icon.draw(c);
 					} else { // Swiping to the left
-						p.setColor(Color.parseColor("#3498db")); // Blue background
+						p.setColor(Color.parseColor("#3498db"));
 						c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
 
-						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
-						int iconTop = itemView.getTop() + iconMargin;
-						int iconBottom = iconTop + icon.getIntrinsicHeight();
 						int iconRight = itemView.getRight() - iconMargin;
 						int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
 						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
 						icon.draw(c);
 					}
-					// Fade out the item as it is swiped away
-					final float alpha = 1.0f - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
-					viewHolder.itemView.setAlpha(alpha);
-					viewHolder.itemView.setTranslationX(dX);
+
+					// Animate icon scale and alpha
+					float iconScale = Math.min(1.5f, Math.abs(dX) / (swipeThreshold / 2));
+					icon.setAlpha((int) (iconScale * 255));
+
+					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 				} else {
 					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 				}
