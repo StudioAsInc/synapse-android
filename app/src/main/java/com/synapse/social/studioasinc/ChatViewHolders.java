@@ -22,12 +22,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.card.MaterialCardView;
 
+import com.synapse.social.studioasinc.animations.ShimmerFrameLayout;
+
 class BaseMessageViewHolder extends RecyclerView.ViewHolder {
     LinearLayout body, message_layout, messageBG, my_message_info, mRepliedMessageLayoutLeftBar;
     CardView mProfileCard;
     ImageView mProfileImage, message_state;
     TextView date, message_text, mRepliedMessageLayoutUsername, mRepliedMessageLayoutMessage;
     MaterialCardView mRepliedMessageLayout;
+    ShimmerFrameLayout shimmer_container;
 
     public BaseMessageViewHolder(View view) {
         super(view);
@@ -40,12 +43,25 @@ class BaseMessageViewHolder extends RecyclerView.ViewHolder {
         date = view.findViewById(R.id.date);
         message_state = view.findViewById(R.id.message_state);
         message_text = view.findViewById(R.id.message_text);
+        shimmer_container = view.findViewById(R.id.shimmer_container);
         
         mRepliedMessageLayout = view.findViewById(R.id.mRepliedMessageLayout);
         if (mRepliedMessageLayout != null) {
             mRepliedMessageLayoutUsername = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutUsername);
             mRepliedMessageLayoutMessage = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutMessage);
             mRepliedMessageLayoutLeftBar = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutLeftBar);
+        }
+    }
+
+    public void startShimmer() {
+        if (shimmer_container != null) {
+            shimmer_container.startShimmer();
+        }
+    }
+
+    public void stopShimmer() {
+        if (shimmer_container != null) {
+            shimmer_container.stopShimmer();
         }
     }
 }

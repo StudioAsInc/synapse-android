@@ -325,11 +325,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             int portraitIndex = -1;
             for(int i=0; i < attachments.size(); i++){
                 HashMap<String, Object> attachment = attachments.get(i);
-                double width = ((Number) attachment.get("width")).doubleValue();
-                double height = ((Number) attachment.get("height")).doubleValue();
-                if(height > width){
-                    portraitIndex = i;
-                    break;
+                Object widthObj = attachment.get("width");
+                Object heightObj = attachment.get("height");
+
+                if (widthObj != null && heightObj != null) {
+                    double width = ((Number) widthObj).doubleValue();
+                    double height = ((Number) heightObj).doubleValue();
+                    if(height > width){
+                        portraitIndex = i;
+                        break;
+                    }
                 }
             }
 
