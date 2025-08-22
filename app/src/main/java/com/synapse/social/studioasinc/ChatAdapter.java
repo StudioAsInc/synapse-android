@@ -239,6 +239,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         leftBarDrawable.setCornerRadius(dpToPx(100));
                                         holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
                                     }
+
+                                    holder.mRepliedMessageLayout.setOnClickListener(v -> {
+                                        if (chatActivity != null) {
+                                            chatActivity.scrollToMessage(repliedId);
+                                        }
+                                    });
                                 }
                             }
                             @Override

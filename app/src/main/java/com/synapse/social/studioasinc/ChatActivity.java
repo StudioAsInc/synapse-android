@@ -1746,10 +1746,10 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 
-	public void _scrollToMessage(final String _messageKey) {
+	public void scrollToMessage(final String _messageKey) {
 		int position = -1;
 		for (int i = 0; i < ChatMessagesList.size(); i++) {
-			if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(_messageKey)) {
+			if (_messageKey.equals(ChatMessagesList.get(i).get(KEY_KEY))) {
 				position = i;
 				break;
 			}
@@ -1757,7 +1757,7 @@ public class ChatActivity extends AppCompatActivity {
 		if (position != -1) {
 			ChatMessagesListRecycler.smoothScrollToPosition(position);
 		} else {
-			Toast.makeText(getApplicationContext(), "Original message not found", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), "Original message not found. It may not be loaded yet.", Toast.LENGTH_SHORT).show();
 		}
 	}
 
