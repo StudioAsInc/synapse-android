@@ -1,6 +1,7 @@
 package com.synapse.social.studioasinc;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -59,10 +60,19 @@ public class BgWallpapersActivity extends AppCompatActivity {
         gridview1.setOnItemClickListener((parent, view, position, id) -> {
             HashMap<String, Object> wallpaper = wallpapersList.get(position);
             String selectedUrl = wallpaper.get("imageUrl").toString();
-            // Save to preferences or return to previous activity
+
+            // Save to preferences
+            SharedPreferences theme = getSharedPreferences("theme", MODE_PRIVATE);
+            SharedPreferences.Editor editor = theme.edit();
+            editor.putString("chat_background_url", selectedUrl);
+            editor.apply();
+
             Toast.makeText(BgWallpapersActivity.this, 
-                "Selected: " + wallpaper.get("name"), 
+                "Wallpaper set to: " + wallpaper.get("name"),
                 Toast.LENGTH_SHORT).show();
+
+            // Finish activity and go back
+            finish();
         });
     }
     
