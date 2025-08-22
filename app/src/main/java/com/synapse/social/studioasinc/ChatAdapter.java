@@ -381,13 +381,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
         } else { // 2, 4, or >4 images
-            int limit = Math.min(count, maxImages);
-            for (int i = 0; i < limit; i++) {
-                ImageView iv = createImageView(attachments.get(i));
-                iv.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
-                Glide.with(_context).load(attachments.get(i).get("url").toString()).override(imageSize, imageSize).centerCrop().into(iv);
+            if (count == 2) {
+                ImageView iv1 = createImageView(attachments.get(0));
+                setAdaptiveLayoutParams(iv1, attachments.get(0), imageSize);
+                gridLayout.addView(iv1);
 
-                if (i == maxImages - 1 && count > maxImages) {
+                ImageView iv2 = createImageView(attachments.get(1));
+                setAdaptiveLayoutParams(iv2, attachments.get(1), imageSize);
+                gridLayout.addView(iv2);
+            } else { // 4 or >4 images
+                int limit = Math.min(count, maxImages);
+                for (int i = 0; i < limit; i++) {
+                    ImageView iv = createImageView(attachments.get(i));
+                    iv.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
+                    Glide.with(_context).load(attachments.get(i).get("url").toString()).override(imageSize, imageSize).centerCrop().into(iv);
+
+                    if (i == maxImages - 1 && count > maxImages) {
                     RelativeLayout overlayContainer = new RelativeLayout(_context);
                     overlayContainer.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
                     overlayContainer.addView(iv);
