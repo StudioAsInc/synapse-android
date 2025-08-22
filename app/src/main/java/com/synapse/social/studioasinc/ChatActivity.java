@@ -338,7 +338,8 @@ public class ChatActivity extends AppCompatActivity {
 
 						if (repliedMessageIndex != -1) {
 							StringBuilder contextBuilder = new StringBuilder();
-							contextBuilder.append("Here is the recent chat history:\n");
+							contextBuilder.append("You are helping 'Me' to write a reply in a conversation with '").append(SecondUserName).append("'.\n");
+							contextBuilder.append("Here is the recent chat history:\n---\n");
 
 							int startIndex = Math.max(0, repliedMessageIndex - 10);
 							int endIndex = Math.min(ChatMessagesList.size() - 1, repliedMessageIndex + 10);
@@ -349,8 +350,13 @@ public class ChatActivity extends AppCompatActivity {
 								contextBuilder.append(sender).append(": ").append(message.get(MESSAGE_TEXT_KEY).toString()).append("\n");
 							}
 
-							contextBuilder.append("\nI am replying to the message: '").append(mMessageReplyLayoutBodyRightMessage.getText().toString()).append("'.\n");
-							contextBuilder.append("Please suggest a short, relevant reply to this message based on the context provided.");
+							contextBuilder.append("---\n");
+
+							String repliedMessageSender = mMessageReplyLayoutBodyRightUsername.getText().toString();
+							String repliedMessageText = mMessageReplyLayoutBodyRightMessage.getText().toString();
+
+							contextBuilder.append("I need to reply to this message from '").append(repliedMessageSender).append("': \"").append(repliedMessageText).append("\"\n");
+							contextBuilder.append("Based on the conversation history, please suggest a short, relevant reply from 'Me'.");
 
 							String prompt = contextBuilder.toString();
 							callGemini(prompt, false);
