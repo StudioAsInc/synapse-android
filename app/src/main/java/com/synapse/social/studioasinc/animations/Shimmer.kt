@@ -17,7 +17,7 @@ class ShimmerFrameLayout @JvmOverloads constructor(
 
     private val shimmerPaint = Paint()
     private var valueAnimator: ValueAnimator? = null
-    private val viewRect = Rect()
+    private val viewRect = RectF()
 
     private var isShimmering = false
     private var shimmerDuration = 1200L
@@ -70,7 +70,7 @@ class ShimmerFrameLayout @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         if (changed) {
-            viewRect.set(0, 0, width, height)
+            viewRect.set(0f, 0f, width.toFloat(), height.toFloat())
             shader = null // Recreate shader on size change
         }
     }
