@@ -54,18 +54,9 @@ class TextViewHolder extends BaseMessageViewHolder { public TextViewHolder(View 
 
 class MediaViewHolder extends BaseMessageViewHolder {
     GridLayout mediaGridLayout;
-    ImageView imageGrid1, imageGrid2, imageGrid3, imageGrid4;
-    LinearLayout imageGridMoreOverlay;
-    TextView imageGridMoreText;
     public MediaViewHolder(View view) {
         super(view);
         mediaGridLayout = view.findViewById(R.id.mediaGridLayout);
-        imageGrid1 = view.findViewById(R.id.imageGrid1);
-        imageGrid2 = view.findViewById(R.id.imageGrid2);
-        imageGrid3 = view.findViewById(R.id.imageGrid3);
-        imageGrid4 = view.findViewById(R.id.imageGrid4);
-        imageGridMoreOverlay = view.findViewById(R.id.imageGridMoreOverlay);
-        imageGridMoreText = view.findViewById(R.id.imageGridMoreText);
     }
 }
 
