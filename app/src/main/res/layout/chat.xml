@@ -181,28 +181,45 @@
 						android:listSelector="@drawable/no_highlight"
 						tools:listitem="@layout/chat_msg_cv_synapse" />
 				</LinearLayout>
-				<LinearLayout
+				<RelativeLayout
 					android:id="@+id/attachmentLayoutListHolder"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:padding="2dp"
+					android:paddingTop="8dp"
+					android:paddingBottom="8dp"
 					android:background="@color/semi_trans"
-					android:orientation="vertical"
 					android:visibility="gone">
 					<androidx.cardview.widget.CardView
 						android:id="@+id/card_attactmentListRVHolder"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
+						android:layout_marginLeft="8dp"
+						android:layout_marginRight="8dp"
 						app:cardElevation="1dp"
 						app:cardCornerRadius="20dp">
 						<androidx.recyclerview.widget.RecyclerView
 							android:id="@+id/rv_attacmentList"
 							android:layout_width="match_parent"
-							android:layout_height="match_parent"
-							android:padding="8dp"
+							android:layout_height="wrap_content"
+							android:paddingTop="4dp"
+							android:paddingBottom="4dp"
+							android:clipToPadding="false"
 							tools:listitem="@layout/chat_attactment" />
 					</androidx.cardview.widget.CardView>
-				</LinearLayout>
+					<ImageView
+						android:id="@+id/close_attachments_btn"
+						android:layout_width="28dp"
+						android:layout_height="28dp"
+						android:layout_alignParentTop="true"
+						android:layout_alignParentEnd="true"
+						android:layout_marginEnd="4dp"
+						android:layout_marginTop="4dp"
+						android:padding="4dp"
+						android:src="@drawable/ic_close_48px"
+						android:background="@drawable/circle_background_dark"
+						app:tint="@android:color/white"
+						android:elevation="2dp" />
+				</RelativeLayout>
 				<LinearLayout
 					android:id="@+id/mMessageReplyLayout"
 					android:layout_width="match_parent"
