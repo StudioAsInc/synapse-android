@@ -60,8 +60,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.dynamicanimation.animation.SpringAnimation;
-import androidx.dynamicanimation.animation.SpringForce;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -384,7 +382,8 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
 				final String _charSeq = _param1.toString();
-				DatabaseReference typingRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF);
+				String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+				DatabaseReference typingRef = _firebase.getReference("skyline/typing_status").child(chatId).child(auth.getCurrentUser().getUid());
 				if (_charSeq.length() == 0) {
 					typingRef.removeValue();
 					_setMargin(message_et, 0, 7, 0, 0);
@@ -589,19 +588,22 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	public void onPause() {
 		super.onPause();
-		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+		_firebase.getReference("skyline/typing_status").child(chatId).child(auth.getCurrentUser().getUid()).removeValue();
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
-		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+		_firebase.getReference("skyline/typing_status").child(chatId).child(auth.getCurrentUser().getUid()).removeValue();
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+		_firebase.getReference("skyline/typing_status").child(chatId).child(auth.getCurrentUser().getUid()).removeValue();
 	}
 
 	@Override
@@ -788,18 +790,11 @@ public class ChatActivity extends AppCompatActivity {
 							ChatSendMap.put(MESSAGE_TEXT_KEY, edittext1.getText().toString().trim());
 							ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 							ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
-							// Updating the chat reference
+							String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
 							_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-							.child(getIntent().getStringExtra(UID_KEY))  // Replacing with the UID from the intent extras
-							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // Replacing with the current user UID
-							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Using the key from your data
-							.updateChildren(ChatSendMap);  // Ensure ChatSendMap contains the necessary data for the update
-							// Updating the chat reference
-							_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // My UID
-							.child(getIntent().getStringExtra(UID_KEY))  // His UID from the intent extras
-							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Using the key from your data
-							.updateChildren(ChatSendMap);  // Ensure ChatSendMap contains the necessary data for the update
+									.child(chatId)
+									.child(_data.get((int)_position).get(KEY_KEY).toString())
+									.updateChildren(ChatSendMap);
 						} else {
 							SketchwareUtil.showMessage(getApplicationContext(), "Can't be empty");
 						}
@@ -913,7 +908,8 @@ public class ChatActivity extends AppCompatActivity {
 
 	public void _getChatMessagesRef() {
 		// Initial load
-		Query getChatsMessages = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).limitToLast(CHAT_PAGE_SIZE);
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+		Query getChatsMessages = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).limitToLast(CHAT_PAGE_SIZE);
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -951,11 +947,12 @@ public class ChatActivity extends AppCompatActivity {
 			lastMessageKey = ChatMessagesList.get(ChatMessagesList.size() - 1).get(KEY_KEY).toString();
 		}
 
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
 		Query newMessagesQuery;
 		if (lastMessageKey != null) {
-			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).orderByKey().startAfter(lastMessageKey);
+			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).orderByKey().startAfter(lastMessageKey);
 		} else {
-			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).orderByKey();
+			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).orderByKey();
 		}
 
 		newMessagesQuery.addChildEventListener(new ChildEventListener() {
@@ -1090,9 +1087,9 @@ public class ChatActivity extends AppCompatActivity {
 		isLoading = true;
 		_showLoadMoreIndicator();
 
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
 		Query getChatsMessages = _firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-		.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-		.child(getIntent().getStringExtra(UID_KEY))
+		.child(chatId)
 		.orderByKey()
 		.endBefore(oldestMessageKey)
 		.limitToLast(CHAT_PAGE_SIZE);
@@ -1137,17 +1134,30 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _DeleteMessageDialog(final ArrayList<HashMap<String, Object>> _data, final double _position) {
-		// Material Delete Dialog
 		MaterialAlertDialogBuilder zorry = new MaterialAlertDialogBuilder(ChatActivity.this);
-
 		zorry.setTitle("Delete");
-		zorry.setMessage("Are you sure you want to delete this message. Please confirm your decision.");
+		zorry.setMessage("Are you sure you want to delete this message? Please confirm your decision.");
 		zorry.setIcon(R.drawable.popup_ic_3);
 		zorry.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface _dialog, int _which) {
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
+				final int positionInt = (int) _position;
+				if (positionInt >= 0 && positionInt < _data.size()) {
+					RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(positionInt);
+					if (viewHolder != null) {
+						final View viewToFade = viewHolder.itemView;
+						AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
+						anim.setDuration(500);
+						viewToFade.startAnimation(anim);
+						new android.os.Handler().postDelayed(new Runnable() {
+							@Override
+							public void run() {
+								String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).child(_data.get(positionInt).get(KEY_KEY).toString()).removeValue();
+							}
+						}, 500);
+					}
+				}
 			}
 		});
 		zorry.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -1372,15 +1382,9 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
 				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
 
+				String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-				.child(getIntent().getStringExtra(UID_KEY))
-				.child(uniqueMessageKey)
-				.updateChildren(ChatSendMap);
-
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-				.child(getIntent().getStringExtra(UID_KEY))
-				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+				.child(chatId)
 				.child(uniqueMessageKey)
 				.updateChildren(ChatSendMap);
 
@@ -1410,21 +1414,13 @@ public class ChatActivity extends AppCompatActivity {
 			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
 			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
 
+			String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-			.child(getIntent().getStringExtra(UID_KEY))
+			.child(chatId)
 			.child(uniqueMessageKey)
 			.updateChildren(ChatSendMap);
 
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY))).child(uniqueMessageKey).updateChildren(ChatSendMap);
-
 			_updateInbox(messageText);
-
-			String myId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-			String otherId = getIntent().getStringExtra(UID_KEY);
-			String chatId = getChatId(myId, otherId);
-			_firebase.getReference(SKYLINE_REF).child(USERS_REF).child(myId).child(CHATS_REF).child(otherId).setValue(chatId);
-			_firebase.getReference(SKYLINE_REF).child(USERS_REF).child(otherId).child(CHATS_REF).child(myId).setValue(chatId);
 
 			message_et.setText("");
 			ReplyMessageID = "null";
@@ -1646,53 +1642,53 @@ public class ChatActivity extends AppCompatActivity {
 			public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 				if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
 					View itemView = viewHolder.itemView;
-					float translationX = dX;
-					float swipeThreshold = recyclerView.getWidth() * 0.3f;
-
-					// Spring animation for the item view
-					SpringAnimation springAnim = new SpringAnimation(itemView, SpringAnimation.TRANSLATION_X);
-					SpringForce spring = new SpringForce();
-					spring.setFinalPosition(0f);
-					spring.setStiffness(SpringForce.STIFFNESS_LOW);
-					spring.setDampingRatio(SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY);
-					springAnim.setSpring(spring);
-
-					if (Math.abs(dX) < swipeThreshold) {
-						itemView.setTranslationX(translationX);
-					} else {
-						springAnim.start();
-					}
-
-					// Draw background and icon
 					Paint p = new Paint();
 					Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_reply);
-					int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
-					int iconTop = itemView.getTop() + iconMargin;
-					int iconBottom = iconTop + icon.getIntrinsicHeight();
+					float swipeThreshold = recyclerView.getWidth() * 0.3f; // The threshold is 30% of the width
 
 					if (dX > 0) { // Swiping to the right
-						p.setColor(Color.parseColor("#3498db"));
-						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
+						// Clamp the swipe to the threshold
+						float translationX = Math.min(dX, swipeThreshold);
+						itemView.setTranslationX(translationX);
 
+						// Draw blue background
+						p.setColor(Color.parseColor("#3498db"));
+						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), itemView.getLeft() + translationX, (float) itemView.getBottom(), p);
+
+						// Draw reply icon
+						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+						int iconTop = itemView.getTop() + iconMargin;
+						int iconBottom = iconTop + icon.getIntrinsicHeight();
 						int iconLeft = itemView.getLeft() + iconMargin;
-						int iconRight = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
+						int iconRight = iconLeft + icon.getIntrinsicWidth();
 						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
 						icon.draw(c);
-					} else { // Swiping to the left
-						p.setColor(Color.parseColor("#3498db"));
-						c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
 
+					} else if (dX < 0) { // Swiping to the left
+						// Clamp the swipe to the threshold
+						float translationX = Math.max(dX, -swipeThreshold);
+						itemView.setTranslationX(translationX);
+
+						// Draw blue background
+						p.setColor(Color.parseColor("#3498db"));
+						c.drawRect((float) itemView.getRight() + translationX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
+
+						// Draw reply icon
+						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+						int iconTop = itemView.getTop() + iconMargin;
+						int iconBottom = iconTop + icon.getIntrinsicHeight();
 						int iconRight = itemView.getRight() - iconMargin;
-						int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
+						int iconLeft = iconRight - icon.getIntrinsicWidth();
 						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
 						icon.draw(c);
+					} else {
+						itemView.setTranslationX(0);
 					}
 
-					// Animate icon scale and alpha
-					float iconScale = Math.min(1.5f, Math.abs(dX) / (swipeThreshold / 2));
-					icon.setAlpha((int) (iconScale * 255));
+					// Reset item alpha in case it was changed by a previous animation
+					viewHolder.itemView.setAlpha(1f);
 
-					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+					// We are handling the drawing, so we don't call super.onChildDraw for the swipe state
 				} else {
 					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 				}
@@ -1715,6 +1711,14 @@ public class ChatActivity extends AppCompatActivity {
 			ChatMessagesListRecycler.smoothScrollToPosition(position);
 		} else {
 			Toast.makeText(getApplicationContext(), "Original message not found", Toast.LENGTH_SHORT).show();
+		}
+	}
+
+	private String getChatId(String uid1, String uid2) {
+		if (uid1.compareTo(uid2) < 0) {
+			return uid1 + "_" + uid2;
+		} else {
+			return uid2 + "_" + uid1;
 		}
 	}
 

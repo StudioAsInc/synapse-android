@@ -929,7 +929,7 @@ if ( || ( || )) {
 
 			}
 		});
-		DatabaseReference checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		Query checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 		checkFollowUser.addValueEventListener(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {

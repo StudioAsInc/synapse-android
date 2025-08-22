@@ -319,53 +319,36 @@ public class FragInboxChatsActivity extends Fragment {
 	}
 
 
-	private String getChatId(String user1, String user2) {
-	    if (user1.compareTo(user2) > 0) {
-	        return user1 + "_" + user2;
-	    } else {
-	        return user2 + "_" + user1;
-	    }
-	}
-
 	public void _getInboxReference() {
-	    DatabaseReference getInboxRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("chats");
-	    getInboxRef.addValueEventListener(new ValueEventListener() {
-	        @Override
-	        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-	            if(dataSnapshot.exists()) {
-	                inboxListRecyclerView.setVisibility(View.VISIBLE);
-	                ChatInboxList.clear();
-	                for (DataSnapshot _data : dataSnapshot.getChildren()) {
-	                    String partnerId = _data.getKey();
-	                    String chatId = _data.getValue(String.class);
+		Query getInboxRef = FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		getInboxRef.addValueEventListener(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				if(dataSnapshot.exists()) {
+					inboxListRecyclerView.setVisibility(View.VISIBLE);
+					ChatInboxList.clear();
+					try {
+						GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+						for (DataSnapshot _data : dataSnapshot.getChildren()) {
+							HashMap<String, Object> _map = _data.getValue(_ind);
+							ChatInboxList.add(_map);
+						}
+					} catch (Exception _e) {
+						_e.printStackTrace();
+					}
 
-	                    Query lastMessageQuery = FirebaseDatabase.getInstance().getReference("skyline/chats").child(chatId).orderByKey().limitToLast(1);
-	                    lastMessageQuery.addListenerForSingleValueEvent(new ValueEventListener() {
-	                        @Override
-	                        public void onDataChange(@NonNull DataSnapshot lastMessageSnapshot) {
-	                            if (lastMessageSnapshot.exists()) {
-	                                for (DataSnapshot messageData : lastMessageSnapshot.getChildren()) {
-	                                    HashMap<String, Object> inboxItem = messageData.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-	                                    inboxItem.put("uid", partnerId);
-	                                    ChatInboxList.add(inboxItem);
-	                                }
-	                                SketchwareUtil.sortListMap(ChatInboxList, "push_date", false, false);
-	                                inboxListRecyclerView.getAdapter().notifyDataSetChanged();
-	                            }
-	                        }
+					SketchwareUtil.sortListMap(ChatInboxList, "push_date", false, false);
+					inboxListRecyclerView.getAdapter().notifyDataSetChanged();
+				} else {
+					inboxListRecyclerView.setVisibility(View.GONE);
+				}
+			}
 
-	                        @Override
-	                        public void onCancelled(@NonNull DatabaseError databaseError) {}
-	                    });
-	                }
-	            } else {
-	                inboxListRecyclerView.setVisibility(View.GONE);
-	            }
-	        }
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
 
-	        @Override
-	        public void onCancelled(@NonNull DatabaseError databaseError) {}
-	    });
+			}
+		});
 	}
 
 
