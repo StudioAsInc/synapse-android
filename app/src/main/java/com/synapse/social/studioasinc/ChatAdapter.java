@@ -138,10 +138,30 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         if (holder.my_message_info != null && holder.date != null && holder.message_state != null) {
             boolean showMessageInfo = false;
-            if (position == _data.size() - 1) { 
+            if (position == _data.size() - 1) {
                 showMessageInfo = true;
             } else if (position + 1 < _data.size()) {
-                if (!_data.get(position + 1).get("uid").toString().equals(data.get("uid").toString()) || _data.get(position+1).containsKey("typingMessageStatus")) {
+                HashMap<String, Object> currentMsg = _data.get(position);
+                HashMap<String, Object> nextMsg = _data.get(position + 1);
+
+                boolean nextIsDifferentUser = !nextMsg.get("uid").toString().equals(currentMsg.get("uid").toString());
+                boolean nextIsTyping = nextMsg.containsKey("typingMessageStatus");
+
+                boolean timeIsSignificant = false;
+                if (currentMsg.containsKey("push_date") && nextMsg.containsKey("push_date")) {
+                    try {
+                        long currentTime = (long) Double.parseDouble(currentMsg.get("push_date").toString());
+                        long nextTime = (long) Double.parseDouble(nextMsg.get("push_date").toString());
+                        if ((nextTime - currentTime) > (5 * 60 * 1000)) { // 5 minutes
+                            timeIsSignificant = true;
+                        }
+                    } catch (NumberFormatException e) {
+                        // Handle case where push_date is not a valid double
+                        timeIsSignificant = false;
+                    }
+                }
+
+                if (nextIsDifferentUser || nextIsTyping || timeIsSignificant) {
                     showMessageInfo = true;
                 }
             }
@@ -184,9 +204,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (data.containsKey("replied_message_id")) {
                 String repliedId = data.get("replied_message_id").toString();
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
+                    String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    String theirUid = chatActivity.getIntent().getStringExtra("uid");
+                    String chatId = chatActivity.getChatId(myUid, theirUid);
                     FirebaseDatabase.getInstance().getReference("skyline/chats")
-                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                        .child(chatActivity.getIntent().getStringExtra("uid"))
+                        .child(chatId)
                         .child(repliedId)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
@@ -200,10 +222,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         holder.mRepliedMessageLayoutUsername.setText(
                                             repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName
                                         );
-                                        if (repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
+                                        if (isMyMessage) {
+                                            holder.mRepliedMessageLayoutUsername.setTextColor(Color.WHITE);
                                         } else {
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(0xFF424242);
+                                            holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
                                         }
                                     }
                                     if(holder.mRepliedMessageLayoutMessage != null) {
@@ -217,6 +239,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         leftBarDrawable.setCornerRadius(dpToPx(100));
                                         holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
                                     }
+
+                                    holder.mRepliedMessageLayout.setOnClickListener(v -> {
+                                        if (chatActivity != null) {
+                                            chatActivity.scrollToMessage(repliedId);
+                                        }
+                                    });
                                 }
                             }
                             @Override

@@ -930,13 +930,17 @@ if ( || ( || )) {
 			}
 		});
 		Query checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-		checkFollowUser.addListenerForSingleValueEvent(new ValueEventListener() {
+		checkFollowUser.addValueEventListener(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if(dataSnapshot.exists()) {
-					// If logic here
+					btnFollow.setText(getResources().getString(R.string.unfollow));
+					btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
+					btnFollow.setTextColor(0xFF000000);
 				} else {
-					// else logic here
+					btnFollow.setText(getResources().getString(R.string.follow));
+					btnFollow.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+					btnFollow.setTextColor(0xFFFFFFFF);
 				}
 			}
 

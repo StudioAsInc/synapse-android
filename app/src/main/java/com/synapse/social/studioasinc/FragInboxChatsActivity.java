@@ -336,17 +336,17 @@ public class FragInboxChatsActivity extends Fragment {
 					} catch (Exception _e) {
 						_e.printStackTrace();
 					}
-					
+
 					SketchwareUtil.sortListMap(ChatInboxList, "push_date", false, false);
 					inboxListRecyclerView.getAdapter().notifyDataSetChanged();
 				} else {
 					inboxListRecyclerView.setVisibility(View.GONE);
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 	}
