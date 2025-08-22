@@ -1,108 +1,63 @@
-<LinearLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tools="http://schemas.android.com/tools"
-	android:layout_width="match_parent"
-	android:layout_height="match_parent"
-	android:orientation="vertical">
-	<androidx.cardview.widget.CardView
-		android:id="@+id/cardMediaItem"
-		android:layout_width="100dp"
-		android:layout_height="100dp"
-		app:cardElevation="1dp"
-		app:cardCornerRadius="20dp">
-		<LinearLayout
-			android:id="@+id/containerLL"
-			android:layout_width="wrap_content"
-			android:layout_height="match_parent"
-			android:background="@android:color/transparent"
-			android:orientation="vertical">
-			<RelativeLayout
-				android:id="@+id/imageWrapperRL"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:background="@android:color/transparent">
-				<ImageView
-					android:id="@+id/previewIV"
-					android:focusable="false"
-					android:layout_width="match_parent"
-					android:layout_height="match_parent"
-					android:src="@drawable/ph_imgbluredsqure"
-					android:scaleType="centerCrop" />
-				<LinearLayout
-					android:id="@+id/overlayLL"
-					android:layout_width="match_parent"
-					android:layout_height="match_parent"
-					android:background="@android:color/transparent"
-					android:gravity="center_horizontal|center_vertical"
-					android:orientation="vertical">
-					<RelativeLayout
-						android:id="@+id/progressWrapperRL"
-						android:layout_width="match_parent"
-						android:layout_height="match_parent"
-						android:background="@android:color/transparent">
-						<com.google.android.material.progressindicator.CircularProgressIndicator
-							android:id="@+id/uploadProgressCPI"
-							android:focusable="false"
-							android:layout_width="match_parent"
-							android:layout_height="match_parent"
-							android:padding="8dp"
-							android:indeterminate="false"
-							style="?attr/circularProgressIndicatorStyle"
-							app:waveSpeed="20dp"
-							app:wavelength="17dp"
-							app:waveAmplitude="2dp"
-							app:indicatorSize="60dp"
-							app:indicatorDirectionCircular="counterclockwise"
-							android:visibility="gone" />
-						<LinearLayout
-							android:id="@+id/topControlsLL"
-							android:layout_width="match_parent"
-							android:layout_height="match_parent"
-							android:background="@android:color/transparent"
-							android:gravity="right|top"
-							android:orientation="vertical">
-							<LinearLayout
-								android:id="@+id/linear4"
-								android:layout_width="match_parent"
-								android:layout_height="wrap_content"
-								android:padding="8dp"
-								android:background="@android:color/transparent"
-								android:gravity="right|center_vertical"
-								android:orientation="vertical">
-								<ImageView
-									android:id="@+id/closeIV"
-									android:focusable="false"
-									android:layout_width="30dp"
-									android:layout_height="30dp"
-									android:src="@drawable/ic_close_48px"
-									android:scaleType="fitCenter" />
-							</LinearLayout>
-							<LinearLayout
-								android:id="@+id/linear5"
-								android:layout_width="match_parent"
-								android:layout_height="wrap_content"
-								android:orientation="vertical"
-								android:layout_weight="1" />
-							<LinearLayout
-								android:id="@+id/linear6"
-								android:layout_width="match_parent"
-								android:layout_height="wrap_content"
-								android:padding="8dp"
-								android:orientation="vertical">
-								<TextView
-									android:id="@+id/textview1"
-									android:focusable="false"
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:text="Filename"
-									android:textSize="12sp"
-									android:visibility="gone" />
-							</LinearLayout>
-						</LinearLayout>
-					</RelativeLayout>
-				</LinearLayout>
-			</RelativeLayout>
-		</LinearLayout>
-	</androidx.cardview.widget.CardView>
-</LinearLayout>
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardMediaItem"
+    android:layout_width="wrap_content"
+    android:layout_height="100dp"
+    android:layout_margin="4dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="8dp">
+
+    <RelativeLayout
+        android:id="@+id/imageWrapperRL"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/previewIV"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:minWidth="60dp"
+            android:maxWidth="150dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ph_imgbluredsqure" />
+
+        <LinearLayout
+            android:id="@+id/overlayLL"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignStart="@id/previewIV"
+            android:layout_alignEnd="@id/previewIV"
+            android:background="#80000000"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/uploadProgressCPI"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminate="false"
+                app:indicatorColor="@android:color/white"
+                app:trackColor="@android:color/transparent"
+                app:indicatorSize="40dp" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/closeIV"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="4dp"
+            android:padding="4dp"
+            android:background="@drawable/circle_background_dark"
+            android:src="@drawable/ic_close_48px"
+            app:tint="@android:color/white" />
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>
