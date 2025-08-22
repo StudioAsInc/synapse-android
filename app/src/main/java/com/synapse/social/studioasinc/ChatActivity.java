@@ -80,9 +80,8 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
-import com.synapse.social.studioasinc.thanos.ThanosSnap;
-import com.synapse.social.studioasinc.thanos.ThanosSnapView;
 import com.synapse.social.studioasinc.FadeEditText;
+import com.plattysoft.leonids.ParticleSystem;
 import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
 import com.synapse.social.studioasinc.StorageUtil;
@@ -1149,30 +1148,30 @@ public class ChatActivity extends AppCompatActivity {
 					RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(positionInt);
 					if (viewHolder != null) {
 						final View viewToSnap = viewHolder.itemView;
-						ThanosSnapView thanosSnapView = new ThanosSnapView(ChatActivity.this);
-						ThanosSnap thanosSnap = new ThanosSnap(viewToSnap, new ThanosSnap.OnAnimationListener() {
-							@Override
-							public void onAnimationStart() {
-								viewToSnap.setVisibility(View.INVISIBLE);
-							}
+						new ParticleSystem(ChatActivity.this, 80, R.drawable.ic_delete_48px, 3000)
+								.setSpeedModuleAndAngleRange(0.05f, 0.2f, 0, 360)
+								.setRotationSpeedRange(90, 180)
+								.setAcceleration(0.00005f, 90)
+								.setFadeOut(200, new LinearInterpolator())
+								.oneShot(viewToSnap, 80);
 
+						final View viewToSnap = viewHolder.itemView;
+						new ParticleSystem(ChatActivity.this, 80, R.drawable.ic_delete_48px, 1000)
+								.setSpeedModuleAndAngleRange(0.07f, 0.3f, 0, 360)
+								.setRotationSpeedRange(90, 180)
+								.setAcceleration(0.00005f, 90)
+								.setFadeOut(800, new LinearInterpolator())
+								.oneShot(viewToSnap, 100);
+
+						new android.os.Handler().postDelayed(new Runnable() {
 							@Override
-							public void onAnimationEnd() {
+							public void run() {
+								viewToSnap.setVisibility(View.INVISIBLE);
 								String messageKey = _data.get(positionInt).get(KEY_KEY).toString();
 								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(messageKey).removeValue();
 								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(messageKey).removeValue();
-
-								if (positionInt < ChatMessagesList.size()) {
-									ChatMessagesList.remove(positionInt);
-									chatAdapter.notifyItemRemoved(positionInt);
-									chatAdapter.notifyItemRangeChanged(positionInt, ChatMessagesList.size());
-								}
-								((ViewGroup) relativelayout1).removeView(thanosSnapView);
 							}
-						});
-						thanosSnapView.setThanosSnap(thanosSnap);
-						((ViewGroup) relativelayout1).addView(thanosSnapView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-						thanosSnap.start();
+						}, 1000);
 					}
 				}
 			}
@@ -1180,6 +1179,7 @@ public class ChatActivity extends AppCompatActivity {
 		zorry.setNegativeButton("No", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface _dialog, int _which) {
+
 			}
 		});
 		zorry.create().show();
