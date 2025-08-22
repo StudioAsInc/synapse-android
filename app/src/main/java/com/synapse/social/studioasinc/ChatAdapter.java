@@ -351,7 +351,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     overlayContainer.addView(iv);
 
                     View overlay = new View(_context);
-                    overlay.setBackgroundColor(0x80000000); // Black overlay with 50% opacity
+                    overlay.setBackgroundColor(0x40000000); // Black overlay with 25% opacity
                     overlayContainer.addView(overlay, new ViewGroup.LayoutParams(imageSize, imageSize));
 
                     TextView moreText = new TextView(_context);
