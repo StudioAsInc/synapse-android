@@ -1268,6 +1268,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		if (!attactmentmap.isEmpty()) {
 			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
+			boolean allUploadsSuccessful = true;
 
 			for (HashMap<String, Object> item : attactmentmap) {
 				if ("success".equals(item.get("uploadState"))) {
@@ -1275,10 +1276,12 @@ public class ChatActivity extends AppCompatActivity {
 					attachmentData.put("url", item.get("cloudinaryUrl"));
 					attachmentData.put("publicId", item.get("publicId"));
 					successfulAttachments.add(attachmentData);
+				} else {
+					allUploadsSuccessful = false;
 				}
 			}
 
-			if (!messageText.isEmpty() || !successfulAttachments.isEmpty()) {
+			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
 				cc = Calendar.getInstance();
 				String uniqueMessageKey = main.push().getKey();
 
@@ -1458,11 +1461,13 @@ public class ChatActivity extends AppCompatActivity {
 		UploadFiles.uploadFile(filePath, file.getName(), new UploadFiles.UploadCallback() {
 			@Override
 			public void onProgress(int percent) {
+				if (itemPosition >= attactmentmap.size()) return;
 				attactmentmap.get(itemPosition).put("uploadProgress", (double) percent);
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			}
 			@Override
 			public void onSuccess(String url, String publicId) {
+				if (itemPosition >= attactmentmap.size()) return;
 				HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
 				mapToUpdate.put("uploadState", "success");
 				mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
@@ -1476,6 +1481,7 @@ public class ChatActivity extends AppCompatActivity {
 			}
 			@Override
 			public void onFailure(String error) {
+				if (itemPosition >= attactmentmap.size()) return;
 				attactmentmap.get(itemPosition).put("uploadState", "failed");
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			}
