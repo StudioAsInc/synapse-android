@@ -38,6 +38,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.AlphaAnimation;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -65,6 +66,8 @@ import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.FirebaseApp;
@@ -195,7 +198,6 @@ public class ChatActivity extends AppCompatActivity {
 	private FadeEditText message_et;
 	private LinearLayout toolContainer;
 	private ImageView expand_send_type_btn;
-	private ImageView close_attachments_btn;
 	private LinearLayout devider_mic_camera;
 	private ImageView galleryBtn;
 
@@ -279,26 +281,11 @@ public class ChatActivity extends AppCompatActivity {
 		expand_send_type_btn = findViewById(R.id.expand_send_type_btn);
 		devider_mic_camera = findViewById(R.id.devider_mic_camera);
 		galleryBtn = findViewById(R.id.galleryBtn);
-		close_attachments_btn = findViewById(R.id.close_attachments_btn);
 		auth = FirebaseAuth.getInstance();
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		blocked = getSharedPreferences("block", Activity.MODE_PRIVATE);
 		theme = getSharedPreferences("theme", Activity.MODE_PRIVATE);
 		appSettings = getSharedPreferences("appSettings", Activity.MODE_PRIVATE);
-
-		close_attachments_btn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				attachmentLayoutListHolder.setVisibility(View.GONE);
-				attactmentmap.clear();
-				rv_attacmentList.getAdapter().notifyDataSetChanged();
-
-				// Clear the attachment draft from SharedPreferences
-				SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
-				String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra("uid"));
-				drafts.edit().remove(chatId + "_attachments").apply();
-			}
-		});
 
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -603,19 +590,52 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	public void onPause() {
 		super.onPause();
-		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+		_firebase.getReference("skyline/typing_status").child(chatId).child(auth.getCurrentUser().getUid()).removeValue();
+
+		// Save draft message
+		SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = drafts.edit();
+		String draftText = message_et.getText().toString();
+
+		// Save text draft
+		if (draftText.isEmpty()) {
+			editor.remove(chatId);
+		} else {
+			editor.putString(chatId, draftText);
+		}
+
+		// Save attachment draft
+		ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
+		for (HashMap<String, Object> item : attactmentmap) {
+			if ("success".equals(item.get("uploadState"))) {
+				successfulAttachments.add(item);
+			}
+		}
+		if (!successfulAttachments.isEmpty()) {
+			Gson gson = new Gson();
+			String attachmentsJson = gson.toJson(successfulAttachments);
+			editor.putString(chatId + "_attachments", attachmentsJson);
+		} else {
+			editor.remove(chatId + "_attachments");
+		}
+
+		editor.apply();
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
-		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+		// In case onPause is skipped
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+		_firebase.getReference("skyline/typing_status").child(chatId).child(auth.getCurrentUser().getUid()).removeValue();
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+		_firebase.getReference("skyline/typing_status").child(chatId).child(auth.getCurrentUser().getUid()).removeValue();
 	}
 
 	@Override
@@ -888,46 +908,46 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _getUserReference() {
-		DatabaseReference getUserReference = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(getIntent().getStringExtra(UID_KEY));
-		getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
+		DatabaseReference secondUserRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(getIntent().getStringExtra(UID_KEY));
+		secondUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if (dataSnapshot.exists()) {
-					updateUserProfile(dataSnapshot);
-					updateUserBadges(dataSnapshot);
+			public void onDataChange(@NonNull DataSnapshot secondUserData) {
+				if (secondUserData.exists()) {
+					updateUserProfile(secondUserData);
+					updateUserBadges(secondUserData);
+
+					DatabaseReference firstUserRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+					firstUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+						@Override
+						public void onDataChange(@NonNull DataSnapshot firstUserData) {
+							if (firstUserData.exists()) {
+								FirstUserName = "null".equals(firstUserData.child("nickname").getValue(String.class))
+										? "@" + firstUserData.child("username").getValue(String.class)
+										: firstUserData.child("nickname").getValue(String.class);
+							}
+							chatAdapter.setFirstUserName(FirstUserName);
+							chatAdapter.setSecondUserName(SecondUserName);
+							_getChatMessagesRef();
+						}
+						@Override
+						public void onCancelled(@NonNull DatabaseError databaseError) {
+							Log.e("ChatActivity", "Failed to get first user name: " + databaseError.getMessage());
+							_getChatMessagesRef();
+						}
+					});
 				}
 			}
-
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				Log.e("ChatActivity", "Failed to get user reference: " + databaseError.getMessage());
 			}
 		});
-
-		DatabaseReference getFirstUserName = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-		getFirstUserName.addListenerForSingleValueEvent(new ValueEventListener() {
-			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if (dataSnapshot.exists()) {
-					FirstUserName = dataSnapshot.child("nickname").getValue(String.class).equals("null")
-					? "@" + dataSnapshot.child("username").getValue(String.class)
-					: dataSnapshot.child("nickname").getValue(String.class);
-				}
-			}
-
-			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-				Log.e("ChatActivity", "Failed to get first user name: " + databaseError.getMessage());
-			}
-		});
-
-		_getChatMessagesRef();
 	}
 
-
 	public void _getChatMessagesRef() {
-		// Initial load
-		Query getChatsMessages = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).limitToLast(CHAT_PAGE_SIZE);
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+		Query getChatsMessages = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).limitToLast(CHAT_PAGE_SIZE);
+
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -937,18 +957,22 @@ public class ChatActivity extends AppCompatActivity {
 					ChatMessagesList.clear();
 					ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
 					for (DataSnapshot _data : dataSnapshot.getChildren()) {
-						initialMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
+						HashMap<String, Object> messageMap = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						if (messageMap != null) {
+							if (!messageMap.containsKey(KEY_KEY) || messageMap.get(KEY_KEY) == null) {
+								messageMap.put(KEY_KEY, _data.getKey());
+							}
+							initialMessages.add(messageMap);
+						}
 					}
 
-					if (!initialMessages.isEmpty() && initialMessages.get(0).get(KEY_KEY) != null) {
+					if (!initialMessages.isEmpty()) {
 						oldestMessageKey = initialMessages.get(0).get(KEY_KEY).toString();
 					}
 
 					ChatMessagesList.addAll(initialMessages);
 					chatAdapter.notifyDataSetChanged();
 					ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-
-					// Now listen for new messages
 					_listenForNewMessages();
 				} else {
 					ChatMessagesListRecycler.setVisibility(View.GONE);
@@ -960,26 +984,26 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _listenForNewMessages() {
+		String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
 		String lastMessageKey = null;
-		if (!ChatMessagesList.isEmpty() && ChatMessagesList.get(ChatMessagesList.size() - 1).get(KEY_KEY) != null) {
+		if (!ChatMessagesList.isEmpty()) {
 			lastMessageKey = ChatMessagesList.get(ChatMessagesList.size() - 1).get(KEY_KEY).toString();
 		}
 
-		Query newMessagesQuery;
-		if (lastMessageKey != null) {
-			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).orderByKey().startAfter(lastMessageKey);
-		} else {
-			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).orderByKey();
-		}
+		Query newMessagesQuery = (lastMessageKey != null)
+			? _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).orderByKey().startAfter(lastMessageKey)
+			: _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).orderByKey();
 
 		newMessagesQuery.addChildEventListener(new ChildEventListener() {
 			@Override
 			public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
 				if (dataSnapshot.exists()) {
 					HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-					if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-						// Simple check to avoid duplicate additions
-						if (ChatMessagesList.stream().noneMatch(msg -> msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY)))) {
+					if (newMessage != null) {
+						if (!newMessage.containsKey(KEY_KEY) || newMessage.get(KEY_KEY) == null) {
+							newMessage.put(KEY_KEY, dataSnapshot.getKey());
+						}
+						if (ChatMessagesList.stream().noneMatch(msg -> newMessage.get(KEY_KEY).equals(msg.get(KEY_KEY)))) {
 							ChatMessagesList.add(newMessage);
 							chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
 							ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
@@ -990,13 +1014,15 @@ public class ChatActivity extends AppCompatActivity {
 
 			@Override
 			public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-				// Find message by key and update it
 				if (snapshot.exists()) {
 					HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-					if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
+					if (updatedMessage != null) {
+						if (!updatedMessage.containsKey(KEY_KEY) || updatedMessage.get(KEY_KEY) == null) {
+							updatedMessage.put(KEY_KEY, snapshot.getKey());
+						}
 						String key = updatedMessage.get(KEY_KEY).toString();
 						for (int i = 0; i < ChatMessagesList.size(); i++) {
-							if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
+							if (key.equals(ChatMessagesList.get(i).get(KEY_KEY))) {
 								ChatMessagesList.set(i, updatedMessage);
 								chatAdapter.notifyItemChanged(i);
 								break;
@@ -1006,7 +1032,17 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			}
 
-			@Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
+			@Override
+			public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					String removedKey = snapshot.getKey();
+					if (removedKey != null) {
+						ChatMessagesList.removeIf(msg -> removedKey.equals(msg.get(KEY_KEY)));
+						chatAdapter.notifyDataSetChanged();
+					}
+				}
+			}
+
 			@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
 			@Override public void onCancelled(@NonNull DatabaseError error) {}
 		});
@@ -1136,17 +1172,36 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _DeleteMessageDialog(final ArrayList<HashMap<String, Object>> _data, final double _position) {
-		// Material Delete Dialog
 		MaterialAlertDialogBuilder zorry = new MaterialAlertDialogBuilder(ChatActivity.this);
-
 		zorry.setTitle("Delete");
-		zorry.setMessage("Are you sure you want to delete this message. Please confirm your decision.");
+		zorry.setMessage("Are you sure you want to delete this message? Please confirm your decision.");
 		zorry.setIcon(R.drawable.popup_ic_3);
 		zorry.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface _dialog, int _which) {
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
+				final int positionInt = (int) _position;
+				if (positionInt >= 0 && positionInt < _data.size()) {
+					RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(positionInt);
+					if (viewHolder != null) {
+						final View viewToFade = viewHolder.itemView;
+						android.view.animation.AlphaAnimation anim = new android.view.animation.AlphaAnimation(1.0f, 0.0f);
+						anim.setDuration(500);
+						viewToFade.startAnimation(anim);
+						new android.os.Handler().postDelayed(new Runnable() {
+							@Override
+							public void run() {
+								Object messageKeyObj = _data.get(positionInt).get(KEY_KEY);
+								if (messageKeyObj == null) {
+									Toast.makeText(getApplicationContext(), "Error: Cannot delete message with a key.", Toast.LENGTH_SHORT).show();
+									return;
+								}
+								String messageKey = messageKeyObj.toString();
+								String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).child(messageKey).removeValue();
+							}
+						}, 500);
+					}
+				}
 			}
 		});
 		zorry.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -1624,18 +1679,15 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _setupSwipeToReply() {
-		// This helper class handles drawing the swipe background and icon.
 		ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
 			@Override
 			public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-				return false; // We don't want to handle drag & drop
+				return false;
 			}
 
 			@Override
 			public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-				// This is triggered when the swipe is completed.
 				_showReplyUI(viewHolder.getAdapterPosition());
-				// The adapter needs to be notified to redraw the item back to its original state.
 				chatAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
 			}
 
@@ -1643,36 +1695,33 @@ public class ChatActivity extends AppCompatActivity {
 			public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 				if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
 					View itemView = viewHolder.itemView;
-					Paint p = new Paint();
 					Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_reply);
+					float swipeThreshold = recyclerView.getWidth() * 0.3f;
 
 					if (dX > 0) { // Swiping to the right
-						p.setColor(Color.parseColor("#3498db")); // Blue background
-						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
-
+						float translationX = Math.min(dX, swipeThreshold);
+						itemView.setTranslationX(translationX);
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
 						int iconTop = itemView.getTop() + iconMargin;
 						int iconBottom = iconTop + icon.getIntrinsicHeight();
 						int iconLeft = itemView.getLeft() + iconMargin;
-						int iconRight = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
+						int iconRight = iconLeft + icon.getIntrinsicWidth();
 						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
 						icon.draw(c);
-					} else { // Swiping to the left
-						p.setColor(Color.parseColor("#3498db")); // Blue background
-						c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
-
+					} else if (dX < 0) { // Swiping to the left
+						float translationX = Math.max(dX, -swipeThreshold);
+						itemView.setTranslationX(translationX);
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
 						int iconTop = itemView.getTop() + iconMargin;
 						int iconBottom = iconTop + icon.getIntrinsicHeight();
 						int iconRight = itemView.getRight() - iconMargin;
-						int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
+						int iconLeft = iconRight - icon.getIntrinsicWidth();
 						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
 						icon.draw(c);
+					} else {
+						itemView.setTranslationX(0);
 					}
-					// Fade out the item as it is swiped away
-					final float alpha = 1.0f - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
-					viewHolder.itemView.setAlpha(alpha);
-					viewHolder.itemView.setTranslationX(dX);
+					viewHolder.itemView.setAlpha(1f);
 				} else {
 					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 				}
@@ -1829,9 +1878,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 		topProfileLayoutUsername.setText(SecondUserName);
 
-		((ChatAdapter) chatAdapter).setSecondUserName(SecondUserName);
-		((ChatAdapter) chatAdapter).setFirstUserName(FirstUserName);
-		((ChatAdapter) chatAdapter).setSecondUserAvatar(SecondUserAvatar);
+		chatAdapter.setSecondUserAvatar(SecondUserAvatar);
 
 		String status = dataSnapshot.child("status").getValue(String.class);
 		if ("online".equals(status)) {
