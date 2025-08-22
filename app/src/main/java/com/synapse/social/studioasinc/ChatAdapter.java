@@ -411,7 +411,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     overlayContainer.addView(moreText, new ViewGroup.LayoutParams(imageSize, imageSize));
                     overlayContainer.setOnClickListener(v -> {
                         if (chatActivity != null) {
-                             chatActivity._OpenWebView(attachments.get(3).get("url").toString());
+                            Intent intent = new Intent(chatActivity, GalleryActivity.class);
+                            intent.putExtra("attachments", attachments);
+                            chatActivity.startActivity(intent);
                         }
                     });
                     gridLayout.addView(overlayContainer);
