@@ -58,12 +58,13 @@
 				android:textColor="@color/colorSurface"
 				style="@style/Widget.Material3.Button" />
 		</LinearLayout>
-		<com.theartofdev.edmodo.cropper.CropImageView
-			android:id="@+id/cropImageView"
+		<ImageView
+			android:id="@+id/image_preview"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:background="#F5F5F5"
-			android:orientation="horizontal" />
+			android:scaleType="fitCenter"
+			android:src="@drawable/default_image" />
 		<LinearLayout
 			android:id="@+id/urlImagePreview"
 			android:layout_width="match_parent"
