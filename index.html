@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synapse - Express yourself in a better way</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .app-logo {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .app-logo i {
+            font-size: 60px;
+            color: #667eea;
+        }
+
+        .app-name {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .app-tagline {
+            font-size: 18px;
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+        }
+
+        /* Auth Screen */
+        .auth-screen {
+            display: none;
+            min-height: 100vh;
+            background: white;
+            padding: 40px 20px;
+        }
+
+        .auth-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .auth-logo i {
+            font-size: 40px;
+            color: white;
+        }
+
+        .auth-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .auth-subtitle {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .auth-switch a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Main App */
+        .app-screen {
+            display: none;
+            min-height: 100vh;
+            background: #f8f9fa;
+        }
+
+        .app-header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .header-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: #f8f9fa;
+            color: #333;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .app-content {
+            padding: 20px;
+        }
+
+        /* Stories Section */
+        .stories-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .stories-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .stories-container {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .story-item {
+            flex-shrink: 0;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .story-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            border: 3px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .story-avatar i {
+            font-size: 24px;
+            color: white;
+        }
+
+        .story-username {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Posts Section */
+        .posts-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .post-header {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .post-avatar i {
+            font-size: 18px;
+            color: white;
+        }
+
+        .post-user-info {
+            flex: 1;
+        }
+
+        .post-username {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .post-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .post-content {
+            padding: 0 20px 15px;
+        }
+
+        .post-text {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .post-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .post-image i {
+            font-size: 48px;
+            color: white;
+        }
+
+        .post-actions {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .post-action-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .post-action-btn:hover {
+            color: #667eea;
+        }
+
+        .post-action-btn.liked {
+            color: #e74c3c;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .nav-item span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Create Post Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 30px 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .create-post-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .post-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .post-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .app-content {
+                padding: 15px;
+                margin-bottom: 80px;
+            }
+            
+            .header-title {
+                font-size: 24px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="app-logo">
+            <i class="fas fa-brain"></i>
+        </div>
+        <h1 class="app-name">Synapse</h1>
+        <p class="app-tagline">Express yourself in a better way</p>
+    </div>
+
+    <!-- Auth Screen -->
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h1 class="auth-title">Welcome to Synapse</h1>
+                <p class="auth-subtitle">Connect with friends and share your moments</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <span class="btn-text">Sign In</span>
+                    <span class="loading" style="display: none;"></span>
+                </button>
+                <div class="auth-switch">
+                    <p>Don't have an account? <a href="#" id="showSignup">Sign Up</a></p>
+                </div>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" id="signupName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="signupPassword" placeholder="Create a password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <span class="btn-text">Create Account</span>
+                    <span class="loading" style="display: none;"></span>
+                </button>
+                <div class="auth-switch">
+                    <p>Already have an account? <a href="#" id="showLogin">Sign In</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-screen" id="appScreen">
+        <!-- Header -->
+        <div class="app-header">
+            <div class="header-content">
+                <h1 class="header-title">Synapse</h1>
+                <div class="header-actions">
+                    <button class="header-btn" id="searchBtn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="header-btn" id="notificationsBtn">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button class="header-btn" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="app-content">
+            <!-- Stories Section -->
+            <div class="stories-section">
+                <h3 class="stories-title">Stories</h3>
+                <div class="stories-container">
+                    <div class="story-item">
+                        <div class="story-avatar">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div class="story-username">Add Story</div>
+                    </div>
+                    <div class="story-item">
+                        <div class="story-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="story-username">John Doe</div>
+                    </div>
+                    <div class="story-item">
+                        <div class="story-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="story-username">Jane Smith</div>
+                    </div>
+                    <div class="story-item">
+                        <div class="story-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="story-username">Mike Johnson</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posts Section -->
+            <div class="posts-section" id="postsSection">
+                <!-- Posts will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-section="home">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+            <div class="nav-item" data-section="search">
+                <i class="fas fa-search"></i>
+                <span>Search</span>
+            </div>
+            <div class="nav-item" data-section="create">
+                <i class="fas fa-plus-circle"></i>
+                <span>Create</span>
+            </div>
+            <div class="nav-item" data-section="chat">
+                <i class="fas fa-comment"></i>
+                <span>Chat</span>
+            </div>
+            <div class="nav-item" data-section="profile">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Post Modal -->
+    <div class="modal" id="createPostModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create Post</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <form class="create-post-form" id="createPostForm">
+                <textarea class="post-textarea" id="postContent" placeholder="What's on your mind?" required></textarea>
+                <button type="submit" class="btn btn-primary">Share Post</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // App State
+        let currentUser = null;
+        let posts = [];
+        let currentSection = 'home';
+
+        // DOM Elements
+        const splashScreen = document.getElementById('splashScreen');
+        const authScreen = document.getElementById('authScreen');
+        const appScreen = document.getElementById('appScreen');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const showSignupLink = document.getElementById('showSignup');
+        const showLoginLink = document.getElementById('showLogin');
+        const createPostModal = document.getElementById('createPostModal');
+        const closeModal = document.getElementById('closeModal');
+        const createPostForm = document.getElementById('createPostForm');
+        const postsSection = document.getElementById('postsSection');
+        const navItems = document.querySelectorAll('.nav-item');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Initialize App
+        function initApp() {
+            // Hide splash screen after 3 seconds
+            setTimeout(() => {
+                splashScreen.classList.add('hidden');
+                setTimeout(() => {
+                    splashScreen.style.display = 'none';
+                    checkAuth();
+                }, 500);
+            }, 3000);
+
+            // Event Listeners
+            setupEventListeners();
+            loadSampleData();
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Auth form switches
+            showSignupLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+            });
+
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'block';
+            });
+
+            // Form submissions
+            loginForm.addEventListener('submit', handleLogin);
+            signupForm.addEventListener('submit', handleSignup);
+            createPostForm.addEventListener('submit', handleCreatePost);
+
+            // Modal controls
+            closeModal.addEventListener('click', () => {
+                createPostModal.classList.remove('show');
+            });
+
+            // Navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const section = item.dataset.section;
+                    if (section === 'create') {
+                        createPostModal.classList.add('show');
+                    } else {
+                        switchSection(section);
+                    }
+                });
+            });
+
+            // Logout
+            logoutBtn.addEventListener('click', handleLogout);
+
+            // Close modal on outside click
+            createPostModal.addEventListener('click', (e) => {
+                if (e.target === createPostModal) {
+                    createPostModal.classList.remove('show');
+                }
+            });
+        }
+
+        // Check Authentication
+        function checkAuth() {
+            const savedUser = localStorage.getItem('synapse_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showApp();
+            } else {
+                showAuth();
+            }
+        }
+
+        // Show Auth Screen
+        function showAuth() {
+            authScreen.style.display = 'block';
+            appScreen.style.display = 'none';
+        }
+
+        // Show App Screen
+        function showApp() {
+            authScreen.style.display = 'none';
+            appScreen.style.display = 'block';
+            renderPosts();
+        }
+
+        // Handle Login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const btn = e.target.querySelector('.btn-primary');
+            const btnText = btn.querySelector('.btn-text');
+            const loading = btn.querySelector('.loading');
+
+            btnText.style.display = 'none';
+            loading.style.display = 'inline-block';
+
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // For demo purposes, accept any email/password
+            currentUser = {
+                id: 1,
+                name: email.split('@')[0],
+                email: email,
+                avatar: '👤'
+            };
+
+            localStorage.setItem('synapse_user', JSON.stringify(currentUser));
+            showToast('Successfully signed in!', 'success');
+            showApp();
+
+            btnText.style.display = 'inline';
+            loading.style.display = 'none';
+        }
+
+        // Handle Signup
+        async function handleSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+
+            const btn = e.target.querySelector('.btn-primary');
+            const btnText = btn.querySelector('.btn-text');
+            const loading = btn.querySelector('.loading');
+
+            btnText.style.display = 'none';
+            loading.style.display = 'inline-block';
+
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            currentUser = {
+                id: Date.now(),
+                name: name,
+                email: email,
+                avatar: '👤'
+            };
+
+            localStorage.setItem('synapse_user', JSON.stringify(currentUser));
+            showToast('Account created successfully!', 'success');
+            showApp();
+
+            btnText.style.display = 'inline';
+            loading.style.display = 'none';
+        }
+
+        // Handle Logout
+        function handleLogout() {
+            localStorage.removeItem('synapse_user');
+            currentUser = null;
+            showToast('Logged out successfully', 'success');
+            showAuth();
+        }
+
+        // Handle Create Post
+        async function handleCreatePost(e) {
+            e.preventDefault();
+            const content = document.getElementById('postContent').value;
+
+            const newPost = {
+                id: Date.now(),
+                user: currentUser,
+                content: content,
+                image: null,
+                likes: 0,
+                comments: 0,
+                timestamp: new Date().toISOString(),
+                liked: false
+            };
+
+            posts.unshift(newPost);
+            renderPosts();
+            createPostModal.classList.remove('show');
+            document.getElementById('postContent').value = '';
+            showToast('Post created successfully!', 'success');
+        }
+
+        // Switch Section
+        function switchSection(section) {
+            currentSection = section;
+            
+            // Update navigation
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.section === section) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Handle section-specific logic
+            switch(section) {
+                case 'home':
+                    renderPosts();
+                    break;
+                case 'search':
+                    showToast('Search feature coming soon!', 'error');
+                    break;
+                case 'chat':
+                    showToast('Chat feature coming soon!', 'error');
+                    break;
+                case 'profile':
+                    showToast('Profile feature coming soon!', 'error');
+                    break;
+            }
+        }
+
+        // Load Sample Data
+        function loadSampleData() {
+            posts = [
+                {
+                    id: 1,
+                    user: { name: 'John Doe', avatar: '👨‍💻' },
+                    content: 'Just finished building this amazing social media app! The future of social networking is here. 🚀',
+                    image: null,
+                    likes: 42,
+                    comments: 8,
+                    timestamp: '2024-01-15T10:30:00Z',
+                    liked: false
+                },
+                {
+                    id: 2,
+                    user: { name: 'Jane Smith', avatar: '👩‍🎨' },
+                    content: 'Beautiful sunset today! Nature never fails to amaze me. 🌅',
+                    image: 'sunset',
+                    likes: 128,
+                    comments: 15,
+                    timestamp: '2024-01-15T09:15:00Z',
+                    liked: true
+                },
+                {
+                    id: 3,
+                    user: { name: 'Mike Johnson', avatar: '👨‍🍳' },
+                    content: 'Made the most delicious pasta today! Cooking is my therapy. 🍝',
+                    image: 'food',
+                    likes: 89,
+                    comments: 12,
+                    timestamp: '2024-01-15T08:45:00Z',
+                    liked: false
+                }
+            ];
+        }
+
+        // Render Posts
+        function renderPosts() {
+            postsSection.innerHTML = posts.map(post => `
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-avatar">
+                            <span style="font-size: 18px;">${post.user.avatar}</span>
+                        </div>
+                        <div class="post-user-info">
+                            <div class="post-username">${post.user.name}</div>
+                            <div class="post-time">${formatTime(post.timestamp)}</div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        <div class="post-text">${post.content}</div>
+                        ${post.image ? `
+                            <div class="post-image">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="post-actions">
+                        <button class="post-action-btn ${post.liked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+                            <i class="fas fa-heart"></i>
+                            <span>${post.likes}</span>
+                        </button>
+                        <button class="post-action-btn" onclick="showComments(${post.id})">
+                            <i class="fas fa-comment"></i>
+                            <span>${post.comments}</span>
+                        </button>
+                        <button class="post-action-btn" onclick="sharePost(${post.id})">
+                            <i class="fas fa-share"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle Like
+        function toggleLike(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (post) {
+                post.liked = !post.liked;
+                post.likes += post.liked ? 1 : -1;
+                renderPosts();
+            }
+        }
+
+        // Show Comments
+        function showComments(postId) {
+            showToast('Comments feature coming soon!', 'error');
+        }
+
+        // Share Post
+        function sharePost(postId) {
+            showToast('Share feature coming soon!', 'error');
+        }
+
+        // Format Time
+        function formatTime(timestamp) {
+            const now = new Date();
+            const postTime = new Date(timestamp);
+            const diffInMinutes = Math.floor((now - postTime) / (1000 * 60));
+            
+            if (diffInMinutes < 1) return 'Just now';
+            if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+            if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+            return `${Math.floor(diffInMinutes / 1440)}d ago`;
+        }
+
+        // Show Toast
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize the app
+        initApp();
+    </script>
+</body>
+</html>
