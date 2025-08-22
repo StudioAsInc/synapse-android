@@ -409,10 +409,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             Glide.with(_context).load(url).into(imageView);
         } else {
-            double imageWidth = ((Number) attachment.get("width")).doubleValue();
-            double imageHeight = ((Number) attachment.get("height")).doubleValue();
-            double ratio = imageHeight / imageWidth;
-            int height = (int) (width * ratio);
+            int height;
+            Object widthObj = attachment.get("width");
+            Object heightObj = attachment.get("height");
+
+            if (widthObj != null && heightObj != null) {
+                double imageWidth = ((Number) widthObj).doubleValue();
+                double imageHeight = ((Number) heightObj).doubleValue();
+                if (imageWidth > 0) {
+                    double ratio = imageHeight / imageWidth;
+                    height = (int) (width * ratio);
+                } else {
+                    height = width; // Fallback to square
+                }
+            } else {
+                // Fallback for old messages without dimensions
+                height = width;
+            }
 
             imageView.setLayoutParams(new ViewGroup.LayoutParams(width, height));
             Glide.with(_context).load(url).override(width, height).into(imageView);
