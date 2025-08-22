@@ -1,4 +1,4 @@
-<LinearLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
@@ -95,4 +95,64 @@
 			android:background="@android:color/transparent"
 			tools:listitem="@layout/inbox_msg_list_cv_synapse" />
 	</LinearLayout>
-</LinearLayout>
+
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/fab_personal_chat"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom|end"
+		android:layout_marginEnd="16dp"
+		android:layout_marginBottom="160dp"
+		android:visibility="gone"
+		app:srcCompat="@drawable/ic_account_circle_48px"
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
+
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/fab_channel"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom|end"
+		android:layout_marginEnd="16dp"
+		android:layout_marginBottom="230dp"
+		android:visibility="gone"
+		app:srcCompat="@drawable/ic_chat_48px"
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
+
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/fab_community"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom|end"
+		android:layout_marginEnd="16dp"
+		android:layout_marginBottom="300dp"
+		android:visibility="gone"
+		app:srcCompat="@drawable/ic_account_circle_48px"
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
+
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/fab_create_group"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom|end"
+		android:layout_marginEnd="16dp"
+		android:layout_marginBottom="370dp"
+		android:visibility="gone"
+		app:srcCompat="@drawable/ic_add_48px"
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
+
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/fab_main"
+		style="@style/Widget.Material3.FloatingActionButton.Large.Primary"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom|end"
+		android:layout_margin="16dp"
+		app:srcCompat="@drawable/ic_add_48px"
+		app:tint="?attr/colorOnPrimary"
+		app:backgroundTint="?attr/colorPrimary" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
