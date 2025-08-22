@@ -919,7 +919,13 @@ public class ChatActivity extends AppCompatActivity {
 					ChatMessagesList.clear();
 					ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
 					for (DataSnapshot _data : dataSnapshot.getChildren()) {
-						initialMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
+						HashMap<String, Object> messageMap = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						if (messageMap != null) {
+							if (!messageMap.containsKey(KEY_KEY) || messageMap.get(KEY_KEY) == null) {
+								messageMap.put(KEY_KEY, _data.getKey());
+							}
+							initialMessages.add(messageMap);
+						}
 					}
 
 					if (!initialMessages.isEmpty() && initialMessages.get(0).get(KEY_KEY) != null) {
@@ -960,12 +966,18 @@ public class ChatActivity extends AppCompatActivity {
 			public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
 				if (dataSnapshot.exists()) {
 					HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-					if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-						// Simple check to avoid duplicate additions
-						if (ChatMessagesList.stream().noneMatch(msg -> msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY)))) {
-							ChatMessagesList.add(newMessage);
-							chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
-							ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+					if (newMessage != null) {
+						if (!newMessage.containsKey(KEY_KEY) || newMessage.get(KEY_KEY) == null) {
+							newMessage.put(KEY_KEY, dataSnapshot.getKey());
+						}
+
+						if (newMessage.get(KEY_KEY) != null) {
+							// Simple check to avoid duplicate additions
+							if (ChatMessagesList.stream().noneMatch(msg -> msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY)))) {
+								ChatMessagesList.add(newMessage);
+								chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+								ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+							}
 						}
 					}
 				}
@@ -1101,7 +1113,13 @@ public class ChatActivity extends AppCompatActivity {
 				if(dataSnapshot.exists()) {
 					ArrayList<HashMap<String, Object>> newMessages = new ArrayList<>();
 					for (DataSnapshot _data : dataSnapshot.getChildren()) {
-						newMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
+						HashMap<String, Object> messageMap = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						if (messageMap != null) {
+							if (!messageMap.containsKey(KEY_KEY) || messageMap.get(KEY_KEY) == null) {
+								messageMap.put(KEY_KEY, _data.getKey());
+							}
+							newMessages.add(messageMap);
+						}
 					}
 
 					if (!newMessages.isEmpty()) {
@@ -1152,8 +1170,14 @@ public class ChatActivity extends AppCompatActivity {
 						new android.os.Handler().postDelayed(new Runnable() {
 							@Override
 							public void run() {
+								Object messageKeyObj = _data.get(positionInt).get(KEY_KEY);
+								if (messageKeyObj == null) {
+									Toast.makeText(getApplicationContext(), "Error: Cannot delete message with a key.", Toast.LENGTH_SHORT).show();
+									return;
+								}
+								String messageKey = messageKeyObj.toString();
 								String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
-								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).child(_data.get(positionInt).get(KEY_KEY).toString()).removeValue();
+								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(chatId).child(messageKey).removeValue();
 							}
 						}, 500);
 					}
@@ -1350,6 +1374,7 @@ public class ChatActivity extends AppCompatActivity {
 
 	public void _send_btn() {
 		final String messageText = message_et.getText().toString().trim();
+		final int MAX_ATTACHMENTS_PER_MESSAGE = 4;
 
 		if (!attactmentmap.isEmpty()) {
 			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
@@ -1368,38 +1393,68 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			}
 
-			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
+			if (!allUploadsSuccessful) {
+				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
+				return;
+			}
+
+			if (successfulAttachments.isEmpty() && messageText.isEmpty()) {
+				return; // Nothing to send
+			}
+
+			String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+			int totalAttachments = successfulAttachments.size();
+			int chunkCount = (int) Math.ceil((double) totalAttachments / MAX_ATTACHMENTS_PER_MESSAGE);
+
+			if (chunkCount == 0 && !messageText.isEmpty()) {
+				// Handle case with only text message but attachment view was open
+				chunkCount = 1;
+			}
+
+
+			for (int i = 0; i < chunkCount; i++) {
+				int start = i * MAX_ATTACHMENTS_PER_MESSAGE;
+				int end = Math.min(start + MAX_ATTACHMENTS_PER_MESSAGE, totalAttachments);
+				boolean isLastChunk = (i == chunkCount - 1);
+
+				ArrayList<HashMap<String, Object>> chunkAttachments = new ArrayList<>(successfulAttachments.subList(start, end));
+
 				cc = Calendar.getInstance();
 				String uniqueMessageKey = main.push().getKey();
 
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
-				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
+				ChatSendMap.put(ATTACHMENTS_KEY, chunkAttachments);
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
 				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
 
-				String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+				if (isLastChunk) {
+					ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
+				} else {
+					ChatSendMap.put(MESSAGE_TEXT_KEY, ""); // No text for intermediate chunks
+				}
+
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-				.child(chatId)
-				.child(uniqueMessageKey)
-				.updateChildren(ChatSendMap);
+						.child(chatId)
+						.child(uniqueMessageKey)
+						.updateChildren(ChatSendMap);
 
-				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
-				_updateInbox(lastMessage);
-
-				attactmentmap.clear();
-				rv_attacmentList.getAdapter().notifyDataSetChanged();
-				attachmentLayoutListHolder.setVisibility(View.GONE);
-				message_et.setText("");
-				ReplyMessageID = "null";
-				mMessageReplyLayout.setVisibility(View.GONE);
-			} else {
-				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
+				if (isLastChunk) {
+					String lastMessage = messageText.isEmpty() ? totalAttachments + " attachment(s)" : messageText;
+					_updateInbox(lastMessage);
+				}
 			}
+			// Clear UI after sending all chunks
+			attactmentmap.clear();
+			rv_attacmentList.getAdapter().notifyDataSetChanged();
+			attachmentLayoutListHolder.setVisibility(View.GONE);
+			message_et.setText("");
+			ReplyMessageID = "null";
+			mMessageReplyLayout.setVisibility(View.GONE);
+
 
 		} else if (!messageText.isEmpty()) {
 			cc = Calendar.getInstance();
@@ -1651,10 +1706,6 @@ public class ChatActivity extends AppCompatActivity {
 						float translationX = Math.min(dX, swipeThreshold);
 						itemView.setTranslationX(translationX);
 
-						// Draw blue background
-						p.setColor(Color.parseColor("#3498db"));
-						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), itemView.getLeft() + translationX, (float) itemView.getBottom(), p);
-
 						// Draw reply icon
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
 						int iconTop = itemView.getTop() + iconMargin;
@@ -1668,10 +1719,6 @@ public class ChatActivity extends AppCompatActivity {
 						// Clamp the swipe to the threshold
 						float translationX = Math.max(dX, -swipeThreshold);
 						itemView.setTranslationX(translationX);
-
-						// Draw blue background
-						p.setColor(Color.parseColor("#3498db"));
-						c.drawRect((float) itemView.getRight() + translationX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
 
 						// Draw reply icon
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;

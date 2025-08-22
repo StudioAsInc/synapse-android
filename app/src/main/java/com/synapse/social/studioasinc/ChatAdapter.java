@@ -138,10 +138,30 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         if (holder.my_message_info != null && holder.date != null && holder.message_state != null) {
             boolean showMessageInfo = false;
-            if (position == _data.size() - 1) { 
+            if (position == _data.size() - 1) {
                 showMessageInfo = true;
             } else if (position + 1 < _data.size()) {
-                if (!_data.get(position + 1).get("uid").toString().equals(data.get("uid").toString()) || _data.get(position+1).containsKey("typingMessageStatus")) {
+                HashMap<String, Object> currentMsg = _data.get(position);
+                HashMap<String, Object> nextMsg = _data.get(position + 1);
+
+                boolean nextIsDifferentUser = !nextMsg.get("uid").toString().equals(currentMsg.get("uid").toString());
+                boolean nextIsTyping = nextMsg.containsKey("typingMessageStatus");
+
+                boolean timeIsSignificant = false;
+                if (currentMsg.containsKey("push_date") && nextMsg.containsKey("push_date")) {
+                    try {
+                        long currentTime = (long) Double.parseDouble(currentMsg.get("push_date").toString());
+                        long nextTime = (long) Double.parseDouble(nextMsg.get("push_date").toString());
+                        if ((nextTime - currentTime) > (5 * 60 * 1000)) { // 5 minutes
+                            timeIsSignificant = true;
+                        }
+                    } catch (NumberFormatException e) {
+                        // Handle case where push_date is not a valid double
+                        timeIsSignificant = false;
+                    }
+                }
+
+                if (nextIsDifferentUser || nextIsTyping || timeIsSignificant) {
                     showMessageInfo = true;
                 }
             }
