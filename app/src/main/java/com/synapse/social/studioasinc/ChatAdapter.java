@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import androidx.gridlayout.widget.GridLayout;
+import android.widget.RelativeLayout;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -285,30 +287,113 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         HashMap<String, Object> data = _data.get(position);
         String msgText = data.getOrDefault("message_text", "").toString();
         holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
-        if (!msgText.isEmpty()) textStylingUtil.applyStyling(msgText, holder.message_text);
-        
-        ArrayList<ImageView> imageViews = new ArrayList<>(Arrays.asList(holder.imageGrid1, holder.imageGrid2, holder.imageGrid3, holder.imageGrid4));
-        for (ImageView iv : imageViews) { iv.setVisibility(View.GONE); iv.setImageDrawable(null); }
-        if(holder.imageGridMoreOverlay != null) holder.imageGridMoreOverlay.setVisibility(View.GONE);
+        if (!msgText.isEmpty()) {
+            textStylingUtil.applyStyling(msgText, holder.message_text);
+        }
 
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
-        if (attachments != null && !attachments.isEmpty()) {
-            if(holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.VISIBLE);
-            int count = attachments.size();
-            int limit = Math.min(count, 4);
+        GridLayout gridLayout = holder.mediaGridLayout;
+        if (gridLayout == null) return;
+
+        gridLayout.removeAllViews();
+        gridLayout.setVisibility(View.VISIBLE);
+
+        if (attachments == null || attachments.isEmpty()) {
+            gridLayout.setVisibility(View.GONE);
+            return;
+        }
+
+        int count = attachments.size();
+        int colCount = 2;
+        int maxImages = 4;
+        int totalGridWidth = dpToPx(250);
+        int imageSize = totalGridWidth / 2;
+
+        gridLayout.setColumnCount(colCount);
+
+        if (count == 1) {
+            gridLayout.setColumnCount(1);
+            String url = attachments.get(0).get("url").toString();
+            ImageView iv = createImageView(url, true);
+            gridLayout.addView(iv);
+        } else if (count == 3) {
+            // First image spans 2 columns
+            ImageView iv1 = createImageView(attachments.get(0).get("url").toString(), false);
+            GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
+            params1.width = totalGridWidth;
+            params1.height = imageSize;
+            iv1.setLayoutParams(params1);
+            gridLayout.addView(iv1);
+
+            // Second and third images
+            for (int i = 1; i < 3; i++) {
+                ImageView iv = createImageView(attachments.get(i).get("url").toString(), false);
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
+                params.width = imageSize;
+                params.height = imageSize;
+                iv.setLayoutParams(params);
+                gridLayout.addView(iv);
+            }
+        } else { // 2, 4, or >4 images
+            int limit = Math.min(count, maxImages);
             for (int i = 0; i < limit; i++) {
                 String url = attachments.get(i).get("url").toString();
-                imageViews.get(i).setVisibility(View.VISIBLE);
-                Glide.with(_context).load(url).into(imageViews.get(i));
-                imageViews.get(i).setOnClickListener(v -> chatActivity._OpenWebView(url));
-            }
-            if (count > 4) {
-                if(holder.imageGridMoreOverlay != null) {
-                    holder.imageGridMoreOverlay.setVisibility(View.VISIBLE);
-                    holder.imageGridMoreText.setText("+" + (count - 4));
+                View viewToAdd;
+                ImageView iv = createImageView(url, false);
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                params.width = imageSize;
+                params.height = imageSize;
+                iv.setLayoutParams(params);
+
+                if (i == maxImages - 1 && count > maxImages) {
+                    RelativeLayout overlayContainer = new RelativeLayout(_context);
+                    overlayContainer.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
+                    overlayContainer.addView(iv);
+
+                    View overlay = new View(_context);
+                    overlay.setBackgroundColor(0x40000000); // Black overlay with 25% opacity
+                    overlayContainer.addView(overlay, new ViewGroup.LayoutParams(imageSize, imageSize));
+
+                    TextView moreText = new TextView(_context);
+                    moreText.setText("+" + (count - maxImages));
+                    moreText.setTextColor(Color.WHITE);
+                    moreText.setTextSize(24);
+                    moreText.setGravity(Gravity.CENTER);
+                    overlayContainer.addView(moreText, new ViewGroup.LayoutParams(imageSize, imageSize));
+                    viewToAdd = overlayContainer;
+                    viewToAdd.setOnClickListener(v -> {
+                        if (chatActivity != null) {
+                            // Potentially open a gallery view of all images
+                             chatActivity._OpenWebView(url);
+                        }
+                    });
+                } else {
+                    viewToAdd = iv;
                 }
+                gridLayout.addView(viewToAdd);
             }
         }
+    }
+
+    private ImageView createImageView(String url, boolean adjustBounds) {
+        ImageView imageView = new ImageView(_context);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+        if (adjustBounds) {
+            imageView.setAdjustViewBounds(true);
+            imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            Glide.with(_context).load(url).into(imageView);
+        } else {
+            int imageSize = dpToPx(125);
+            Glide.with(_context).load(url).override(imageSize, imageSize).centerCrop().into(imageView);
+        }
+
+        imageView.setOnClickListener(v -> {
+            if (chatActivity != null) {
+                chatActivity._OpenWebView(url);
+            }
+        });
+        return imageView;
     }
 
     private void bindVideoViewHolder(VideoViewHolder holder, int position) {
