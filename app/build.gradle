@@ -146,8 +146,8 @@ dependencies {
     implementation 'com.airbnb.android:lottie:6.6.0'
 
     // Local AARs
-    implementation files('libs/android-image-cropper-2.8.0.aar')
-    implementation files('libs/ucrop-2.2.8.aar')
+    implementation 'com.theartofdev.edmodo:android-image-cropper:2.8.0'
+    implementation 'com.github.yalantis:ucrop:2.2.8'
 
     // Kotlin coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
