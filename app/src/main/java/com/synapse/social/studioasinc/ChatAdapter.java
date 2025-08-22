@@ -339,6 +339,77 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         portraitIndex = i;
                         break;
                     }
+
+                }
+            }
+
+            if(portraitIndex != -1){
+                // Tall layout
+                ImageView ivHero = createImageView(attachments.get(portraitIndex));
+                GridLayout.LayoutParams paramsHero = new GridLayout.LayoutParams(GridLayout.spec(0, 2, 1f), GridLayout.spec(0, 1, 1f));
+                setAdaptiveLayoutParams(ivHero, attachments.get(portraitIndex), imageSize);
+                ivHero.setLayoutParams(paramsHero);
+                gridLayout.addView(ivHero);
+
+                int thumbIndex = 0;
+                for(int i=0; i<2; i++){
+                    if(thumbIndex == portraitIndex) thumbIndex++;
+                    ImageView ivThumb = createImageView(attachments.get(thumbIndex));
+                    GridLayout.LayoutParams paramsThumb = new GridLayout.LayoutParams(GridLayout.spec(i, 1, 1f), GridLayout.spec(1, 1, 1f));
+                    paramsThumb.width = imageSize;
+                    paramsThumb.height = imageSize;
+                    ivThumb.setLayoutParams(paramsThumb);
+                    Glide.with(_context).load(attachments.get(thumbIndex).get("url").toString()).override(imageSize, imageSize).centerCrop().into(ivThumb);
+                    gridLayout.addView(ivThumb);
+                    thumbIndex++;
+                }
+            } else {
+                // Wide layout
+                ImageView ivHero = createImageView(attachments.get(0));
+                GridLayout.LayoutParams paramsHero = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
+                setAdaptiveLayoutParams(ivHero, attachments.get(0), totalGridWidth);
+                ivHero.setLayoutParams(paramsHero);
+                gridLayout.addView(ivHero);
+
+                for (int i = 1; i < 3; i++) {
+                    ImageView ivThumb = createImageView(attachments.get(i));
+                    GridLayout.LayoutParams paramsThumb = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
+                    paramsThumb.width = imageSize;
+                    paramsThumb.height = imageSize;
+                    ivThumb.setLayoutParams(paramsThumb);
+                    Glide.with(_context).load(attachments.get(i).get("url").toString()).override(imageSize, imageSize).centerCrop().into(ivThumb);
+                    gridLayout.addView(ivThumb);
+                }
+            }
+        } else { // 2, 4, or >4 images
+            int limit = Math.min(count, maxImages);
+            for (int i = 0; i < limit; i++) {
+                ImageView iv = createImageView(attachments.get(i));
+                iv.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
+                Glide.with(_context).load(attachments.get(i).get("url").toString()).override(imageSize, imageSize).centerCrop().into(iv);
+
+                if (i == maxImages - 1 && count > maxImages) {
+                    RelativeLayout overlayContainer = new RelativeLayout(_context);
+                    overlayContainer.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
+                    overlayContainer.addView(iv);
+                    View overlay = new View(_context);
+                    overlay.setBackgroundColor(0x40000000);
+                    overlayContainer.addView(overlay, new ViewGroup.LayoutParams(imageSize, imageSize));
+                    TextView moreText = new TextView(_context);
+                    moreText.setText("+" + (count - maxImages));
+                    moreText.setTextColor(Color.WHITE);
+                    moreText.setTextSize(24);
+                    moreText.setGravity(Gravity.CENTER);
+                    overlayContainer.addView(moreText, new ViewGroup.LayoutParams(imageSize, imageSize));
+                    overlayContainer.setOnClickListener(v -> {
+                        if (chatActivity != null) {
+                             chatActivity._OpenWebView(attachments.get(3).get("url").toString());
+                        }
+                    });
+                    gridLayout.addView(overlayContainer);
+                } else {
+                    gridLayout.addView(iv);
+
                 }
             }
 

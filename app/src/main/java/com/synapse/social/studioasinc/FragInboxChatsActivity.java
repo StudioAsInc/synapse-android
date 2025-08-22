@@ -75,16 +75,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.appcompat.app.AppCompatDelegate;
-import com.bumptech.glide.Glide;
+import com.bumptech.glide.Glide;
 
 public class FragInboxChatsActivity extends Fragment {
-	
+
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
-	
+
 	private HashMap<String, Object> UserInfoCacheMap = new HashMap<>();
-	
+
 	private ArrayList<HashMap<String, Object>> ChatInboxList = new ArrayList<>();
-	
+
 	private LinearLayout linear2;
 	private HorizontalScrollView hscroll1;
 	private RecyclerView inboxListRecyclerView;
@@ -95,7 +95,7 @@ public class FragInboxChatsActivity extends Fragment {
 	private Chip linear31;
 	private Chip linear32;
 	private Chip linear33;
-	
+
 	private FirebaseAuth auth;
 	private OnCompleteListener<AuthResult> _auth_create_user_listener;
 	private OnCompleteListener<AuthResult> _auth_sign_in_listener;
@@ -110,7 +110,7 @@ public class FragInboxChatsActivity extends Fragment {
 	private DatabaseReference main = _firebase.getReference("skyline");
 	private ChildEventListener _main_child_listener;
 	private Intent intent = new Intent();
-	
+
 	@NonNull
 	@Override
 	public View onCreateView(@NonNull LayoutInflater _inflater, @Nullable ViewGroup _container, @Nullable Bundle _savedInstanceState) {
@@ -120,7 +120,7 @@ public class FragInboxChatsActivity extends Fragment {
 		initializeLogic();
 		return _view;
 	}
-	
+
 	private void initialize(Bundle _savedInstanceState, View _view) {
 		linear2 = _view.findViewById(R.id.linear2);
 		hscroll1 = _view.findViewById(R.id.hscroll1);
@@ -133,142 +133,142 @@ public class FragInboxChatsActivity extends Fragment {
 		linear32 = _view.findViewById(R.id.linear32);
 		linear33 = _view.findViewById(R.id.linear33);
 		auth = FirebaseAuth.getInstance();
-		
+
 		_main_child_listener = new ChildEventListener() {
 			@Override
 			public void onChildAdded(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildChanged(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildMoved(DataSnapshot _param1, String _param2) {
-				
+
 			}
-			
+
 			@Override
 			public void onChildRemoved(DataSnapshot _param1) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError _param1) {
 				final int _errorCode = _param1.getCode();
 				final String _errorMessage = _param1.getMessage();
-				
+
 			}
 		};
 		main.addChildEventListener(_main_child_listener);
-		
+
 		auth_updateEmailListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_updatePasswordListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_emailVerificationSentListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_deleteUserListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_phoneAuthListener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> task) {
 				final boolean _success = task.isSuccessful();
 				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_updateProfileListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_googleSignInListener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> task) {
 				final boolean _success = task.isSuccessful();
 				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_create_user_listener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_sign_in_listener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_reset_password_listener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
-				
+
 			}
 		};
 	}
-	
+
 	private void initializeLogic() {
 		inboxListRecyclerView.setAdapter(new InboxListRecyclerViewAdapter(ChatInboxList));
 		inboxListRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 		_getInboxReference();
 	}
-	
+
 	public void _ImgRound(final ImageView _imageview, final double _value) {
 		android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable ();
 		gd.setColor(android.R.color.transparent);
@@ -276,8 +276,8 @@ public class FragInboxChatsActivity extends Fragment {
 		_imageview.setClipToOutline(true);
 		_imageview.setBackground(gd);
 	}
-	
-	
+
+
 	public void _setTime(final double _currentTime, final TextView _txt) {
 		Calendar c1 = Calendar.getInstance();
 		Calendar c2 = Calendar.getInstance();
@@ -317,8 +317,8 @@ public class FragInboxChatsActivity extends Fragment {
 			}
 		}
 	}
-	
-	
+
+
 	public void _getInboxReference() {
 		Query getInboxRef = FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 		getInboxRef.addValueEventListener(new ValueEventListener() {
@@ -350,8 +350,8 @@ public class FragInboxChatsActivity extends Fragment {
 			}
 		});
 	}
-	
-	
+
+
 	public void _viewGraphics(final View _view, final int _onFocus, final int _onRipple, final double _radius, final double _stroke, final int _strokeColor) {
 		android.graphics.drawable.GradientDrawable GG = new android.graphics.drawable.GradientDrawable();
 		GG.setColor(_onFocus);
@@ -360,20 +360,20 @@ public class FragInboxChatsActivity extends Fragment {
 		android.graphics.drawable.RippleDrawable RE = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{ _onRipple}), GG, null);
 		_view.setBackground(RE);
 	}
-	
-	
+
+
 	public void _ImageColor(final ImageView _image, final int _color) {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
 	}
-	
+
 	public class InboxListRecyclerViewAdapter extends RecyclerView.Adapter<InboxListRecyclerViewAdapter.ViewHolder> {
-		
+
 		ArrayList<HashMap<String, Object>> _data;
-		
+
 		public InboxListRecyclerViewAdapter(ArrayList<HashMap<String, Object>> _arr) {
 			_data = _arr;
 		}
-		
+
 		@Override
 		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 			LayoutInflater _inflater = getActivity().getLayoutInflater();
@@ -382,11 +382,11 @@ public class FragInboxChatsActivity extends Fragment {
 			_v.setLayoutParams(_lp);
 			return new ViewHolder(_v);
 		}
-		
+
 		@Override
 		public void onBindViewHolder(ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
-			
+
 			final androidx.cardview.widget.CardView cardview1 = _view.findViewById(R.id.cardview1);
 			final LinearLayout main = _view.findViewById(R.id.main);
 			final LinearLayout body = _view.findViewById(R.id.body);
@@ -408,7 +408,7 @@ public class FragInboxChatsActivity extends Fragment {
 			final TextView last_message = _view.findViewById(R.id.last_message);
 			final ImageView message_state = _view.findViewById(R.id.message_state);
 			final TextView unread_messages_count_badge = _view.findViewById(R.id.unread_messages_count_badge);
-			
+
 			try{
 				RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 				_view.setLayoutParams(_lp);
@@ -661,7 +661,7 @@ public class FragInboxChatsActivity extends Fragment {
 							}
 						});
 					}
-					
+
 				}
 				main.setOnClickListener(new View.OnClickListener() {
 					@Override
@@ -676,16 +676,16 @@ public class FragInboxChatsActivity extends Fragment {
 				
 			}
 		}
-		
+
 		@Override
 		public int getItemCount() {
 			return _data.size();
 		}
-		
+
 		public class ViewHolder extends RecyclerView.ViewHolder {
 			public ViewHolder(View v) {
 				super(v);
 			}
 		}
 	}
-}
+}
