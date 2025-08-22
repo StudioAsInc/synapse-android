@@ -200,10 +200,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         holder.mRepliedMessageLayoutUsername.setText(
                                             repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName
                                         );
-                                        if (repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
+                                        if (isMyMessage) {
+                                            holder.mRepliedMessageLayoutUsername.setTextColor(Color.WHITE);
                                         } else {
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(0xFF424242);
+                                            holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
                                         }
                                     }
                                     if(holder.mRepliedMessageLayoutMessage != null) {
