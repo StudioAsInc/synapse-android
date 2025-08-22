@@ -327,14 +327,45 @@ public class ChatActivity extends AppCompatActivity {
 					.concat("```");
 					callGemini(prompt, true);
 				} else {
-					String replyText = mMessageReplyLayoutBodyRightMessage.getText().toString();
-					String prompt = "Read the message inside the backticks and write a natural, context-aware reply " +
-					"in the same language and tone. Keep it concise (1–3 short sentences). " +
-					"Do NOT include quotes, extra commentary, or disclaimers. Censor profanity. " +
-					"Output ONLY the reply text.\n```"
-					.concat(replyText)
-					.concat("```");
-					callGemini(prompt, false);
+					if (ReplyMessageID != null && !ReplyMessageID.equals("null")) {
+						int repliedMessageIndex = -1;
+						for (int i = 0; i < ChatMessagesList.size(); i++) {
+							if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(ReplyMessageID)) {
+								repliedMessageIndex = i;
+								break;
+							}
+						}
+
+						if (repliedMessageIndex != -1) {
+							StringBuilder contextBuilder = new StringBuilder();
+							contextBuilder.append("You are helping 'Me' to write a reply in a conversation with '").append(SecondUserName).append("'.\n");
+							contextBuilder.append("Here is the recent chat history:\n---\n");
+
+							int startIndex = Math.max(0, repliedMessageIndex - 10);
+							int endIndex = Math.min(ChatMessagesList.size() - 1, repliedMessageIndex + 10);
+
+							for (int i = startIndex; i <= endIndex; i++) {
+								HashMap<String, Object> message = ChatMessagesList.get(i);
+								String sender = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? "Me" : SecondUserName;
+								contextBuilder.append(sender).append(": ").append(message.get(MESSAGE_TEXT_KEY).toString()).append("\n");
+							}
+
+							contextBuilder.append("---\n");
+
+							String repliedMessageSender = mMessageReplyLayoutBodyRightUsername.getText().toString();
+							String repliedMessageText = mMessageReplyLayoutBodyRightMessage.getText().toString();
+
+							contextBuilder.append("I need to reply to this message from '").append(repliedMessageSender).append("': \"").append(repliedMessageText).append("\"\n");
+							contextBuilder.append("Based on the conversation history, please suggest a short, relevant reply from 'Me'.");
+
+							String prompt = contextBuilder.toString();
+							callGemini(prompt, false);
+						}
+					} else {
+						// Fallback for non-reply long-press
+						String prompt = "Suggest a generic, friendly greeting.";
+						callGemini(prompt, false);
+					}
 				}
 				return true;
 			}
@@ -667,6 +698,13 @@ public class ChatActivity extends AppCompatActivity {
 		_viewGraphics(edit, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(reply, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(summary, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
+
+		String messageTextForSummary = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
+		if (messageTextForSummary.length() > 200) {
+			summary.setVisibility(View.VISIBLE);
+		} else {
+			summary.setVisibility(View.GONE);
+		}
 		_viewGraphics(copy, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(delete, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		main.setOnClickListener(new View.OnClickListener() {
@@ -695,7 +733,12 @@ public class ChatActivity extends AppCompatActivity {
 			public void onClick(View _view) {
 				String messageText = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
 				String prompt = "Summarize the following text in a few sentences:\n\n" + messageText;
-				callGeminiForSummary(prompt);
+
+				RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
+				if (viewHolder instanceof BaseMessageViewHolder) {
+					callGeminiForSummary(prompt, (BaseMessageViewHolder) viewHolder);
+				}
+
 				pop1.dismiss();
 			}
 		});
@@ -1674,7 +1717,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 	}
 
-	private void callGeminiForSummary(String prompt) {
+	private void callGeminiForSummary(String prompt, final BaseMessageViewHolder viewHolder) {
 		Gemini summaryGemini = new Gemini.Builder(this)
 				.model(GEMINI_MODEL)
 				.tone(GEMINI_TONE)
@@ -1685,21 +1728,33 @@ public class ChatActivity extends AppCompatActivity {
 		summaryGemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
-				SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response);
-				bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
+				runOnUiThread(() -> {
+					if (viewHolder != null) {
+						viewHolder.stopShimmer();
+					}
+					SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response);
+					bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
+				});
 			}
 
 			@Override
 			public void onError(String error) {
-				Log.e("GeminiSummary", "Error: " + error);
 				runOnUiThread(() -> {
+					if (viewHolder != null) {
+						viewHolder.stopShimmer();
+					}
+					Log.e("GeminiSummary", "Error: " + error);
 					Toast.makeText(getApplicationContext(), "Error getting summary: " + error, Toast.LENGTH_SHORT).show();
 				});
 			}
 
 			@Override
 			public void onThinking() {
-				// Can show a loading indicator here
+				runOnUiThread(() -> {
+					if (viewHolder != null) {
+						viewHolder.startShimmer();
+					}
+				});
 			}
 		});
 	}
