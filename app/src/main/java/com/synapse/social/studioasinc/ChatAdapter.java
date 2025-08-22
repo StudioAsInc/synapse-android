@@ -422,7 +422,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
         }
-    }
+    }}
 
     private void setAdaptiveLayoutParams(ImageView iv, HashMap<String, Object> attachment, int targetWidth) {
         Object widthObj = attachment.get("width");
