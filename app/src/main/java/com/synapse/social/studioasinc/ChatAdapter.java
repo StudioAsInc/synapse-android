@@ -381,13 +381,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private ImageView createImageView(String url, boolean adjustBounds) {
         ImageView imageView = new ImageView(_context);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
         if (adjustBounds) {
             imageView.setAdjustViewBounds(true);
+            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             Glide.with(_context).load(url).into(imageView);
         } else {
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             int imageSize = dpToPx(125);
             Glide.with(_context).load(url).override(imageSize, imageSize).centerCrop().into(imageView);
         }
