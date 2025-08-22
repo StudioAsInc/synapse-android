@@ -6,14 +6,6 @@ plugins {
     id 'com.google.firebase.crashlytics' version '3.0.3' apply false
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-    }
-}
-
 tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }

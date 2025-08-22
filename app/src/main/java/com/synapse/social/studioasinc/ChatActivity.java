@@ -83,7 +83,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
 import com.synapse.social.studioasinc.FadeEditText;
-import com.plattysoft.leonids.ParticleSystem;
 import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
 import com.synapse.social.studioasinc.StorageUtil;
@@ -1138,44 +1137,17 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _DeleteMessageDialog(final ArrayList<HashMap<String, Object>> _data, final double _position) {
+		// Material Delete Dialog
 		MaterialAlertDialogBuilder zorry = new MaterialAlertDialogBuilder(ChatActivity.this);
+
 		zorry.setTitle("Delete");
-		zorry.setMessage("Are you sure you want to delete this message? Please confirm your decision.");
+		zorry.setMessage("Are you sure you want to delete this message. Please confirm your decision.");
 		zorry.setIcon(R.drawable.popup_ic_3);
 		zorry.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface _dialog, int _which) {
-				final int positionInt = (int) _position;
-				if (positionInt >= 0 && positionInt < _data.size()) {
-					RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(positionInt);
-					if (viewHolder != null) {
-						final View viewToSnap = viewHolder.itemView;
-						new ParticleSystem(ChatActivity.this, 80, R.drawable.ic_delete_48px, 3000)
-								.setSpeedModuleAndAngleRange(0.05f, 0.2f, 0, 360)
-								.setRotationSpeedRange(90, 180)
-								.setAcceleration(0.00005f, 90)
-								.setFadeOut(200, new LinearInterpolator())
-								.oneShot(viewToSnap, 80);
-
-						final View viewToSnap = viewHolder.itemView;
-						new ParticleSystem(ChatActivity.this, 80, R.drawable.ic_delete_48px, 1000)
-								.setSpeedModuleAndAngleRange(0.07f, 0.3f, 0, 360)
-								.setRotationSpeedRange(90, 180)
-								.setAcceleration(0.00005f, 90)
-								.setFadeOut(800, new LinearInterpolator())
-								.oneShot(viewToSnap, 100);
-
-						new android.os.Handler().postDelayed(new Runnable() {
-							@Override
-							public void run() {
-								viewToSnap.setVisibility(View.INVISIBLE);
-								String messageKey = _data.get(positionInt).get(KEY_KEY).toString();
-								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(messageKey).removeValue();
-								_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(messageKey).removeValue();
-							}
-						}, 1000);
-					}
-				}
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
 			}
 		});
 		zorry.setNegativeButton("No", new DialogInterface.OnClickListener() {
