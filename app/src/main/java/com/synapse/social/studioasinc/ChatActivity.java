@@ -1682,8 +1682,15 @@ public class ChatActivity extends AppCompatActivity {
 		itemTouchHelper.attachToRecyclerView(ChatMessagesListRecycler);
 	}
 
+	public String getChatId(String uid1, String uid2) {
+		if (uid1.compareTo(uid2) > 0) {
+			return uid1 + uid2;
+		} else {
+			return uid2 + uid1;
+		}
+	}
 
-	public void _scrollToMessage(final String _messageKey) {
+	public void scrollToMessage(final String _messageKey) {
 		int position = -1;
 		for (int i = 0; i < ChatMessagesList.size(); i++) {
 			if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(_messageKey)) {
@@ -1958,18 +1965,11 @@ public class ChatActivity extends AppCompatActivity {
 			View _view = _holder.itemView;
 
 			final androidx.cardview.widget.CardView cardMediaItem = _view.findViewById(R.id.cardMediaItem);
-			final LinearLayout containerLL = _view.findViewById(R.id.containerLL);
 			final RelativeLayout imageWrapperRL = _view.findViewById(R.id.imageWrapperRL);
 			final ImageView previewIV = _view.findViewById(R.id.previewIV);
 			final LinearLayout overlayLL = _view.findViewById(R.id.overlayLL);
-			final RelativeLayout progressWrapperRL = _view.findViewById(R.id.progressWrapperRL);
 			final com.google.android.material.progressindicator.CircularProgressIndicator uploadProgressCPI = _view.findViewById(R.id.uploadProgressCPI);
-			final LinearLayout topControlsLL = _view.findViewById(R.id.topControlsLL);
-			final LinearLayout linear4 = _view.findViewById(R.id.linear4);
-			final LinearLayout linear5 = _view.findViewById(R.id.linear5);
-			final LinearLayout linear6 = _view.findViewById(R.id.linear6);
 			final ImageView closeIV = _view.findViewById(R.id.closeIV);
-			final TextView textview1 = _view.findViewById(R.id.textview1);
 
 			// Get the data map using the block's parameters
 			HashMap<String, Object> itemData = attactmentmap.get(_position);
