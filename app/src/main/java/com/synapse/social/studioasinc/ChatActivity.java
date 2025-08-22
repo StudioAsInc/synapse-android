@@ -667,6 +667,13 @@ public class ChatActivity extends AppCompatActivity {
 		_viewGraphics(edit, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(reply, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(summary, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
+
+		String messageTextForSummary = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
+		if (messageTextForSummary.length() > 200) {
+			summary.setVisibility(View.VISIBLE);
+		} else {
+			summary.setVisibility(View.GONE);
+		}
 		_viewGraphics(copy, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(delete, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		main.setOnClickListener(new View.OnClickListener() {
