@@ -1,3 +1,4 @@
+// Backend, this will be uploaded into cloudflare workers
 // Cloudflare Worker for handling push notifications via OneSignal
 // This worker receives notification requests and forwards them to OneSignal's REST API
 
