@@ -456,10 +456,7 @@ public class ChatActivity extends AppCompatActivity {
 
 			}
 
-			@Override
-			public void afterTextChanged(Editable _param1) {
 
-			}
 		});
 
 		galleryBtn.setOnClickListener(new View.OnClickListener() {

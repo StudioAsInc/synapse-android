@@ -89,17 +89,11 @@ class VideoViewHolder extends BaseMessageViewHolder {
     }
 }
 
-class TypingViewHolder extends RecyclerView.ViewHolder {
+class TypingViewHolder extends BaseMessageViewHolder {
     LottieAnimationView lottie_typing;
-    CardView mProfileCard;
-    ImageView mProfileImage;
-    LinearLayout messageBG;
     public TypingViewHolder(View view) {
         super(view);
         lottie_typing = view.findViewById(R.id.lottie_typing);
-        mProfileCard = view.findViewById(R.id.mProfileCard);
-        mProfileImage = view.findViewById(R.id.mProfileImage);
-        messageBG = view.findViewById(R.id.messageBG);
     }
 }
 
