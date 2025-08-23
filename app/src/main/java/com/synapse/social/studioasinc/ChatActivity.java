@@ -1747,10 +1747,23 @@ public class ChatActivity extends AppCompatActivity {
 
 			@Override
 			public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-				// This is triggered when the swipe is completed.
-				_showReplyUI(viewHolder.getAdapterPosition());
-				// The adapter needs to be notified to redraw the item back to its original state.
-				chatAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
+				int position = viewHolder.getAdapterPosition();
+				if (position < 0 || position >= ChatMessagesList.size()) {
+					return; // Invalid position, do nothing.
+				}
+
+				// Get the item and check if it's a real message with a key.
+				HashMap<String, Object> messageData = ChatMessagesList.get(position);
+				if (messageData == null || !messageData.containsKey("key") || messageData.get("key") == null) {
+					// This is not a real message (e.g., typing indicator, loading view).
+					// We just notify the adapter to redraw the item back to its original state.
+					chatAdapter.notifyItemChanged(position);
+					return;
+				}
+
+				// If it's a real message, proceed with the reply UI.
+				_showReplyUI(position);
+				chatAdapter.notifyItemChanged(position);
 			}
 
 			@Override
