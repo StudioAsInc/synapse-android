@@ -494,10 +494,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void bindTypingViewHolder(TypingViewHolder holder, int position) {
+        // Create a subtle typing bubble background
         android.graphics.drawable.GradientDrawable bubbleDrawable = new android.graphics.drawable.GradientDrawable();
-        bubbleDrawable.setColor(Color.TRANSPARENT);
+        bubbleDrawable.setColor(0xFFF5F5F5); // Light gray background
+        bubbleDrawable.setCornerRadius(dpToPx(20)); // Rounded corners
         if(holder.messageBG != null) holder.messageBG.setBackground(bubbleDrawable);
 
+        // Set profile image for the typing user
         if (holder.mProfileImage != null) {
             if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
                 Glide.with(_context).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
@@ -507,7 +510,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 holder.mProfileImage.setImageResource(R.drawable.avatar);
             }
         }
+        
+        // Show profile card for typing indicator
         if(holder.mProfileCard != null) holder.mProfileCard.setVisibility(View.VISIBLE);
+        
+        // Start the typing animation
+        if (holder.lottie_typing != null) {
+            holder.lottie_typing.setVisibility(View.VISIBLE);
+            holder.lottie_typing.playAnimation();
+        }
+        
+        // Set the typing indicator to show it's from the other user
+        // The typing indicator will appear on the left side like other user messages
+        if(holder.body != null) {
+            holder.body.setGravity(Gravity.START);
+        }
     }
     
     private void bindLinkPreviewViewHolder(LinkPreviewViewHolder holder, int position) {

@@ -212,6 +212,10 @@ public class ChatActivity extends AppCompatActivity {
 	private TimerTask timer;
 	private DatabaseReference blocklist = _firebase.getReference(SKYLINE_REF).child(BLOCKLIST_REF);
 	private ChildEventListener _blocklist_child_listener;
+	private ValueEventListener _typingStatusListener;
+	private String _currentTypingUserId = null;
+	private Handler _typingTimeoutHandler = new Handler();
+	private static final long TYPING_TIMEOUT_DELAY = 5000; // 5 seconds
 	private SharedPreferences blocked;
 	private SharedPreferences theme;
 	private Intent i = new Intent();
@@ -411,14 +415,38 @@ public class ChatActivity extends AppCompatActivity {
 					_TransitionManager(message_input_overall_container, 125);
 					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
 				} else {
-					typingSnd = new HashMap<>();
-					typingSnd.put(UID_KEY, auth.getCurrentUser().getUid());
-					typingSnd.put("typingMessageStatus", "true");
-					typingRef.updateChildren(typingSnd);
-					_TransitionManager(message_input_overall_container, 125);
+					// Only send typing status if we haven't already
+					if (!typingSnd.containsKey("typingMessageStatus") || !"true".equals(typingSnd.get("typingMessageStatus"))) {
+						typingSnd = new HashMap<>();
+						typingSnd.put(UID_KEY, auth.getCurrentUser().getUid());
+						typingSnd.put("typingMessageStatus", "true");
+						typingRef.updateChildren(typingSnd);
+					}
+					_setMargin(message_et, 0, 7, 0, 0);
 					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
 
 					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)60, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
+				}
+				
+				// Reset typing timeout on each keystroke for more accurate typing detection
+				_typingTimeoutHandler.removeCallbacksAndMessages(null);
+				if (_charSeq.length() > 0) {
+					_typingTimeoutHandler.postDelayed(() -> {
+						// Only remove typing status if user hasn't typed in a while
+						if (message_et.getText().length() == _charSeq.length()) {
+							DatabaseReference typingRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF);
+							typingRef2.removeValue();
+							typingSnd.clear();
+						}
+					}, 1500); // 1.5 second delay for more responsive typing detection
+				}
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				// Clear typing status immediately when text is empty
+				if (s.length() == 0) {
+					typingSnd.clear();
 				}
 			}
 
@@ -630,6 +658,9 @@ public class ChatActivity extends AppCompatActivity {
 			String recipientUid = getIntent().getStringExtra("uid");
 			PresenceManager.setChattingWith(auth.getCurrentUser().getUid(), recipientUid);
 		}
+		
+		// Attach typing status listener
+		_attachTypingStatusListener();
 	}
 
 	@Override
@@ -637,6 +668,7 @@ public class ChatActivity extends AppCompatActivity {
 		super.onStop();
 		_detachChatListener();
 		_detachUserStatusListener();
+		_detachTypingStatusListener();
 		blocklist.removeEventListener(_blocklist_child_listener);
 		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
 	}
@@ -981,6 +1013,21 @@ public class ChatActivity extends AppCompatActivity {
 
 	private void _attachChatListener() {
 		if (_chat_child_listener == null) {
+			// Add scroll listener to handle typing animation performance
+			ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+				@Override
+				public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+					super.onScrollStateChanged(recyclerView, newState);
+					if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+						// Resume typing animation when scrolling stops
+						_resumeTypingAnimation();
+					} else {
+						// Pause typing animation when scrolling
+						_pauseTypingAnimation();
+					}
+				}
+			});
+			
 			_chat_child_listener = new ChildEventListener() {
 				@Override
 				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
@@ -997,6 +1044,9 @@ public class ChatActivity extends AppCompatActivity {
 							}
 
 							if (!exists) {
+								// Hide typing indicator when a new message arrives
+								_hideTypingIndicator();
+								
 								if (ChatMessagesListRecycler.getVisibility() == View.GONE) {
 									ChatMessagesListRecycler.setVisibility(View.VISIBLE);
 									noChatText.setVisibility(View.GONE);
@@ -1095,6 +1145,118 @@ public class ChatActivity extends AppCompatActivity {
 		if (_userStatusListener != null) {
 			userRef.removeEventListener(_userStatusListener);
 			_userStatusListener = null;
+		}
+	}
+
+	private void _attachTypingStatusListener() {
+		if (_typingStatusListener == null) {
+			String recipientUid = getIntent().getStringExtra("uid");
+			DatabaseReference typingRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF);
+			
+			_typingStatusListener = new ValueEventListener() {
+				@Override
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+					if (dataSnapshot.exists()) {
+						HashMap<String, Object> typingData = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						if (typingData != null && typingData.containsKey("typingMessageStatus")) {
+							String typingUserId = typingData.get("uid").toString();
+							// Only show typing indicator if it's from the other user
+							if (!typingUserId.equals(auth.getCurrentUser().getUid())) {
+								_showTypingIndicator(typingUserId);
+							}
+						}
+					} else {
+						_hideTypingIndicator();
+					}
+				}
+
+				@Override
+				public void onCancelled(@NonNull DatabaseError databaseError) {
+					Log.e("ChatActivity", "Typing status listener cancelled: " + databaseError.getMessage());
+				}
+			};
+			typingRef.addValueEventListener(_typingStatusListener);
+		}
+	}
+
+	private void _detachTypingStatusListener() {
+		if (_typingStatusListener != null) {
+			String recipientUid = getIntent().getStringExtra("uid");
+			DatabaseReference typingRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF);
+			typingRef.removeEventListener(_typingStatusListener);
+			_typingStatusListener = null;
+		}
+	}
+
+	private void _showTypingIndicator(String userId) {
+		if (_currentTypingUserId == null || !_currentTypingUserId.equals(userId)) {
+			_currentTypingUserId = userId;
+			
+			// Remove any existing typing indicator
+			_removeTypingIndicator();
+			
+			// Add typing indicator to the end of the list
+			HashMap<String, Object> typingIndicator = new HashMap<>();
+			typingIndicator.put("typingMessageStatus", "true");
+			typingIndicator.put("uid", userId);
+			typingIndicator.put("timestamp", System.currentTimeMillis());
+			
+			ChatMessagesList.add(typingIndicator);
+			chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+			
+			// Only auto-scroll if user is at the bottom
+			if (ChatMessagesListRecycler.canScrollVertically(1)) {
+				ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+			}
+			
+			// Set timeout to automatically hide typing indicator
+			_typingTimeoutHandler.postDelayed(() -> _hideTypingIndicator(), TYPING_TIMEOUT_DELAY);
+		} else {
+			// Reset the timeout if the same user is still typing
+			_typingTimeoutHandler.removeCallbacksAndMessages(null);
+			_typingTimeoutHandler.postDelayed(() -> _hideTypingIndicator(), TYPING_TIMEOUT_DELAY);
+		}
+	}
+
+	private void _hideTypingIndicator() {
+		if (_currentTypingUserId != null) {
+			_removeTypingIndicator();
+			_currentTypingUserId = null;
+			_typingTimeoutHandler.removeCallbacksAndMessages(null);
+		}
+	}
+
+	private void _removeTypingIndicator() {
+		// Remove typing indicator from the list
+		for (int i = ChatMessagesList.size() - 1; i >= 0; i--) {
+			HashMap<String, Object> message = ChatMessagesList.get(i);
+			if (message.containsKey("typingMessageStatus")) {
+				ChatMessagesList.remove(i);
+				chatAdapter.notifyItemRemoved(i);
+				break;
+			}
+		}
+	}
+
+	private void _pauseTypingAnimation() {
+		// Pause typing animation for better performance during scrolling
+		RecyclerView.ViewHolder holder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(ChatMessagesList.size() - 1);
+		if (holder instanceof TypingViewHolder) {
+			TypingViewHolder typingHolder = (TypingViewHolder) holder;
+			if (typingHolder.lottie_typing != null) {
+				typingHolder.lottie_typing.pauseAnimation();
+			}
+		}
+	}
+
+	private void _resumeTypingAnimation() {
+		// Resume typing animation when scrolling stops
+		RecyclerView.ViewHolder holder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(ChatMessagesList.size() - 1);
+		if (holder instanceof TypingViewHolder) {
+			TypingViewHolder typingHolder = (TypingViewHolder) holder;
+			if (typingHolder.lottie_typing != null) {
+				typingHolder.lottie_typing.resumeAnimation();
+			}
 		}
 	}
 
@@ -1498,6 +1660,9 @@ public class ChatActivity extends AppCompatActivity {
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 
+				// Remove typing status when sending message
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+
 				// Add message to local list immediately for instant display
 				ChatMessagesList.add(ChatSendMap);
 				chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
@@ -1537,6 +1702,9 @@ public class ChatActivity extends AppCompatActivity {
 			// Send to both chat nodes
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+
+			// Remove typing status when sending message
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
 
 			// Add message to local list immediately for instant display
 			ChatMessagesList.add(ChatSendMap);
