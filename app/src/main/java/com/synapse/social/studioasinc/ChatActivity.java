@@ -2371,7 +2371,7 @@ public class ChatActivity extends AppCompatActivity {
 		 * Helper method to get the fixed height in pixels
 		 */
 		private int getItemHeightInPixels() {
-			float density = getResources().getDisplayMetrics().density;
+			float density = ChatActivity.this.getResources().getDisplayMetrics().density;
 			return (int) (ITEM_HEIGHT_DP * density);
 		}
 
