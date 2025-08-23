@@ -667,6 +667,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		// Set user status back to online when leaving the chat screen
 		if (auth.getCurrentUser() != null) {
+			Log.d("ChatActivity", "Setting user status back to online (leaving chat)");
 			PresenceManager.stopChatting(auth.getCurrentUser().getUid());
 		}
 	}
@@ -679,6 +680,7 @@ public class ChatActivity extends AppCompatActivity {
 		// Set user status to indicate they are in this chat
 		if (auth.getCurrentUser() != null) {
 			String recipientUid = getIntent().getStringExtra("uid");
+			Log.d("ChatActivity", "Setting user status to chatting_with_" + recipientUid);
 			PresenceManager.setChattingWith(auth.getCurrentUser().getUid(), recipientUid);
 		}
 		

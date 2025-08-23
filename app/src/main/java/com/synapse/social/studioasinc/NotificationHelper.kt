@@ -38,19 +38,21 @@ object NotificationHelper {
         recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
             val recipientStatus = dataSnapshot.getValue(String::class.java)
             val suppressStatus = "chatting_with_$senderUid"
+            
+            Log.d(TAG, "Checking notification status - Recipient: $recipientUid, Status: $recipientStatus, Suppress: $suppressStatus")
 
             // Don't send if recipient is in this chat.
             if (suppressStatus == recipientStatus) {
-                Log.i(TAG, "Recipient is in chat. Suppressing notification.")
+                Log.i(TAG, "✅ Notification SUPPRESSED - Recipient is in chat with sender")
             } else {
                 // Send in all other cases (offline, online, null).
-                Log.i(TAG, "Recipient not in chat. Sending notification.")
+                Log.i(TAG, "📱 Notification SENT - Recipient not in chat (Status: $recipientStatus)")
                 triggerPushNotification(recipientOneSignalPlayerId, message, messageType, attachments, senderName)
             }
         }.addOnFailureListener { e ->
-            // On error, default to sending notification.
-            Log.e(TAG, "Status check failed. Defaulting to send notification.", e)
-            triggerPushNotification(recipientOneSignalPlayerId, message)
+            // On error, be conservative and don't send notification to avoid spam
+            Log.e(TAG, "Status check failed. Not sending notification to avoid spam.", e)
+            // Don't send notification on error - better to miss one than spam
         }
 
         // TODO: Save the actual message to your DB here.
