@@ -521,6 +521,16 @@ public class ChatActivity extends AppCompatActivity {
 		chatAdapter = new ChatAdapter(ChatMessagesList);
 		chatAdapter.setChatActivity(this);
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
+		
+		// Disable item animations for instant updates
+		ChatMessagesListRecycler.setItemAnimator(null);
+		
+		// Additional performance optimizations for real-time updates
+		ChatMessagesListRecycler.setHasFixedSize(true);
+		ChatMessagesListRecycler.setNestedScrollingEnabled(false);
+		
+		// Force immediate layout updates
+		ChatMessagesListRecycler.setLayoutFrozen(false);
 		chatMessagesRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY));
 		userRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(getIntent().getStringExtra(UID_KEY));
 		// Initialize with custom settings
@@ -2084,7 +2094,7 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}
 		if (position != -1) {
-			ChatMessagesListRecycler.smoothScrollToPosition(position);
+			ChatMessagesListRecycler.scrollToPosition(position);
 		} else {
 			Toast.makeText(getApplicationContext(), "Original message not found", Toast.LENGTH_SHORT).show();
 		}
