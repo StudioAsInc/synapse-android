@@ -33,42 +33,18 @@
 			android:supportsPictureInPicture="true"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
-			android:name=".ui.settings.JavaSettingsActivity"
+			android:name=".SettingsActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
-            android:name=".ui.settings.BlockedUsersActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
-            android:hardwareAccelerated="true"
-            android:supportsPictureInPicture="true"
-            android:windowSoftInputMode="stateHidden" />
-		<activity
-            android:name=".ui.settings.MutedUsersActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
-            android:hardwareAccelerated="true"
-            android:supportsPictureInPicture="true"
-            android:windowSoftInputMode="stateHidden" />
-		<activity
-            android:name=".ui.settings.EmailPrefsActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
-            android:hardwareAccelerated="true"
-            android:supportsPictureInPicture="true"
-            android:windowSoftInputMode="stateHidden" />
-		<activity
-            android:name=".ui.settings.ChangePasswordActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
-            android:hardwareAccelerated="true"
-            android:supportsPictureInPicture="true"
-            android:windowSoftInputMode="stateHidden" />
-		<activity
-            android:name=".ui.settings.OpenSourceLicensesActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
-            android:hardwareAccelerated="true"
-            android:supportsPictureInPicture="true"
-            android:windowSoftInputMode="stateHidden" />
-		<activity
+			android:name=".ui.settings.JavaSettingsActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:windowSoftInputMode="stateHidden" />
+        <activity
             android:name=".ui.settings.BlockedUsersActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
             android:hardwareAccelerated="true"
@@ -264,12 +240,6 @@
 			android:screenOrientation="portrait" />
 		<activity
 			android:name=".LabsActivity"
-			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
-			android:hardwareAccelerated="true"
-			android:supportsPictureInPicture="true"
-			android:windowSoftInputMode="stateHidden" />
-		<activity
-			android:name=".SettingsActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
