@@ -20,8 +20,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.onesignal.OneSignal;
 import com.onesignal.debug.LogLevel;
-import com.onesignal.user.state.PushSubscriptionChangedState;
-import com.onesignal.user.state.PushSubscriptionObserver;
+import com.onesignal.user.subscriptions.IPushSubscriptionObserver;
+import com.onesignal.user.subscriptions.PushSubscriptionChangedState;
 
 import java.util.Calendar;
 
@@ -81,12 +81,12 @@ public class SynapseApp extends Application {
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
 
         // Add a subscription observer to get the Player ID and save it to Firestore
-        OneSignal.getUser().getPushSubscription().addObserver(new PushSubscriptionObserver() {
+        OneSignal.getUser().getPushSubscription().addObserver(new IPushSubscriptionObserver() {
             @Override
             public void onPushSubscriptionChange(@NonNull PushSubscriptionChangedState state) {
                 if (state.getCurrent().isSubscribed()) {
                     String playerId = state.getCurrent().getId();
-                    if (mAuth.getCurrentUser() != null) {
+                    if (mAuth.getCurrentUser() != null && playerId != null) {
                         String userUid = mAuth.getCurrentUser().getUid();
                         OneSignalManager.savePlayerIdToFirestore(userUid, playerId);
                     }
