@@ -11,6 +11,7 @@
 
 package com.synapse.social.studioasinc;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
