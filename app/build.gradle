@@ -139,7 +139,10 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:5.0.0-rc01'
 
     // Networking
-    implementation 'io.grpc:grpc-android:1.52.1' // For Firestore networking
+    implementation 'io.grpc:grpc-android:1.57.2'
+    implementation 'io.grpc:grpc-okhttp:1.57.2'
+    implementation 'io.grpc:grpc-protobuf-lite:1.57.2'
+    implementation 'io.grpc:grpc-stub:1.57.2'
     implementation 'com.squareup.okhttp3:okhttp:5.1.0'
     implementation 'com.google.code.gson:gson:2.13.1'
 
