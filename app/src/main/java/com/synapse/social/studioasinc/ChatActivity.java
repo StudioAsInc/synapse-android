@@ -608,20 +608,30 @@ public class ChatActivity extends AppCompatActivity {
 					int startingPosition = attactmentmap.size();
 
 					for (String filePath : resolvedFilePaths) {
-						HashMap<String, Object> itemMap = new HashMap<>();
-						itemMap.put("localPath", filePath);
-						itemMap.put("uploadState", "pending");
+						if (filePath != null && !filePath.isEmpty()) {
+							HashMap<String, Object> itemMap = new HashMap<>();
+							itemMap.put("localPath", filePath);
+							itemMap.put("uploadState", "pending");
 
-						BitmapFactory.Options options = new BitmapFactory.Options();
-						options.inJustDecodeBounds = true;
-						BitmapFactory.decodeFile(filePath, options);
-						itemMap.put("width", options.outWidth);
-						itemMap.put("height", options.outHeight);
+							try {
+								BitmapFactory.Options options = new BitmapFactory.Options();
+								options.inJustDecodeBounds = true;
+								BitmapFactory.decodeFile(filePath, options);
+								itemMap.put("width", options.outWidth > 0 ? options.outWidth : 100);
+								itemMap.put("height", options.outHeight > 0 ? options.outHeight : 100);
+							} catch (Exception e) {
+								Log.e("ChatActivity", "Error reading image dimensions: " + e.getMessage());
+								itemMap.put("width", 100);
+								itemMap.put("height", 100);
+							}
 
-						attactmentmap.add(itemMap);
+							attactmentmap.add(itemMap);
+						}
 					}
 
-					rv_attacmentList.getAdapter().notifyItemRangeInserted(startingPosition, resolvedFilePaths.size());
+					if (rv_attacmentList.getAdapter() != null) {
+						rv_attacmentList.getAdapter().notifyItemRangeInserted(startingPosition, resolvedFilePaths.size());
+					}
 
 					for (int i = 0; i < resolvedFilePaths.size(); i++) {
 						_startUploadForItem(startingPosition + i);
@@ -961,9 +971,16 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if (dataSnapshot.exists()) {
-					FirstUserName = dataSnapshot.child("nickname").getValue(String.class).equals("null")
-					? "@" + dataSnapshot.child("username").getValue(String.class)
-					: dataSnapshot.child("nickname").getValue(String.class);
+					String nickname = dataSnapshot.child("nickname").getValue(String.class);
+					String username = dataSnapshot.child("username").getValue(String.class);
+					
+					if (nickname != null && !"null".equals(nickname)) {
+						FirstUserName = nickname;
+					} else if (username != null && !"null".equals(username)) {
+						FirstUserName = "@" + username;
+					} else {
+						FirstUserName = "Unknown User";
+					}
 				}
 			}
 
@@ -1555,14 +1572,16 @@ public class ChatActivity extends AppCompatActivity {
 						@Override
 						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 							if(dataSnapshot.exists()) {
-								if (!dataSnapshot.child(UID_KEY).getValue(String.class).equals("null")) {
+								String uid = dataSnapshot.child(UID_KEY).getValue(String.class);
+								if (uid != null && !"null".equals(uid)) {
 									intent.setClass(getApplicationContext(), ProfileActivity.class);
-									intent.putExtra(UID_KEY, dataSnapshot.child(UID_KEY).getValue(String.class));
+									intent.putExtra(UID_KEY, uid);
 									startActivity(intent);
 								} else {
-
+									Toast.makeText(getApplicationContext(), "User not found", Toast.LENGTH_SHORT).show();
 								}
 							} else {
+								Toast.makeText(getApplicationContext(), "User not found", Toast.LENGTH_SHORT).show();
 							}
 						}
 						@Override
@@ -2119,14 +2138,16 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void updateUserProfile(DataSnapshot dataSnapshot) {
-		if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
+		// Safely get banned status
+		String bannedStatus = dataSnapshot.child("banned").getValue(String.class);
+		if (bannedStatus != null && "true".equals(bannedStatus)) {
 			topProfileLayoutProfileImage.setImageResource(R.drawable.banned_avatar);
 			SecondUserAvatar = "null_banned";
 			topProfileLayoutStatus.setTextColor(0xFF9E9E9E);
 			topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
 		} else {
 			String avatarUrl = dataSnapshot.child("avatar").getValue(String.class);
-			if ("null".equals(avatarUrl)) {
+			if (avatarUrl == null || "null".equals(avatarUrl)) {
 				topProfileLayoutProfileImage.setImageResource(R.drawable.avatar);
 				SecondUserAvatar = "null";
 			} else {
@@ -2136,8 +2157,14 @@ public class ChatActivity extends AppCompatActivity {
 		}
 
 		String nickname = dataSnapshot.child("nickname").getValue(String.class);
-		if ("null".equals(nickname)) {
-			SecondUserName = "@" + dataSnapshot.child("username").getValue(String.class);
+		String username = dataSnapshot.child("username").getValue(String.class);
+		
+		if (nickname == null || "null".equals(nickname)) {
+			if (username != null && !"null".equals(username)) {
+				SecondUserName = "@" + username;
+			} else {
+				SecondUserName = "Unknown User";
+			}
 		} else {
 			SecondUserName = nickname;
 		}
@@ -2177,7 +2204,7 @@ public class ChatActivity extends AppCompatActivity {
 
 	private void updateUserBadges(DataSnapshot dataSnapshot) {
 		String gender = dataSnapshot.child("gender").getValue(String.class);
-		if ("hidden".equals(gender)) {
+		if (gender == null || "hidden".equals(gender)) {
 			topProfileLayoutGenderBadge.setVisibility(View.GONE);
 		} else if ("male".equals(gender)) {
 			topProfileLayoutGenderBadge.setImageResource(R.drawable.male_badge);
@@ -2189,25 +2216,33 @@ public class ChatActivity extends AppCompatActivity {
 
 		String accountType = dataSnapshot.child("account_type").getValue(String.class);
 		topProfileLayoutVerifiedBadge.setVisibility(View.VISIBLE);
-		switch (accountType) {
-			case "admin":
-			topProfileLayoutVerifiedBadge.setImageResource(R.drawable.admin_badge);
-			break;
-			case "moderator":
-			topProfileLayoutVerifiedBadge.setImageResource(R.drawable.moderator_badge);
-			break;
-			case "support":
-			topProfileLayoutVerifiedBadge.setImageResource(R.drawable.support_badge);
-			break;
-			default:
-			if ("true".equals(dataSnapshot.child("account_premium").getValue(String.class))) {
-				topProfileLayoutVerifiedBadge.setImageResource(R.drawable.premium_badge);
-			} else if ("true".equals(dataSnapshot.child("verify").getValue(String.class))) {
-				topProfileLayoutVerifiedBadge.setImageResource(R.drawable.verified_badge);
-			} else {
-				topProfileLayoutVerifiedBadge.setVisibility(View.GONE);
+		
+		if (accountType != null) {
+			switch (accountType) {
+				case "admin":
+					topProfileLayoutVerifiedBadge.setImageResource(R.drawable.admin_badge);
+					break;
+				case "moderator":
+					topProfileLayoutVerifiedBadge.setImageResource(R.drawable.moderator_badge);
+					break;
+				case "support":
+					topProfileLayoutVerifiedBadge.setImageResource(R.drawable.support_badge);
+					break;
+				default:
+					String accountPremium = dataSnapshot.child("account_premium").getValue(String.class);
+					String verify = dataSnapshot.child("verify").getValue(String.class);
+					
+					if ("true".equals(accountPremium)) {
+						topProfileLayoutVerifiedBadge.setImageResource(R.drawable.premium_badge);
+					} else if ("true".equals(verify)) {
+						topProfileLayoutVerifiedBadge.setImageResource(R.drawable.verified_badge);
+					} else {
+						topProfileLayoutVerifiedBadge.setVisibility(View.GONE);
+					}
+					break;
 			}
-			break;
+		} else {
+			topProfileLayoutVerifiedBadge.setVisibility(View.GONE);
 		}
 	}
 
