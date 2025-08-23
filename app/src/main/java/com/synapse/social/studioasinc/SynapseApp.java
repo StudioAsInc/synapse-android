@@ -18,6 +18,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.onesignal.OneSignal;
+import com.onesignal.debug.LogLevel;
+import com.onesignal.user.state.PushSubscriptionChangedState;
+import com.onesignal.user.state.PushSubscriptionObserver;
 
 import java.util.Calendar;
 
@@ -70,6 +74,25 @@ public class SynapseApp extends Application {
             });
         
         setUserStatus();
+
+        // Initialize OneSignal
+        final String ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
+        OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
+        OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
+
+        // Add a subscription observer to get the Player ID and save it to Firestore
+        OneSignal.getUser().getPushSubscription().addObserver(new PushSubscriptionObserver() {
+            @Override
+            public void onPushSubscriptionChange(@NonNull PushSubscriptionChangedState state) {
+                if (state.getCurrent().isSubscribed()) {
+                    String playerId = state.getCurrent().getId();
+                    if (mAuth.getCurrentUser() != null) {
+                        String userUid = mAuth.getCurrentUser().getUid();
+                        OneSignalManager.savePlayerIdToFirestore(userUid, playerId);
+                    }
+                }
+            }
+        });
     }
     
     public static void setUserStatus() {
