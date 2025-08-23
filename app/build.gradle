@@ -32,7 +32,7 @@ def getGitCommitCount = { ->
 
 android {
     namespace = "com.synapse.social.studioasinc"
-    compileSdk = 36
+    compileSdk = 34
 
     useLibrary 'org.apache.http.legacy'
 
@@ -48,7 +48,7 @@ android {
     defaultConfig {
         applicationId = "com.synapse.social.studioasinc"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 32
         versionCode = 12
         versionName = "1.0.0-alpha06"
         multiDexEnabled = true

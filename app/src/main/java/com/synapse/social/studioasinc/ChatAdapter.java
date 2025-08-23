@@ -181,22 +181,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
 
-        if (holder.mProfileCard != null && holder.mProfileImage != null) {
-            if (!isMyMessage) {
-                boolean isFirstOfGroup = (position == 0) || (position - 1 >= 0 && !_data.get(position - 1).get("uid").toString().equals(data.get("uid").toString()));
-                holder.mProfileCard.setVisibility(isFirstOfGroup ? View.VISIBLE : View.GONE);
-                if (isFirstOfGroup) {
-                    if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
-                         Glide.with(_context).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
-                    } else if ("null_banned".equals(secondUserAvatarUrl)) {
-                         holder.mProfileImage.setImageResource(R.drawable.banned_avatar);
-                    } else {
-                         holder.mProfileImage.setImageResource(R.drawable.avatar);
-                    }
-                }
-            } else {
-                holder.mProfileCard.setVisibility(View.GONE);
-            }
+        if (holder.mProfileCard != null) {
+            holder.mProfileCard.setVisibility(View.GONE);
         }
         
         if (holder.mRepliedMessageLayout != null) {

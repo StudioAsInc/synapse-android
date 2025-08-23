@@ -552,7 +552,6 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 		// Attach listeners after all references are safely initialized.
-		_attachChatListener();
 		_attachUserStatusListener();
 	}
 
@@ -972,6 +971,8 @@ public class ChatActivity extends AppCompatActivity {
 					ChatMessagesListRecycler.setVisibility(View.GONE);
 					noChatText.setVisibility(View.VISIBLE);
 				}
+				// Attach the listener *after* the initial data is loaded to prevent race conditions.
+				_attachChatListener();
 			}
 			@Override public void onCancelled(@NonNull DatabaseError databaseError) {
 				Log.e("ChatActivity", "Initial message load failed: " + databaseError.getMessage());
@@ -1776,7 +1777,7 @@ public class ChatActivity extends AppCompatActivity {
 					Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_reply);
 
 					if (dX > 0) { // Swiping to the right
-						p.setColor(Color.parseColor("#3498db")); // Blue background
+						p.setColor(Color.TRANSPARENT); // Blue background
 						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
 
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
@@ -1787,7 +1788,7 @@ public class ChatActivity extends AppCompatActivity {
 						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
 						icon.draw(c);
 					} else { // Swiping to the left
-						p.setColor(Color.parseColor("#3498db")); // Blue background
+						p.setColor(Color.TRANSPARENT); // Blue background
 						c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
 
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
@@ -1970,14 +1971,19 @@ public class ChatActivity extends AppCompatActivity {
 		((ChatAdapter) chatAdapter).setSecondUserAvatar(SecondUserAvatar);
 
 		String status = dataSnapshot.child("status").getValue(String.class);
-		if ("online".equals(status)) {
+		if ("online".equals(status) || (status != null && status.startsWith("chatting_with_"))) {
 			topProfileLayoutStatus.setText(getResources().getString(R.string.online));
 			topProfileLayoutStatus.setTextColor(0xFF2196F3);
 		} else {
 			if ("offline".equals(status)) {
 				topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
 			} else {
-				_setUserLastSeen(Double.parseDouble(status), topProfileLayoutStatus);
+				try {
+					_setUserLastSeen(Double.parseDouble(status), topProfileLayoutStatus);
+				} catch (Exception e) {
+					// Fallback for any other unexpected status string or null status
+					topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+				}
 			}
 			topProfileLayoutStatus.setTextColor(0xFF757575);
 		}
@@ -2168,6 +2174,10 @@ public class ChatActivity extends AppCompatActivity {
 					attactmentmap.remove(_position);
 					rv_attacmentList.getAdapter().notifyItemRemoved(_position);
 					rv_attacmentList.getAdapter().notifyItemRangeChanged(_position, attactmentmap.size());
+
+					if (attactmentmap.isEmpty()) {
+						attachmentLayoutListHolder.setVisibility(View.GONE);
+					}
 
 					if (currentItemData.containsKey("publicId")) {
 						String publicId = currentItemData.get("publicId").toString();
