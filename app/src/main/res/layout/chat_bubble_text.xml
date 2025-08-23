@@ -12,7 +12,7 @@
 		android:paddingLeft="8dp"
 		android:paddingRight="8dp"
 		android:orientation="horizontal"
-		android:animateLayoutChanges="false">
+		android:animateLayoutChanges="true">
 		<androidx.cardview.widget.CardView
 			android:id="@+id/mProfileCard"
 			android:layout_width="34dp"

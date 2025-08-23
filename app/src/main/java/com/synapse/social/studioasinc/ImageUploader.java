@@ -17,14 +17,19 @@ limitations under the License.
 
 package com.synapse.social.studioasinc;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -38,21 +43,44 @@ public class ImageUploader {
     }
 
     public static void uploadImage(String filePath, UploadCallback callback) {
-        new ImageUploadTask(callback).execute(filePath);
+        new ImageUploadTask(callback, false).execute(filePath);
+    }
+    
+    public static void uploadImageWithCompression(String filePath, UploadCallback callback, boolean enableCompression) {
+        new ImageUploadTask(callback, enableCompression).execute(filePath);
+    }
+    
+    public static void uploadImageWithCompression(String filePath, UploadCallback callback) {
+        // Default compression enabled
+        new ImageUploadTask(callback, true).execute(filePath);
     }
 
     private static class ImageUploadTask extends AsyncTask<String, Void, String> {
         private UploadCallback callback;
+        private boolean enableCompression;
+        private static final int MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 
-        public ImageUploadTask(UploadCallback callback) {
+        public ImageUploadTask(UploadCallback callback, boolean enableCompression) {
             this.callback = callback;
+            this.enableCompression = enableCompression;
         }
 
         @Override
         protected String doInBackground(String... params) {
             try {
                 String filePath = params[0];
-                File file = new File(filePath);
+                File originalFile = new File(filePath);
+                
+                // Compress image if enabled and file is larger than 2MB
+                File fileToUpload = originalFile;
+                if (enableCompression && originalFile.length() > MAX_FILE_SIZE_BYTES) {
+                    Log.d("ImageUploader", "Compressing image from " + (originalFile.length() / 1024 / 1024) + "MB");
+                    fileToUpload = compressImage(originalFile);
+                    if (fileToUpload != null) {
+                        Log.d("ImageUploader", "Compressed to " + (fileToUpload.length() / 1024 / 1024) + "MB");
+                    }
+                }
+                
                 String boundary = "*****";
                 String lineEnd = "\r\n";
                 String twoHyphens = "--";
@@ -71,10 +99,10 @@ public class ImageUploader {
                 DataOutputStream dos = new DataOutputStream(connection.getOutputStream());
 
                 dos.writeBytes(twoHyphens + boundary + lineEnd);
-                dos.writeBytes("Content-Disposition: form-data; name=\"image\";filename=\"" + file.getName() + "\"" + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\"image\";filename=\"" + fileToUpload.getName() + "\"" + lineEnd);
                 dos.writeBytes(lineEnd);
 
-                FileInputStream fileInputStream = new FileInputStream(file);
+                FileInputStream fileInputStream = new FileInputStream(fileToUpload);
                 int bufferSize = 1024;
                 byte[] buffer = new byte[bufferSize];
 
@@ -134,6 +162,74 @@ public class ImageUploader {
                 e.printStackTrace();
                 callback.onUploadError("Error parsing JSON response");
             }
+        }
+        
+        private File compressImage(File originalFile) {
+            try {
+                // Decode image size first
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeFile(originalFile.getAbsolutePath(), options);
+                
+                // Calculate inSampleSize for compression
+                options.inSampleSize = calculateInSampleSize(options, 1920, 1080); // Max dimensions
+                options.inJustDecodeBounds = false;
+                
+                // Decode bitmap with new options
+                Bitmap bitmap = BitmapFactory.decodeFile(originalFile.getAbsolutePath(), options);
+                if (bitmap == null) {
+                    Log.e("ImageUploader", "Failed to decode image for compression");
+                    return originalFile;
+                }
+                
+                // Create compressed file
+                File compressedFile = new File(originalFile.getParent(), "compressed_" + originalFile.getName());
+                FileOutputStream fos = new FileOutputStream(compressedFile);
+                
+                // Compress with quality 85 (good balance between size and quality)
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos);
+                byte[] compressedData = baos.toByteArray();
+                
+                // Write to file
+                fos.write(compressedData);
+                fos.close();
+                baos.close();
+                
+                // Recycle bitmap
+                bitmap.recycle();
+                
+                // Check if compression was successful and file is under 2MB
+                if (compressedFile.length() <= MAX_FILE_SIZE_BYTES) {
+                    Log.d("ImageUploader", "Compression successful: " + (compressedFile.length() / 1024 / 1024) + "MB");
+                    return compressedFile;
+                } else {
+                    Log.w("ImageUploader", "Compressed file still too large: " + (compressedFile.length() / 1024 / 1024) + "MB");
+                    compressedFile.delete();
+                    return originalFile;
+                }
+                
+            } catch (Exception e) {
+                Log.e("ImageUploader", "Error compressing image: " + e.getMessage());
+                return originalFile;
+            }
+        }
+        
+        private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+            final int height = options.outHeight;
+            final int width = options.outWidth;
+            int inSampleSize = 1;
+            
+            if (height > reqHeight || width > reqWidth) {
+                final int halfHeight = height / 2;
+                final int halfWidth = width / 2;
+                
+                while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                    inSampleSize *= 2;
+                }
+            }
+            
+            return inSampleSize;
         }
     }
 }

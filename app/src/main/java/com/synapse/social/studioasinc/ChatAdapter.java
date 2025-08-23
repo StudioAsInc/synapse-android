@@ -199,16 +199,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
         
-        Log.d("ChatAdapter", "Checking reply layout - holder.mRepliedMessageLayout: " + (holder.mRepliedMessageLayout != null ? "NOT NULL" : "NULL"));
         if (holder.mRepliedMessageLayout != null) {
-            Log.d("ChatAdapter", "Setting reply layout to GONE initially");
+            // Always start with reply layout hidden
             holder.mRepliedMessageLayout.setVisibility(View.GONE);
             
-            // Test if reply layout can be made visible
-            holder.mRepliedMessageLayout.post(() -> {
-                holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
-                Log.d("ChatAdapter", "Test: Reply layout visibility set to VISIBLE in post");
-            });
+            // Only show reply layout if this message actually has reply data
             if (data.containsKey("replied_message_id")) {
                 String repliedId = data.get("replied_message_id").toString();
                 Log.d("ChatAdapter", "Reply data found: " + repliedId);
@@ -257,6 +252,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                                     holder.mRepliedMessageLayout.setOnClickListener(v -> {
                                         if (chatActivity != null) {
+                                            Log.d("ChatAdapter", "Reply layout clicked, scrolling to message: " + repliedId);
                                             chatActivity.scrollToMessage(repliedId);
                                         }
                                     });

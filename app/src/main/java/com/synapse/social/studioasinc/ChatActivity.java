@@ -58,6 +58,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -522,15 +523,11 @@ public class ChatActivity extends AppCompatActivity {
 		chatAdapter.setChatActivity(this);
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
 		
-		// Disable item animations for instant updates
-		ChatMessagesListRecycler.setItemAnimator(null);
+		// Enable smooth item animations
+		ChatMessagesListRecycler.setItemAnimator(new DefaultItemAnimator());
 		
-		// Additional performance optimizations for real-time updates
+		// Performance optimizations that don't interfere with animations
 		ChatMessagesListRecycler.setHasFixedSize(true);
-		ChatMessagesListRecycler.setNestedScrollingEnabled(false);
-		
-		// Force immediate layout updates
-		ChatMessagesListRecycler.setLayoutFrozen(false);
 		chatMessagesRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY));
 		userRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(getIntent().getStringExtra(UID_KEY));
 		// Initialize with custom settings
@@ -1118,17 +1115,19 @@ public class ChatActivity extends AppCompatActivity {
 					if (snapshot.exists()) {
 						String removedKey = snapshot.getKey();
 						if (removedKey != null) {
+							Log.d("ChatActivity", "Message removed from Firebase: " + removedKey);
 							for (int i = ChatMessagesList.size() - 1; i >= 0; i--) {
 								if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
+									Log.d("ChatActivity", "Removing message at position " + i + " from local list");
 									ChatMessagesList.remove(i);
 									chatAdapter.notifyItemRemoved(i);
+									
+									// Force refresh the adapter to ensure proper updates
+									chatAdapter.notifyDataSetChanged();
+									
 									if (ChatMessagesList.isEmpty()) {
 										ChatMessagesListRecycler.setVisibility(View.GONE);
 										noChatText.setVisibility(View.VISIBLE);
-									} else {
-										// After any removal, the last item in the list might need to be updated
-										// to correctly display its timestamp.
-										chatAdapter.notifyItemChanged(ChatMessagesList.size() - 1);
 									}
 									break;
 								}
@@ -2086,16 +2085,30 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	public void scrollToMessage(final String _messageKey) {
+		Log.d("ChatActivity", "Scrolling to message: " + _messageKey);
 		int position = -1;
 		for (int i = 0; i < ChatMessagesList.size(); i++) {
-			if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(_messageKey)) {
+			if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(_messageKey)) {
 				position = i;
 				break;
 			}
 		}
 		if (position != -1) {
+			Log.d("ChatActivity", "Found message at position: " + position + ", scrolling...");
 			ChatMessagesListRecycler.scrollToPosition(position);
+			
+			// Highlight the message briefly
+			ChatMessagesListRecycler.post(() -> {
+				RecyclerView.ViewHolder holder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
+				if (holder != null && holder.itemView != null) {
+					holder.itemView.setBackgroundColor(0x30FFD700); // Light yellow highlight
+					holder.itemView.postDelayed(() -> {
+						holder.itemView.setBackgroundColor(0x00000000); // Remove highlight
+					}, 2000); // 2 seconds
+				}
+			});
 		} else {
+			Log.w("ChatActivity", "Message not found: " + _messageKey);
 			Toast.makeText(getApplicationContext(), "Original message not found", Toast.LENGTH_SHORT).show();
 		}
 	}
