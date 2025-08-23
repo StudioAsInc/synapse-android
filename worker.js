@@ -43,8 +43,8 @@ export default {
       }
 
       // OneSignal configuration
-      const ONESIGNAL_APP_ID = '044e1911-6911-4871-95f9-d60003002fe2'; // Your OneSignal App ID
-      const ONESIGNAL_REST_API_KEY = env.ONESIGNAL_REST_API_KEY; // Set this in Cloudflare Workers environment variables
+      const ONESIGNAL_APP_ID = '044e1911-6911-4871-95f9-d60003002fe2';
+      const ONESIGNAL_REST_API_KEY = env.ONESIGNAL_REST_API_KEY;
 
       if (!ONESIGNAL_REST_API_KEY) {
         console.error('OneSignal REST API key not configured');
@@ -74,17 +74,10 @@ export default {
           message: notificationMessage,
           timestamp: new Date().toISOString()
         },
-        // Optional: Customize notification appearance
-        small_icon: 'ic_notification_icon', // Make sure this icon exists in your app
-        large_icon: 'ic_launcher', // Your app icon
-        android_accent_color: '#FF6B6B', // Custom accent color
+        // Simplified notification settings - removed problematic fields
         priority: 10, // High priority for messages
-        android_channel_id: 'messages', // Custom notification channel
-        // Add sound and vibration
-        android_sound: 'notification_sound',
-        android_led_color: '#FF6B6B',
-        android_group: 'messages',
-        android_group_message: 'You have a new message'
+        android_accent_color: '#FF6B6B', // Custom accent color
+        // Removed android_channel_id and other problematic fields
       };
 
       // Send notification to OneSignal
