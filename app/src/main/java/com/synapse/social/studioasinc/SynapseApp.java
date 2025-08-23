@@ -117,6 +117,19 @@ public class SynapseApp extends Application {
             messagesChannel.setShowBadge(true);
             messagesChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
             
+            // Chat messages channel (dedicated for OneSignal notifications)
+            android.app.NotificationChannel chatMessagesChannel = new android.app.NotificationChannel(
+                "chat_messages",
+                "Chat Messages",
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            );
+            chatMessagesChannel.setDescription("Direct chat message notifications via OneSignal");
+            chatMessagesChannel.enableLights(true);
+            chatMessagesChannel.setLightColor(android.graphics.Color.BLUE);
+            chatMessagesChannel.enableVibration(true);
+            chatMessagesChannel.setShowBadge(true);
+            chatMessagesChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
+            
             // General notifications channel
             android.app.NotificationChannel generalChannel = new android.app.NotificationChannel(
                 "general",
@@ -129,6 +142,7 @@ public class SynapseApp extends Application {
             
             // Create the channels
             notificationManager.createNotificationChannel(messagesChannel);
+            notificationManager.createNotificationChannel(chatMessagesChannel);
             notificationManager.createNotificationChannel(generalChannel);
         }
     }
