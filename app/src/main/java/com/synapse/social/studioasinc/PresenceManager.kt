@@ -3,57 +3,61 @@ package com.synapse.social.studioasinc
 import com.google.firebase.database.FirebaseDatabase
 
 /**
- * Manages user online presence in Firebase.
- * Handles online, offline, and chat statuses.
+ * Manages user online presence in Firebase, writing to the correct database path.
+ * Handles online, offline (timestamp), and chat statuses.
  */
 object PresenceManager {
 
-    private val database = FirebaseDatabase.getInstance().getReference("/status")
+    // Correct database reference to the 'users' node
+    private val usersRef = FirebaseDatabase.getInstance().getReference("skyline/users")
+
+    /**
+     * Returns the specific database reference for a user's status.
+     * Path: /skyline/users/{uid}/status
+     */
+    private fun getUserStatusRef(uid: String) = usersRef.child(uid).child("status")
 
     /**
      * Sets user status to "online".
-     * Registers onDisconnect to set to "offline".
-     * Call when app is in the foreground.
+     * Registers onDisconnect to set a timestamp for last seen.
      * @param uid The Firebase UID of the current user.
      */
     @JvmStatic
     fun goOnline(uid: String) {
-        val userStatusRef = database.child(uid)
-        userStatusRef.setValue("online")
-        // Set onDisconnect to mark user as offline
-        userStatusRef.onDisconnect().setValue("offline")
+        val statusRef = getUserStatusRef(uid)
+        statusRef.setValue("online")
+        // On disconnect, set the last seen time as a timestamp string
+        statusRef.onDisconnect().setValue(System.currentTimeMillis().toString())
     }
 
     /**
-     * Explicitly sets the user's status to "offline".
-     * Call on manual logout or app backgrounding.
+     * Explicitly sets the user's status to a timestamp (last seen).
      * @param uid The Firebase UID of the current user.
      */
     @JvmStatic
     fun goOffline(uid: String) {
-        database.child(uid).setValue("offline")
+        // Set the last seen time as a timestamp string
+        getUserStatusRef(uid).setValue(System.currentTimeMillis().toString())
     }
 
     /**
      * Sets status to "chatting_with_<otherUserUid>".
-     * Call from ChatActivity's onResume/onStart.
      * @param currentUserUid The UID of the current user.
      * @param otherUserUid The UID of the user they are chatting with.
      */
     @JvmStatic
     fun setChattingWith(currentUserUid: String, otherUserUid: String) {
-        database.child(currentUserUid).setValue("chatting_with_$otherUserUid")
+        getUserStatusRef(currentUserUid).setValue("chatting_with_$otherUserUid")
     }
 
     /**
      * Reverts the user's status back to "online".
-     * Call from ChatActivity's onPause/onStop.
      * @param currentUserUid The UID of the current user.
      */
     @JvmStatic
     fun stopChatting(currentUserUid: String) {
-        // Revert to "online" if still connected.
-        // onDisconnect handles "offline" on app close.
-        database.child(currentUserUid).setValue("online")
+        // Revert to "online" when the user leaves the chat screen.
+        // The onDisconnect handler from goOnline() will take care of app closes.
+        getUserStatusRef(currentUserUid).setValue("online")
     }
 }
