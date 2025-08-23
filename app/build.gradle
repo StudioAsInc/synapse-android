@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+    id 'com.google.dagger.hilt.android'
     id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
     //id 'com.google.firebase.firebase-perf'
@@ -102,6 +104,7 @@ dependencies {
     // Firebase dependencies with explicit latest stable versions (no BoM)
     implementation 'com.google.firebase:firebase-auth-ktx:23.2.1'
     implementation 'com.google.firebase:firebase-database-ktx:21.0.0'
+    implementation 'com.google.firebase:firebase-firestore-ktx:25.0.0'
     implementation 'com.google.firebase:firebase-storage-ktx:21.0.2'
     implementation 'com.google.firebase:firebase-perf-ktx:21.0.5'
     implementation 'com.google.firebase:firebase-crashlytics-ktx:19.4.4'
@@ -121,6 +124,10 @@ dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
+    // Dagger - Hilt
+    implementation 'com.google.dagger:hilt-android:2.48'
+    kapt 'com.google.dagger:hilt-compiler:2.48'
+
     // AndroidX Architecture Components
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.9.2'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2'
@@ -129,6 +136,7 @@ dependencies {
     implementation 'androidx.work:work-runtime-ktx:2.10.3'
     implementation 'androidx.paging:paging-runtime-ktx:3.3.6'
     implementation 'androidx.preference:preference-ktx:1.2.1'
+    implementation 'androidx.datastore:datastore-preferences:1.1.1'
 
     // Google Play services
     implementation 'com.google.android.gms:play-services-auth:21.4.0'
@@ -168,4 +176,16 @@ dependencies {
 	implementation 'org.jsoup:jsoup:1.21.1'
 
     // Testing
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:4.8.0'
+    testImplementation 'org.mockito.kotlin:mockito-kotlin:4.8.0'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
+    testImplementation 'app.cash.turbine:turbine:0.12.1'
+    testImplementation 'androidx.arch.core:core-testing:2.2.0'
+
+    // Instrumented Testing
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'com.google.dagger:hilt-android-testing:2.48'
+    kaptAndroidTest 'com.google.dagger:hilt-compiler:2.48'
 }

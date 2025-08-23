@@ -21,6 +21,9 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.Calendar;
 
+import dagger.hilt.android.HiltAndroidApp;
+
+@HiltAndroidApp
 public class SynapseApp extends Application {
     
     private static Context mContext;

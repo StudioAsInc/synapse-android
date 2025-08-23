@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ui.settings.SettingsActivity">
+    tools:context=".ui.settings.JavaSettingsActivity">
 
     <include layout="@layout/activity_settings_header" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/settings_fragment_container"
-        android:name="com.synapse.social.studioasinc.ui.settings.SettingsFragment"
+        android:name="com.synapse.social.studioasinc.ui.settings.JavaSettingsFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:layout="@xml/preferences_settings" />

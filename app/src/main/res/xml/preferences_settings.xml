@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        app:title="@string/settings_title_account"
+        app:icon="@drawable/ic_account_circle_48px">
+
+        <Preference
+            app:key="edit_profile"
+            app:title="@string/settings_edit_profile"
+            app:summary="Manage your public profile information" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/settings_title_privacy"
+        app:icon="@drawable/icon_privacy_tip_round">
+
+        <SwitchPreferenceCompat
+            app:key="private_account"
+            app:title="@string/settings_private_account"
+            app:summaryOn="@string/settings_private_account_summary_on"
+            app:summaryOff="@string/settings_private_account_summary_off"
+            app:defaultValue="false" />
+
+        <ListPreference
+            app:key="profile_visibility"
+            app:title="@string/settings_profile_visibility"
+            app:entries="@array/settings_profile_visibility_entries"
+            app:entryValues="@array/settings_profile_visibility_values"
+            app:defaultValue="public"
+            app:useSimpleSummaryProvider="true" />
+
+        <Preference
+            app:key="blocked_users"
+            app:title="@string/settings_blocked_users" />
+
+        <Preference
+            app:key="muted_accounts"
+            app:title="@string/settings_muted_accounts" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/settings_title_notifications"
+        app:icon="@drawable/ic_notifications_48px">
+
+        <SwitchPreferenceCompat
+            app:key="push_notifications"
+            app:title="@string/settings_push_notifications"
+            app:summary="@string/settings_push_notifications_summary"
+            app:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            app:key="mentions_notifications"
+            app:title="@string/settings_mentions"
+            app:dependency="push_notifications"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat
+            app:key="likes_notifications"
+            app:title="@string/settings_likes"
+            app:dependency="push_notifications"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat
+            app:key="comments_notifications"
+            app:title="@string/settings_comments"
+            app:dependency="push_notifications"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat
+            app:key="follows_notifications"
+            app:title="@string/settings_follows"
+            app:dependency="push_notifications"
+            app:defaultValue="true" />
+
+        <Preference
+            app:key="quiet_hours"
+            app:title="@string/settings_quiet_hours"
+            app:summary="@string/settings_quiet_hours_summary"
+            app:dependency="push_notifications" />
+
+        <Preference
+            app:key="email_notifications"
+            app:title="@string/settings_email_notifications" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/settings_title_appearance"
+        app:icon="@drawable/icon_palette_round">
+
+        <ListPreference
+            app:key="theme"
+            app:title="@string/settings_theme"
+            app:entries="@array/settings_theme_entries"
+            app:entryValues="@array/settings_theme_values"
+            app:defaultValue="system"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="font_size"
+            app:title="@string/settings_font_size"
+            app:entries="@array/settings_font_size_entries"
+            app:entryValues="@array/settings_font_size_values"
+            app:defaultValue="normal"
+            app:useSimpleSummaryProvider="true" />
+
+        <Preference
+            app:key="accent_color"
+            app:title="@string/settings_accent_color"
+            app:summary="@string/settings_accent_color_summary" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/settings_title_security"
+        app:icon="@drawable/ic_shield_lock">
+
+        <Preference
+            app:key="change_password"
+            app:title="@string/settings_change_password" />
+
+        <SwitchPreferenceCompat
+            app:key="two_factor_auth"
+            app:title="@string/settings_two_factor_auth"
+            app:summary="@string/settings_two_factor_auth_summary"
+            app:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            app:key="app_lock"
+            app:title="@string/settings_app_lock"
+            app:summary="@string/settings_app_lock_summary"
+            app:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/settings_title_data"
+        app:icon="@drawable/ic_data_table_48px">
+
+        <Preference
+            app:key="clear_cache"
+            app:title="@string/settings_clear_cache" />
+
+        <Preference
+            app:key="download_data"
+            app:title="@string/settings_download_data"
+            app:summary="@string/settings_download_data_summary" />
+
+        <Preference
+            app:key="manage_storage"
+            app:title="@string/settings_manage_storage" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/settings_title_connected"
+        app:icon="@drawable/ic_media_link_48px">
+
+        <SwitchPreferenceCompat
+            app:key="connect_google"
+            app:title="@string/settings_connect_google"
+            app:defaultValue="false" />
+        <SwitchPreferenceCompat
+            app:key="connect_facebook"
+            app:title="@string/settings_connect_facebook"
+            app:defaultValue="false" />
+        <SwitchPreferenceCompat
+            app:key="connect_twitter"
+            app:title="@string/settings_connect_twitter"
+            app:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/settings_title_ai_api"
+        app:icon="@drawable/ic_api_48px">
+
+        <ListPreference
+            app:key="ai_assistant"
+            app:title="@string/settings_ai_assistant"
+            app:entries="@array/settings_ai_assistant_entries"
+            app:entryValues="@array/settings_ai_assistant_values"
+            app:defaultValue="gemini"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="ai_model"
+            app:title="@string/settings_ai_assistant_model"
+            app:entries="@array/settings_model_default_entries"
+            app:entryValues="@array/settings_model_default_values"
+            app:defaultValue="default"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreferenceCompat
+            app:key="connect_cloudinary"
+            app:title="@string/settings_connect_cloudinary"
+            app:defaultValue="false" />
+        <SwitchPreferenceCompat
+            app:key="connect_cloudflare"
+            app:title="@string/settings_connect_cloudflare"
+            app:defaultValue="false" />
+        <SwitchPreferenceCompat
+            app:key="connect_github"
+            app:title="@string/settings_connect_github"
+            app:defaultValue="false" />
+        <SwitchPreferenceCompat
+            app:key="connect_with_google"
+            app:title="@string/settings_connect_google"
+            app:defaultValue="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/settings_title_about"
+        app:icon="@drawable/ic_info_48px">
+
+        <Preference
+            app:key="app_version"
+            app:title="@string/settings_app_version" />
+
+        <Preference
+            app:key="terms_of_service"
+            app:title="@string/settings_terms_of_service" />
+
+        <Preference
+            app:key="privacy_policy"
+            app:title="@string/settings_privacy_policy" />
+
+        <Preference
+            app:key="open_source_licenses"
+            app:title="@string/settings_open_source_licenses" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/settings_title_danger_zone"
+        app:icon="@drawable/icon_dangerous_round">
+
+        <Preference
+            app:key="sign_out"
+            app:title="@string/settings_sign_out" />
+
+        <Preference
+            app:key="delete_account"
+            app:title="@string/settings_delete_account" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

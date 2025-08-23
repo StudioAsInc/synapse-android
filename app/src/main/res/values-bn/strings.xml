@@ -218,4 +218,10 @@
     <string name="status_text_week">week ago</string>
     <string name="status_text_month">month ago</string>
     <string name="status_text_years">year ago</string>
+    <!-- Settings Screen Sample Translations -->
+    <string name="settings_title_account">অ্যাকাউন্ট</string>
+    <string name="settings_title_privacy">গোপনীয়তা এবং সুরক্ষা</string>
+    <string name="settings_edit_profile">প্রোফাইল সম্পাদনা করুন</string>
+    <string name="settings_theme">থিম</string>
+    <string name="settings_sign_out">সাইন আউট</string>
 </resources>

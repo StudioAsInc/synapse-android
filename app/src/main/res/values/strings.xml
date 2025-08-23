@@ -239,4 +239,174 @@
     <string name="ph_message">I\'m also good, man.</string>
     <string name="age_agreement">I confirm that I\'m at least 12 years of age.</string>
     <string name="ph_replied_message">I\'m good, you?</string>
+    <!-- Settings Screen Strings -->
+
+    <!-- Section Titles -->
+    <string name="settings_title_account">Account</string>
+    <string name="settings_title_privacy">Privacy &amp; Safety</string>
+    <string name="settings_title_notifications">Notifications</string>
+    <string name="settings_title_appearance">Appearance</string>
+    <string name="settings_title_security">Security</string>
+    <string name="settings_title_data">Data &amp; Storage</string>
+    <string name="settings_title_connected">Connected Accounts</string>
+    <string name="settings_title_ai_api">AI &amp; API</string>
+    <string name="settings_title_about">About &amp; Legal</string>
+    <string name="settings_title_danger_zone">Danger Zone</string>
+
+    <!-- Account -->
+    <string name="settings_edit_profile">Edit Profile</string>
+    <string name="settings_header_username">\@handle</string>
+    <string name="settings_header_display_name">Display Name</string>
+
+    <!-- Privacy & Safety -->
+    <string name="settings_private_account">Private Account</string>
+    <string name="settings_private_account_summary_on">Your account is private. Only followers you approve can see your posts.</string>
+    <string name="settings_private_account_summary_off">Your account is public. Anyone can see your posts.</string>
+    <string name="settings_profile_visibility">Profile Visibility</string>
+    <string name="settings_blocked_users">Blocked Users</string>
+    <string name="settings_muted_accounts">Muted Accounts</string>
+    <string-array name="settings_profile_visibility_entries">
+        <item>Public</item>
+        <item>Followers Only</item>
+    </string-array>
+    <string-array name="settings_profile_visibility_values">
+        <item>public</item>
+        <item>followers_only</item>
+    </string-array>
+
+    <!-- Notifications -->
+    <string name="settings_push_notifications">Push Notifications</string>
+    <string name="settings_push_notifications_summary">Manage all push notifications</string>
+    <string name="settings_mentions">Mentions</string>
+    <string name="settings_likes">Likes</string>
+    <string name="settings_comments">Comments</string>
+    <string name="settings_follows">New Followers</string>
+    <string name="settings_quiet_hours">Quiet Hours</string>
+    <string name="settings_quiet_hours_summary">Pause notifications during specific times</string>
+    <string name="settings_email_notifications">Email Notifications</string>
+
+    <!-- Appearance -->
+    <string name="settings_theme">Theme</string>
+    <string name="settings_font_size">Font Size</string>
+    <string name="settings_accent_color">Accent Color</string>
+    <string name="settings_accent_color_summary">Choose a custom accent color (stub)</string>
+    <string-array name="settings_theme_entries">
+        <item>System Default</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+    <string-array name="settings_theme_values">
+        <item>system</item>
+        <item>light</item>
+        <item>dark</item>
+    </string-array>
+    <string-array name="settings_font_size_entries">
+        <item>Small</item>
+        <item>Normal</item>
+        <item>Large</item>
+    </string-array>
+    <string-array name="settings_font_size_values">
+        <item>small</item>
+        <item>normal</item>
+        <item>large</item>
+    </string-array>
+
+    <!-- Security -->
+    <string name="settings_change_password">Change Password</string>
+    <string name="settings_two_factor_auth">Two-Factor Authentication</string>
+    <string name="settings_two_factor_auth_summary">Add an extra layer of security</string>
+    <string name="settings_app_lock">App Lock</string>
+    <string name="settings_app_lock_summary">Require biometrics to open the app</string>
+
+    <!-- Data & Storage -->
+    <string name="settings_clear_cache">Clear Cache</string>
+    <string name="settings_clear_cache_dialog_title">Clear Cache?</string>
+    <string name="settings_clear_cache_dialog_message">This will clear temporary data. Your posts and account data will not be affected.</string>
+    <string name="settings_download_data">Download My Data</string>
+    <string name="settings_download_data_summary">Get a copy of your information</string>
+    <string name="settings_manage_storage">Manage Media Storage</string>
+
+    <!-- Connected Accounts -->
+    <string name="settings_connect_google">Google</string>
+    <string name="settings_connect_facebook">Facebook</string>
+    <string name="settings_connect_twitter">X (Twitter)</string>
+
+    <!-- AI & API -->
+    <string name="settings_ai_assistant">AI Assistant</string>
+    <string name="settings_ai_assistant_model">Assistant Model</string>
+    <string name="settings_connect_cloudinary">Connect with Cloudinary</string>
+    <string name="settings_connect_cloudflare">Connect with Cloudflare</string>
+    <string name="settings_connect_github">Connect with GitHub</string>
+    <string-array name="settings_ai_assistant_entries">
+        <item>Gemini</item>
+        <item>ChatGPT</item>
+        <item>Claude</item>
+        <item>DeepSeek</item>
+    </string-array>
+    <string-array name="settings_ai_assistant_values">
+        <item>gemini</item>
+        <item>chatgpt</item>
+        <item>claude</item>
+        <item>deepseek</item>
+    </string-array>
+    <string-array name="settings_model_gemini_entries">
+        <item>Gemini 1.5 Pro</item>
+        <item>Gemini 1.0 Pro</item>
+    </string-array>
+    <string-array name="settings_model_gemini_values">
+        <item>gemini-1.5-pro</item>
+        <item>gemini-1.0-pro</item>
+    </string-array>
+    <string-array name="settings_model_chatgpt_entries">
+        <item>GPT-4o</item>
+        <item>GPT-4 Turbo</item>
+        <item>GPT-3.5 Turbo</item>
+    </string-array>
+    <string-array name="settings_model_chatgpt_values">
+        <item>gpt-4o</item>
+        <item>gpt-4-turbo</item>
+        <item>gpt-3.5-turbo</item>
+    </string-array>
+    <string-array name="settings_model_claude_entries">
+        <item>Claude 3 Opus</item>
+        <item>Claude 3 Sonnet</item>
+        <item>Claude 3 Haiku</item>
+    </string-array>
+    <string-array name="settings_model_claude_values">
+        <item>claude-3-opus</item>
+        <item>claude-3-sonnet</item>
+        <item>claude-3-haiku</item>
+    </string-array>
+    <string-array name="settings_model_deepseek_entries">
+        <item>DeepSeek Coder V2</item>
+        <item>DeepSeek V2</item>
+    </string-array>
+    <string-array name="settings_model_deepseek_values">
+        <item>deepseek-coder-v2</item>
+        <item>deepseek-v2</item>
+    </string-array>
+     <string-array name="settings_model_default_entries">
+        <item>Select an assistant first</item>
+    </string-array>
+    <string-array name="settings_model_default_values">
+        <item>default</item>
+    </string-array>
+
+
+    <!-- About & Legal -->
+    <string name="settings_app_version">App Version</string>
+    <string name="settings_terms_of_service">Terms of Service</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_open_source_licenses">Open-Source Licenses</string>
+
+    <!-- Danger Zone -->
+    <string name="settings_sign_out">Sign Out</string>
+    <string name="settings_sign_out_dialog_title">Sign Out?</string>
+    <string name="settings_sign_out_dialog_message">Are you sure you want to sign out?</string>
+    <string name="settings_delete_account">Delete Account</string>
+    <string name="settings_delete_account_dialog_title">Delete Account?</string>
+    <string name="settings_delete_account_dialog_message">This action is permanent and cannot be undone. To confirm, please type "DELETE" in the box below.</string>
+    <string name="settings_delete_account_dialog_edit_text_hint">DELETE</string>
+    <string name="settings_delete_account_dialog_error">You must type DELETE to confirm.</string>
+
 </resources>
