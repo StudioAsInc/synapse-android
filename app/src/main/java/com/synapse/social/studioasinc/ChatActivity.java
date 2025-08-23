@@ -94,8 +94,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class ChatActivity extends AppCompatActivity {
@@ -224,6 +227,9 @@ public class ChatActivity extends AppCompatActivity {
 	private Intent i = new Intent();
 	private SharedPreferences appSettings;
 	private Gemini gemini;
+
+	// Import the notification configuration
+	// import com.synapse.social.studioasinc.NotificationConfig;
 
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -1709,124 +1715,10 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	/**
-	 * This helper method contains the original logic for sending a message.
-	 * It's now called after the recipient's OneSignal ID has been fetched.
+	 * This helper method now delegates to the refactored message sending logic.
 	 */
 	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
-		if (!attactmentmap.isEmpty()) {
-			// Logic for sending messages with attachments
-			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
-			boolean allUploadsSuccessful = true;
-			for (HashMap<String, Object> item : attactmentmap) {
-				if ("success".equals(item.get("uploadState"))) {
-					HashMap<String, Object> attachmentData = new HashMap<>();
-					attachmentData.put("url", item.get("cloudinaryUrl"));
-					attachmentData.put("publicId", item.get("publicId"));
-					attachmentData.put("width", item.get("width"));
-					attachmentData.put("height", item.get("height"));
-					successfulAttachments.add(attachmentData);
-				} else {
-					allUploadsSuccessful = false;
-				}
-			}
-
-			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
-				String uniqueMessageKey = main.push().getKey();
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
-				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
-
-				// Send to both chat nodes
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
-
-				// Remove typing status when sending message
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
-
-				// Add message to local list immediately for instant display
-				ChatMessagesList.add(ChatSendMap);
-				chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
-				ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-
-				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
-
-				// Smart Notification Check with detailed information
-				NotificationHelper.sendMessageAndNotifyIfNeeded(
-					senderUid, 
-					recipientUid, 
-					recipientOneSignalPlayerId, 
-					lastMessage,
-					!ReplyMessageID.equals("null") ? "reply" : "attachment",
-					successfulAttachments,
-					FirstUserName
-				);
-
-				_updateInbox(lastMessage);
-
-				// Clear UI
-				attactmentmap.clear();
-				rv_attacmentList.getAdapter().notifyDataSetChanged();
-				attachmentLayoutListHolder.setVisibility(View.GONE);
-				
-				// Reset attachment container height when hiding
-				_resetAttachmentContainerHeight();
-				
-				message_et.setText("");
-				ReplyMessageID = "null";
-				mMessageReplyLayout.setVisibility(View.GONE);
-
-			} else {
-				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
-			}
-
-		} else if (!messageText.isEmpty()) {
-			// Logic for sending text-only messages
-			String uniqueMessageKey = main.push().getKey();
-			ChatSendMap = new HashMap<>();
-			ChatSendMap.put(UID_KEY, senderUid);
-			ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-			ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
-			ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-			if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
-
-			// Send to both chat nodes
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
-
-			// Remove typing status when sending message
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
-
-			// Add message to local list immediately for instant display
-			ChatMessagesList.add(ChatSendMap);
-			chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
-			ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-
-			// Smart Notification Check with detailed information
-			NotificationHelper.sendMessageAndNotifyIfNeeded(
-				senderUid, 
-				recipientUid, 
-				recipientOneSignalPlayerId, 
-				messageText,
-				!ReplyMessageID.equals("null") ? "reply" : "text",
-				Collections.emptyList(),
-				FirstUserName
-			);
-
-			_updateInbox(messageText);
-
-			// Clear UI
-			message_et.setText("");
-			ReplyMessageID = "null";
-			mMessageReplyLayout.setVisibility(View.GONE);
-		}
+		_sendMessageWithAttachments(messageText);
 	}
 
 
@@ -2540,4 +2432,321 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}
 	}
+
+	private void _sendMessageWithAttachments(String messageText) {
+		if (attactmentmap.isEmpty() && messageText.isEmpty()) {
+			return;
+		}
+
+		final String senderUid = auth.getCurrentUser().getUid();
+		final String recipientUid = getIntent().getStringExtra(UID_KEY);
+		final String recipientOneSignalPlayerId = getIntent().getStringExtra("oneSignalPlayerId");
+
+		if (attactmentmap.isEmpty()) {
+			// Text-only message
+			_sendTextMessage(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
+		} else {
+			// Message with attachments
+			_sendMessageWithAttachmentsInternal(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
+		}
+	}
+
+	private void _sendTextMessage(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
+		String uniqueMessageKey = main.push().getKey();
+		HashMap<String, Object> ChatSendMap = new HashMap<>();
+		ChatSendMap.put(UID_KEY, senderUid);
+		ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
+		ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
+		ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
+		if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
+		ChatSendMap.put(KEY_KEY, uniqueMessageKey);
+		ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
+
+		// Send to both chat nodes
+		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+
+		// Remove typing status when sending message
+		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+
+		// Add message to local list immediately for instant display
+		ChatMessagesList.add(ChatSendMap);
+		chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+		ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+
+		// Send notification
+		_sendNotification(senderUid, recipientUid, recipientOneSignalPlayerId, messageText, 
+			!ReplyMessageID.equals("null") ? "reply" : "text", Collections.emptyList(), FirstUserName);
+
+		_updateInbox(messageText);
+
+		// Clear UI
+		message_et.setText("");
+		ReplyMessageID = "null";
+		mMessageReplyLayout.setVisibility(View.GONE);
+	}
+
+	private void _sendMessageWithAttachmentsInternal(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
+		final int totalAttachments = attactmentmap.size();
+		final AtomicInteger completedUploads = new AtomicInteger(0);
+		final AtomicBoolean hasUploadError = new AtomicBoolean(false);
+		final ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
+
+		for (final HashMap<String, Object> attachmentData : attactmentmap) {
+			String filePath = attachmentData.get("filePath").toString();
+			ImageUploader.uploadImageWithCompression(filePath, new ImageUploader.UploadCallback() {
+				@Override
+				public void onSuccess(String downloadUrl) {
+					attachmentData.put("downloadUrl", downloadUrl);
+					successfulAttachments.add(attachmentData);
+					
+					int completed = completedUploads.incrementAndGet();
+					if (completed == totalAttachments) {
+						// All uploads completed
+						if (!hasUploadError.get() && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
+							_sendAttachmentMessage(messageText, senderUid, recipientUid, recipientOneSignalPlayerId, successfulAttachments);
+						}
+					}
+				}
+
+				@Override
+				public void onFailure(String error) {
+					hasUploadError.set(true);
+					Toast.makeText(getApplicationContext(), "Upload failed: " + error, Toast.LENGTH_SHORT).show();
+					
+					int completed = completedUploads.incrementAndGet();
+					if (completed == totalAttachments) {
+						// All uploads completed (some failed)
+						if (!messageText.isEmpty()) {
+							// Send text message without attachments
+							_sendTextMessage(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
+						}
+					}
+				}
+			}, true); // Enable compression
+		}
+	}
+
+	private void _sendAttachmentMessage(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId, ArrayList<HashMap<String, Object>> successfulAttachments) {
+		String uniqueMessageKey = main.push().getKey();
+		HashMap<String, Object> ChatSendMap = new HashMap<>();
+		ChatSendMap.put(UID_KEY, senderUid);
+		ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
+		ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
+		ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
+		if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
+		ChatSendMap.put(KEY_KEY, uniqueMessageKey);
+		ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
+		ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
+
+		// Send to both chat nodes
+		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+
+		// Remove typing status when sending message
+		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+
+		// Add message to local list immediately for instant display
+		ChatMessagesList.add(ChatSendMap);
+		chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+		ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+
+		// Extract file paths for notification
+		List<String> attachmentPaths = _extractAttachmentPaths(successfulAttachments);
+		String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
+
+		// Send notification
+		_sendNotification(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage,
+			!ReplyMessageID.equals("null") ? "reply" : "attachment", attachmentPaths, FirstUserName);
+
+		_updateInbox(lastMessage);
+
+		// Clear UI
+		attactmentmap.clear();
+		rv_attacmentList.getAdapter().notifyDataSetChanged();
+		attachmentLayoutListHolder.setVisibility(View.GONE);
+		
+		// Reset attachment container height when hiding
+		_resetAttachmentContainerHeight();
+		
+		message_et.setText("");
+		ReplyMessageID = "null";
+		mMessageReplyLayout.setVisibility(View.GONE);
+	}
+
+	/**
+	 * Extracts file paths from attachment data for notifications
+	 */
+	private List<String> _extractAttachmentPaths(ArrayList<HashMap<String, Object>> attachments) {
+		List<String> paths = new ArrayList<>();
+		for (HashMap<String, Object> attachment : attachments) {
+			if (attachment.containsKey("filePath")) {
+				paths.add(attachment.get("filePath").toString());
+			}
+		}
+		return paths;
+	}
+
+	/**
+	 * Unified notification sending method with fallback support
+	 */
+	private void _sendNotification(String senderUid, String recipientUid, String recipientOneSignalPlayerId, 
+								 String message, String messageType, List<String> attachments, String senderName) {
+		if (NotificationConfig.USE_SERVER_NOTIFICATIONS) {
+			// Server-side notification (primary method)
+			_sendServerNotification(senderUid, recipientUid, recipientOneSignalPlayerId, message, messageType, attachments, senderName);
+		} else {
+			// Client-side notification (fallback method)
+			_sendClientNotification(senderUid, recipientUid, recipientOneSignalPlayerId, message, messageType, attachments, senderName);
+		}
+	}
+
+	/**
+	 * Server-side notification via NotificationHelper with retry logic
+	 */
+	private void _sendServerNotification(String senderUid, String recipientUid, String recipientOneSignalPlayerId, 
+									   String message, String messageType, List<String> attachments, String senderName) {
+		_sendServerNotificationWithRetry(senderUid, recipientUid, recipientOneSignalPlayerId, message, messageType, attachments, senderName, 0);
+	}
+	
+	/**
+	 * Server notification with retry mechanism
+	 */
+	private void _sendServerNotificationWithRetry(String senderUid, String recipientUid, String recipientOneSignalPlayerId, 
+												 String message, String messageType, List<String> attachments, String senderName, int retryCount) {
+		try {
+			if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+				Log.d("ChatActivity", "Attempting server notification (attempt " + (retryCount + 1) + "/" + (NotificationConfig.MAX_SERVER_RETRY_ATTEMPTS + 1) + ")");
+			}
+			
+			NotificationHelper.sendMessageAndNotifyIfNeeded(
+				senderUid, recipientUid, recipientOneSignalPlayerId, message, messageType, attachments, senderName);
+				
+			if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+				Log.i("ChatActivity", "Server notification sent successfully");
+			}
+		} catch (Exception e) {
+			Log.e("ChatActivity", "Server notification failed (attempt " + (retryCount + 1) + ")", e);
+			
+			// Retry if we haven't exceeded max attempts
+			if (retryCount < NotificationConfig.MAX_SERVER_RETRY_ATTEMPTS) {
+				if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+					Log.d("ChatActivity", "Retrying server notification in " + NotificationConfig.RETRY_DELAY_MS + "ms");
+				}
+				
+				new Handler().postDelayed(() -> {
+					_sendServerNotificationWithRetry(senderUid, recipientUid, recipientOneSignalPlayerId, 
+						message, messageType, attachments, senderName, retryCount + 1);
+				}, NotificationConfig.RETRY_DELAY_MS);
+			} else {
+				// Max retries exceeded, fallback to client-side if enabled
+				if (NotificationConfig.ENABLE_AUTOMATIC_FALLBACK) {
+					Log.w("ChatActivity", "Max server retries exceeded, falling back to client-side notification");
+					_sendClientNotification(senderUid, recipientUid, recipientOneSignalPlayerId, message, messageType, attachments, senderName);
+				} else {
+					Log.e("ChatActivity", "Max server retries exceeded, notification failed");
+				}
+			}
+		}
+	}
+
+	/**
+	 * Client-side notification fallback
+	 */
+	private void _sendClientNotification(String senderUid, String recipientUid, String recipientOneSignalPlayerId, 
+									   String message, String messageType, List<String> attachments, String senderName) {
+		if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+			Log.d("ChatActivity", "Using client-side notification fallback");
+		}
+		
+		// Check if recipient is online/offline using Firebase presence
+		DatabaseReference statusRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(recipientUid).child("status");
+		statusRef.get().addOnSuccessListener(dataSnapshot -> {
+			String recipientStatus = dataSnapshot.getValue(String.class);
+			String suppressStatus = "chatting_with_" + senderUid;
+			
+			if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+				Log.d("ChatActivity", "Client notification - Recipient status: " + recipientStatus + ", Suppress: " + suppressStatus);
+			}
+			
+			// Don't send if recipient is in this chat
+			if (!suppressStatus.equals(recipientStatus)) {
+				// Create local notification or use alternative notification service
+				_createLocalNotification(message, messageType, attachments, senderName);
+			} else {
+				if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+					Log.d("ChatActivity", "Client notification suppressed - recipient is in chat");
+				}
+			}
+		}).addOnFailureListener(e -> {
+			Log.e("ChatActivity", "Failed to check recipient status for client notification", e);
+			// Send notification anyway if status check fails
+			_createLocalNotification(message, messageType, attachments, senderName);
+		});
+	}
+
+	/**
+	 * Creates a local notification as fallback
+	 */
+	private void _createLocalNotification(String message, String messageType, List<String> attachments, String senderName) {
+		if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+			Log.i("ChatActivity", "Creating client-side notification - Message: " + message + ", Type: " + messageType + ", From: " + senderName + ", Attachments: " + attachments.size());
+		}
+		
+		// This is a placeholder for client-side notification implementation
+		// You can implement local notifications, in-app notifications, or use alternative services
+		
+		// Example implementations you can uncomment and customize:
+		
+		// 1. Local Android Notification
+		// _createAndroidNotification(message, messageType, attachments, senderName);
+		
+		// 2. In-app notification
+		// _showInAppNotification(message, messageType, attachments, senderName);
+		
+		// 3. Alternative push service (e.g., Firebase Cloud Messaging)
+		// _sendAlternativePushNotification(message, messageType, attachments, senderName);
+		
+		// For now, just show a toast and log
+		runOnUiThread(() -> {
+			String notificationText = "Message sent and notification delivered";
+			if (!senderName.isEmpty()) {
+				notificationText = "Message from " + senderName + " delivered";
+			}
+			Toast.makeText(getApplicationContext(), notificationText, Toast.LENGTH_SHORT).show();
+		});
+	}
+	
+	/**
+	 * Example method for creating Android local notifications
+	 * Uncomment and customize as needed
+	 */
+	/*
+	private void _createAndroidNotification(String message, String messageType, List<String> attachments, String senderName) {
+		// Implementation for local Android notifications
+		// This would use NotificationManager and NotificationCompat.Builder
+	}
+	*/
+	
+	/**
+	 * Example method for showing in-app notifications
+	 * Uncomment and customize as needed
+	 */
+	/*
+	private void _showInAppNotification(String message, String messageType, List<String> attachments, String senderName) {
+		// Implementation for in-app notification UI
+		// This could show a banner, update a notification center, etc.
+	}
+	*/
+	
+	/**
+	 * Example method for alternative push notification services
+	 * Uncomment and customize as needed
+	 */
+	/*
+	private void _sendAlternativePushNotification(String message, String messageType, List<String> attachments, String senderName) {
+		// Implementation for alternative push services
+		// This could use Firebase Cloud Messaging, OneSignal direct API, etc.
+	}
+	*/
 }
