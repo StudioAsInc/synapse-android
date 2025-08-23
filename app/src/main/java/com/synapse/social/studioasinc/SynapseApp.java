@@ -88,7 +88,7 @@ public class SynapseApp extends Application {
                     String playerId = state.getCurrent().getId();
                     if (mAuth.getCurrentUser() != null && playerId != null) {
                         String userUid = mAuth.getCurrentUser().getUid();
-                        OneSignalManager.savePlayerIdToFirestore(userUid, playerId);
+                        OneSignalManager.savePlayerIdToRealtimeDatabase(userUid, playerId);
                     }
                 }
             }
