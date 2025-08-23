@@ -1469,7 +1469,7 @@ public class ChatActivity extends AppCompatActivity {
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 
-				// Smart Notification Check
+				// Smart Notification Check (from Kotlin helper)
 				String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 				String recipientUid = getIntent().getStringExtra("uid");
 				// TODO: You must fetch the recipient's OneSignal Player ID from their user profile.
@@ -1513,7 +1513,7 @@ public class ChatActivity extends AppCompatActivity {
 			.child(uniqueMessageKey)
 			.updateChildren(ChatSendMap);
 
-			// Smart Notification Check
+			// Smart Notification Check (from Kotlin helper)
 			String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 			String recipientUid = getIntent().getStringExtra("uid");
 			// TODO: You must fetch the recipient's OneSignal Player ID from their user profile.
