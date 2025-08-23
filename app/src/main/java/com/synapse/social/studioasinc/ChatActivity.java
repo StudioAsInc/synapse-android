@@ -675,6 +675,10 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _messageOverviewPopup(final View _view, final double _position, final ArrayList<HashMap<String, Object>> _data) {
+		if (_data == null || (int)_position >= _data.size() || (int)_position < 0) {
+			Log.e("ChatActivity", "Invalid position or data for message overview popup. Position: " + _position + ", Size: " + (_data != null ? _data.size() : "null"));
+			return;
+		}
 		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
 
 		final PopupWindow pop1 = new PopupWindow(pop1V, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
@@ -947,9 +951,6 @@ public class ChatActivity extends AppCompatActivity {
 					ChatMessagesList.addAll(initialMessages);
 					chatAdapter.notifyDataSetChanged();
 					ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-
-					// Now listen for new messages
-					_listenForNewMessages();
 				} else {
 					ChatMessagesListRecycler.setVisibility(View.GONE);
 					noChatText.setVisibility(View.VISIBLE);
@@ -1018,7 +1019,7 @@ public class ChatActivity extends AppCompatActivity {
 				if (snapshot.exists()) {
 					String removedKey = snapshot.getKey();
 					if (removedKey != null) {
-						for (int i = 0; i < ChatMessagesList.size(); i++) {
+						for (int i = ChatMessagesList.size() - 1; i >= 0; i--) {
 							if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
 								ChatMessagesList.remove(i);
 								chatAdapter.notifyItemRemoved(i);
