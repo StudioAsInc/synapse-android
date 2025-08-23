@@ -122,7 +122,7 @@
 					</LinearLayout>
 					<LinearLayout
 						android:id="@+id/topProfileLayoutSpace"
-						android:layout_width="wrap_content"
+						android:layout_width="0dp"
 						android:layout_height="match_parent"
 						android:layout_marginLeft="8dp"
 						android:layout_marginRight="8dp"
@@ -156,7 +156,7 @@
 				<LinearLayout
 					android:id="@+id/middle"
 					android:layout_width="match_parent"
-					android:layout_height="match_parent"
+					android:layout_height="0dp"
 					android:background="@android:color/transparent"
 					android:orientation="vertical"
 					android:layout_weight="1"
@@ -297,7 +297,7 @@
 					android:animateLayoutChanges="true">
 					<LinearLayout
 						android:id="@+id/message_input_outlined_round"
-						android:layout_width="match_parent"
+						android:layout_width="0dp"
 						android:layout_height="wrap_content"
 						android:padding="3dp"
 						android:background="#FFFFFF"
@@ -308,7 +308,7 @@
 						<com.synapse.social.studioasinc.FadeEditText
 							android:id="@+id/message_et"
 							android:layout_width="match_parent"
-							android:layout_height="wrap_content"
+							android:layout_height="0dp"
 							android:layout_marginLeft="7dp"
 							android:padding="8dp"
 							android:background="@android:color/transparent"

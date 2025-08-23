@@ -1030,10 +1030,10 @@ public class ChatActivity extends AppCompatActivity {
 									if (ChatMessagesList.isEmpty()) {
 										ChatMessagesListRecycler.setVisibility(View.GONE);
 										noChatText.setVisibility(View.VISIBLE);
-									}
-									// Update the last message if the removed one was the last
-									if (i > 0 && i == ChatMessagesList.size()) {
-										chatAdapter.notifyItemChanged(i - 1);
+									} else {
+										// After any removal, the last item in the list might need to be updated
+										// to correctly display its timestamp.
+										chatAdapter.notifyItemChanged(ChatMessagesList.size() - 1);
 									}
 									break;
 								}
