@@ -84,7 +84,7 @@ public class SynapseApp extends Application {
         OneSignal.getUser().getPushSubscription().addObserver(new IPushSubscriptionObserver() {
             @Override
             public void onPushSubscriptionChange(@NonNull PushSubscriptionChangedState state) {
-                if (state.getCurrent().isSubscribed()) {
+                if (state.getCurrent().getOptedIn()) {
                     String playerId = state.getCurrent().getId();
                     if (mAuth.getCurrentUser() != null && playerId != null) {
                         String userUid = mAuth.getCurrentUser().getUid();
