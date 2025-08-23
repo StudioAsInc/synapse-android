@@ -20,7 +20,7 @@
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
-            android:src="@drawable/ph_imgbluredsquare" />
+            android:src="@drawable/ph_imgbluredsqure" />
 
         <LinearLayout
             android:id="@+id/overlayLL"
