@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Account Section -->
+    <PreferenceCategory
+        android:title="Account"
+        android:icon="@drawable/ic_account"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="account"
+            android:title="Account Settings"
+            android:summary="Manage your account information and preferences"
+            android:icon="@drawable/ic_account_settings"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="profile"
+            android:title="Profile"
+            android:summary="Edit your profile information"
+            android:icon="@drawable/ic_profile"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="security"
+            android:title="Security"
+            android:summary="Password, two-factor authentication, and security settings"
+            android:icon="@drawable/ic_security"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Notifications Section -->
+    <PreferenceCategory
+        android:title="Notifications"
+        android:icon="@drawable/ic_notifications"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="notifications"
+            android:title="Notification Settings"
+            android:summary="Configure push notifications, sounds, and alerts"
+            android:icon="@drawable/ic_notification_settings"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="quiet_hours"
+            android:title="Quiet Hours"
+            android:summary="Set times when notifications are silenced"
+            android:icon="@drawable/ic_quiet_hours"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Privacy Section -->
+    <PreferenceCategory
+        android:title="Privacy"
+        android:icon="@drawable/ic_privacy"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="privacy"
+            android:title="Privacy Settings"
+            android:summary="Control who can see your information"
+            android:icon="@drawable/ic_privacy_settings"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="blocked_users"
+            android:title="Blocked Users"
+            android:summary="Manage blocked users and content"
+            android:icon="@drawable/ic_blocked"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- App Settings Section -->
+    <PreferenceCategory
+        android:title="App Settings"
+        android:icon="@drawable/ic_app_settings"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="app_settings"
+            android:title="General Settings"
+            android:summary="Language, theme, and app behavior"
+            android:icon="@drawable/ic_general_settings"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="storage"
+            android:title="Storage & Data"
+            android:summary="Manage app storage and data usage"
+            android:icon="@drawable/ic_storage"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="accessibility"
+            android:title="Accessibility"
+            android:summary="Accessibility features and options"
+            android:icon="@drawable/ic_accessibility"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Support Section -->
+    <PreferenceCategory
+        android:title="Support"
+        android:icon="@drawable/ic_support"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="help"
+            android:title="Help & Support"
+            android:summary="Get help and contact support"
+            android:icon="@drawable/ic_help"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="feedback"
+            android:title="Send Feedback"
+            android:summary="Report bugs and send suggestions"
+            android:icon="@drawable/ic_feedback"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="about"
+            android:title="About"
+            android:summary="App version and information"
+            android:icon="@drawable/ic_info"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

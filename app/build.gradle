@@ -1,13 +1,11 @@
-plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'com.google.devtools.ksp'
-    id 'org.jetbrains.kotlin.kapt' version '1.9.23'
-    id 'com.google.dagger.hilt.android'
-    id 'com.google.gms.google-services'
-    id 'com.google.firebase.crashlytics'
-    //id 'com.google.firebase.firebase-perf'
-}
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'com.google.devtools.ksp'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'dagger.hilt.android.plugin'
+apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.crashlytics'
+//id 'com.google.firebase.firebase-perf'
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('keystore.properties')
@@ -34,27 +32,29 @@ def getGitCommitCount = { ->
 }
 
 android {
-    namespace = "com.synapse.social.studioasinc"
-    compileSdk = 34
+    namespace "com.synapse.social.studioasinc"
+    compileSdk 34
 
     useLibrary 'org.apache.http.legacy'
 
     signingConfigs {
         release {
-            storeFile = file(keystoreProperties['storeFile'])
-            storePassword = keystoreProperties['storePassword']
-            keyAlias = keystoreProperties['keyAlias']
-            keyPassword = keystoreProperties['keyPassword']
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
         }
     }
 
     defaultConfig {
-        applicationId = "com.synapse.social.studioasinc"
-        minSdk = 26
-        targetSdk = 34
-        versionCode = 11
-        versionName = "1.0.0-alpha05"
-        multiDexEnabled = true
+        applicationId "com.synapse.social.studioasinc"
+        minSdk 26
+        targetSdk 34
+        versionCode 11
+        versionName "1.0.0-alpha05"
+        multiDexEnabled true
 
         vectorDrawables.useSupportLibrary = true
 
@@ -65,39 +65,42 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled = false
-            shrinkResources = false
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig = signingConfigs.release
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
         debug {
-            applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = "17"
     }
 
     buildFeatures {
-        viewBinding = true
-        buildConfig = true
+        viewBinding true
+        buildConfig true
     }
 
-    lintOptions {
-        abortOnError = false
-        checkReleaseBuilds = false
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
     }
 
-    packagingOptions {
-        resources.excludes.add("META-INF/*")
-        resources.excludes.add("META-INF/DEPENDENCIES")
+    packaging {
+        resources {
+            excludes += ['META-INF/*', 'META-INF/DEPENDENCIES']
+        }
     }
 }
 
@@ -117,7 +120,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.activity:activity-ktx:1.8.2'
     implementation 'androidx.fragment:fragment-ktx:1.6.2'
-    implementation 'com.google.android.material:material:1.14.0-alpha03'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.multidex:multidex:2.0.1'
 
@@ -145,7 +148,7 @@ dependencies {
 
     // Image Loading
     implementation 'com.github.bumptech.glide:glide:4.16.0'
-    kapt 'com.github.bumptech.glide:compiler:4.16.0'
+    ksp 'com.github.bumptech.glide:compiler:4.16.0'
 
     // Networking
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
