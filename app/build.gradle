@@ -99,17 +99,18 @@ android {
 }
 
 dependencies {
-    // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
+    // Import the Firebase BoM (downgraded to avoid gRPC conflict)
+    implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
 
     // When using the BoM, don't specify versions in Firebase dependencies
-    implementation 'com.google.firebase:firebase-auth'
-    implementation 'com.google.firebase:firebase-database'
-    implementation 'com.google.firebase:firebase-firestore'
-    implementation 'com.google.firebase:firebase-storage'
-    implementation 'com.google.firebase:firebase-perf'
-    implementation 'com.google.firebase:firebase-crashlytics'
-    implementation 'com.google.firebase:firebase-analytics'
+    // Re-adding -ktx suffixes as they are included in this BoM version
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-database-ktx'
+    implementation 'com.google.firebase:firebase-firestore-ktx'
+    implementation 'com.google.firebase:firebase-storage-ktx'
+    implementation 'com.google.firebase:firebase-perf-ktx'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
 
     // AndroidX Core & UI Components
     implementation 'androidx.core:core-ktx:1.17.0-rc01'
@@ -173,28 +174,4 @@ dependencies {
 	implementation 'org.jsoup:jsoup:1.21.1'
 
     // Testing
-
-    constraints {
-        implementation("io.grpc:grpc-api:1.62.2") {
-            because("Force consistent gRPC versions for Firebase Firestore")
-        }
-        implementation("io.grpc:grpc-context:1.62.2") {
-            because("Force consistent gRPC versions for Firebase Firestore")
-        }
-        implementation("io.grpc:grpc-core:1.62.2") {
-            because("Force consistent gRPC versions for Firebase Firestore")
-        }
-        implementation("io.grpc:grpc-okhttp:1.62.2") {
-            because("Force consistent gRPC versions for Firebase Firestore")
-        }
-        implementation("io.grpc:grpc-android:1.62.2") {
-            because("Force consistent gRPC versions for Firebase Firestore")
-        }
-        implementation("io.grpc:grpc-stub:1.62.2") {
-            because("Force consistent gRPC versions for Firebase Firestore")
-        }
-        implementation("io.grpc:grpc-protobuf-lite:1.62.2") {
-            because("Force consistent gRPC versions for Firebase Firestore")
-        }
-    }
 }
