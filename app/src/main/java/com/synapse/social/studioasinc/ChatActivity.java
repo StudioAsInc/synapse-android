@@ -550,6 +550,10 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			}
 		});
+
+		// Attach listeners after all references are safely initialized.
+		_attachChatListener();
+		_attachUserStatusListener();
 	}
 
 	@Override
@@ -609,14 +613,23 @@ public class ChatActivity extends AppCompatActivity {
 	public void onPause() {
 		super.onPause();
 		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+
+		// Set user status back to online when leaving the chat screen
+		if (auth.getCurrentUser() != null) {
+			PresenceManager.stopChatting(auth.getCurrentUser().getUid());
+		}
 	}
 
 	@Override
 	protected void onStart() {
 		super.onStart();
-		_attachChatListener();
-		_attachUserStatusListener();
 		blocklist.addChildEventListener(_blocklist_child_listener);
+
+		// Set user status to indicate they are in this chat
+		if (auth.getCurrentUser() != null) {
+			String recipientUid = getIntent().getStringExtra("uid");
+			PresenceManager.setChattingWith(auth.getCurrentUser().getUid(), recipientUid);
+		}
 	}
 
 	@Override
@@ -1412,11 +1425,50 @@ public class ChatActivity extends AppCompatActivity {
 
 	public void _send_btn() {
 		final String messageText = message_et.getText().toString().trim();
+		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		final String recipientUid = getIntent().getStringExtra("uid");
 
+		// The message sending logic is now wrapped inside a Realtime Database query.
+		// First, we fetch the recipient's OneSignal Player ID from the 'users' node.
+		_firebase.getReference(SKYLINE_REF).child(USERS_REF).child(recipientUid)
+			.addListenerForSingleValueEvent(new ValueEventListener() {
+				@Override
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+					String recipientOneSignalPlayerId = "missing_id"; // Default value
+
+					if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
+						String fetchedId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
+						if (fetchedId != null && !fetchedId.isEmpty()) {
+							recipientOneSignalPlayerId = fetchedId;
+						} else {
+							Log.e("ChatActivity", "Recipient's OneSignal Player ID is null or empty in the database.");
+						}
+					} else {
+						Log.e("ChatActivity", "Recipient's user node or oneSignalPlayerId not found in Realtime Database.");
+					}
+
+					// After fetching the ID (or failing), proceed with sending the message.
+					proceedWithMessageSending(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
+				}
+
+				@Override
+				public void onCancelled(@NonNull DatabaseError databaseError) {
+					Log.e("ChatActivity", "Failed to fetch recipient's data from RTDB. Sending message without notification.", databaseError.toException());
+					// Still send the message, just without the notification.
+					proceedWithMessageSending(messageText, senderUid, recipientUid, "missing_id");
+				}
+			});
+	}
+
+	/**
+	 * This helper method contains the original logic for sending a message.
+	 * It's now called after the recipient's OneSignal ID has been fetched.
+	 */
+	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
 		if (!attactmentmap.isEmpty()) {
+			// Logic for sending messages with attachments
 			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
 			boolean allUploadsSuccessful = true;
-
 			for (HashMap<String, Object> item : attactmentmap) {
 				if ("success".equals(item.get("uploadState"))) {
 					HashMap<String, Object> attachmentData = new HashMap<>();
@@ -1431,71 +1483,62 @@ public class ChatActivity extends AppCompatActivity {
 			}
 
 			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
-				cc = Calendar.getInstance();
 				String uniqueMessageKey = main.push().getKey();
-
 				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
+				ChatSendMap.put(UID_KEY, senderUid);
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
 				ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
 				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-				.child(getIntent().getStringExtra(UID_KEY))
-				.child(uniqueMessageKey)
-				.updateChildren(ChatSendMap);
-
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-				.child(getIntent().getStringExtra(UID_KEY))
-				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-				.child(uniqueMessageKey)
-				.updateChildren(ChatSendMap);
+				// Send to both chat nodes
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
+
+				// Smart Notification Check
+				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage);
+
 				_updateInbox(lastMessage);
 
+				// Clear UI
 				attactmentmap.clear();
 				rv_attacmentList.getAdapter().notifyDataSetChanged();
 				attachmentLayoutListHolder.setVisibility(View.GONE);
 				message_et.setText("");
 				ReplyMessageID = "null";
 				mMessageReplyLayout.setVisibility(View.GONE);
+
 			} else {
 				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
 			}
 
 		} else if (!messageText.isEmpty()) {
-			cc = Calendar.getInstance();
+			// Logic for sending text-only messages
 			String uniqueMessageKey = main.push().getKey();
-
 			ChatSendMap = new HashMap<>();
-			ChatSendMap.put(UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
+			ChatSendMap.put(UID_KEY, senderUid);
 			ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
 			ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
 			ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 			if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-			.child(getIntent().getStringExtra(UID_KEY))
-			.child(uniqueMessageKey)
-			.updateChildren(ChatSendMap);
+			// Send to both chat nodes
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-			.child(getIntent().getStringExtra(UID_KEY))
-			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-			.child(uniqueMessageKey)
-			.updateChildren(ChatSendMap);
+			// Smart Notification Check
+			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText);
 
 			_updateInbox(messageText);
 
+			// Clear UI
 			message_et.setText("");
 			ReplyMessageID = "null";
 			mMessageReplyLayout.setVisibility(View.GONE);
@@ -1706,10 +1749,23 @@ public class ChatActivity extends AppCompatActivity {
 
 			@Override
 			public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-				// This is triggered when the swipe is completed.
-				_showReplyUI(viewHolder.getAdapterPosition());
-				// The adapter needs to be notified to redraw the item back to its original state.
-				chatAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
+				int position = viewHolder.getAdapterPosition();
+				if (position < 0 || position >= ChatMessagesList.size()) {
+					return; // Invalid position, do nothing.
+				}
+
+				// Get the item and check if it's a real message with a key.
+				HashMap<String, Object> messageData = ChatMessagesList.get(position);
+				if (messageData == null || !messageData.containsKey("key") || messageData.get("key") == null) {
+					// This is not a real message (e.g., typing indicator, loading view).
+					// We just notify the adapter to redraw the item back to its original state.
+					chatAdapter.notifyItemChanged(position);
+					return;
+				}
+
+				// If it's a real message, proceed with the reply UI.
+				_showReplyUI(position);
+				chatAdapter.notifyItemChanged(position);
 			}
 
 			@Override

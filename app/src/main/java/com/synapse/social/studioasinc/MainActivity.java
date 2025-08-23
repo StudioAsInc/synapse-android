@@ -103,7 +103,42 @@ public class MainActivity extends AppCompatActivity {
 		setContentView(R.layout.main);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
+		createNotificationChannels();
 		initializeLogic();
+	}
+
+	private void createNotificationChannels() {
+		// Create notification channels for Android O and above
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			NotificationManager notificationManager = getSystemService(NotificationManager.class);
+			
+			// Messages channel
+			NotificationChannel messagesChannel = new NotificationChannel(
+				"messages",
+				"Messages",
+				NotificationManager.IMPORTANCE_HIGH
+			);
+			messagesChannel.setDescription("Chat message notifications");
+			messagesChannel.enableLights(true);
+			messagesChannel.setLightColor(Color.RED);
+			messagesChannel.enableVibration(true);
+			messagesChannel.setShowBadge(true);
+			messagesChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+			
+			// General notifications channel
+			NotificationChannel generalChannel = new NotificationChannel(
+				"general",
+				"General",
+				NotificationManager.IMPORTANCE_DEFAULT
+			);
+			generalChannel.setDescription("General app notifications");
+			generalChannel.enableLights(false);
+			generalChannel.enableVibration(false);
+			
+			// Create the channels
+			notificationManager.createNotificationChannel(messagesChannel);
+			notificationManager.createNotificationChannel(generalChannel);
+		}
 	}
 
 	private void initialize(Bundle _savedInstanceState) {
