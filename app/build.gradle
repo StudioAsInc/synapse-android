@@ -173,4 +173,28 @@ dependencies {
 	implementation 'org.jsoup:jsoup:1.21.1'
 
     // Testing
+
+    constraints {
+        implementation("io.grpc:grpc-api:1.62.2") {
+            because("Force consistent gRPC versions for Firebase Firestore")
+        }
+        implementation("io.grpc:grpc-context:1.62.2") {
+            because("Force consistent gRPC versions for Firebase Firestore")
+        }
+        implementation("io.grpc:grpc-core:1.62.2") {
+            because("Force consistent gRPC versions for Firebase Firestore")
+        }
+        implementation("io.grpc:grpc-okhttp:1.62.2") {
+            because("Force consistent gRPC versions for Firebase Firestore")
+        }
+        implementation("io.grpc:grpc-android:1.62.2") {
+            because("Force consistent gRPC versions for Firebase Firestore")
+        }
+        implementation("io.grpc:grpc-stub:1.62.2") {
+            because("Force consistent gRPC versions for Firebase Firestore")
+        }
+        implementation("io.grpc:grpc-protobuf-lite:1.62.2") {
+            because("Force consistent gRPC versions for Firebase Firestore")
+        }
+    }
 }
