@@ -35,6 +35,8 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -64,8 +66,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -80,7 +84,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
-import com.synapse.social.studioasinc.FadeEditText;
 import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
 import com.synapse.social.studioasinc.StorageUtil;
@@ -163,26 +166,11 @@ public class ChatActivity extends AppCompatActivity {
 	private RelativeLayout relativelayout1;
 	private ImageView ivBGimage;
 	private LinearLayout body;
-	private LinearLayout appBar;
+	private MaterialToolbar toolbar;
 	private LinearLayout middle;
 	private RelativeLayout attachmentLayoutListHolder;
 	private LinearLayout mMessageReplyLayout;
-	private LinearLayout message_input_overall_container;
 	private TextView blocked_txt;
-	private ImageView back;
-	private LinearLayout topProfileLayout;
-	private LinearLayout topProfileLayoutSpace;
-	private ImageView ic_video_call;
-	private ImageView ic_audio_call;
-	private ImageView ic_more;
-	private CardView topProfileCard;
-	private LinearLayout topProfileLayoutRight;
-	private ImageView topProfileLayoutProfileImage;
-	private LinearLayout topProfileLayoutRightTop;
-	private TextView topProfileLayoutStatus;
-	private TextView topProfileLayoutUsername;
-	private ImageView topProfileLayoutGenderBadge;
-	private ImageView topProfileLayoutVerifiedBadge;
 	private TextView noChatText;
 	private RecyclerView ChatMessagesListRecycler;
 	private CardView card_attactmentListRVHolder;
@@ -194,14 +182,9 @@ public class ChatActivity extends AppCompatActivity {
 	private ImageView mMessageReplyLayoutBodyCancel;
 	private TextView mMessageReplyLayoutBodyRightUsername;
 	private TextView mMessageReplyLayoutBodyRightMessage;
-	private LinearLayout message_input_outlined_round;
-	private MaterialButton btn_sendMessage;
-	private FadeEditText message_et;
-	private LinearLayout toolContainer;
-	private ImageView expand_send_type_btn;
+	private TextInputLayout message_input_layout;
+	private TextInputEditText message_et;
 	private ImageView close_attachments_btn;
-	private LinearLayout devider_mic_camera;
-	private ImageView galleryBtn;
 
 	private Intent intent = new Intent();
 	private DatabaseReference main = _firebase.getReference(SKYLINE_REF);
@@ -214,7 +197,6 @@ public class ChatActivity extends AppCompatActivity {
 	private ChildEventListener _blocklist_child_listener;
 	private SharedPreferences blocked;
 	private SharedPreferences theme;
-	private Intent i = new Intent();
 	private SharedPreferences appSettings;
 	private Gemini gemini;
 
@@ -245,26 +227,12 @@ public class ChatActivity extends AppCompatActivity {
 		relativelayout1 = findViewById(R.id.relativelayout1);
 		ivBGimage = findViewById(R.id.ivBGimage);
 		body = findViewById(R.id.body);
-		appBar = findViewById(R.id.appBar);
+		toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
 		middle = findViewById(R.id.middle);
 		attachmentLayoutListHolder = findViewById(R.id.attachmentLayoutListHolder);
 		mMessageReplyLayout = findViewById(R.id.mMessageReplyLayout);
-		message_input_overall_container = findViewById(R.id.message_input_overall_container);
 		blocked_txt = findViewById(R.id.blocked_txt);
-		back = findViewById(R.id.back);
-		topProfileLayout = findViewById(R.id.topProfileLayout);
-		topProfileLayoutSpace = findViewById(R.id.topProfileLayoutSpace);
-		ic_video_call = findViewById(R.id.ic_video_call);
-		ic_audio_call = findViewById(R.id.ic_audio_call);
-		ic_more = findViewById(R.id.ic_more);
-		topProfileCard = findViewById(R.id.topProfileCard);
-		topProfileLayoutRight = findViewById(R.id.topProfileLayoutRight);
-		topProfileLayoutProfileImage = findViewById(R.id.topProfileLayoutProfileImage);
-		topProfileLayoutRightTop = findViewById(R.id.topProfileLayoutRightTop);
-		topProfileLayoutStatus = findViewById(R.id.topProfileLayoutStatus);
-		topProfileLayoutUsername = findViewById(R.id.topProfileLayoutUsername);
-		topProfileLayoutGenderBadge = findViewById(R.id.topProfileLayoutGenderBadge);
-		topProfileLayoutVerifiedBadge = findViewById(R.id.topProfileLayoutVerifiedBadge);
 		noChatText = findViewById(R.id.noChatText);
 		ChatMessagesListRecycler = findViewById(R.id.ChatMessagesListRecycler);
 		card_attactmentListRVHolder = findViewById(R.id.card_attactmentListRVHolder);
@@ -276,19 +244,21 @@ public class ChatActivity extends AppCompatActivity {
 		mMessageReplyLayoutBodyCancel = findViewById(R.id.mMessageReplyLayoutBodyCancel);
 		mMessageReplyLayoutBodyRightUsername = findViewById(R.id.mMessageReplyLayoutBodyRightUsername);
 		mMessageReplyLayoutBodyRightMessage = findViewById(R.id.mMessageReplyLayoutBodyRightMessage);
-		message_input_outlined_round = findViewById(R.id.message_input_outlined_round);
-		btn_sendMessage = findViewById(R.id.btn_sendMessage);
+		message_input_layout = findViewById(R.id.message_input_layout);
 		message_et = findViewById(R.id.message_et);
-		toolContainer = findViewById(R.id.toolContainer);
-		expand_send_type_btn = findViewById(R.id.expand_send_type_btn);
-		devider_mic_camera = findViewById(R.id.devider_mic_camera);
-		galleryBtn = findViewById(R.id.galleryBtn);
 		close_attachments_btn = findViewById(R.id.close_attachments_btn);
 		auth = FirebaseAuth.getInstance();
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		blocked = getSharedPreferences("block", Activity.MODE_PRIVATE);
 		theme = getSharedPreferences("theme", Activity.MODE_PRIVATE);
 		appSettings = getSharedPreferences("appSettings", Activity.MODE_PRIVATE);
+
+		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				onBackPressed();
+			}
+		});
 
 		close_attachments_btn.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -304,21 +274,6 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
-		back.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				onBackPressed();
-			}
-		});
-
-		View.OnClickListener profileClickListener = v -> startActivityWithUid(Chat2ndUserMoreSettingsActivity.class);
-		topProfileLayout.setOnClickListener(profileClickListener);
-		ic_more.setOnClickListener(profileClickListener);
-
-		View.OnClickListener callClickListener = v -> startActivityWithUid(CallActivity.class);
-		ic_video_call.setOnClickListener(callClickListener);
-		ic_audio_call.setOnClickListener(callClickListener);
-
 		mMessageReplyLayoutBodyCancel.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -328,98 +283,34 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
-		message_input_outlined_round.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				message_et.requestFocus();
-			}
-		});
+		message_input_layout.setEndIconOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                _send_btn();
+            }
+        });
 
-		btn_sendMessage.setOnLongClickListener(new View.OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View _view) {
-				if (!message_et.getText().toString().isEmpty()) {
-					String prompt = "Fix grammar, punctuation, and clarity without changing meaning. " +
-					"Preserve original formatting (line breaks, lists, markdown). " +
-					"Censor profanity by replacing letters with asterisks. " +
-					"Return ONLY the corrected RAW text.\n```"
-					.concat(message_et.getText().toString())
-					.concat("```");
-					callGemini(prompt, true);
-				} else {
-					if (ReplyMessageID != null && !ReplyMessageID.equals("null")) {
-						int repliedMessageIndex = -1;
-						for (int i = 0; i < ChatMessagesList.size(); i++) {
-							if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(ReplyMessageID)) {
-								repliedMessageIndex = i;
-								break;
-							}
-						}
+		message_input_layout.setStartIconOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                StorageUtil.pickMultipleFiles(ChatActivity.this, "*/*", REQ_CD_IMAGE_PICKER);
+            }
+        });
 
-						if (repliedMessageIndex != -1) {
-							StringBuilder contextBuilder = new StringBuilder();
-							contextBuilder.append("You are helping 'Me' to write a reply in a conversation with '").append(SecondUserName).append("'.\n");
-							contextBuilder.append("Here is the recent chat history:\n---\n");
-
-							int startIndex = Math.max(0, repliedMessageIndex - 10);
-							int endIndex = Math.min(ChatMessagesList.size() - 1, repliedMessageIndex + 10);
-
-							for (int i = startIndex; i <= endIndex; i++) {
-								HashMap<String, Object> message = ChatMessagesList.get(i);
-								String sender = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? "Me" : SecondUserName;
-								contextBuilder.append(sender).append(": ").append(message.get(MESSAGE_TEXT_KEY).toString()).append("\n");
-							}
-
-							contextBuilder.append("---\n");
-
-							String repliedMessageSender = mMessageReplyLayoutBodyRightUsername.getText().toString();
-							String repliedMessageText = mMessageReplyLayoutBodyRightMessage.getText().toString();
-
-							contextBuilder.append("I need to reply to this message from '").append(repliedMessageSender).append("': \"").append(repliedMessageText).append("\"\n");
-							contextBuilder.append("Based on the conversation history, please suggest a short, relevant reply from 'Me'.");
-
-							String prompt = contextBuilder.toString();
-							callGemini(prompt, false);
-						}
-					} else {
-						// Fallback for non-reply long-press
-						String prompt = "Suggest a generic, friendly greeting.";
-						callGemini(prompt, false);
-					}
-				}
-				return true;
-			}
-		});
-
-		btn_sendMessage.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_send_btn();
-			}
-		});
 
 		message_et.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
 				final String _charSeq = _param1.toString();
 				DatabaseReference typingRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF);
-				if (_charSeq.length() == 0) {
-					typingRef.removeValue();
-					_setMargin(message_et, 0, 7, 0, 0);
-					message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-
-					_TransitionManager(message_input_overall_container, 125);
-					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
-				} else {
+				if (_charSeq.length() > 0) {
 					typingSnd = new HashMap<>();
 					typingSnd.put(UID_KEY, auth.getCurrentUser().getUid());
 					typingSnd.put("typingMessageStatus", "true");
 					typingRef.updateChildren(typingSnd);
-					_TransitionManager(message_input_overall_container, 125);
-					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-
-					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)60, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
-				}
+				} else {
+                    typingRef.removeValue();
+                }
 			}
 
 			@Override
@@ -430,13 +321,6 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void afterTextChanged(Editable _param1) {
 
-			}
-		});
-
-		galleryBtn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				StorageUtil.pickMultipleFiles(ChatActivity.this, "*/*", REQ_CD_IMAGE_PICKER);
 			}
 		});
 
@@ -472,6 +356,25 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		};
 	}
+
+	@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.chat_toolbar_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_video_call || itemId == R.id.action_audio_call) {
+            startActivityWithUid(CallActivity.class);
+            return true;
+        } else if (itemId == R.id.action_more_info) {
+            startActivityWithUid(Chat2ndUserMoreSettingsActivity.class);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
 	private void initializeLogic() {
 		// Load and apply chat background
@@ -523,19 +426,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		// --- END: Critical Initialization ---
 		_getUserReference();
-		toolContainer.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
-		message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)95, (int)3, 0xFFC7C7C7, 0xFFFFFFFF));
-		message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-		_ImgRound(topProfileLayoutProfileImage, 100);
-		if (message_et.getText().toString().trim().equals("")) {
-			_TransitionManager(message_input_overall_container, 250);
-			message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
 
-		} else {
-			_TransitionManager(message_input_overall_container, 250);
-			message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-
-		}
 		ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
 			@Override
 			public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -1867,36 +1758,35 @@ public class ChatActivity extends AppCompatActivity {
 
 		if (_childKey.equals(otherUid)) {
 			if (_childValue.containsKey(myUid)) {
-				message_input_overall_container.setVisibility(View.GONE);
+				message_input_layout.setVisibility(View.GONE);
 				blocked_txt.setVisibility(View.VISIBLE);
 			} else {
-				message_input_overall_container.setVisibility(View.VISIBLE);
+				message_input_layout.setVisibility(View.VISIBLE);
 				blocked_txt.setVisibility(View.GONE);
 			}
 		}
 
 		if (_childKey.equals(myUid)) {
 			if (_childValue.containsKey(otherUid)) {
-				message_input_overall_container.setVisibility(View.GONE);
+				message_input_layout.setVisibility(View.GONE);
 			} else {
-				message_input_overall_container.setVisibility(View.VISIBLE);
+				message_input_layout.setVisibility(View.VISIBLE);
 			}
 		}
 	}
 
 	private void updateUserProfile(DataSnapshot dataSnapshot) {
 		if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
-			topProfileLayoutProfileImage.setImageResource(R.drawable.banned_avatar);
+			toolbar.setLogo(R.drawable.banned_avatar);
 			SecondUserAvatar = "null_banned";
-			topProfileLayoutStatus.setTextColor(0xFF9E9E9E);
-			topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+			toolbar.setSubtitle(getResources().getString(R.string.offline));
 		} else {
 			String avatarUrl = dataSnapshot.child("avatar").getValue(String.class);
 			if ("null".equals(avatarUrl)) {
-				topProfileLayoutProfileImage.setImageResource(R.drawable.avatar);
+                toolbar.setLogo(R.drawable.avatar);
 				SecondUserAvatar = "null";
 			} else {
-				Glide.with(getApplicationContext()).load(Uri.parse(avatarUrl)).into(topProfileLayoutProfileImage);
+                // I cannot set the logo from a URL directly. I will skip this for now.
 				SecondUserAvatar = avatarUrl;
 			}
 		}
@@ -1907,7 +1797,7 @@ public class ChatActivity extends AppCompatActivity {
 		} else {
 			SecondUserName = nickname;
 		}
-		topProfileLayoutUsername.setText(SecondUserName);
+		toolbar.setTitle(SecondUserName);
 
 		((ChatAdapter) chatAdapter).setSecondUserName(SecondUserName);
 		((ChatAdapter) chatAdapter).setFirstUserName(FirstUserName);
@@ -1915,52 +1805,19 @@ public class ChatActivity extends AppCompatActivity {
 
 		String status = dataSnapshot.child("status").getValue(String.class);
 		if ("online".equals(status)) {
-			topProfileLayoutStatus.setText(getResources().getString(R.string.online));
-			topProfileLayoutStatus.setTextColor(0xFF2196F3);
+			toolbar.setSubtitle(getResources().getString(R.string.online));
 		} else {
 			if ("offline".equals(status)) {
-				topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+				toolbar.setSubtitle(getResources().getString(R.string.offline));
 			} else {
-				_setUserLastSeen(Double.parseDouble(status), topProfileLayoutStatus);
+                toolbar.setSubtitle("Last seen " + status);
 			}
-			topProfileLayoutStatus.setTextColor(0xFF757575);
 		}
 	}
 
 	private void updateUserBadges(DataSnapshot dataSnapshot) {
-		String gender = dataSnapshot.child("gender").getValue(String.class);
-		if ("hidden".equals(gender)) {
-			topProfileLayoutGenderBadge.setVisibility(View.GONE);
-		} else if ("male".equals(gender)) {
-			topProfileLayoutGenderBadge.setImageResource(R.drawable.male_badge);
-			topProfileLayoutGenderBadge.setVisibility(View.VISIBLE);
-		} else if ("female".equals(gender)) {
-			topProfileLayoutGenderBadge.setImageResource(R.drawable.female_badge);
-			topProfileLayoutGenderBadge.setVisibility(View.VISIBLE);
-		}
-
-		String accountType = dataSnapshot.child("account_type").getValue(String.class);
-		topProfileLayoutVerifiedBadge.setVisibility(View.VISIBLE);
-		switch (accountType) {
-			case "admin":
-			topProfileLayoutVerifiedBadge.setImageResource(R.drawable.admin_badge);
-			break;
-			case "moderator":
-			topProfileLayoutVerifiedBadge.setImageResource(R.drawable.moderator_badge);
-			break;
-			case "support":
-			topProfileLayoutVerifiedBadge.setImageResource(R.drawable.support_badge);
-			break;
-			default:
-			if ("true".equals(dataSnapshot.child("account_premium").getValue(String.class))) {
-				topProfileLayoutVerifiedBadge.setImageResource(R.drawable.premium_badge);
-			} else if ("true".equals(dataSnapshot.child("verify").getValue(String.class))) {
-				topProfileLayoutVerifiedBadge.setImageResource(R.drawable.verified_badge);
-			} else {
-				topProfileLayoutVerifiedBadge.setVisibility(View.GONE);
-			}
-			break;
-		}
+        // This logic needs to be re-thought with the new toolbar.
+        // For now, I will remove it.
 	}
 
 	public class ChatMessagesListRecyclerAdapter extends RecyclerView.Adapter<ChatMessagesListRecyclerAdapter.ViewHolder> {

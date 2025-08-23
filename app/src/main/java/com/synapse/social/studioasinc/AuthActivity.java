@@ -52,7 +52,7 @@ public class AuthActivity extends AppCompatActivity {
     private LinearLayout animatorSupportLayout;
     private LinearLayout profileHolderLayout;
     private TextView nameFirstLetterTextView;
-    private EditText usernameEditText;
+    private com.google.android.material.textfield.TextInputEditText usernameEditText;
     private CheckBox confirmAgeCheckBox;
     private Button continueButton;
     private TVeffects aiResponseTextView_2;
@@ -60,10 +60,10 @@ public class AuthActivity extends AppCompatActivity {
     private TVeffects ruleTextView1;
     private LinearLayout emailLayout;
     private TextView ask_for_email_tv;
-    private EditText email_et;
+    private com.google.android.material.textfield.TextInputEditText email_et;
     private LinearLayout passLayout;
     private TextView askForPassTV;
-    private EditText pass_et;
+    private com.google.android.material.textfield.TextInputEditText pass_et;
     private Button button1;
 
     // System services
