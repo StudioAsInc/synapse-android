@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- OneSignal Status Section -->
+    <PreferenceCategory
+        android:title="OneSignal Configuration"
+        android:icon="@drawable/ic_onesignal"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="onesignal_status"
+            android:title="OneSignal Status"
+            android:summary="Checking configuration..."
+            android:icon="@drawable/ic_info"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="onesignal_app_id"
+            android:title="App ID"
+            android:summary="044e1911-6911-4871-95f9-d60003002fe2"
+            android:icon="@drawable/ic_app_id"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- General Notification Settings -->
+    <PreferenceCategory
+        android:title="General Notifications"
+        android:icon="@drawable/ic_notifications"
+        app:iconSpaceReserved="false">
+
+        <SwitchPreferenceCompat
+            android:key="push_notifications"
+            android:title="Push Notifications"
+            android:summary="Enable or disable all push notifications"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_push_notifications"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            android:key="notification_sound"
+            android:title="Notification Sound"
+            android:summary="Play sound when notifications arrive"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_sound"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            android:key="notification_vibration"
+            android:title="Vibration"
+            android:summary="Vibrate when notifications arrive"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_vibration"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            android:key="notification_led"
+            android:title="LED Light"
+            android:summary="Show LED light for notifications"
+            android:defaultValue="false"
+            android:icon="@drawable/ic_led"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Notification Types -->
+    <PreferenceCategory
+        android:title="Notification Types"
+        android:icon="@drawable/ic_notification_types"
+        app:iconSpaceReserved="false">
+
+        <SwitchPreferenceCompat
+            android:key="chat_messages"
+            android:title="Chat Messages"
+            android:summary="Receive notifications for new chat messages"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_chat"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            android:key="group_updates"
+            android:title="Group Updates"
+            android:summary="Receive notifications for group activities"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_group"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            android:key="friend_requests"
+            android:title="Friend Requests"
+            android:summary="Receive notifications for friend requests"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_friend_request"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            android:key="mentions"
+            android:title="Mentions"
+            android:summary="Receive notifications when mentioned"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_mention"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Advanced Settings -->
+    <PreferenceCategory
+        android:title="Advanced Settings"
+        android:icon="@drawable/ic_settings"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="notification_channels"
+            android:title="Notification Channels"
+            android:summary="Manage individual notification channels"
+            android:icon="@drawable/ic_channels"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="quiet_hours"
+            android:title="Quiet Hours"
+            android:summary="Set times when notifications are silenced"
+            android:icon="@drawable/ic_quiet_hours"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="notification_history"
+            android:title="Notification History"
+            android:summary="View recent notifications"
+            android:icon="@drawable/ic_history"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
