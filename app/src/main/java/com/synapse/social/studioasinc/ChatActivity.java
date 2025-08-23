@@ -92,6 +92,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -1753,8 +1754,16 @@ public class ChatActivity extends AppCompatActivity {
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 
-				// Smart Notification Check
-				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage);
+				// Smart Notification Check with detailed information
+				NotificationHelper.sendMessageAndNotifyIfNeeded(
+					senderUid, 
+					recipientUid, 
+					recipientOneSignalPlayerId, 
+					lastMessage,
+					!ReplyMessageID.equals("null") ? "reply" : "attachment",
+					successfulAttachments,
+					FirstUserName
+				);
 
 				_updateInbox(lastMessage);
 
@@ -1798,8 +1807,16 @@ public class ChatActivity extends AppCompatActivity {
 			chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
 			ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
 
-			// Smart Notification Check
-			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText);
+			// Smart Notification Check with detailed information
+			NotificationHelper.sendMessageAndNotifyIfNeeded(
+				senderUid, 
+				recipientUid, 
+				recipientOneSignalPlayerId, 
+				messageText,
+				!ReplyMessageID.equals("null") ? "reply" : "text",
+				Collections.emptyList(),
+				FirstUserName
+			);
 
 			_updateInbox(messageText);
 

@@ -5,6 +5,7 @@ import com.google.firebase.database.FirebaseDatabase
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
@@ -27,7 +28,10 @@ object NotificationHelper {
         senderUid: String,
         recipientUid: String,
         recipientOneSignalPlayerId: String,
-        message: String
+        message: String,
+        messageType: String = "text",
+        attachments: List<String> = emptyList(),
+        senderName: String = ""
     ) {
         val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/status/$recipientUid")
 
@@ -41,7 +45,7 @@ object NotificationHelper {
             } else {
                 // Send in all other cases (offline, online, null).
                 Log.i(TAG, "Recipient not in chat. Sending notification.")
-                triggerPushNotification(recipientOneSignalPlayerId, message)
+                triggerPushNotification(recipientOneSignalPlayerId, message, messageType, attachments, senderName)
             }
         }.addOnFailureListener { e ->
             // On error, default to sending notification.
@@ -56,12 +60,22 @@ object NotificationHelper {
      * Triggers a push notification via the Cloudflare Worker.
      */
     @JvmStatic
-    fun triggerPushNotification(recipientId: String, message: String) {
+    fun triggerPushNotification(
+        recipientId: String, 
+        message: String, 
+        messageType: String = "text",
+        attachments: List<String> = emptyList(),
+        senderName: String = ""
+    ) {
         val client = OkHttpClient()
         val jsonBody = JSONObject()
         try {
             jsonBody.put("recipientUserId", recipientId)
             jsonBody.put("notificationMessage", message)
+            jsonBody.put("messageType", messageType)
+            jsonBody.put("attachments", JSONArray(attachments))
+            jsonBody.put("senderName", senderName)
+            jsonBody.put("timestamp", System.currentTimeMillis())
         } catch (e: Exception) {
             Log.e(TAG, "Failed to create JSON for notification", e)
             return

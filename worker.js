@@ -1,5 +1,6 @@
-// Cloudflare Worker for handling push notifications via OneSignal
+// Enhanced Cloudflare Worker for detailed push notifications via OneSignal
 // This worker receives notification requests and forwards them to OneSignal's REST API
+// Now includes sender information, message type, and image previews
 
 export default {
   async fetch(request, env, ctx) {
@@ -24,7 +25,14 @@ export default {
     try {
       // Parse the request body
       const requestData = await request.json();
-      const { recipientUserId, notificationMessage } = requestData;
+      const { 
+        recipientUserId, 
+        notificationMessage, 
+        messageType = 'text',
+        attachments = [],
+        senderName = 'Someone',
+        timestamp
+      } = requestData;
 
       // Validate required fields
       if (!recipientUserId || !notificationMessage) {
@@ -60,24 +68,103 @@ export default {
         );
       }
 
-      // Prepare the notification payload for OneSignal
+      // Create enhanced notification content based on message type
+      let notificationTitle, notificationContent, notificationImage;
+      
+      if (messageType === 'attachment' && attachments && attachments.length > 0) {
+        // Handle attachment messages with smart detection
+        const firstAttachment = attachments[0];
+        const isImage = firstAttachment.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+        const isVideo = firstAttachment.match(/\.(mp4|avi|mov|mkv|webm)$/i);
+        const isAudio = firstAttachment.match(/\.(mp3|wav|aac|ogg)$/i);
+        
+        if (attachments.length === 1) {
+          if (isImage) {
+            notificationTitle = `${senderName} sent you a photo`;
+            notificationContent = '📷 Tap to view';
+            notificationImage = firstAttachment;
+          } else if (isVideo) {
+            notificationTitle = `${senderName} sent you a video`;
+            notificationContent = '🎥 Tap to view';
+            notificationImage = firstAttachment; // Video thumbnail if available
+          } else if (isAudio) {
+            notificationTitle = `${senderName} sent you a voice message`;
+            notificationContent = '🎵 Tap to listen';
+          } else {
+            notificationTitle = `${senderName} sent you a file`;
+            notificationContent = '📎 Tap to download';
+          }
+        } else {
+          // Multiple attachments
+          if (isImage) {
+            notificationTitle = `${senderName} sent you ${attachments.length} photos`;
+            notificationContent = `📷 ${attachments.length} photos • Tap to view`;
+            notificationImage = firstAttachment;
+          } else if (isVideo) {
+            notificationTitle = `${senderName} sent you ${attachments.length} videos`;
+            notificationContent = `🎥 ${attachments.length} videos • Tap to view`;
+            notificationImage = firstAttachment;
+          } else {
+            notificationTitle = `${senderName} sent you ${attachments.length} files`;
+            notificationContent = `📎 ${attachments.length} files • Tap to view`;
+          }
+        }
+      } else if (messageType === 'text') {
+        // Handle text messages
+        notificationTitle = `${senderName}`;
+        notificationContent = notificationMessage;
+      } else if (messageType === 'reply') {
+        // Handle reply messages
+        notificationTitle = `${senderName} replied to a message`;
+        notificationContent = notificationMessage;
+      } else {
+        // Fallback for other message types
+        notificationTitle = `${senderName} sent you a message`;
+        notificationContent = notificationMessage;
+      }
+
+      // Prepare the enhanced notification payload for OneSignal
       const notificationPayload = {
         app_id: ONESIGNAL_APP_ID,
         include_player_ids: [recipientUserId],
         contents: {
-          en: notificationMessage
+          en: notificationContent
         },
         headings: {
-          en: 'New Message'
+          en: notificationTitle
         },
+        // Add image preview for attachment messages
+        ...(notificationImage && { big_picture: notificationImage }),
+        // Enhanced data payload
         data: {
           message: notificationMessage,
-          timestamp: new Date().toISOString()
+          messageType: messageType,
+          senderName: senderName,
+          attachments: attachments,
+          timestamp: timestamp || new Date().toISOString(),
+          // Additional metadata for rich notifications
+          isAttachment: messageType === 'attachment',
+          attachmentCount: attachments ? attachments.length : 0,
+          hasImage: attachments && attachments.length > 0
         },
-        // Simplified notification settings - removed problematic fields
+        // Enhanced notification settings
         priority: 10, // High priority for messages
         android_accent_color: '#FF6B6B', // Custom accent color
-        // Removed android_channel_id and other problematic fields
+        android_led_color: '#FF6B6B', // LED color for Android
+        android_sound: 'default', // Default notification sound
+        // iOS specific settings
+        ios_sound: 'default',
+        // Rich notification settings
+        chrome_web_image: notificationImage,
+        firefox_web_image: notificationImage,
+        // Action buttons for rich interactions
+        web_buttons: [
+          {
+            id: "view_message",
+            text: "View Message",
+            url: "https://your-app.com/chat" // Replace with your app's deep link
+          }
+        ]
       };
 
       // Send notification to OneSignal
@@ -110,19 +197,30 @@ export default {
 
       const oneSignalResult = await oneSignalResponse.json();
       
-      // Log successful notification
-      console.log('Notification sent successfully:', {
+      // Log successful enhanced notification
+      console.log('Enhanced notification sent successfully:', {
         recipientId: recipientUserId,
+        senderName: senderName,
+        messageType: messageType,
         message: notificationMessage,
-        oneSignalId: oneSignalResult.id
+        attachmentCount: attachments ? attachments.length : 0,
+        hasImage: notificationImage ? 'Yes' : 'No',
+        oneSignalId: oneSignalResult.id,
+        timestamp: new Date().toISOString()
       });
 
       // Return success response
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Notification sent successfully',
-          oneSignalId: oneSignalResult.id
+          message: 'Enhanced notification sent successfully',
+          oneSignalId: oneSignalResult.id,
+          notificationDetails: {
+            title: notificationTitle,
+            content: notificationContent,
+            hasImage: !!notificationImage,
+            attachmentCount: attachments ? attachments.length : 0
+          }
         }), 
         { 
           status: 200,
