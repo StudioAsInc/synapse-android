@@ -544,6 +544,10 @@ public class ChatActivity extends AppCompatActivity {
 		rv_attacmentList.setAdapter(attachmentAdapter);
 
 		// 2. A RecyclerView must have a LayoutManager to function.
+		// 3. Set fixed height for the attachment RecyclerView to prevent it from taking whole screen
+		_setAttachmentRecyclerViewHeight();
+		// 4. Set fixed height for the attachment container
+		_setAttachmentContainerHeight();
 		//    We set it to a horizontal layout.
 		rv_attacmentList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 
@@ -602,6 +606,9 @@ public class ChatActivity extends AppCompatActivity {
 
 				if (!resolvedFilePaths.isEmpty()) {
 					attachmentLayoutListHolder.setVisibility(View.VISIBLE);
+					
+					// Ensure the attachment container has proper height constraints
+					_setAttachmentContainerHeight();
 
 					int startingPosition = attactmentmap.size();
 
@@ -1252,6 +1259,56 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}
 	}
+	
+	/**
+	 * Set the attachment container to have a fixed height based on the item height
+	 */
+	private void _setAttachmentContainerHeight() {
+		if (attachmentLayoutListHolder != null) {
+			// Convert 100dp to pixels for the container height
+			float density = getResources().getDisplayMetrics().density;
+			int heightInPixels = (int) (100 * density);
+			
+			// Add some padding for the container
+			int containerHeight = heightInPixels + (int) (16 * density); // 16dp padding
+			
+			ViewGroup.LayoutParams params = attachmentLayoutListHolder.getLayoutParams();
+			if (params != null) {
+				params.height = containerHeight;
+				attachmentLayoutListHolder.setLayoutParams(params);
+			}
+		}
+	}
+	
+	/**
+	 * Reset the attachment container height to wrap content when hiding
+	 */
+	private void _resetAttachmentContainerHeight() {
+		if (attachmentLayoutListHolder != null) {
+			ViewGroup.LayoutParams params = attachmentLayoutListHolder.getLayoutParams();
+			if (params != null) {
+				params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+				attachmentLayoutListHolder.setLayoutParams(params);
+			}
+		}
+	}
+	
+	/**
+	 * Set the attachment RecyclerView to have a fixed height
+	 */
+	private void _setAttachmentRecyclerViewHeight() {
+		if (rv_attacmentList != null) {
+			// Convert 100dp to pixels for the RecyclerView height
+			float density = getResources().getDisplayMetrics().density;
+			int heightInPixels = (int) (100 * density);
+			
+			ViewGroup.LayoutParams params = rv_attacmentList.getLayoutParams();
+			if (params != null) {
+				params.height = heightInPixels;
+				rv_attacmentList.setLayoutParams(params);
+			}
+		}
+	}
 
 	private void _pauseTypingAnimation() {
 		// Pause typing animation for better performance during scrolling
@@ -1696,6 +1753,10 @@ public class ChatActivity extends AppCompatActivity {
 				attactmentmap.clear();
 				rv_attacmentList.getAdapter().notifyDataSetChanged();
 				attachmentLayoutListHolder.setVisibility(View.GONE);
+				
+				// Reset attachment container height when hiding
+				_resetAttachmentContainerHeight();
+				
 				message_et.setText("");
 				ReplyMessageID = "null";
 				mMessageReplyLayout.setVisibility(View.GONE);
@@ -2300,16 +2361,29 @@ public class ChatActivity extends AppCompatActivity {
 	public class Rv_attacmentListAdapter extends RecyclerView.Adapter<Rv_attacmentListAdapter.ViewHolder> {
 
 		ArrayList<HashMap<String, Object>> _data;
+		private static final int ITEM_HEIGHT_DP = 100;
 
 		public Rv_attacmentListAdapter(ArrayList<HashMap<String, Object>> _arr) {
 			_data = _arr;
+		}
+		
+		/**
+		 * Helper method to get the fixed height in pixels
+		 */
+		private int getItemHeightInPixels() {
+			float density = getResources().getDisplayMetrics().density;
+			return (int) (ITEM_HEIGHT_DP * density);
 		}
 
 		@Override
 		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 			LayoutInflater _inflater = getLayoutInflater();
 			View _v = _inflater.inflate(R.layout.chat_attactment, null);
-			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			
+			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(
+				ViewGroup.LayoutParams.WRAP_CONTENT, 
+				getItemHeightInPixels()
+			);
 			_v.setLayoutParams(_lp);
 			return new ViewHolder(_v);
 		}
@@ -2338,7 +2412,9 @@ public class ChatActivity extends AppCompatActivity {
 			}
 			// If we pass this check, we can safely proceed.
 			_view.setVisibility(View.VISIBLE);
-			_view.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+			
+			// Maintain fixed height of ITEM_HEIGHT_DP even when setting visibility
+			_view.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, getItemHeightInPixels()));
 			// --- END: ROBUSTNESS FIX ---
 
 			// Set the image preview directly by its ID
@@ -2393,6 +2469,12 @@ public class ChatActivity extends AppCompatActivity {
 					attactmentmap.remove(_position);
 					rv_attacmentList.getAdapter().notifyItemRemoved(_position);
 					rv_attacmentList.getAdapter().notifyItemRangeChanged(_position, attactmentmap.size());
+
+					// If this was the last attachment, hide the container
+					if (attactmentmap.isEmpty()) {
+						attachmentLayoutListHolder.setVisibility(View.GONE);
+						_resetAttachmentContainerHeight();
+					}
 
 					if (currentItemData.containsKey("publicId")) {
 						String publicId = currentItemData.get("publicId").toString();
