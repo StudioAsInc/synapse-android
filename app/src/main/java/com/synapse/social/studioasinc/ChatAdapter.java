@@ -203,20 +203,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             holder.mRepliedMessageLayout.setVisibility(View.GONE);
             if (data.containsKey("replied_message_id")) {
                 String repliedId = data.get("replied_message_id").toString();
+                Log.d("ChatAdapter", "Reply data found: " + repliedId);
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
                     String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     String theirUid = chatActivity.getIntent().getStringExtra("uid");
-                    String chatId = chatActivity.getChatId(myUid, theirUid);
                     FirebaseDatabase.getInstance().getReference("skyline/chats")
-                        .child(chatId)
+                        .child(myUid)
+                        .child(theirUid)
                         .child(repliedId)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot snapshot) {
+                                Log.d("ChatAdapter", "Firebase reply query result: " + (snapshot.exists() ? "exists" : "not found"));
                                 if (snapshot.exists() && holder.mRepliedMessageLayout != null) {
                                     holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
                                     String repliedUid = snapshot.child("uid").getValue(String.class);
                                     String repliedText = snapshot.child("message_text").getValue(String.class);
+                                    Log.d("ChatAdapter", "Reply UID: " + repliedUid + ", Text: " + repliedText);
                                     
                                     if(holder.mRepliedMessageLayoutUsername != null) {
                                         holder.mRepliedMessageLayoutUsername.setText(
@@ -245,6 +248,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                             chatActivity.scrollToMessage(repliedId);
                                         }
                                     });
+                                    Log.d("ChatAdapter", "Reply layout made visible for message: " + repliedId);
                                 }
                             }
                             @Override
