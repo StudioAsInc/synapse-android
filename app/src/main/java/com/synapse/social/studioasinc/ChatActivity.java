@@ -550,6 +550,10 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			}
 		});
+
+		// Attach listeners after all references are safely initialized.
+		_attachChatListener();
+		_attachUserStatusListener();
 	}
 
 	@Override
@@ -619,8 +623,6 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		_attachChatListener();
-		_attachUserStatusListener();
 		blocklist.addChildEventListener(_blocklist_child_listener);
 
 		// Set user status to indicate they are in this chat
