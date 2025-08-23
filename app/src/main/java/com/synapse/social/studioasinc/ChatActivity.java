@@ -1498,6 +1498,11 @@ public class ChatActivity extends AppCompatActivity {
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 
+				// Add message to local list immediately for instant display
+				ChatMessagesList.add(ChatSendMap);
+				chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+				ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 
 				// Smart Notification Check
@@ -1532,6 +1537,11 @@ public class ChatActivity extends AppCompatActivity {
 			// Send to both chat nodes
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+
+			// Add message to local list immediately for instant display
+			ChatMessagesList.add(ChatSendMap);
+			chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+			ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
 
 			// Smart Notification Check
 			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText);
@@ -1973,12 +1983,26 @@ public class ChatActivity extends AppCompatActivity {
 		if ("online".equals(status)) {
 			topProfileLayoutStatus.setText(getResources().getString(R.string.online));
 			topProfileLayoutStatus.setTextColor(0xFF2196F3);
-		} else {
-			if ("offline".equals(status)) {
-				topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
-			} else {
+		} else if ("offline".equals(status)) {
+			topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+			topProfileLayoutStatus.setTextColor(0xFF757575);
+		} else if (status != null && status.startsWith("chatting_with_")) {
+			// User is chatting with someone else
+			topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+			topProfileLayoutStatus.setTextColor(0xFF757575);
+		} else if (status != null && !status.isEmpty()) {
+			// Try to parse as timestamp, but handle errors gracefully
+			try {
 				_setUserLastSeen(Double.parseDouble(status), topProfileLayoutStatus);
+			} catch (NumberFormatException e) {
+				// If parsing fails, show offline status
+				Log.w("ChatActivity", "Failed to parse status timestamp: " + status, e);
+				topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
 			}
+			topProfileLayoutStatus.setTextColor(0xFF757575);
+		} else {
+			// Default to offline if status is null or empty
+			topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
 			topProfileLayoutStatus.setTextColor(0xFF757575);
 		}
 	}
