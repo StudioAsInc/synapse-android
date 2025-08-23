@@ -78,8 +78,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
 import com.synapse.social.studioasinc.FadeEditText;
@@ -1430,31 +1428,35 @@ public class ChatActivity extends AppCompatActivity {
 		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		final String recipientUid = getIntent().getStringExtra("uid");
 
-		// The message sending logic is now wrapped inside a Firestore query.
-		// First, we fetch the recipient's OneSignal Player ID.
-		FirebaseFirestore.getInstance().collection("users").document(recipientUid).get()
-			.addOnSuccessListener(documentSnapshot -> {
-				if (documentSnapshot.exists()) {
-					String recipientOneSignalPlayerId = documentSnapshot.getString("oneSignalPlayerId");
-					if (recipientOneSignalPlayerId == null || recipientOneSignalPlayerId.isEmpty()) {
-						Log.e("ChatActivity", "Recipient's OneSignal Player ID is missing. Cannot send notification.");
-						// Set to a value that won't cause a crash but will fail silently on OneSignal's end.
-						recipientOneSignalPlayerId = "missing_id";
+		// The message sending logic is now wrapped inside a Realtime Database query.
+		// First, we fetch the recipient's OneSignal Player ID from the 'users' node.
+		_firebase.getReference(SKYLINE_REF).child(USERS_REF).child(recipientUid)
+			.addListenerForSingleValueEvent(new ValueEventListener() {
+				@Override
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+					String recipientOneSignalPlayerId = "missing_id"; // Default value
+
+					if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
+						String fetchedId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
+						if (fetchedId != null && !fetchedId.isEmpty()) {
+							recipientOneSignalPlayerId = fetchedId;
+						} else {
+							Log.e("ChatActivity", "Recipient's OneSignal Player ID is null or empty in the database.");
+						}
+					} else {
+						Log.e("ChatActivity", "Recipient's user node or oneSignalPlayerId not found in Realtime Database.");
 					}
 
-					// After successfully getting the ID, proceed with sending the message.
+					// After fetching the ID (or failing), proceed with sending the message.
 					proceedWithMessageSending(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
+				}
 
-				} else {
-					Log.e("ChatActivity", "Recipient's user document not found. Cannot send notification.");
+				@Override
+				public void onCancelled(@NonNull DatabaseError databaseError) {
+					Log.e("ChatActivity", "Failed to fetch recipient's data from RTDB. Sending message without notification.", databaseError.toException());
 					// Still send the message, just without the notification.
 					proceedWithMessageSending(messageText, senderUid, recipientUid, "missing_id");
 				}
-			})
-			.addOnFailureListener(e -> {
-				Log.e("ChatActivity", "Failed to fetch recipient's data. Sending message without notification.", e);
-				// Still send the message, just without the notification.
-				proceedWithMessageSending(messageText, senderUid, recipientUid, "missing_id");
 			});
 	}
 
