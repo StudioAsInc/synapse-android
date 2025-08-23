@@ -285,10 +285,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (!isMyMessage && data.containsKey("message_state") && "sended".equals(data.get("message_state").toString())) {
             String otherUserUid = chatActivity.getIntent().getStringExtra("uid");
             String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            String messageKey = data.get("key").toString();
-            FirebaseDatabase.getInstance().getReference("skyline/chats").child(otherUserUid).child(myUid).child(messageKey).child("message_state").setValue("seen");
-            FirebaseDatabase.getInstance().getReference("skyline/chats").child(myUid).child(otherUserUid).child(messageKey).child("message_state").setValue("seen");
-            FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
+            String messageKey = data.get("key") != null ? data.get("key").toString() : null;
+            
+            if (otherUserUid != null && myUid != null && messageKey != null) {
+                FirebaseDatabase.getInstance().getReference("skyline/chats").child(otherUserUid).child(myUid).child(messageKey).child("message_state").setValue("seen");
+                FirebaseDatabase.getInstance().getReference("skyline/chats").child(myUid).child(otherUserUid).child(messageKey).child("message_state").setValue("seen");
+                FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
+            }
         }
         
         if (holder.messageBG != null) {
