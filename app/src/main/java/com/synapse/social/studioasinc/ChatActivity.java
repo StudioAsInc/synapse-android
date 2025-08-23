@@ -151,6 +151,10 @@ public class ChatActivity extends AppCompatActivity {
 	public final int REQ_CD_IMAGE_PICKER = 101;
 	private ChatAdapter chatAdapter;
 	private boolean isLoading = false;
+	private ChildEventListener _chat_child_listener;
+	private DatabaseReference chatMessagesRef;
+	private ValueEventListener _userStatusListener;
+	private DatabaseReference userRef;
 
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
@@ -467,7 +471,6 @@ public class ChatActivity extends AppCompatActivity {
 
 			}
 		};
-		blocklist.addChildEventListener(_blocklist_child_listener);
 	}
 
 	private void initializeLogic() {
@@ -492,6 +495,8 @@ public class ChatActivity extends AppCompatActivity {
 		chatAdapter = new ChatAdapter(ChatMessagesList);
 		chatAdapter.setChatActivity(this);
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
+		chatMessagesRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY));
+		userRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(getIntent().getStringExtra(UID_KEY));
 		// Initialize with custom settings
 		gemini = new Gemini.Builder(this)
 		.model("gemini-1.5-flash")
@@ -607,8 +612,19 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	@Override
+	protected void onStart() {
+		super.onStart();
+		_attachChatListener();
+		_attachUserStatusListener();
+		blocklist.addChildEventListener(_blocklist_child_listener);
+	}
+
+	@Override
 	public void onStop() {
 		super.onStop();
+		_detachChatListener();
+		_detachUserStatusListener();
+		blocklist.removeEventListener(_blocklist_child_listener);
 		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
 	}
 
@@ -892,21 +908,8 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _getUserReference() {
-		DatabaseReference getUserReference = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(getIntent().getStringExtra(UID_KEY));
-		getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
-			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if (dataSnapshot.exists()) {
-					updateUserProfile(dataSnapshot);
-					updateUserBadges(dataSnapshot);
-				}
-			}
-
-			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-				Log.e("ChatActivity", "Failed to get user reference: " + databaseError.getMessage());
-			}
-		});
+		// The user profile data is now fetched via a persistent listener attached in onStart,
+		// so the addListenerForSingleValueEvent call is no longer needed here.
 
 		DatabaseReference getFirstUserName = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 		getFirstUserName.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -931,13 +934,14 @@ public class ChatActivity extends AppCompatActivity {
 
 	public void _getChatMessagesRef() {
 		// Initial load
-		Query getChatsMessages = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).limitToLast(CHAT_PAGE_SIZE);
+		Query getChatsMessages = chatMessagesRef.limitToLast(CHAT_PAGE_SIZE);
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if(dataSnapshot.exists()) {
 					ChatMessagesListRecycler.setVisibility(View.VISIBLE);
 					noChatText.setVisibility(View.GONE);
+					// We clear the list here before the initial load
 					ChatMessagesList.clear();
 					ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
 					for (DataSnapshot _data : dataSnapshot.getChildren()) {
@@ -955,90 +959,130 @@ public class ChatActivity extends AppCompatActivity {
 					ChatMessagesListRecycler.setVisibility(View.GONE);
 					noChatText.setVisibility(View.VISIBLE);
 				}
-				_listenForNewMessages();
 			}
-			@Override public void onCancelled(@NonNull DatabaseError databaseError) {}
+			@Override public void onCancelled(@NonNull DatabaseError databaseError) {
+				Log.e("ChatActivity", "Initial message load failed: " + databaseError.getMessage());
+			}
 		});
 	}
 
-	private void _listenForNewMessages() {
-		String lastMessageKey = null;
-		if (!ChatMessagesList.isEmpty() && ChatMessagesList.get(ChatMessagesList.size() - 1).get(KEY_KEY) != null) {
-			lastMessageKey = ChatMessagesList.get(ChatMessagesList.size() - 1).get(KEY_KEY).toString();
-		}
-
-		Query newMessagesQuery;
-		if (lastMessageKey != null) {
-			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).orderByKey().startAfter(lastMessageKey);
-		} else {
-			newMessagesQuery = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).orderByKey();
-		}
-
-		newMessagesQuery.addChildEventListener(new ChildEventListener() {
-			@Override
-			public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
-				if (dataSnapshot.exists()) {
-					HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-					if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-						if (ChatMessagesList.stream().noneMatch(msg -> msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY)))) {
-							if (ChatMessagesListRecycler.getVisibility() == View.GONE) {
-								ChatMessagesListRecycler.setVisibility(View.VISIBLE);
-								noChatText.setVisibility(View.GONE);
-							}
-							int previousSize = ChatMessagesList.size();
-							ChatMessagesList.add(newMessage);
-							chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
-							if (previousSize > 0) {
-								chatAdapter.notifyItemChanged(previousSize - 1);
-							}
-							ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-						}
-					}
-				}
-			}
-
-			@Override
-			public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-				if (snapshot.exists()) {
-					HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-					if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
-						String key = updatedMessage.get(KEY_KEY).toString();
-						for (int i = 0; i < ChatMessagesList.size(); i++) {
-							if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
-								ChatMessagesList.set(i, updatedMessage);
-								chatAdapter.notifyItemChanged(i);
-								break;
-							}
-						}
-					}
-				}
-			}
-
-			@Override
-			public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-				if (snapshot.exists()) {
-					String removedKey = snapshot.getKey();
-					if (removedKey != null) {
-						for (int i = ChatMessagesList.size() - 1; i >= 0; i--) {
-							if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
-								ChatMessagesList.remove(i);
-								chatAdapter.notifyItemRemoved(i);
-								if (ChatMessagesList.isEmpty()) {
-									ChatMessagesListRecycler.setVisibility(View.GONE);
-									noChatText.setVisibility(View.VISIBLE);
+	private void _attachChatListener() {
+		if (_chat_child_listener == null) {
+			_chat_child_listener = new ChildEventListener() {
+				@Override
+				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
+					if (dataSnapshot.exists()) {
+						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
+							// Check if message already exists to avoid duplicates from initial load
+							boolean exists = false;
+							for (HashMap<String, Object> msg : ChatMessagesList) {
+								if (msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY))) {
+									exists = true;
+									break;
 								}
-								break;
+							}
+
+							if (!exists) {
+								if (ChatMessagesListRecycler.getVisibility() == View.GONE) {
+									ChatMessagesListRecycler.setVisibility(View.VISIBLE);
+									noChatText.setVisibility(View.GONE);
+								}
+								int previousSize = ChatMessagesList.size();
+								ChatMessagesList.add(newMessage);
+								chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+								if (previousSize > 0) {
+									// This is to update the previous item's timestamp visibility
+									chatAdapter.notifyItemChanged(previousSize - 1);
+								}
+								ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
 							}
 						}
 					}
 				}
-			}
 
-			@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-			@Override public void onCancelled(@NonNull DatabaseError error) {
-				Log.e("ChatActivity", "Error listening for new messages: " + error.getMessage());
-			}
-		});
+				@Override
+				public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+					if (snapshot.exists()) {
+						HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
+							String key = updatedMessage.get(KEY_KEY).toString();
+							for (int i = 0; i < ChatMessagesList.size(); i++) {
+								if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
+									ChatMessagesList.set(i, updatedMessage);
+									chatAdapter.notifyItemChanged(i);
+									break;
+								}
+							}
+						}
+					}
+				}
+
+				@Override
+				public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+					if (snapshot.exists()) {
+						String removedKey = snapshot.getKey();
+						if (removedKey != null) {
+							for (int i = ChatMessagesList.size() - 1; i >= 0; i--) {
+								if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
+									ChatMessagesList.remove(i);
+									chatAdapter.notifyItemRemoved(i);
+									if (ChatMessagesList.isEmpty()) {
+										ChatMessagesListRecycler.setVisibility(View.GONE);
+										noChatText.setVisibility(View.VISIBLE);
+									}
+									// Update the last message if the removed one was the last
+									if (i > 0 && i == ChatMessagesList.size()) {
+										chatAdapter.notifyItemChanged(i - 1);
+									}
+									break;
+								}
+							}
+						}
+					}
+				}
+
+				@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
+				@Override public void onCancelled(@NonNull DatabaseError error) {
+					Log.e("ChatActivity", "Chat listener cancelled: " + error.getMessage());
+				}
+			};
+			chatMessagesRef.addChildEventListener(_chat_child_listener);
+		}
+	}
+
+	private void _detachChatListener() {
+		if (_chat_child_listener != null) {
+			chatMessagesRef.removeEventListener(_chat_child_listener);
+			_chat_child_listener = null;
+		}
+	}
+
+	private void _attachUserStatusListener() {
+		if (_userStatusListener == null) {
+			_userStatusListener = new ValueEventListener() {
+				@Override
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+					if (dataSnapshot.exists()) {
+						updateUserProfile(dataSnapshot);
+						updateUserBadges(dataSnapshot);
+					}
+				}
+
+				@Override
+				public void onCancelled(@NonNull DatabaseError databaseError) {
+					Log.e("ChatActivity", "Failed to get user reference: " + databaseError.getMessage());
+				}
+			};
+			userRef.addValueEventListener(_userStatusListener);
+		}
+	}
+
+	private void _detachUserStatusListener() {
+		if (_userStatusListener != null) {
+			userRef.removeEventListener(_userStatusListener);
+			_userStatusListener = null;
+		}
 	}
 
 
