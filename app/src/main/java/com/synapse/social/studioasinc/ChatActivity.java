@@ -78,6 +78,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
 import com.synapse.social.studioasinc.FadeEditText;
@@ -1425,11 +1427,46 @@ public class ChatActivity extends AppCompatActivity {
 
 	public void _send_btn() {
 		final String messageText = message_et.getText().toString().trim();
+		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		final String recipientUid = getIntent().getStringExtra("uid");
 
+		// The message sending logic is now wrapped inside a Firestore query.
+		// First, we fetch the recipient's OneSignal Player ID.
+		FirebaseFirestore.getInstance().collection("users").document(recipientUid).get()
+			.addOnSuccessListener(documentSnapshot -> {
+				if (documentSnapshot.exists()) {
+					String recipientOneSignalPlayerId = documentSnapshot.getString("oneSignalPlayerId");
+					if (recipientOneSignalPlayerId == null || recipientOneSignalPlayerId.isEmpty()) {
+						Log.e("ChatActivity", "Recipient's OneSignal Player ID is missing. Cannot send notification.");
+						// Set to a value that won't cause a crash but will fail silently on OneSignal's end.
+						recipientOneSignalPlayerId = "missing_id";
+					}
+
+					// After successfully getting the ID, proceed with sending the message.
+					proceedWithMessageSending(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
+
+				} else {
+					Log.e("ChatActivity", "Recipient's user document not found. Cannot send notification.");
+					// Still send the message, just without the notification.
+					proceedWithMessageSending(messageText, senderUid, recipientUid, "missing_id");
+				}
+			})
+			.addOnFailureListener(e -> {
+				Log.e("ChatActivity", "Failed to fetch recipient's data. Sending message without notification.", e);
+				// Still send the message, just without the notification.
+				proceedWithMessageSending(messageText, senderUid, recipientUid, "missing_id");
+			});
+	}
+
+	/**
+	 * This helper method contains the original logic for sending a message.
+	 * It's now called after the recipient's OneSignal ID has been fetched.
+	 */
+	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
 		if (!attactmentmap.isEmpty()) {
+			// Logic for sending messages with attachments
 			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
 			boolean allUploadsSuccessful = true;
-
 			for (HashMap<String, Object> item : attactmentmap) {
 				if ("success".equals(item.get("uploadState"))) {
 					HashMap<String, Object> attachmentData = new HashMap<>();
@@ -1444,86 +1481,62 @@ public class ChatActivity extends AppCompatActivity {
 			}
 
 			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
-				cc = Calendar.getInstance();
 				String uniqueMessageKey = main.push().getKey();
-
 				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
+				ChatSendMap.put(UID_KEY, senderUid);
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
 				ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
 				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-				.child(getIntent().getStringExtra(UID_KEY))
-				.child(uniqueMessageKey)
-				.updateChildren(ChatSendMap);
-
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-				.child(getIntent().getStringExtra(UID_KEY))
-				.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-				.child(uniqueMessageKey)
-				.updateChildren(ChatSendMap);
+				// Send to both chat nodes
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 
-				// Smart Notification Check (from Kotlin helper)
-				String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-				String recipientUid = getIntent().getStringExtra("uid");
-				// TODO: You must fetch the recipient's OneSignal Player ID from their user profile.
-				String recipientOneSignalPlayerId = "placeholder_recipient_onesignal_id";
+				// Smart Notification Check
 				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage);
 
 				_updateInbox(lastMessage);
 
+				// Clear UI
 				attactmentmap.clear();
 				rv_attacmentList.getAdapter().notifyDataSetChanged();
 				attachmentLayoutListHolder.setVisibility(View.GONE);
 				message_et.setText("");
 				ReplyMessageID = "null";
 				mMessageReplyLayout.setVisibility(View.GONE);
+
 			} else {
 				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
 			}
 
 		} else if (!messageText.isEmpty()) {
-			cc = Calendar.getInstance();
+			// Logic for sending text-only messages
 			String uniqueMessageKey = main.push().getKey();
-
 			ChatSendMap = new HashMap<>();
-			ChatSendMap.put(UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
+			ChatSendMap.put(UID_KEY, senderUid);
 			ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
 			ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
 			ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 			if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-			.child(getIntent().getStringExtra(UID_KEY))
-			.child(uniqueMessageKey)
-			.updateChildren(ChatSendMap);
+			// Send to both chat nodes
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
 
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-			.child(getIntent().getStringExtra(UID_KEY))
-			.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-			.child(uniqueMessageKey)
-			.updateChildren(ChatSendMap);
-
-			// Smart Notification Check (from Kotlin helper)
-			String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-			String recipientUid = getIntent().getStringExtra("uid");
-			// TODO: You must fetch the recipient's OneSignal Player ID from their user profile.
-			String recipientOneSignalPlayerId = "placeholder_recipient_onesignal_id";
+			// Smart Notification Check
 			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText);
 
 			_updateInbox(messageText);
 
+			// Clear UI
 			message_et.setText("");
 			ReplyMessageID = "null";
 			mMessageReplyLayout.setVisibility(View.GONE);

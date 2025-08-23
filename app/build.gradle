@@ -102,6 +102,7 @@ dependencies {
     // Firebase dependencies with explicit latest stable versions (no BoM)
     implementation 'com.google.firebase:firebase-auth-ktx:23.2.1'
     implementation 'com.google.firebase:firebase-database-ktx:21.0.0'
+    implementation 'com.google.firebase:firebase-firestore-ktx:25.0.0' // Added for Firestore
     implementation 'com.google.firebase:firebase-storage-ktx:21.0.2'
     implementation 'com.google.firebase:firebase-perf-ktx:21.0.5'
     implementation 'com.google.firebase:firebase-crashlytics-ktx:19.4.4'
