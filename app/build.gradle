@@ -99,14 +99,17 @@ android {
 }
 
 dependencies {
-    // Firebase dependencies with explicit latest stable versions (no BoM)
-    implementation 'com.google.firebase:firebase-auth-ktx:23.2.1'
-    implementation 'com.google.firebase:firebase-database-ktx:21.0.0'
-    implementation 'com.google.firebase:firebase-firestore-ktx:25.0.0' // Added for Firestore
-    implementation 'com.google.firebase:firebase-storage-ktx:21.0.2'
-    implementation 'com.google.firebase:firebase-perf-ktx:21.0.5'
-    implementation 'com.google.firebase:firebase-crashlytics-ktx:19.4.4'
-    implementation 'com.google.firebase:firebase-analytics-ktx:22.5.0'
+    // Import the Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
+
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-database'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-storage'
+    implementation 'com.google.firebase:firebase-perf'
+    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-analytics'
 
     // AndroidX Core & UI Components
     implementation 'androidx.core:core-ktx:1.17.0-rc01'
@@ -139,10 +142,6 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:5.0.0-rc01'
 
     // Networking
-    implementation 'io.grpc:grpc-android:1.57.2'
-    implementation 'io.grpc:grpc-okhttp:1.57.2'
-    implementation 'io.grpc:grpc-protobuf-lite:1.57.2'
-    implementation 'io.grpc:grpc-stub:1.57.2'
     implementation 'com.squareup.okhttp3:okhttp:5.1.0'
     implementation 'com.google.code.gson:gson:2.13.1'
 
