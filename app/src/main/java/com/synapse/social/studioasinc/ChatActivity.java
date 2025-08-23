@@ -954,6 +954,7 @@ public class ChatActivity extends AppCompatActivity {
 					ChatMessagesListRecycler.setVisibility(View.GONE);
 					noChatText.setVisibility(View.VISIBLE);
 				}
+				_listenForNewMessages();
 			}
 			@Override public void onCancelled(@NonNull DatabaseError databaseError) {}
 		});
@@ -978,10 +979,17 @@ public class ChatActivity extends AppCompatActivity {
 				if (dataSnapshot.exists()) {
 					HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 					if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-						// Simple check to avoid duplicate additions
 						if (ChatMessagesList.stream().noneMatch(msg -> msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY)))) {
+							if (ChatMessagesListRecycler.getVisibility() == View.GONE) {
+								ChatMessagesListRecycler.setVisibility(View.VISIBLE);
+								noChatText.setVisibility(View.GONE);
+							}
+							int previousSize = ChatMessagesList.size();
 							ChatMessagesList.add(newMessage);
 							chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+							if (previousSize > 0) {
+								chatAdapter.notifyItemChanged(previousSize - 1);
+							}
 							ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
 						}
 					}
@@ -990,7 +998,6 @@ public class ChatActivity extends AppCompatActivity {
 
 			@Override
 			public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-				// Find message by key and update it
 				if (snapshot.exists()) {
 					HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 					if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
@@ -1006,9 +1013,30 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			}
 
-			@Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
+			@Override
+			public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					String removedKey = snapshot.getKey();
+					if (removedKey != null) {
+						for (int i = 0; i < ChatMessagesList.size(); i++) {
+							if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
+								ChatMessagesList.remove(i);
+								chatAdapter.notifyItemRemoved(i);
+								if (ChatMessagesList.isEmpty()) {
+									ChatMessagesListRecycler.setVisibility(View.GONE);
+									noChatText.setVisibility(View.VISIBLE);
+								}
+								break;
+							}
+						}
+					}
+				}
+			}
+
 			@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-			@Override public void onCancelled(@NonNull DatabaseError error) {}
+			@Override public void onCancelled(@NonNull DatabaseError error) {
+				Log.e("ChatActivity", "Error listening for new messages: " + error.getMessage());
+			}
 		});
 	}
 
