@@ -53,6 +53,9 @@ public class SynapseApp extends Application {
         FirebaseApp.initializeApp(this);
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         
+        // Create notification channels
+        createNotificationChannels();
+        
         this.mAuth = FirebaseAuth.getInstance();
         this.getCheckUserReference = FirebaseDatabase.getInstance().getReference("skyline/users");
         this.setUserStatusRef = FirebaseDatabase.getInstance().getReference(".info/connected");
@@ -93,6 +96,41 @@ public class SynapseApp extends Application {
                 }
             }
         });
+    }
+    
+    private void createNotificationChannels() {
+        // Create notification channels for Android O and above
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.NotificationManager notificationManager = 
+                (android.app.NotificationManager) getSystemService(android.app.NotificationManager.class);
+            
+            // Messages channel
+            android.app.NotificationChannel messagesChannel = new android.app.NotificationChannel(
+                "messages",
+                "Messages",
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            );
+            messagesChannel.setDescription("Chat message notifications");
+            messagesChannel.enableLights(true);
+            messagesChannel.setLightColor(android.graphics.Color.RED);
+            messagesChannel.enableVibration(true);
+            messagesChannel.setShowBadge(true);
+            messagesChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
+            
+            // General notifications channel
+            android.app.NotificationChannel generalChannel = new android.app.NotificationChannel(
+                "general",
+                "General",
+                android.app.NotificationManager.IMPORTANCE_DEFAULT
+            );
+            generalChannel.setDescription("General app notifications");
+            generalChannel.enableLights(false);
+            generalChannel.enableVibration(false);
+            
+            // Create the channels
+            notificationManager.createNotificationChannel(messagesChannel);
+            notificationManager.createNotificationChannel(generalChannel);
+        }
     }
     
     public static void setUserStatus() {
