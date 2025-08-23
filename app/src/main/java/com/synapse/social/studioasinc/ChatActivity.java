@@ -1941,47 +1941,48 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void updateUserProfile(DataSnapshot dataSnapshot) {
-		if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
-			topProfileLayoutProfileImage.setImageResource(R.drawable.banned_avatar);
-			SecondUserAvatar = "null_banned";
-			topProfileLayoutStatus.setTextColor(0xFF9E9E9E);
-			topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
-		} else {
-			String avatarUrl = dataSnapshot.child("avatar").getValue(String.class);
-			if ("null".equals(avatarUrl)) {
-				topProfileLayoutProfileImage.setImageResource(R.drawable.avatar);
-				SecondUserAvatar = "null";
-			} else {
-				Glide.with(getApplicationContext()).load(Uri.parse(avatarUrl)).into(topProfileLayoutProfileImage);
-				SecondUserAvatar = avatarUrl;
-			}
-		}
-
-		String nickname = dataSnapshot.child("nickname").getValue(String.class);
-		if ("null".equals(nickname)) {
-			SecondUserName = "@" + dataSnapshot.child("username").getValue(String.class);
-		} else {
-			SecondUserName = nickname;
-		}
-		topProfileLayoutUsername.setText(SecondUserName);
-
-		((ChatAdapter) chatAdapter).setSecondUserName(SecondUserName);
-		((ChatAdapter) chatAdapter).setFirstUserName(FirstUserName);
-		((ChatAdapter) chatAdapter).setSecondUserAvatar(SecondUserAvatar);
-
-		String status = dataSnapshot.child("status").getValue(String.class);
-		if ("online".equals(status)) {
-			topProfileLayoutStatus.setText(getResources().getString(R.string.online));
-			topProfileLayoutStatus.setTextColor(0xFF2196F3);
-		} else {
-			if ("offline".equals(status)) {
-				topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
-			} else {
-				_setUserLastSeen(Double.parseDouble(status), topProfileLayoutStatus);
-			}
-			topProfileLayoutStatus.setTextColor(0xFF757575);
-		}
-	}
+    if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
+        topProfileLayoutProfileImage.setImageResource(R.drawable.banned_avatar);
+        SecondUserAvatar = "null_banned";
+        topProfileLayoutStatus.setTextColor(0xFF9E9E9E);
+        topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+    } else {
+        String avatarUrl = dataSnapshot.child("avatar").getValue(String.class);
+        if ("null".equals(avatarUrl)) {
+            topProfileLayoutProfileImage.setImageResource(R.drawable.avatar);
+            SecondUserAvatar = "null";
+        } else {
+            Glide.with(getApplicationContext()).load(Uri.parse(avatarUrl)).into(topProfileLayoutProfileImage);
+            SecondUserAvatar = avatarUrl;
+        }
+    }
+    String nickname = dataSnapshot.child("nickname").getValue(String.class);
+    if ("null".equals(nickname)) {
+        SecondUserName = "@" + dataSnapshot.child("username").getValue(String.class);
+    } else {
+        SecondUserName = nickname;
+    }
+    topProfileLayoutUsername.setText(SecondUserName);
+    ((ChatAdapter) chatAdapter).setSecondUserName(SecondUserName);
+    ((ChatAdapter) chatAdapter).setFirstUserName(FirstUserName);
+    ((ChatAdapter) chatAdapter).setSecondUserAvatar(SecondUserAvatar);
+    String status = dataSnapshot.child("status").getValue(String.class);
+    if ("online".equals(status)) {
+        topProfileLayoutStatus.setText(getResources().getString(R.string.online));
+        topProfileLayoutStatus.setTextColor(0xFF2196F3);
+    } else {
+        if ("offline".equals(status)) {
+            topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+        } else {
+            try {
+                _setUserLastSeen(Double.parseDouble(status), topProfileLayoutStatus);
+            } catch (NumberFormatException e) {
+                topProfileLayoutStatus.setText(status);
+            }
+        }
+        topProfileLayoutStatus.setTextColor(0xFF757575);
+    }
+}
 
 	private void updateUserBadges(DataSnapshot dataSnapshot) {
 		String gender = dataSnapshot.child("gender").getValue(String.class);
