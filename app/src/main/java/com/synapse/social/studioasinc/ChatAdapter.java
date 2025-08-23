@@ -199,14 +199,25 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
         
+        Log.d("ChatAdapter", "Checking reply layout - holder.mRepliedMessageLayout: " + (holder.mRepliedMessageLayout != null ? "NOT NULL" : "NULL"));
         if (holder.mRepliedMessageLayout != null) {
+            Log.d("ChatAdapter", "Setting reply layout to GONE initially");
             holder.mRepliedMessageLayout.setVisibility(View.GONE);
+            
+            // Test if reply layout can be made visible
+            holder.mRepliedMessageLayout.post(() -> {
+                holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
+                Log.d("ChatAdapter", "Test: Reply layout visibility set to VISIBLE in post");
+            });
             if (data.containsKey("replied_message_id")) {
                 String repliedId = data.get("replied_message_id").toString();
                 Log.d("ChatAdapter", "Reply data found: " + repliedId);
+                Log.d("ChatAdapter", "Reply data type: " + (repliedId != null ? repliedId.getClass().getSimpleName() : "NULL"));
+                Log.d("ChatAdapter", "Reply data equals 'null': " + "null".equals(repliedId));
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
                     String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     String theirUid = chatActivity.getIntent().getStringExtra("uid");
+                    Log.d("ChatAdapter", "Querying Firebase for reply - myUid: " + myUid + ", theirUid: " + theirUid + ", repliedId: " + repliedId);
                     FirebaseDatabase.getInstance().getReference("skyline/chats")
                         .child(myUid)
                         .child(theirUid)
@@ -216,6 +227,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             public void onDataChange(DataSnapshot snapshot) {
                                 Log.d("ChatAdapter", "Firebase reply query result: " + (snapshot.exists() ? "exists" : "not found"));
                                 if (snapshot.exists() && holder.mRepliedMessageLayout != null) {
+                                    Log.d("ChatAdapter", "Making reply layout VISIBLE");
                                     holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
                                     String repliedUid = snapshot.child("uid").getValue(String.class);
                                     String repliedText = snapshot.child("message_text").getValue(String.class);
@@ -249,6 +261,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         }
                                     });
                                     Log.d("ChatAdapter", "Reply layout made visible for message: " + repliedId);
+                                    Log.d("ChatAdapter", "Reply layout visibility after setting: " + (holder.mRepliedMessageLayout.getVisibility() == View.VISIBLE ? "VISIBLE" : "NOT VISIBLE"));
+                                    
+                                    // Force the reply layout to be visible and bring to front
+                                    holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
+                                    holder.mRepliedMessageLayout.bringToFront();
+                                    Log.d("ChatAdapter", "Reply layout forced visible and brought to front");
                                 }
                             }
                             @Override

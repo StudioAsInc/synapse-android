@@ -46,10 +46,14 @@ class BaseMessageViewHolder extends RecyclerView.ViewHolder {
         shimmer_container = view.findViewById(R.id.shimmer_container);
         
         mRepliedMessageLayout = view.findViewById(R.id.mRepliedMessageLayout);
+        Log.d("ChatViewHolders", "mRepliedMessageLayout found: " + (mRepliedMessageLayout != null ? "YES" : "NO"));
         if (mRepliedMessageLayout != null) {
             mRepliedMessageLayoutUsername = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutUsername);
             mRepliedMessageLayoutMessage = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutMessage);
             mRepliedMessageLayoutLeftBar = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutLeftBar);
+            Log.d("ChatViewHolders", "Reply layout views found - Username: " + (mRepliedMessageLayoutUsername != null ? "YES" : "NO") + 
+                ", Message: " + (mRepliedMessageLayoutMessage != null ? "YES" : "NO") + 
+                ", LeftBar: " + (mRepliedMessageLayoutLeftBar != null ? "YES" : "NO"));
         }
     }
 
