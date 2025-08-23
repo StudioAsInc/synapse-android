@@ -5,7 +5,7 @@
     android:id="@+id/cardMediaItem"
     android:layout_width="100dp"
     android:layout_height="100dp"
-    android:layout_margin="4dp"
+    android:layout_margin="8dp"
     app:cardElevation="2dp"
     app:cardCornerRadius="8dp">
 
