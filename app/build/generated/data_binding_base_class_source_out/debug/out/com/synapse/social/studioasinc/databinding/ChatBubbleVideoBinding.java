@@ -46,6 +46,9 @@ public final class ChatBubbleVideoBinding implements ViewBinding {
   public final MaterialCardView mRepliedMessageLayout;
 
   @NonNull
+  public final ImageView mRepliedMessageLayoutImage;
+
+  @NonNull
   public final LinearLayout mRepliedMessageLayoutLeftBar;
 
   @NonNull
@@ -91,6 +94,7 @@ public final class ChatBubbleVideoBinding implements ViewBinding {
       @NonNull TextView date, @NonNull LinearLayout linear2, @NonNull LinearLayout linear9,
       @NonNull CardView mProfileCard, @NonNull ImageView mProfileImage,
       @NonNull MaterialCardView mRepliedMessageLayout,
+      @NonNull ImageView mRepliedMessageLayoutImage,
       @NonNull LinearLayout mRepliedMessageLayoutLeftBar,
       @NonNull TextView mRepliedMessageLayoutMessage,
       @NonNull LinearLayout mRepliedMessageLayoutRightBody,
@@ -108,6 +112,7 @@ public final class ChatBubbleVideoBinding implements ViewBinding {
     this.mProfileCard = mProfileCard;
     this.mProfileImage = mProfileImage;
     this.mRepliedMessageLayout = mRepliedMessageLayout;
+    this.mRepliedMessageLayoutImage = mRepliedMessageLayoutImage;
     this.mRepliedMessageLayoutLeftBar = mRepliedMessageLayoutLeftBar;
     this.mRepliedMessageLayoutMessage = mRepliedMessageLayoutMessage;
     this.mRepliedMessageLayoutRightBody = mRepliedMessageLayoutRightBody;
@@ -190,6 +195,12 @@ public final class ChatBubbleVideoBinding implements ViewBinding {
       id = R.id.mRepliedMessageLayout;
       MaterialCardView mRepliedMessageLayout = ViewBindings.findChildViewById(rootView, id);
       if (mRepliedMessageLayout == null) {
+        break missingId;
+      }
+
+      id = R.id.mRepliedMessageLayoutImage;
+      ImageView mRepliedMessageLayoutImage = ViewBindings.findChildViewById(rootView, id);
+      if (mRepliedMessageLayoutImage == null) {
         break missingId;
       }
 
@@ -278,11 +289,11 @@ public final class ChatBubbleVideoBinding implements ViewBinding {
       }
 
       return new ChatBubbleVideoBinding((LinearLayout) rootView, body, date, linear2, linear9,
-          mProfileCard, mProfileImage, mRepliedMessageLayout, mRepliedMessageLayoutLeftBar,
-          mRepliedMessageLayoutMessage, mRepliedMessageLayoutRightBody,
-          mRepliedMessageLayoutUsername, messageBG, messageLayout, messageState, messageText,
-          myMessageInfo, playButton, relativelayout12, shimmerContainer, videoContainerCard,
-          videoThumbnail);
+          mProfileCard, mProfileImage, mRepliedMessageLayout, mRepliedMessageLayoutImage,
+          mRepliedMessageLayoutLeftBar, mRepliedMessageLayoutMessage,
+          mRepliedMessageLayoutRightBody, mRepliedMessageLayoutUsername, messageBG, messageLayout,
+          messageState, messageText, myMessageInfo, playButton, relativelayout12, shimmerContainer,
+          videoContainerCard, videoThumbnail);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

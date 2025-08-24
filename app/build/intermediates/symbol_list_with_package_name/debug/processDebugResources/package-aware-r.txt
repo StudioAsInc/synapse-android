@@ -5387,6 +5387,7 @@ id mProfileCard
 id mProfileImage
 id mRegionList
 id mRepliedMessageLayout
+id mRepliedMessageLayoutImage
 id mRepliedMessageLayoutLeftBar
 id mRepliedMessageLayoutMessage
 id mRepliedMessageLayoutRightBody

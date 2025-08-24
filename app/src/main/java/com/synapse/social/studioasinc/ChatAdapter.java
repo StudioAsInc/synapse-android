@@ -231,7 +231,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
                     Log.d(TAG, "Processing reply for message ID: " + repliedId);
                     
-                    String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     String theirUid = chatActivity.getIntent().getStringExtra("uid");
                     
                     Log.d(TAG, "Looking for replied message in chat: " + myUid + "/" + theirUid + " with ID: " + repliedId);
@@ -404,7 +403,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (!isMyMessage && data.containsKey("message_state") && "sended".equals(String.valueOf(data.get("message_state")))) {
             String otherUserUid = chatActivity.getIntent().getStringExtra("uid");
-            String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            
             String messageKey = String.valueOf(data.get("key"));
             FirebaseDatabase.getInstance().getReference("skyline/chats").child(otherUserUid).child(myUid).child(messageKey).child("message_state").setValue("seen");
             FirebaseDatabase.getInstance().getReference("skyline/chats").child(myUid).child(otherUserUid).child(messageKey).child("message_state").setValue("seen");

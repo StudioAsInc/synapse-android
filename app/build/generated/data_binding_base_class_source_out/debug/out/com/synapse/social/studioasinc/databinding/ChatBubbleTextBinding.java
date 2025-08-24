@@ -42,6 +42,9 @@ public final class ChatBubbleTextBinding implements ViewBinding {
   public final MaterialCardView mRepliedMessageLayout;
 
   @NonNull
+  public final ImageView mRepliedMessageLayoutImage;
+
+  @NonNull
   public final LinearLayout mRepliedMessageLayoutLeftBar;
 
   @NonNull
@@ -77,6 +80,7 @@ public final class ChatBubbleTextBinding implements ViewBinding {
   private ChatBubbleTextBinding(@NonNull LinearLayout rootView, @NonNull LinearLayout body,
       @NonNull TextView date, @NonNull LinearLayout linear2, @NonNull CardView mProfileCard,
       @NonNull ImageView mProfileImage, @NonNull MaterialCardView mRepliedMessageLayout,
+      @NonNull ImageView mRepliedMessageLayoutImage,
       @NonNull LinearLayout mRepliedMessageLayoutLeftBar,
       @NonNull TextView mRepliedMessageLayoutMessage,
       @NonNull LinearLayout mRepliedMessageLayoutRightBody,
@@ -91,6 +95,7 @@ public final class ChatBubbleTextBinding implements ViewBinding {
     this.mProfileCard = mProfileCard;
     this.mProfileImage = mProfileImage;
     this.mRepliedMessageLayout = mRepliedMessageLayout;
+    this.mRepliedMessageLayoutImage = mRepliedMessageLayoutImage;
     this.mRepliedMessageLayoutLeftBar = mRepliedMessageLayoutLeftBar;
     this.mRepliedMessageLayoutMessage = mRepliedMessageLayoutMessage;
     this.mRepliedMessageLayoutRightBody = mRepliedMessageLayoutRightBody;
@@ -167,6 +172,12 @@ public final class ChatBubbleTextBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.mRepliedMessageLayoutImage;
+      ImageView mRepliedMessageLayoutImage = ViewBindings.findChildViewById(rootView, id);
+      if (mRepliedMessageLayoutImage == null) {
+        break missingId;
+      }
+
       id = R.id.mRepliedMessageLayoutLeftBar;
       LinearLayout mRepliedMessageLayoutLeftBar = ViewBindings.findChildViewById(rootView, id);
       if (mRepliedMessageLayoutLeftBar == null) {
@@ -234,10 +245,10 @@ public final class ChatBubbleTextBinding implements ViewBinding {
       }
 
       return new ChatBubbleTextBinding((LinearLayout) rootView, body, date, linear2, mProfileCard,
-          mProfileImage, mRepliedMessageLayout, mRepliedMessageLayoutLeftBar,
-          mRepliedMessageLayoutMessage, mRepliedMessageLayoutRightBody,
-          mRepliedMessageLayoutUsername, menuViewD, messageBG, messageLayout, messageState,
-          messageText, myMessageInfo, shimmerContainer);
+          mProfileImage, mRepliedMessageLayout, mRepliedMessageLayoutImage,
+          mRepliedMessageLayoutLeftBar, mRepliedMessageLayoutMessage,
+          mRepliedMessageLayoutRightBody, mRepliedMessageLayoutUsername, menuViewD, messageBG,
+          messageLayout, messageState, messageText, myMessageInfo, shimmerContainer);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

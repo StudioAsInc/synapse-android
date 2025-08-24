@@ -130,6 +130,9 @@
 						android:paddingRight="8dp"
 						android:paddingBottom="6dp"
 						android:background="#FFFFFF"
+						android:clickable="true"
+						android:focusable="true"
+						android:foreground="?attr/selectableItemBackgroundBorderless"
 						android:gravity="center_vertical"
 						android:orientation="horizontal">
 						<ImageView
@@ -160,6 +163,9 @@
 						android:paddingRight="8dp"
 						android:paddingBottom="6dp"
 						android:background="#FFFFFF"
+						android:clickable="true"
+						android:focusable="true"
+						android:foreground="?attr/selectableItemBackgroundBorderless"
 						android:gravity="center_vertical"
 						android:orientation="horizontal">
 						<ImageView
@@ -190,6 +196,9 @@
 						android:paddingRight="8dp"
 						android:paddingBottom="6dp"
 						android:background="#FFFFFF"
+						android:clickable="true"
+						android:focusable="true"
+						android:foreground="?attr/selectableItemBackgroundBorderless"
 						android:gravity="center_vertical"
 						android:orientation="horizontal">
 						<ImageView
@@ -219,6 +228,9 @@
 						android:paddingRight="8dp"
 						android:paddingBottom="6dp"
 						android:background="#FFFFFF"
+						android:clickable="true"
+						android:focusable="true"
+						android:foreground="?attr/selectableItemBackgroundBorderless"
 						android:gravity="center_vertical"
 						android:orientation="horizontal">
 						<ImageView
@@ -249,6 +261,9 @@
 						android:paddingRight="8dp"
 						android:paddingBottom="6dp"
 						android:background="#FFFFFF"
+						android:clickable="true"
+						android:focusable="true"
+						android:foreground="?attr/selectableItemBackgroundBorderless"
 						android:gravity="center_vertical"
 						android:orientation="horizontal">
 						<ImageView
