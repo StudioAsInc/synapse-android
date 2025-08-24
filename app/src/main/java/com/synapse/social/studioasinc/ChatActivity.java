@@ -1259,8 +1259,8 @@ public class ChatActivity extends AppCompatActivity {
 								
 								Log.d("ChatActivity", "Added new Firebase message to list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
 								
-								// Notify adapter of the new item
-								chatAdapter.notifyItemInserted(newPosition);
+								// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
+								chatAdapter.notifyDataSetChanged();
 								
 								// Update previous item's timestamp if needed
 								if (newPosition > 0) {
@@ -1856,7 +1856,8 @@ public class ChatActivity extends AppCompatActivity {
 				ChatMessagesList.add(ChatSendMap);
 				int newPosition = ChatMessagesList.size() - 1;
 				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-				chatAdapter.notifyItemInserted(newPosition);
+				// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
+				chatAdapter.notifyDataSetChanged();
 				
 				// Scroll to the new message immediately
 				ChatMessagesListRecycler.post(() -> {
@@ -1916,7 +1917,8 @@ public class ChatActivity extends AppCompatActivity {
 			ChatMessagesList.add(ChatSendMap);
 			int newPosition = ChatMessagesList.size() - 1;
 			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			chatAdapter.notifyItemInserted(newPosition);
+			// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
+			chatAdapter.notifyDataSetChanged();
 			
 			// Scroll to the new message immediately
 			ChatMessagesListRecycler.post(() -> {
@@ -2196,7 +2198,8 @@ public class ChatActivity extends AppCompatActivity {
 			HashMap<String, Object> loadingMap = new HashMap<>();
 			loadingMap.put("isLoadingMore", true);
 			ChatMessagesList.add(0, loadingMap);
-			((ChatAdapter)chatAdapter).notifyItemInserted(0);
+			// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
+			((ChatAdapter)chatAdapter).notifyDataSetChanged();
 		}
 	}
 

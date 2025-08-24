@@ -334,15 +334,27 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
         }
         
+        // CRITICAL FIX: Set up long click listener on the entire message layout for better touch detection
+        View.OnLongClickListener longClickListener = v -> {
+            Log.d(TAG, "=== LONG CLICK DETECTED ===");
+            Log.d(TAG, "Long click on view: " + v.getClass().getSimpleName() + " at position: " + position);
+            Log.d(TAG, "Message data: " + data.toString());
+            chatActivity._messageOverviewPopup(v, position, _data);
+            return true;
+        };
+        
+        // Set long click listener on multiple views to ensure it works
+        if (holder.message_layout != null) {
+            holder.message_layout.setOnLongClickListener(longClickListener);
+        }
         if (holder.messageBG != null) {
-            View.OnLongClickListener longClickListener = v -> {
-                chatActivity._messageOverviewPopup(v, position, _data);
-                return true;
-            };
             holder.messageBG.setOnLongClickListener(longClickListener);
-            if(holder.message_text != null) {
-                holder.message_text.setOnLongClickListener(longClickListener);
-            }
+        }
+        if (holder.message_text != null) {
+            holder.message_text.setOnLongClickListener(longClickListener);
+        }
+        if (holder.body != null) {
+            holder.body.setOnLongClickListener(longClickListener);
         }
     }
 
