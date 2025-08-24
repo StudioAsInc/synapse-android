@@ -66,9 +66,10 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import android.widget.PopupMenu;
+import androidx.appcompat.widget.PopupMenu;
 import android.view.Menu;
 import android.view.MenuItem;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -837,17 +838,7 @@ public class ChatActivity extends AppCompatActivity {
 		Log.d("ChatActivity", "Popup called for position: " + _position + ", data size: " + _data.size());
 		Log.d("ChatActivity", "Message data: " + _data.get((int)_position).toString());
 		
-		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
-		Log.d("ChatActivity", "Popup layout inflated successfully");
-
-		// Replace BottomSheet with a compact PopupMenu for robust anchoring
-		
-		final LinearLayout main = pop1V.findViewById(R.id.main);
-		final LinearLayout edit = pop1V.findViewById(R.id.edit);
-		final LinearLayout reply = pop1V.findViewById(R.id.reply);
-		final LinearLayout summary = pop1V.findViewById(R.id.summary);
-		final LinearLayout copy = pop1V.findViewById(R.id.copy);
-		final LinearLayout delete = pop1V.findViewById(R.id.delete);
+		// Build a compact, robust PopupMenu (no dependency on PopupWindow tokens)
 		
 		// Show compact contextual menu anchored to the bubble
 		View anchorView = _view;
@@ -909,142 +900,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 		pm.show();
 		
-		// Set up the popup content based on message ownership
-		if (_data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-			main.setGravity(Gravity.CENTER | Gravity.RIGHT);
-			edit.setVisibility(View.VISIBLE);
-			delete.setVisibility(View.VISIBLE);
-		} else {
-			main.setGravity(Gravity.CENTER | Gravity.LEFT);
-			edit.setVisibility(View.GONE);
-			delete.setVisibility(View.GONE);
-		}
-		
-		_viewGraphics(edit, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-		_viewGraphics(reply, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-		_viewGraphics(summary, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-
-		String messageTextForSummary2 = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
-		if (messageTextForSummary2.length() > 200) {
-			summary.setVisibility(View.VISIBLE);
-		} else {
-			summary.setVisibility(View.GONE);
-		}
-		_viewGraphics(copy, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-		_viewGraphics(delete, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-		
-		main.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				if (dialog.isShowing()) dialog.dismiss();
-			}
-		});
-		reply.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				ReplyMessageID = _data.get((int)_position).get(KEY_KEY).toString();
-				if (_data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-					mMessageReplyLayoutBodyRightUsername.setText(FirstUserName);
-				} else {
-					mMessageReplyLayoutBodyRightUsername.setText(SecondUserName);
-				}
-				mMessageReplyLayoutBodyRightMessage.setText(_data.get((int)_position).get(MESSAGE_TEXT_KEY).toString());
-				mMessageReplyLayout.setVisibility(View.VISIBLE);
-				vbr.vibrate((long)(48));
-				if (dialog.isShowing()) dialog.dismiss();
-			}
-		});
-		summary.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				String messageText = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
-				String prompt = "Summarize the following text in a few sentences:\n\n" + messageText;
-
-				RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
-				if (viewHolder instanceof BaseMessageViewHolder) {
-					callGeminiForSummary(prompt, (BaseMessageViewHolder) viewHolder);
-				}
-
-				if (dialog.isShowing()) dialog.dismiss();
-			}
-		});
-		copy.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				((ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString()));
-				vbr.vibrate((long)(48));
-				if (dialog.isShowing()) dialog.dismiss();
-			}
-		});
-		delete.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_DeleteMessageDialog(_data, _position);
-				if (dialog.isShowing()) dialog.dismiss();
-			}
-		});
-		edit.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				if (dialog.isShowing()) dialog.dismiss();
-				MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(ChatActivity.this);
-				Dialogs.setTitle("Edit message");
-				View EdittextDesign = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
-				Dialogs.setView(EdittextDesign);
-
-				final EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
-				final TextInputLayout textinputlayout1 = EdittextDesign.findViewById(R.id.textinputlayout1);
-				edittext1.setFocusableInTouchMode(true);
-				edittext1.setText(_data.get((int)_position).get(MESSAGE_TEXT_KEY).toString());
-				edittext1.setMaxLines(10);
-				edittext1.setVerticalScrollBarEnabled(true);
-				edittext1.setMovementMethod(new ScrollingMovementMethod());
-				edittext1.setScrollBarStyle(View.SCROLLBARS_INSIDE_INSET);
-
-				Dialogs.setPositiveButton("Change", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface _dialog, int _which) {
-						if (!(edittext1.getText().toString().length() == 0)) {
-							ChatSendMap = new HashMap<>();
-							ChatSendMap.put(UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
-							ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-							ChatSendMap.put("message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-							ChatSendMap.put(MESSAGE_TEXT_KEY, edittext1.getText().toString().trim());
-							ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-							ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
-							
-							// Update both chat nodes using setValue for proper real-time updates
-							_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // Current user UID
-							.child(getIntent().getStringExtra(UID_KEY))  // Other user UID
-							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Message key
-							.setValue(ChatSendMap);
-							
-							_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-							.child(getIntent().getStringExtra(UID_KEY))  // Other user UID
-							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // Current user UID
-							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Message key
-							.setValue(ChatSendMap);
-							
-							// Clear the edit dialog
-							edittext1.setText("");
-						} else {
-							SketchwareUtil.showMessage(getApplicationContext(), "Can't be empty");
-						}
-					}
-				});
-				Dialogs.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface _dialog, int _which) {
-
-					}
-				});
-				androidx.appcompat.app.AlertDialog edittextDialog = Dialogs.create();
-
-				edittextDialog.setCancelable(true);
-				edittextDialog.show();
-			}
-		});
+		// Legacy inline layout-based popup actions removed in favor of PopupMenu
 	}
 
 
