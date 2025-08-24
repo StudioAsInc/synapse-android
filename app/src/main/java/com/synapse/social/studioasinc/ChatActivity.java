@@ -491,6 +491,10 @@ public class ChatActivity extends AppCompatActivity {
 		ChatRecyclerLayoutManager.setStackFromEnd(true);
 		ChatMessagesListRecycler.setLayoutManager(ChatRecyclerLayoutManager);
 
+		// CRITICAL FIX: Configure RecyclerView to allow long press events
+		ChatMessagesListRecycler.setLongClickable(true);
+		ChatMessagesListRecycler.setClickable(true);
+		
 		// Create, configure, and set the new ChatAdapter
 		chatAdapter = new ChatAdapter(ChatMessagesList);
 		chatAdapter.setChatActivity(this);
@@ -2258,6 +2262,16 @@ public class ChatActivity extends AppCompatActivity {
 			}
 
 			@Override
+			public boolean isItemViewSwipeEnabled() {
+				return true; // Enable swipe
+			}
+
+			@Override
+			public boolean isLongPressDragEnabled() {
+				return false; // Disable long press drag to allow our custom long press
+			}
+
+			@Override
 			public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 				if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
 					View itemView = viewHolder.itemView;
@@ -2289,8 +2303,8 @@ public class ChatActivity extends AppCompatActivity {
 					}
 					// Fade out the item as it is swiped away
 					final float alpha = 1.0f - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
-					viewHolder.itemView.setAlpha(alpha);
-					viewHolder.itemView.setTranslationX(dX);
+					itemView.setAlpha(alpha);
+					itemView.setTranslationX(dX);
 				} else {
 					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 				}

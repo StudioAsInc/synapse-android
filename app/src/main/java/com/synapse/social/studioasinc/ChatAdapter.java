@@ -34,6 +34,8 @@ import java.util.HashMap;
 import androidx.gridlayout.widget.GridLayout;
 import android.widget.RelativeLayout;
 import com.google.firebase.database.GenericTypeIndicator;
+import android.view.MotionEvent;
+import android.widget.Toast;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -407,19 +409,56 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return true;
         };
         
+        // CRITICAL FIX: Enhanced touch event handling with multiple fallbacks
+        View.OnTouchListener touchListener = (v, event) -> {
+            // Log all touch events for debugging
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                Log.d(TAG, "=== TOUCH DOWN DETECTED ===");
+                Log.d(TAG, "Touch on view: " + v.getClass().getSimpleName() + " at position: " + position);
+            }
+            
+            // Handle long press manually if needed
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                Log.d(TAG, "=== TOUCH UP DETECTED ===");
+            }
+            
+            return false; // Don't consume the event
+        };
+        
         // Set long click listener on multiple views to ensure it works
         if (holder.message_layout != null) {
             holder.message_layout.setOnLongClickListener(longClickListener);
+            holder.message_layout.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on message_layout for position: " + position);
         }
         if (holder.messageBG != null) {
             holder.messageBG.setOnLongClickListener(longClickListener);
+            holder.messageBG.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on messageBG for position: " + position);
         }
         if (holder.message_text != null) {
             holder.message_text.setOnLongClickListener(longClickListener);
+            holder.message_text.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on message_text for position: " + position);
         }
         if (holder.body != null) {
             holder.body.setOnLongClickListener(longClickListener);
+            holder.body.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on body for position: " + position);
         }
+        
+        // CRITICAL FIX: Also set on the entire item view as a fallback
+        holder.itemView.setOnLongClickListener(longClickListener);
+        holder.itemView.setOnTouchListener(touchListener);
+        Log.d(TAG, "Set long click listener on itemView for position: " + position);
+        
+        // CRITICAL FIX: Add a simple test long click listener to verify it works
+        holder.itemView.setOnLongClickListener(v -> {
+            Log.d(TAG, "=== ITEM VIEW LONG CLICK TEST ===");
+            Log.d(TAG, "Item view long click at position: " + position);
+            Toast.makeText(_context, "Long click detected at position: " + position, Toast.LENGTH_SHORT).show();
+            return true;
+        });
     }
 
     private void bindTextViewHolder(TextViewHolder holder, int position) {
