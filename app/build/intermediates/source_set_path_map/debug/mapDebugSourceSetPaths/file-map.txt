@@ -84,9 +84,11 @@ com.synapse.social.studioasinc.app-jetified-lifecycle-process-2.9.2-82 /home/ubu
 com.synapse.social.studioasinc.app-jetified-play-services-auth-21.4.0-83 /home/ubuntu/.gradle/caches/8.13/transforms/eae17038374e54e76e98f708bffe74a8/transformed/jetified-play-services-auth-21.4.0/res
 com.synapse.social.studioasinc.app-jetified-customview-poolingcontainer-1.0.0-84 /home/ubuntu/.gradle/caches/8.13/transforms/f89df40cf94e498169411270c01f4bab/transformed/jetified-customview-poolingcontainer-1.0.0/res
 com.synapse.social.studioasinc.app-jetified-navigation-runtime-release-85 /home/ubuntu/.gradle/caches/8.13/transforms/fb66c3daa1bcfe6a6d9d3f0e1aa6d75d/transformed/jetified-navigation-runtime-release/res
-com.synapse.social.studioasinc.app-resValues-86 /workspace/app/build/generated/res/resValues/debug
-com.synapse.social.studioasinc.app-packageDebugResources-87 /workspace/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
-com.synapse.social.studioasinc.app-packageDebugResources-88 /workspace/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
-com.synapse.social.studioasinc.app-debug-89 /workspace/app/build/intermediates/merged_res/debug/mergeDebugResources
-com.synapse.social.studioasinc.app-debug-90 /workspace/app/src/debug/res
-com.synapse.social.studioasinc.app-main-91 /workspace/app/src/main/res
+com.synapse.social.studioasinc.app-res-86 /workspace/app/build/generated/res/injectCrashlyticsMappingFileIdDebug
+com.synapse.social.studioasinc.app-res-87 /workspace/app/build/generated/res/processDebugGoogleServices
+com.synapse.social.studioasinc.app-resValues-88 /workspace/app/build/generated/res/resValues/debug
+com.synapse.social.studioasinc.app-packageDebugResources-89 /workspace/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.synapse.social.studioasinc.app-packageDebugResources-90 /workspace/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.synapse.social.studioasinc.app-debug-91 /workspace/app/build/intermediates/merged_res/debug/mergeDebugResources
+com.synapse.social.studioasinc.app-debug-92 /workspace/app/src/debug/res
+com.synapse.social.studioasinc.app-main-93 /workspace/app/src/main/res

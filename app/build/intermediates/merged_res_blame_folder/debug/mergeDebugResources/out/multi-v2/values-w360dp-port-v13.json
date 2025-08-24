@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-88:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
+            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-90:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
             "map": [
                 {
                     "source": "/home/ubuntu/.gradle/caches/8.13/transforms/17d843180ece46c5c5b7cb9084c20035/transformed/material-1.14.0-alpha03/res/values-w360dp-port-v13/values-w360dp-port-v13.xml",

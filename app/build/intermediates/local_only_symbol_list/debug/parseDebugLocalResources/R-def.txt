@@ -1697,6 +1697,7 @@ string change_profile_image
 string changes_saved
 string chat
 string close_app
+string com.google.firebase.crashlytics.mapping_file_id
 string comment
 string comment_liked_by_publisher
 string comments
@@ -1741,6 +1742,7 @@ string followed_users_posts
 string followers
 string following
 string forgot_password
+string gcm_defaultSenderId
 string gender_gone_title
 string gender_subtitle
 string gender_title
@@ -1748,6 +1750,7 @@ string gift
 string gifts
 string google_api_key
 string google_app_id
+string google_crash_reporting_api_key
 string google_sign_not_available
 string google_storage_bucket
 string hide_post_from_everyone

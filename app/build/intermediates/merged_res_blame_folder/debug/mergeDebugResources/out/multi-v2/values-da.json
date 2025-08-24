@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-88:/values-da/values-da.xml",
+            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-90:/values-da/values-da.xml",
             "map": [
                 {
                     "source": "/home/ubuntu/.gradle/caches/8.13/transforms/c897fc3f1fb0962298c38e6f42df2b3e/transformed/jetified-play-services-base-18.5.0/res/values-da/values.xml",
