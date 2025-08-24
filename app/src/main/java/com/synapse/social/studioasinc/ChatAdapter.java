@@ -474,6 +474,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             holder.message_text.setOnTouchListener(touchListener);
             Log.d(TAG, "Set long click listener on message_text for position: " + position);
         }
+        // Also attach to the entire item view as a fallback
+        if (holder.itemView != null) {
+            holder.itemView.setOnLongClickListener(longClickListener);
+            holder.itemView.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on itemView for position: " + position);
+        }
         if (holder.body != null) {
             holder.body.setOnLongClickListener(longClickListener);
             holder.body.setOnTouchListener(touchListener);
