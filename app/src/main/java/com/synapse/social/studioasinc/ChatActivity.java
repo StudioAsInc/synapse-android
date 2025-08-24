@@ -2635,7 +2635,8 @@ public class ChatActivity extends AppCompatActivity {
 		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 			LayoutInflater _inflater = getLayoutInflater();
 			View _v = _inflater.inflate(R.layout.chat_attactment, null);
-			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			// CRITICAL FIX: Ensure consistent dimensions to prevent height changes during upload
+			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(dpToPx(100), dpToPx(100));
 			_v.setLayoutParams(_lp);
 			return new ViewHolder(_v);
 		}
@@ -2676,7 +2677,8 @@ public class ChatActivity extends AppCompatActivity {
 			}
 			// If we pass this check, we can safely proceed.
 			_view.setVisibility(View.VISIBLE);
-			_view.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+			// CRITICAL FIX: Maintain consistent dimensions regardless of upload state
+			_view.setLayoutParams(new RecyclerView.LayoutParams(dpToPx(100), dpToPx(100)));
 			// --- END: ROBUSTNESS FIX ---
 
 			// Set the image preview with error handling
@@ -2798,5 +2800,11 @@ public class ChatActivity extends AppCompatActivity {
 				super(v);
 			}
 		}
+	}
+
+	// Helper method to convert dp to pixels
+	private int dpToPx(int dp) {
+		float density = getResources().getDisplayMetrics().density;
+		return Math.round(dp * density);
 	}
 }

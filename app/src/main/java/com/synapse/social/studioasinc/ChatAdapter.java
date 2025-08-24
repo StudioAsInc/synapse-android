@@ -236,6 +236,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                     Log.d(TAG, "Found replied message data, showing reply layout");
                                     holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
                                     
+                                    // CRITICAL FIX: Set proper background for reply layout to ensure visibility
+                                    if (isMyMessage) {
+                                        // For my messages, use a semi-transparent white background
+                                        holder.mRepliedMessageLayout.setCardBackgroundColor(Color.parseColor("#80FFFFFF"));
+                                    } else {
+                                        // For other's messages, use a semi-transparent light gray background
+                                        holder.mRepliedMessageLayout.setCardBackgroundColor(Color.parseColor("#F5F5F5"));
+                                    }
+                                    
                                     String repliedUid = snapshot.child("uid").getValue(String.class);
                                     String repliedText = snapshot.child("message_text").getValue(String.class);
                                     
@@ -246,10 +255,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         holder.mRepliedMessageLayoutUsername.setText(username);
                                         Log.d(TAG, "Set reply username: " + username);
                                         
+                                        // CRITICAL FIX: Use high-contrast colors for better visibility
                                         if (isMyMessage) {
+                                            // For my messages (purple background), use white text
                                             holder.mRepliedMessageLayoutUsername.setTextColor(Color.WHITE);
                                         } else {
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
+                                            // For other's messages (white background), use dark text
+                                            holder.mRepliedMessageLayoutUsername.setTextColor(Color.parseColor("#1A1A1A"));
                                         }
                                     } else {
                                         Log.w(TAG, "Reply username TextView is null");
@@ -259,6 +271,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         String messageText = repliedText != null ? repliedText : "";
                                         holder.mRepliedMessageLayoutMessage.setText(messageText);
                                         Log.d(TAG, "Set reply message: " + messageText);
+                                        
+                                        // CRITICAL FIX: Set message text color for better visibility
+                                        if (isMyMessage) {
+                                            holder.mRepliedMessageLayoutMessage.setTextColor(Color.parseColor("#E0E0E0"));
+                                        } else {
+                                            holder.mRepliedMessageLayoutMessage.setTextColor(Color.parseColor("#424242"));
+                                        }
                                     } else {
                                         Log.w(TAG, "Reply message TextView is null");
                                     }
@@ -279,7 +298,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         }
                                     });
                                     
-                                    Log.d(TAG, "Reply layout should now be visible");
+                                    Log.d(TAG, "Reply layout should now be visible with proper styling");
                                 } else {
                                     Log.d(TAG, "Replied message not found or holder is null. Snapshot exists: " + (snapshot != null && snapshot.exists()) + ", Holder null: " + (holder.mRepliedMessageLayout == null));
                                 }
