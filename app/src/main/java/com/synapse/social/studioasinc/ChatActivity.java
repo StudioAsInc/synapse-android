@@ -1195,18 +1195,8 @@ public class ChatActivity extends AppCompatActivity {
 					if (!newMessages.isEmpty()) {
 						oldestMessageKey = newMessages.get(0).get(KEY_KEY).toString();
 
-						final LinearLayoutManager layoutManager = (LinearLayoutManager) ChatMessagesListRecycler.getLayoutManager();
-						int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
-						View firstVisibleView = layoutManager.findViewByPosition(firstVisiblePosition);
-						int topOffset = (firstVisibleView != null) ? firstVisibleView.getTop() : 0;
-
 						ChatMessagesList.addAll(0, newMessages);
-						chatAdapter.notifyItemRangeInserted(0, newMessages.size());
-
-						// Restore scroll position to the item that was previously at the top
-						if (firstVisibleView != null) {
-							layoutManager.scrollToPositionWithOffset(firstVisiblePosition + newMessages.size(), topOffset);
-						}
+						chatAdapter.notifyDataSetChanged();
 					}
 				}
 				isLoading = false;
