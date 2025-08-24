@@ -1209,8 +1209,13 @@ public class ChatActivity extends AppCompatActivity {
 			_chat_child_listener = new ChildEventListener() {
 				@Override
 				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
+					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
+					Log.d("ChatActivity", "Snapshot key: " + dataSnapshot.getKey() + ", Previous child: " + previousChildName);
+					
 					if (dataSnapshot.exists()) {
 						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
+						
 						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
 							// Debug logging for image messages
 							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
@@ -1238,6 +1243,8 @@ public class ChatActivity extends AppCompatActivity {
 									break;
 								}
 							}
+
+							Log.d("ChatActivity", "Message exists check - Exists: " + exists + ", Position: " + existingPosition + ", Current list size: " + ChatMessagesList.size());
 
 							if (!exists) {
 								// This is a truly new message from Firebase
@@ -1280,7 +1287,10 @@ public class ChatActivity extends AppCompatActivity {
 						} else {
 							Log.w("ChatActivity", "New message is null or missing key");
 						}
+					} else {
+						Log.w("ChatActivity", "DataSnapshot does not exist");
 					}
+					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded END ===");
 				}
 
 				@Override
@@ -1791,7 +1801,11 @@ public class ChatActivity extends AppCompatActivity {
 	 * It's now called after the recipient's OneSignal ID has been fetched.
 	 */
 	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
-		Log.d("ChatActivity", "Starting message sending process - Text: '" + messageText + "', Sender: " + senderUid + ", Recipient: " + recipientUid);
+		Log.d("ChatActivity", "=== MESSAGE SENDING START ===");
+		Log.d("ChatActivity", "Message text: '" + messageText + "'");
+		Log.d("ChatActivity", "Sender: " + senderUid + ", Recipient: " + recipientUid);
+		Log.d("ChatActivity", "Attachment map size: " + attactmentmap.size());
+		Log.d("ChatActivity", "Attachment map content: " + attactmentmap.toString());
 		
 		if (!attactmentmap.isEmpty()) {
 			Log.d("ChatActivity", "Processing message with " + attactmentmap.size() + " attachments");
@@ -1799,6 +1813,7 @@ public class ChatActivity extends AppCompatActivity {
 			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
 			boolean allUploadsSuccessful = true;
 			for (HashMap<String, Object> item : attactmentmap) {
+				Log.d("ChatActivity", "Checking attachment: " + item.toString());
 				if ("success".equals(item.get("uploadState"))) {
 					HashMap<String, Object> attachmentData = new HashMap<>();
 					attachmentData.put("url", item.get("cloudinaryUrl"));
@@ -1813,6 +1828,8 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			}
 
+			Log.d("ChatActivity", "All uploads successful: " + allUploadsSuccessful + ", Successful attachments: " + successfulAttachments.size());
+			
 			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
 				String uniqueMessageKey = main.push().getKey();
 				Log.d("ChatActivity", "Generated message key: " + uniqueMessageKey);
@@ -1828,6 +1845,7 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
 				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
+				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
 				
 				// Send to both chat nodes using setValue for proper real-time updates
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
@@ -1853,14 +1871,21 @@ public class ChatActivity extends AppCompatActivity {
 				_updateInbox(lastMessage);
 
 				// Clear UI
+				Log.d("ChatActivity", "Clearing attachment map and UI");
 				attactmentmap.clear();
 				rv_attacmentList.getAdapter().notifyDataSetChanged();
 				attachmentLayoutListHolder.setVisibility(View.GONE);
 				message_et.setText("");
 				ReplyMessageID = "null";
 				mMessageReplyLayout.setVisibility(View.GONE);
+				
+				// CRITICAL FIX: Reset attachment state completely
+				resetAttachmentState();
+				
+				Log.d("ChatActivity", "=== ATTACHMENT MESSAGE SENT SUCCESSFULLY ===");
 
 			} else {
+				Log.w("ChatActivity", "Cannot send message - All uploads successful: " + allUploadsSuccessful + ", Message text empty: " + messageText.isEmpty() + ", Attachments empty: " + successfulAttachments.isEmpty());
 				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
 			}
 
@@ -1880,6 +1905,7 @@ public class ChatActivity extends AppCompatActivity {
 			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
 			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
+			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
 			
 			// Send to both chat nodes using setValue for proper real-time updates
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
@@ -1906,6 +1932,10 @@ public class ChatActivity extends AppCompatActivity {
 			message_et.setText("");
 			ReplyMessageID = "null";
 			mMessageReplyLayout.setVisibility(View.GONE);
+			
+			Log.d("ChatActivity", "=== TEXT MESSAGE SENT SUCCESSFULLY ===");
+		} else {
+			Log.w("ChatActivity", "No message text and no attachments - nothing to send");
 		}
 	}
 
@@ -2109,6 +2139,33 @@ public class ChatActivity extends AppCompatActivity {
 		});
 	}
 
+
+	/**
+	 * CRITICAL FIX: Reset attachment state completely to prevent issues with subsequent messages
+	 */
+	private void resetAttachmentState() {
+		Log.d("ChatActivity", "=== RESETTING ATTACHMENT STATE ===");
+		Log.d("ChatActivity", "Attachment map before reset: " + attactmentmap.toString());
+		
+		// Clear the attachment map
+		attactmentmap.clear();
+		
+		// Reset the path variable
+		path = "";
+		
+		// Update the attachment list adapter
+		if (rv_attacmentList.getAdapter() != null) {
+			rv_attacmentList.getAdapter().notifyDataSetChanged();
+		}
+		
+		// Hide the attachment layout
+		if (attachmentLayoutListHolder != null) {
+			attachmentLayoutListHolder.setVisibility(View.GONE);
+		}
+		
+		Log.d("ChatActivity", "Attachment state reset complete - Map size: " + attactmentmap.size() + ", Path: '" + path + "'");
+		Log.d("ChatActivity", "=== ATTACHMENT STATE RESET COMPLETE ===");
+	}
 
 	public void _updateInbox(final String _lastMessage) {
 		// Using the correct parameter name '_lastMessage' with the underscore prefix.
