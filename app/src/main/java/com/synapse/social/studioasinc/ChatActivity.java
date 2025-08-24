@@ -66,7 +66,9 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
+import android.widget.PopupMenu;
+import android.view.Menu;
+import android.view.MenuItem;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -838,11 +840,7 @@ public class ChatActivity extends AppCompatActivity {
 		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
 		Log.d("ChatActivity", "Popup layout inflated successfully");
 
-		// Use a robust BottomSheetDialog instead of PopupWindow to avoid window/token issues
-		final BottomSheetDialog dialog = new BottomSheetDialog(this);
-		dialog.setContentView(pop1V);
-		dialog.setCancelable(true);
-		dialog.setCanceledOnTouchOutside(true);
+		// Replace BottomSheet with a compact PopupMenu for robust anchoring
 		
 		final LinearLayout main = pop1V.findViewById(R.id.main);
 		final LinearLayout edit = pop1V.findViewById(R.id.edit);
@@ -851,32 +849,65 @@ public class ChatActivity extends AppCompatActivity {
 		final LinearLayout copy = pop1V.findViewById(R.id.copy);
 		final LinearLayout delete = pop1V.findViewById(R.id.delete);
 		
-		// Use a post callback to ensure the popup is measured before positioning
-		pop1V.post(() -> {
-			try {
-				View anchorView = _view;
-				// Prefer anchoring to the message bubble if available for accurate coords
-				if (anchorView.getId() != R.id.messageBG && anchorView.getParent() instanceof View) {
-					View possible = ((View) anchorView.getParent()).findViewById(R.id.messageBG);
-					if (possible != null) anchorView = possible;
-				}
-				// Ensure the popup view is measured
-				int widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-				int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-				pop1V.measure(widthSpec, heightSpec);
-				int popupWidth = pop1V.getMeasuredWidth();
-				if (popupWidth <= 0) popupWidth = (int)(200 * getResources().getDisplayMetrics().density);
-				int xOff = - (popupWidth - anchorView.getWidth()) / 2;
-				int yOff = dpToPx(8);
-				Log.d("ChatActivity", "Showing popup as dropDown with xOff=" + xOff + ", yOff=" + yOff + ", measuredWidth=" + popupWidth);
-				dialog.show();
-				
-			} catch (Exception e) {
-				Log.e("ChatActivity", "Error positioning popup: " + e.getMessage(), e);
-				// Fallback positioning - center on screen
-				dialog.show();
+		// Show compact contextual menu anchored to the bubble
+		View anchorView = _view;
+		if (anchorView.getId() != R.id.messageBG && anchorView.getParent() instanceof View) {
+			View possible = ((View) anchorView.getParent()).findViewById(R.id.messageBG);
+			if (possible != null) anchorView = possible;
+		}
+		final boolean isMine = _data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		String messageTextForSummary = _data.get((int)_position).get(MESSAGE_TEXT_KEY) != null ? _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString() : "";
+		final int ID_EDIT = 1, ID_REPLY = 2, ID_SUMMARY = 3, ID_COPY = 4, ID_DELETE = 5;
+		PopupMenu pm = new PopupMenu(this, anchorView, Gravity.END);
+		Menu m = pm.getMenu();
+		if (isMine) m.add(Menu.NONE, ID_EDIT, 0, getString(R.string.m_edit));
+		m.add(Menu.NONE, ID_REPLY, 1, getString(R.string.m_reply));
+		if (messageTextForSummary.length() > 200) m.add(Menu.NONE, ID_SUMMARY, 2, "Summary");
+		m.add(Menu.NONE, ID_COPY, 3, getString(R.string.m_copy));
+		if (isMine) m.add(Menu.NONE, ID_DELETE, 4, getString(R.string.m_delete));
+		pm.setOnMenuItemClickListener(item -> {
+			int id = item.getItemId();
+			if (id == ID_REPLY) {
+				ReplyMessageID = _data.get((int)_position).get(KEY_KEY).toString();
+				mMessageReplyLayoutBodyRightUsername.setText(isMine ? FirstUserName : SecondUserName);
+				mMessageReplyLayoutBodyRightMessage.setText(_data.get((int)_position).get(MESSAGE_TEXT_KEY).toString());
+				mMessageReplyLayout.setVisibility(View.VISIBLE);
+				vbr.vibrate((long)(48));
+				return true;
+			} else if (id == ID_SUMMARY) {
+				String prompt = "Summarize the following text in a few sentences:\n\n" + messageTextForSummary;
+				RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
+				if (vh instanceof BaseMessageViewHolder) callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
+				return true;
+			} else if (id == ID_COPY) {
+				((ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", messageTextForSummary));
+				vbr.vibrate((long)(48));
+				return true;
+			} else if (id == ID_DELETE) {
+				_DeleteMessageDialog(_data, _position);
+				return true;
+			} else if (id == ID_EDIT) {
+				MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(ChatActivity.this);
+				Dialogs.setTitle("Edit message");
+				View EdittextDesign = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
+				Dialogs.setView(EdittextDesign);
+				EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
+				edittext1.setText(messageTextForSummary);
+				Dialogs.setPositiveButton("Save", (d, w) -> {
+					String newText = edittext1.getText().toString();
+					String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+					String otherUid = getIntent().getStringExtra("uid");
+					String msgKey = _data.get((int)_position).get(KEY_KEY).toString();
+					_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey).child(MESSAGE_TEXT_KEY).setValue(newText);
+					_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey).child(MESSAGE_TEXT_KEY).setValue(newText);
+				});
+				Dialogs.setNegativeButton("Cancel", null);
+				Dialogs.show();
+				return true;
 			}
+			return false;
 		});
+		pm.show();
 		
 		// Set up the popup content based on message ownership
 		if (_data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
@@ -893,8 +924,8 @@ public class ChatActivity extends AppCompatActivity {
 		_viewGraphics(reply, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(summary, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 
-		String messageTextForSummary = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
-		if (messageTextForSummary.length() > 200) {
+		String messageTextForSummary2 = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
+		if (messageTextForSummary2.length() > 200) {
 			summary.setVisibility(View.VISIBLE);
 		} else {
 			summary.setVisibility(View.GONE);
