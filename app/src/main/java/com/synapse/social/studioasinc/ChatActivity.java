@@ -987,7 +987,7 @@ public class ChatActivity extends AppCompatActivity {
 					if (dataSnapshot.exists()) {
 						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-							// Check if message already exists to avoid duplicates from initial load
+							// Check if message already exists to avoid duplicates
 							boolean exists = false;
 							for (HashMap<String, Object> msg : ChatMessagesList) {
 								if (msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY))) {
@@ -1001,14 +1001,23 @@ public class ChatActivity extends AppCompatActivity {
 									ChatMessagesListRecycler.setVisibility(View.VISIBLE);
 									noChatText.setVisibility(View.GONE);
 								}
-								int previousSize = ChatMessagesList.size();
+								
+								// Add new message to the end
 								ChatMessagesList.add(newMessage);
-								chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
-								if (previousSize > 0) {
-									// This is to update the previous item's timestamp visibility
-									chatAdapter.notifyItemChanged(previousSize - 1);
+								int newPosition = ChatMessagesList.size() - 1;
+								
+								// Notify adapter of the new item
+								chatAdapter.notifyItemInserted(newPosition);
+								
+								// Update previous item's timestamp if needed
+								if (newPosition > 0) {
+									chatAdapter.notifyItemChanged(newPosition - 1);
 								}
-								ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+								
+								// Scroll to the new message with a slight delay to ensure layout is complete
+								ChatMessagesListRecycler.post(() -> {
+									scrollToBottom();
+								});
 							}
 						}
 					}
@@ -1020,9 +1029,16 @@ public class ChatActivity extends AppCompatActivity {
 						HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 						if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
 							String key = updatedMessage.get(KEY_KEY).toString();
+							
+							// Find the exact position of the message to update
 							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
+								if (ChatMessagesList.get(i).get(KEY_KEY) != null && 
+									ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
+									
+									// Update the message in the list
 									ChatMessagesList.set(i, updatedMessage);
+									
+									// Notify adapter of the specific item change
 									chatAdapter.notifyItemChanged(i);
 									break;
 								}
@@ -1036,17 +1052,26 @@ public class ChatActivity extends AppCompatActivity {
 					if (snapshot.exists()) {
 						String removedKey = snapshot.getKey();
 						if (removedKey != null) {
-							for (int i = ChatMessagesList.size() - 1; i >= 0; i--) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
+							// Find and remove the message by key (not by position)
+							for (int i = 0; i < ChatMessagesList.size(); i++) {
+								if (ChatMessagesList.get(i).get(KEY_KEY) != null && 
+									ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
+									
+									// Remove the message from the list
 									ChatMessagesList.remove(i);
+									
+									// Notify adapter of the removal
 									chatAdapter.notifyItemRemoved(i);
+									
+									// Update the last item's timestamp if needed
+									if (!ChatMessagesList.isEmpty() && i < ChatMessagesList.size()) {
+										chatAdapter.notifyItemChanged(Math.min(i, ChatMessagesList.size() - 1));
+									}
+									
+									// Check if list is empty
 									if (ChatMessagesList.isEmpty()) {
 										ChatMessagesListRecycler.setVisibility(View.GONE);
 										noChatText.setVisibility(View.VISIBLE);
-									} else {
-										// After any removal, the last item in the list might need to be updated
-										// to correctly display its timestamp.
-										chatAdapter.notifyItemChanged(ChatMessagesList.size() - 1);
 									}
 									break;
 								}
@@ -1061,6 +1086,24 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			};
 			chatMessagesRef.addChildEventListener(_chat_child_listener);
+		}
+	}
+
+	/**
+	 * Scrolls the RecyclerView to the bottom smoothly
+	 */
+	private void scrollToBottom() {
+		if (ChatMessagesListRecycler != null && !ChatMessagesList.isEmpty()) {
+			ChatMessagesListRecycler.smoothScrollToPosition(ChatMessagesList.size() - 1);
+		}
+	}
+
+	/**
+	 * Scrolls the RecyclerView to the bottom immediately
+	 */
+	private void scrollToBottomImmediate() {
+		if (ChatMessagesListRecycler != null && !ChatMessagesList.isEmpty()) {
+			ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
 		}
 	}
 
@@ -1494,9 +1537,9 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
 				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
-				// Send to both chat nodes
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+				// Send to both chat nodes using setValue for proper real-time updates
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 
@@ -1529,9 +1572,9 @@ public class ChatActivity extends AppCompatActivity {
 			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
 			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
-			// Send to both chat nodes
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(ChatSendMap);
+			// Send to both chat nodes using setValue for proper real-time updates
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
 
 			// Smart Notification Check
 			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText);

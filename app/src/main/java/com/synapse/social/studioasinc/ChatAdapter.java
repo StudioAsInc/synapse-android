@@ -204,9 +204,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (data.containsKey("replied_message_id")) {
                 String repliedId = data.get("replied_message_id").toString();
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
+                    Log.d(TAG, "Found reply message ID: " + repliedId + " for message at position: " + position);
+                    
                     String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     String theirUid = chatActivity.getIntent().getStringExtra("uid");
                     String chatId = chatActivity.getChatId(myUid, theirUid);
+                    
+                    Log.d(TAG, "Looking for replied message in chat: " + chatId + " with ID: " + repliedId);
+                    
                     FirebaseDatabase.getInstance().getReference("skyline/chats")
                         .child(chatId)
                         .child(repliedId)
@@ -214,22 +219,28 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             @Override
                             public void onDataChange(DataSnapshot snapshot) {
                                 if (snapshot.exists() && holder.mRepliedMessageLayout != null) {
+                                    Log.d(TAG, "Found replied message data, showing reply layout");
                                     holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
+                                    
                                     String repliedUid = snapshot.child("uid").getValue(String.class);
                                     String repliedText = snapshot.child("message_text").getValue(String.class);
                                     
                                     if(holder.mRepliedMessageLayoutUsername != null) {
-                                        holder.mRepliedMessageLayoutUsername.setText(
-                                            repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName
-                                        );
+                                        String username = repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName;
+                                        holder.mRepliedMessageLayoutUsername.setText(username);
+                                        Log.d(TAG, "Set reply username: " + username);
+                                        
                                         if (isMyMessage) {
                                             holder.mRepliedMessageLayoutUsername.setTextColor(Color.WHITE);
                                         } else {
                                             holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
                                         }
                                     }
+                                    
                                     if(holder.mRepliedMessageLayoutMessage != null) {
-                                        holder.mRepliedMessageLayoutMessage.setText(repliedText != null ? repliedText : "");
+                                        String messageText = repliedText != null ? repliedText : "";
+                                        holder.mRepliedMessageLayoutMessage.setText(messageText);
+                                        Log.d(TAG, "Set reply message: " + messageText);
                                     }
                                     
                                     if(holder.mRepliedMessageLayoutLeftBar != null) {
@@ -245,6 +256,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                             chatActivity.scrollToMessage(repliedId);
                                         }
                                     });
+                                } else {
+                                    Log.d(TAG, "Replied message not found or holder is null");
                                 }
                             }
                             @Override
@@ -252,8 +265,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 Log.e(TAG, "Failed to load replied message: " + error.getMessage());
                             }
                         });
+                } else {
+                    Log.d(TAG, "Reply message ID is null or empty for position: " + position);
                 }
+            } else {
+                Log.d(TAG, "No replied_message_id found for position: " + position);
             }
+        } else {
+            Log.w(TAG, "Reply layout holder is null for position: " + position);
         }
         
         if (holder.messageBG != null) {
