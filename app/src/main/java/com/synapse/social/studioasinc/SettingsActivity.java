@@ -29,6 +29,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.gridlayout.*;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.FirebaseApp;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
@@ -50,6 +51,22 @@ public class SettingsActivity extends AppCompatActivity {
 		setContentView(R.layout.settings);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
+		MaterialToolbar toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		if (getSupportActionBar() != null) {
+			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		}
+		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				onBackPressed();
+			}
+		});
+		if (_savedInstanceState == null) {
+			getSupportFragmentManager().beginTransaction()
+				.replace(R.id.fragment_container, new SettingsFragmentCompat())
+				.commit();
+		}
 		initializeLogic();
 	}
 	
@@ -60,4 +77,4 @@ public class SettingsActivity extends AppCompatActivity {
 	private void initializeLogic() {
 	}
 	
-}
+}
