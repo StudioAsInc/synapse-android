@@ -43,6 +43,19 @@ public class SettingsFragmentCompat extends PreferenceFragmentCompat {
         if (priv != null) priv.setOnPreferenceChangeListener((preference, newValue) -> true);
         ListPreference theme = findPreference("appearance_theme");
         if (theme != null) theme.setOnPreferenceChangeListener((preference, newValue) -> true);
+
+        setupConnectClick("connect_google");
+        setupConnectClick("connect_facebook");
+        setupConnectClick("connect_twitter");
+        setupConnectClick("ai_connect_cloudinary");
+        setupConnectClick("ai_connect_cloudflare");
+        setupConnectClick("ai_connect_github");
+        setupConnectClick("ai_connect_google");
+    }
+
+    private void setupConnectClick(String key) {
+        Preference p = findPreference(key);
+        if (p != null) p.setOnPreferenceClickListener(pref -> { toast(); return true; });
     }
 
     private void openUrl(String url) {

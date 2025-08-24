@@ -386,4 +386,5 @@
     </string-array>
 
     <string name="toast_stub">Feature not yet implemented</string>
+    <string name="connect">Connect</string>
 </resources>

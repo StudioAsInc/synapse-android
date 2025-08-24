@@ -207,21 +207,21 @@
         android:icon="@android:drawable/ic_menu_share"
         app:iconSpaceReserved="true" />
 
-    <SwitchPreferenceCompat
+    <com.synapse.social.studioasinc.TonalButtonPreference
         android:key="connect_google"
         android:title="@string/pref_title_connect_google"
         android:summary="@string/pref_summary_connect_google"
         android:icon="@android:drawable/ic_menu_compass"
         app:iconSpaceReserved="true" />
 
-    <SwitchPreferenceCompat
+    <com.synapse.social.studioasinc.TonalButtonPreference
         android:key="connect_facebook"
         android:title="@string/pref_title_connect_facebook"
         android:summary="@string/pref_summary_connect_facebook"
         android:icon="@android:drawable/ic_menu_share"
         app:iconSpaceReserved="true" />
 
-    <SwitchPreferenceCompat
+    <com.synapse.social.studioasinc.TonalButtonPreference
         android:key="connect_twitter"
         android:title="@string/pref_title_connect_twitter"
         android:summary="@string/pref_summary_connect_twitter"
@@ -255,28 +255,28 @@
         app:useSimpleSummaryProvider="true"
         app:iconSpaceReserved="true" />
 
-    <SwitchPreferenceCompat
+    <com.synapse.social.studioasinc.TonalButtonPreference
         android:key="ai_connect_cloudinary"
         android:title="@string/pref_title_connect_cloudinary"
         android:summary="@string/pref_summary_connect_cloudinary"
         android:icon="@android:drawable/ic_menu_upload"
         app:iconSpaceReserved="true" />
 
-    <SwitchPreferenceCompat
+    <com.synapse.social.studioasinc.TonalButtonPreference
         android:key="ai_connect_cloudflare"
         android:title="@string/pref_title_connect_cloudflare"
         android:summary="@string/pref_summary_connect_cloudflare"
         android:icon="@android:drawable/ic_menu_compass"
         app:iconSpaceReserved="true" />
 
-    <SwitchPreferenceCompat
+    <com.synapse.social.studioasinc.TonalButtonPreference
         android:key="ai_connect_github"
         android:title="@string/pref_title_connect_github"
         android:summary="@string/pref_summary_connect_github"
         android:icon="@android:drawable/ic_menu_set_as"
         app:iconSpaceReserved="true" />
 
-    <SwitchPreferenceCompat
+    <com.synapse.social.studioasinc.TonalButtonPreference
         android:key="ai_connect_google"
         android:title="@string/pref_title_connect_google_services"
         android:summary="@string/pref_summary_connect_google_services"
