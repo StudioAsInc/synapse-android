@@ -386,5 +386,12 @@
     </string-array>
 
     <string name="toast_stub">Feature not yet implemented</string>
+    <string name="dialog_title_sign_out">Sign out?</string>
+    <string name="dialog_message_sign_out">Are you sure you want to sign out?</string>
+    <string name="dialog_positive">Yes</string>
+    <string name="dialog_negative">Cancel</string>
+    <string name="dialog_title_delete_account">Delete account</string>
+    <string name="hint_type_delete">Type DELETE</string>
+    <string name="hint_password">Password</string>
     <string name="connect">Connect</string>
 </resources>

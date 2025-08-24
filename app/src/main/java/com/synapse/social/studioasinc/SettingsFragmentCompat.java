@@ -35,9 +35,9 @@ public class SettingsFragmentCompat extends PreferenceFragmentCompat {
         Preference licenses = findPreference("about_licenses");
         if (licenses != null) licenses.setOnPreferenceClickListener(p -> { toast(); return true; });
         Preference signOut = findPreference("danger_sign_out");
-        if (signOut != null) signOut.setOnPreferenceClickListener(p -> { toast(); return true; });
+        if (signOut != null) signOut.setOnPreferenceClickListener(p -> { showSignOutDialog(); return true; });
         Preference deleteAccount = findPreference("danger_delete_account");
-        if (deleteAccount != null) deleteAccount.setOnPreferenceClickListener(p -> { toast(); return true; });
+        if (deleteAccount != null) deleteAccount.setOnPreferenceClickListener(p -> { showDeleteDialog(); return true; });
 
         SwitchPreferenceCompat priv = findPreference("privacy_private_account");
         if (priv != null) priv.setOnPreferenceChangeListener((preference, newValue) -> true);
@@ -64,6 +64,25 @@ public class SettingsFragmentCompat extends PreferenceFragmentCompat {
 
     private void toast() {
         Toast.makeText(requireContext(), "Coming soon", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showSignOutDialog() {
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.dialog_title_sign_out)
+            .setMessage(R.string.dialog_message_sign_out)
+            .setPositiveButton(R.string.dialog_positive, (d, w) -> toast())
+            .setNegativeButton(R.string.dialog_negative, (d, w) -> d.dismiss())
+            .show();
+    }
+
+    private void showDeleteDialog() {
+        android.view.View view = getLayoutInflater().inflate(R.layout.dialog_delete_account, null, false);
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.dialog_title_delete_account)
+            .setView(view)
+            .setPositiveButton(R.string.dialog_positive, (d, w) -> toast())
+            .setNegativeButton(R.string.dialog_negative, (d, w) -> d.dismiss())
+            .show();
     }
 }
 
