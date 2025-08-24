@@ -438,7 +438,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.d(TAG, "Long click on view: " + v.getClass().getSimpleName() + " at position: " + position);
             Log.d(TAG, "Message data: " + data.toString());
             if (chatActivity != null) chatActivity.performHapticFeedbackLight();
-            chatActivity._messageOverviewPopup(v, position, _data);
+            // Prefer passing the bubble view as anchor if available
+            View anchor = holder.messageBG != null ? holder.messageBG : v;
+            chatActivity._messageOverviewPopup(anchor, position, _data);
             return true;
         };
         

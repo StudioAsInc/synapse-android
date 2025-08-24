@@ -841,6 +841,7 @@ public class ChatActivity extends AppCompatActivity {
 		pop1.setFocusable(true);
 		pop1.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
 		pop1.setOutsideTouchable(true);
+		pop1.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
 		pop1.setElevation(10f);
 		
 		Log.d("ChatActivity", "PopupWindow created with focusable: " + pop1.isFocusable());
@@ -858,6 +859,11 @@ public class ChatActivity extends AppCompatActivity {
 			try {
 				int[] location = new int[2];
 				View anchorView = _view;
+				// Prefer anchoring to the message bubble if available for accurate coords
+				if (anchorView.getId() != R.id.messageBG && anchorView.getParent() instanceof View) {
+					View possible = ((View) anchorView.getParent()).findViewById(R.id.messageBG);
+					if (possible != null) anchorView = possible;
+				}
 				anchorView.getLocationOnScreen(location);
 
 				int screenHeight = getApplicationContext().getResources().getDisplayMetrics().heightPixels;
