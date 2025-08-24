@@ -33,6 +33,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import androidx.gridlayout.widget.GridLayout;
 import android.widget.RelativeLayout;
+import com.google.firebase.database.GenericTypeIndicator;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -250,6 +251,43 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                     
                                     Log.d(TAG, "Replied message - UID: " + repliedUid + ", Text: " + repliedText);
                                     
+                                    // CRITICAL FIX: Handle image replies by checking for attachments
+                                    if (holder.mRepliedMessageLayoutImage != null) {
+                                        if (snapshot.hasChild("attachments")) {
+                                            // This is an image/video message
+                                            ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) snapshot.child("attachments").getValue(new GenericTypeIndicator<ArrayList<HashMap<String, Object>>>() {});
+                                            if (attachments != null && !attachments.isEmpty()) {
+                                                // Show image preview
+                                                holder.mRepliedMessageLayoutImage.setVisibility(View.VISIBLE);
+                                                
+                                                // Get the first attachment for preview
+                                                HashMap<String, Object> firstAttachment = attachments.get(0);
+                                                String publicId = firstAttachment.getOrDefault("publicId", "").toString();
+                                                
+                                                if (!publicId.isEmpty()) {
+                                                    // Load image from Cloudinary
+                                                    String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
+                                                    Glide.with(_context)
+                                                        .load(imageUrl)
+                                                        .placeholder(R.drawable.ph_imgbluredsqure)
+                                                        .error(R.drawable.ph_imgbluredsqure)
+                                                        .into(holder.mRepliedMessageLayoutImage);
+                                                    
+                                                    Log.d(TAG, "Loaded reply image preview: " + imageUrl);
+                                                } else {
+                                                    // Fallback to placeholder
+                                                    holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
+                                                }
+                                            } else {
+                                                // No attachments, hide image
+                                                holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
+                                            }
+                                        } else {
+                                            // No attachments, hide image
+                                            holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
+                                        }
+                                    }
+                                    
                                     if(holder.mRepliedMessageLayoutUsername != null) {
                                         String username = repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName;
                                         holder.mRepliedMessageLayoutUsername.setText(username);
@@ -277,6 +315,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                             holder.mRepliedMessageLayoutMessage.setTextColor(Color.parseColor("#E0E0E0"));
                                         } else {
                                             holder.mRepliedMessageLayoutMessage.setTextColor(Color.parseColor("#424242"));
+                                        }
+                                        
+                                        // CRITICAL FIX: Show/hide message text based on content
+                                        if (messageText.isEmpty()) {
+                                            holder.mRepliedMessageLayoutMessage.setVisibility(View.GONE);
+                                        } else {
+                                            holder.mRepliedMessageLayoutMessage.setVisibility(View.VISIBLE);
                                         }
                                     } else {
                                         Log.w(TAG, "Reply message TextView is null");
