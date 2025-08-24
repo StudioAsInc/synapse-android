@@ -941,43 +941,8 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
-		_getChatMessagesRef();
 	}
 
-
-	public void _getChatMessagesRef() {
-		// Initial load
-		Query getChatsMessages = chatMessagesRef.limitToLast(CHAT_PAGE_SIZE);
-		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
-			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {
-					ChatMessagesListRecycler.setVisibility(View.VISIBLE);
-					noChatText.setVisibility(View.GONE);
-					// We clear the list here before the initial load
-					ChatMessagesList.clear();
-					ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
-					for (DataSnapshot _data : dataSnapshot.getChildren()) {
-						initialMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
-					}
-
-					if (!initialMessages.isEmpty() && initialMessages.get(0).get(KEY_KEY) != null) {
-						oldestMessageKey = initialMessages.get(0).get(KEY_KEY).toString();
-					}
-
-					ChatMessagesList.addAll(initialMessages);
-					chatAdapter.notifyDataSetChanged();
-					ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-				} else {
-					ChatMessagesListRecycler.setVisibility(View.GONE);
-					noChatText.setVisibility(View.VISIBLE);
-				}
-			}
-			@Override public void onCancelled(@NonNull DatabaseError databaseError) {
-				Log.e("ChatActivity", "Initial message load failed: " + databaseError.getMessage());
-			}
-		});
-	}
 
 	private void _attachChatListener() {
 		if (_chat_child_listener == null) {
