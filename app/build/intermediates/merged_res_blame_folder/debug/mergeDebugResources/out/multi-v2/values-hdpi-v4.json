@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-90:/values-hdpi-v4/values-hdpi-v4.xml",
+            "map": [
+                {
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/a80f1658fcc7ab7619f5632e579d9b6f/transformed/appcompat-1.7.1/res/values-hdpi-v4/values-hdpi-v4.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "13",
+                        "endOffsets": "327"
+                    }
+                }
+            ]
+        }
+    ]
+}

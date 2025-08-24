@@ -211,7 +211,8 @@
 		<provider
 			android:name="androidx.startup.InitializationProvider"
 			android:authorities="com.synapse.social.studioasinc.androidx-startup"
-			android:exported="false">
+			android:exported="false"
+			tools:replace="android:authorities">
 			<meta-data
 				android:name="androidx.lifecycle.ProcessLifecycleInitializer"
 				android:value="androidx.startup" />
