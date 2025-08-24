@@ -495,8 +495,17 @@ public class ChatActivity extends AppCompatActivity {
 		chatAdapter = new ChatAdapter(ChatMessagesList);
 		chatAdapter.setChatActivity(this);
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
-		chatMessagesRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY));
-		userRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(getIntent().getStringExtra(UID_KEY));
+		
+		// CRITICAL FIX: Set up Firebase reference to listen to the correct chat node
+		// We need to listen to the chat node where messages are being sent/received
+		String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String otherUserUid = getIntent().getStringExtra(UID_KEY);
+		
+		// Set up the chat reference for the current user's perspective
+		chatMessagesRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(currentUserUid).child(otherUserUid);
+		
+		// Set up user reference
+		userRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(otherUserUid);
 		// Initialize with custom settings
 		gemini = new Gemini.Builder(this)
 		.model("gemini-1.5-flash")
@@ -1198,7 +1207,7 @@ public class ChatActivity extends AppCompatActivity {
 						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
 							// Debug logging for image messages
 							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
-							Log.d("ChatActivity", "New message received - Type: " + messageType + ", Key: " + newMessage.get(KEY_KEY));
+							Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + newMessage.get(KEY_KEY));
 							
 							if ("ATTACHMENT_MESSAGE".equals(messageType)) {
 								ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) newMessage.get("attachments");
@@ -1213,14 +1222,18 @@ public class ChatActivity extends AppCompatActivity {
 							
 							// Check if message already exists to avoid duplicates
 							boolean exists = false;
-							for (HashMap<String, Object> msg : ChatMessagesList) {
+							int existingPosition = -1;
+							for (int i = 0; i < ChatMessagesList.size(); i++) {
+								HashMap<String, Object> msg = ChatMessagesList.get(i);
 								if (msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY))) {
 									exists = true;
+									existingPosition = i;
 									break;
 								}
 							}
 
 							if (!exists) {
+								// This is a truly new message from Firebase
 								if (ChatMessagesListRecycler.getVisibility() == View.GONE) {
 									ChatMessagesListRecycler.setVisibility(View.VISIBLE);
 									noChatText.setVisibility(View.GONE);
@@ -1230,7 +1243,7 @@ public class ChatActivity extends AppCompatActivity {
 								ChatMessagesList.add(newMessage);
 								int newPosition = ChatMessagesList.size() - 1;
 								
-								Log.d("ChatActivity", "Added message to list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
+								Log.d("ChatActivity", "Added new Firebase message to list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
 								
 								// Notify adapter of the new item
 								chatAdapter.notifyItemInserted(newPosition);
@@ -1245,7 +1258,17 @@ public class ChatActivity extends AppCompatActivity {
 									scrollToBottom();
 								});
 							} else {
-								Log.d("ChatActivity", "Message already exists, skipping duplicate");
+								// Message already exists, but check if we need to update it (e.g., remove local flag)
+								Log.d("ChatActivity", "Message already exists at position " + existingPosition + ", checking if update needed");
+								
+								HashMap<String, Object> existingMsg = ChatMessagesList.get(existingPosition);
+								if (existingMsg.containsKey("isLocalMessage")) {
+									// Remove local flag and update the message
+									newMessage.remove("isLocalMessage");
+									ChatMessagesList.set(existingPosition, newMessage);
+									chatAdapter.notifyItemChanged(existingPosition);
+									Log.d("ChatActivity", "Updated local message with Firebase data at position " + existingPosition);
+								}
 							}
 						} else {
 							Log.w("ChatActivity", "New message is null or missing key");
@@ -1761,7 +1784,10 @@ public class ChatActivity extends AppCompatActivity {
 	 * It's now called after the recipient's OneSignal ID has been fetched.
 	 */
 	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
+		Log.d("ChatActivity", "Starting message sending process - Text: '" + messageText + "', Sender: " + senderUid + ", Recipient: " + recipientUid);
+		
 		if (!attactmentmap.isEmpty()) {
+			Log.d("ChatActivity", "Processing message with " + attactmentmap.size() + " attachments");
 			// Logic for sending messages with attachments
 			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
 			boolean allUploadsSuccessful = true;
@@ -1773,13 +1799,17 @@ public class ChatActivity extends AppCompatActivity {
 					attachmentData.put("width", item.get("width"));
 					attachmentData.put("height", item.get("height"));
 					successfulAttachments.add(attachmentData);
+					Log.d("ChatActivity", "Added successful attachment: " + attachmentData.toString());
 				} else {
+					Log.w("ChatActivity", "Attachment not ready: " + item.toString());
 					allUploadsSuccessful = false;
 				}
 			}
 
 			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
 				String uniqueMessageKey = main.push().getKey();
+				Log.d("ChatActivity", "Generated message key: " + uniqueMessageKey);
+				
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, senderUid);
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
@@ -1790,9 +1820,23 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
 				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
+				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
+				
 				// Send to both chat nodes using setValue for proper real-time updates
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
+
+				// CRITICAL FIX: Immediately add the message to local list for instant feedback
+				ChatSendMap.put("isLocalMessage", true); // Mark as local message
+				ChatMessagesList.add(ChatSendMap);
+				int newPosition = ChatMessagesList.size() - 1;
+				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
+				chatAdapter.notifyItemInserted(newPosition);
+				
+				// Scroll to the new message immediately
+				ChatMessagesListRecycler.post(() -> {
+					scrollToBottom();
+				});
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 
@@ -1814,8 +1858,11 @@ public class ChatActivity extends AppCompatActivity {
 			}
 
 		} else if (!messageText.isEmpty()) {
+			Log.d("ChatActivity", "Processing text-only message");
 			// Logic for sending text-only messages
 			String uniqueMessageKey = main.push().getKey();
+			Log.d("ChatActivity", "Generated text message key: " + uniqueMessageKey);
+			
 			ChatSendMap = new HashMap<>();
 			ChatSendMap.put(UID_KEY, senderUid);
 			ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
@@ -1825,9 +1872,23 @@ public class ChatActivity extends AppCompatActivity {
 			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
 			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
+			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
+			
 			// Send to both chat nodes using setValue for proper real-time updates
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
+
+			// CRITICAL FIX: Immediately add the message to local list for instant feedback
+			ChatSendMap.put("isLocalMessage", true); // Mark as local message
+			ChatMessagesList.add(ChatSendMap);
+			int newPosition = ChatMessagesList.size() - 1;
+			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
+			chatAdapter.notifyItemInserted(newPosition);
+			
+			// Scroll to the new message immediately
+			ChatMessagesListRecycler.post(() -> {
+				scrollToBottom();
+			});
 
 			// Smart Notification Check
 			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText);
