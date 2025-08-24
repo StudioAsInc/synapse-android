@@ -817,6 +817,9 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _messageOverviewPopup(final View _view, final double _position, final ArrayList<HashMap<String, Object>> _data) {
+		Log.d("ChatActivity", "=== POPUP MENU CALLED ===");
+		Log.d("ChatActivity", "View: " + _view + ", Position: " + _position + ", Data size: " + (_data != null ? _data.size() : "null"));
+		
 		if (_data == null || (int)_position >= _data.size() || (int)_position < 0) {
 			Log.e("ChatActivity", "Invalid position or data for message overview popup. Position: " + _position + ", Size: " + (_data != null ? _data.size() : "null"));
 			return;
@@ -824,14 +827,18 @@ public class ChatActivity extends AppCompatActivity {
 		
 		// Log the data being passed for debugging
 		Log.d("ChatActivity", "Popup called for position: " + _position + ", data size: " + _data.size());
+		Log.d("ChatActivity", "Message data: " + _data.get((int)_position).toString());
 		
 		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
+		Log.d("ChatActivity", "Popup layout inflated successfully");
 
 		final PopupWindow pop1 = new PopupWindow(pop1V, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
 		pop1.setFocusable(true);
 		pop1.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
 		pop1.setOutsideTouchable(true);
 		pop1.setElevation(10f);
+		
+		Log.d("ChatActivity", "PopupWindow created with focusable: " + pop1.isFocusable());
 		
 		final LinearLayout main = pop1V.findViewById(R.id.main);
 		final LinearLayout edit = pop1V.findViewById(R.id.edit);

@@ -208,7 +208,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         if (holder.mRepliedMessageLayout != null) {
             holder.mRepliedMessageLayout.setVisibility(View.GONE);
-            Log.d(TAG, "Checking for reply data at position " + position);
+            Log.d(TAG, "Checking for reply data at position " + position + " - Reply layout holder exists");
             
             if (data.containsKey("replied_message_id")) {
                 String repliedId = data.get("replied_message_id").toString();
@@ -219,16 +219,19 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     
                     String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     String theirUid = chatActivity.getIntent().getStringExtra("uid");
-                    String chatId = chatActivity.getChatId(myUid, theirUid);
                     
-                    Log.d(TAG, "Looking for replied message in chat: " + chatId + " with ID: " + repliedId);
+                    Log.d(TAG, "Looking for replied message in chat: " + myUid + "/" + theirUid + " with ID: " + repliedId);
                     
+                    // Use the same Firebase path structure as the main chat
                     FirebaseDatabase.getInstance().getReference("skyline/chats")
-                        .child(chatId)
+                        .child(myUid)
+                        .child(theirUid)
                         .child(repliedId)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot snapshot) {
+                                Log.d(TAG, "Firebase reply lookup result - Snapshot exists: " + (snapshot != null && snapshot.exists()) + ", Holder null: " + (holder.mRepliedMessageLayout == null));
+                                
                                 if (snapshot.exists() && holder.mRepliedMessageLayout != null) {
                                     Log.d(TAG, "Found replied message data, showing reply layout");
                                     holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
@@ -248,12 +251,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         } else {
                                             holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
                                         }
+                                    } else {
+                                        Log.w(TAG, "Reply username TextView is null");
                                     }
                                     
                                     if(holder.mRepliedMessageLayoutMessage != null) {
                                         String messageText = repliedText != null ? repliedText : "";
                                         holder.mRepliedMessageLayoutMessage.setText(messageText);
                                         Log.d(TAG, "Set reply message: " + messageText);
+                                    } else {
+                                        Log.w(TAG, "Reply message TextView is null");
                                     }
                                     
                                     if(holder.mRepliedMessageLayoutLeftBar != null) {
@@ -262,6 +269,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
                                         leftBarDrawable.setCornerRadius(dpToPx(100));
                                         holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
+                                    } else {
+                                        Log.w(TAG, "Reply left bar is null");
                                     }
 
                                     holder.mRepliedMessageLayout.setOnClickListener(v -> {
@@ -269,6 +278,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                             chatActivity.scrollToMessage(repliedId);
                                         }
                                     });
+                                    
+                                    Log.d(TAG, "Reply layout should now be visible");
                                 } else {
                                     Log.d(TAG, "Replied message not found or holder is null. Snapshot exists: " + (snapshot != null && snapshot.exists()) + ", Holder null: " + (holder.mRepliedMessageLayout == null));
                                 }
