@@ -80,10 +80,10 @@ import android.os.Looper;
 public class HomeActivity extends AppCompatActivity {
 
     // Initialize FirebaseDatabase instance and references here.
-    private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
-	private DatabaseReference udb = _firebase.getReference("skyline/users");
-    private DatabaseReference postsRef = _firebase.getReference("skyline/posts");
-    private DatabaseReference storiesDbRef = _firebase.getReference("skyline/stories"); // Reference for stories
+    private FirebaseDatabase _firebase;
+	private DatabaseReference udb;
+    private DatabaseReference postsRef;
+    private DatabaseReference storiesDbRef; // Reference for stories
 
 	private HashMap<String, Object> createPostMap = new HashMap<>();
 	private HashMap<String, Object> postLikeCountCache = new HashMap<>();
@@ -188,10 +188,16 @@ public class HomeActivity extends AppCompatActivity {
 
         // Ensure FirebaseApp is initialized. If SynapseApp handles it, this might be redundant,
         // but harmless. Keeping it for robustness if SynapseApp's `initializeApp` path changes.
-        FirebaseApp.initializeApp(this); 
-        
+        FirebaseApp.initializeApp(this);
+
+        // Initialize Firebase references after FirebaseApp is ready
+        _firebase = FirebaseDatabase.getInstance();
+		udb = _firebase.getReference("skyline/users");
+        postsRef = _firebase.getReference("skyline/posts");
+        storiesDbRef = _firebase.getReference("skyline/stories");
+
         // Ensure data persistence is enabled for posts and stories
-        postsRef.keepSynced(true); 
+        postsRef.keepSynced(true);
         storiesDbRef.keepSynced(true); // Keep stories synced
 
 		setContentView(R.layout.home);
