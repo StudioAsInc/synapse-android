@@ -66,6 +66,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -837,14 +838,11 @@ public class ChatActivity extends AppCompatActivity {
 		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
 		Log.d("ChatActivity", "Popup layout inflated successfully");
 
-		final PopupWindow pop1 = new PopupWindow(pop1V, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
-		pop1.setFocusable(true);
-		pop1.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
-		pop1.setOutsideTouchable(true);
-		pop1.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
-		pop1.setElevation(10f);
-		
-		Log.d("ChatActivity", "PopupWindow created with focusable: " + pop1.isFocusable());
+		// Use a robust BottomSheetDialog instead of PopupWindow to avoid window/token issues
+		final BottomSheetDialog dialog = new BottomSheetDialog(this);
+		dialog.setContentView(pop1V);
+		dialog.setCancelable(true);
+		dialog.setCanceledOnTouchOutside(true);
 		
 		final LinearLayout main = pop1V.findViewById(R.id.main);
 		final LinearLayout edit = pop1V.findViewById(R.id.edit);
@@ -852,7 +850,6 @@ public class ChatActivity extends AppCompatActivity {
 		final LinearLayout summary = pop1V.findViewById(R.id.summary);
 		final LinearLayout copy = pop1V.findViewById(R.id.copy);
 		final LinearLayout delete = pop1V.findViewById(R.id.delete);
-		pop1.setAnimationStyle(android.R.style.Animation_Dialog);
 		
 		// Use a post callback to ensure the popup is measured before positioning
 		pop1V.post(() -> {
@@ -872,12 +869,12 @@ public class ChatActivity extends AppCompatActivity {
 				int xOff = - (popupWidth - anchorView.getWidth()) / 2;
 				int yOff = dpToPx(8);
 				Log.d("ChatActivity", "Showing popup as dropDown with xOff=" + xOff + ", yOff=" + yOff + ", measuredWidth=" + popupWidth);
-				pop1.showAsDropDown(anchorView, xOff, yOff, Gravity.START);
+				dialog.show();
 				
 			} catch (Exception e) {
 				Log.e("ChatActivity", "Error positioning popup: " + e.getMessage(), e);
 				// Fallback positioning - center on screen
-				pop1.showAtLocation(_view, Gravity.CENTER, 0, 0);
+				dialog.show();
 			}
 		});
 		
@@ -908,7 +905,7 @@ public class ChatActivity extends AppCompatActivity {
 		main.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				pop1.dismiss();
+				if (dialog.isShowing()) dialog.dismiss();
 			}
 		});
 		reply.setOnClickListener(new View.OnClickListener() {
@@ -923,7 +920,7 @@ public class ChatActivity extends AppCompatActivity {
 				mMessageReplyLayoutBodyRightMessage.setText(_data.get((int)_position).get(MESSAGE_TEXT_KEY).toString());
 				mMessageReplyLayout.setVisibility(View.VISIBLE);
 				vbr.vibrate((long)(48));
-				pop1.dismiss();
+				if (dialog.isShowing()) dialog.dismiss();
 			}
 		});
 		summary.setOnClickListener(new View.OnClickListener() {
@@ -937,7 +934,7 @@ public class ChatActivity extends AppCompatActivity {
 					callGeminiForSummary(prompt, (BaseMessageViewHolder) viewHolder);
 				}
 
-				pop1.dismiss();
+				if (dialog.isShowing()) dialog.dismiss();
 			}
 		});
 		copy.setOnClickListener(new View.OnClickListener() {
@@ -945,20 +942,20 @@ public class ChatActivity extends AppCompatActivity {
 			public void onClick(View _view) {
 				((ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString()));
 				vbr.vibrate((long)(48));
-				pop1.dismiss();
+				if (dialog.isShowing()) dialog.dismiss();
 			}
 		});
 		delete.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				_DeleteMessageDialog(_data, _position);
-				pop1.dismiss();
+				if (dialog.isShowing()) dialog.dismiss();
 			}
 		});
 		edit.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				pop1.dismiss();
+				if (dialog.isShowing()) dialog.dismiss();
 				MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(ChatActivity.this);
 				Dialogs.setTitle("Edit message");
 				View EdittextDesign = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
