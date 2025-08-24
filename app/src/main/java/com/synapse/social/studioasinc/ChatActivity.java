@@ -857,62 +857,22 @@ public class ChatActivity extends AppCompatActivity {
 		// Use a post callback to ensure the popup is measured before positioning
 		pop1V.post(() -> {
 			try {
-				int[] location = new int[2];
 				View anchorView = _view;
 				// Prefer anchoring to the message bubble if available for accurate coords
 				if (anchorView.getId() != R.id.messageBG && anchorView.getParent() instanceof View) {
 					View possible = ((View) anchorView.getParent()).findViewById(R.id.messageBG);
 					if (possible != null) anchorView = possible;
 				}
-				anchorView.getLocationOnScreen(location);
-
-				int screenHeight = getApplicationContext().getResources().getDisplayMetrics().heightPixels;
-				int screenWidth = getApplicationContext().getResources().getDisplayMetrics().widthPixels;
-				int halfScreenHeight = screenHeight / 2;
-				int anchorViewHeight = anchorView.getHeight();
-				int popupHeight = pop1V.getHeight();
-				int popupWidth = pop1V.getWidth();
-
-				// Ensure we have valid dimensions
-				if (popupHeight <= 0) {
-					popupHeight = 200; // Fallback height in dp
-					popupHeight = (int) (popupHeight * getResources().getDisplayMetrics().density);
-				}
-				if (popupWidth <= 0) {
-					popupWidth = 200; // Fallback width in dp
-					popupWidth = (int) (popupWidth * getResources().getDisplayMetrics().density);
-				}
-
-				int x, y;
-
-				// Calculate X position - center horizontally relative to anchor view
-				x = location[0] + (anchorView.getWidth() / 2) - (popupWidth / 2);
-				
-				// Ensure popup doesn't go off-screen horizontally
-				if (x < 0) {
-					x = 10; // Small margin from left edge
-				} else if (x + popupWidth > screenWidth) {
-					x = screenWidth - popupWidth - 10; // Small margin from right edge
-				}
-
-				// Calculate Y position
-				if (location[1] < halfScreenHeight) {
-					// Show below the anchor view
-					y = location[1] + anchorViewHeight + 10; // Small gap below
-				} else {
-					// Show above the anchor view
-					y = location[1] - popupHeight - 10; // Small gap above
-				}
-
-				// Ensure popup doesn't go off-screen vertically
-				if (y < 0) {
-					y = 10; // Small margin from top edge
-				} else if (y + popupHeight > screenHeight) {
-					y = screenHeight - popupHeight - 10; // Small margin from bottom edge
-				}
-
-				Log.d("ChatActivity", "Showing popup at x=" + x + ", y=" + y + " with dimensions " + popupWidth + "x" + popupHeight);
-				pop1.showAtLocation(anchorView, Gravity.NO_GRAVITY, x, y);
+				// Ensure the popup view is measured
+				int widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+				int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+				pop1V.measure(widthSpec, heightSpec);
+				int popupWidth = pop1V.getMeasuredWidth();
+				if (popupWidth <= 0) popupWidth = (int)(200 * getResources().getDisplayMetrics().density);
+				int xOff = - (popupWidth - anchorView.getWidth()) / 2;
+				int yOff = dpToPx(8);
+				Log.d("ChatActivity", "Showing popup as dropDown with xOff=" + xOff + ", yOff=" + yOff + ", measuredWidth=" + popupWidth);
+				pop1.showAsDropDown(anchorView, xOff, yOff, Gravity.START);
 				
 			} catch (Exception e) {
 				Log.e("ChatActivity", "Error positioning popup: " + e.getMessage(), e);
