@@ -18,7 +18,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,6 +33,9 @@ import java.util.Calendar;
 import java.util.HashMap;
 import androidx.gridlayout.widget.GridLayout;
 import android.widget.RelativeLayout;
+import com.google.firebase.database.GenericTypeIndicator;
+import android.view.MotionEvent;
+import android.widget.Toast;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -66,19 +68,27 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (_data.get(position).containsKey("typingMessageStatus")) return VIEW_TYPE_TYPING;
         
         String type = _data.get(position).getOrDefault("TYPE", "MESSAGE").toString();
+        Log.d(TAG, "Message at position " + position + " has type: " + type);
+        
         if ("ATTACHMENT_MESSAGE".equals(type)) {
             ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) _data.get(position).get("attachments");
+            Log.d(TAG, "ATTACHMENT_MESSAGE detected with " + (attachments != null ? attachments.size() : 0) + " attachments");
+            
             if (attachments != null && attachments.size() == 1 && attachments.get(0).getOrDefault("publicId", "").toString().contains("|video")) {
+                Log.d(TAG, "Video message detected, returning VIEW_TYPE_VIDEO");
                 return VIEW_TYPE_VIDEO;
             }
+            Log.d(TAG, "Media message detected, returning VIEW_TYPE_MEDIA_GRID");
             return VIEW_TYPE_MEDIA_GRID;
         }
 
         String messageText = _data.get(position).getOrDefault("message_text", "").toString();
         if (LinkPreviewUtil.extractUrl(messageText) != null) {
+            Log.d(TAG, "Link preview message detected, returning VIEW_TYPE_LINK_PREVIEW");
             return VIEW_TYPE_LINK_PREVIEW;
         }
         
+        Log.d(TAG, "Text message detected, returning VIEW_TYPE_TEXT");
         return VIEW_TYPE_TEXT;
     }
 
@@ -201,35 +211,122 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         if (holder.mRepliedMessageLayout != null) {
             holder.mRepliedMessageLayout.setVisibility(View.GONE);
+            Log.d(TAG, "Checking for reply data at position " + position + " - Reply layout holder exists");
+            
             if (data.containsKey("replied_message_id")) {
                 String repliedId = data.get("replied_message_id").toString();
+                Log.d(TAG, "Found replied_message_id: " + repliedId + " for position: " + position);
+                
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
+                    Log.d(TAG, "Processing reply for message ID: " + repliedId);
+                    
                     String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     String theirUid = chatActivity.getIntent().getStringExtra("uid");
-                    String chatId = chatActivity.getChatId(myUid, theirUid);
+                    
+                    Log.d(TAG, "Looking for replied message in chat: " + myUid + "/" + theirUid + " with ID: " + repliedId);
+                    
+                    // Use the same Firebase path structure as the main chat
                     FirebaseDatabase.getInstance().getReference("skyline/chats")
-                        .child(chatId)
+                        .child(myUid)
+                        .child(theirUid)
                         .child(repliedId)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot snapshot) {
+                                Log.d(TAG, "Firebase reply lookup result - Snapshot exists: " + (snapshot != null && snapshot.exists()) + ", Holder null: " + (holder.mRepliedMessageLayout == null));
+                                
                                 if (snapshot.exists() && holder.mRepliedMessageLayout != null) {
+                                    Log.d(TAG, "Found replied message data, showing reply layout");
                                     holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
+                                    
+                                    // CRITICAL FIX: Set proper background for reply layout to ensure visibility
+                                    if (isMyMessage) {
+                                        // For my messages, use a semi-transparent white background
+                                        holder.mRepliedMessageLayout.setCardBackgroundColor(Color.parseColor("#80FFFFFF"));
+                                    } else {
+                                        // For other's messages, use a semi-transparent light gray background
+                                        holder.mRepliedMessageLayout.setCardBackgroundColor(Color.parseColor("#F5F5F5"));
+                                    }
+                                    
                                     String repliedUid = snapshot.child("uid").getValue(String.class);
                                     String repliedText = snapshot.child("message_text").getValue(String.class);
                                     
-                                    if(holder.mRepliedMessageLayoutUsername != null) {
-                                        holder.mRepliedMessageLayoutUsername.setText(
-                                            repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName
-                                        );
-                                        if (isMyMessage) {
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(Color.WHITE);
+                                    Log.d(TAG, "Replied message - UID: " + repliedUid + ", Text: " + repliedText);
+                                    
+                                    // CRITICAL FIX: Handle image replies by checking for attachments
+                                    if (holder.mRepliedMessageLayoutImage != null) {
+                                        if (snapshot.hasChild("attachments")) {
+                                            // This is an image/video message
+                                            ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) snapshot.child("attachments").getValue(new GenericTypeIndicator<ArrayList<HashMap<String, Object>>>() {});
+                                            if (attachments != null && !attachments.isEmpty()) {
+                                                // Show image preview
+                                                holder.mRepliedMessageLayoutImage.setVisibility(View.VISIBLE);
+                                                
+                                                // Get the first attachment for preview
+                                                HashMap<String, Object> firstAttachment = attachments.get(0);
+                                                String publicId = firstAttachment.getOrDefault("publicId", "").toString();
+                                                
+                                                if (!publicId.isEmpty()) {
+                                                    // Load image from Cloudinary
+                                                    String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
+                                                    Glide.with(_context)
+                                                        .load(imageUrl)
+                                                        .placeholder(R.drawable.ph_imgbluredsqure)
+                                                        .error(R.drawable.ph_imgbluredsqure)
+                                                        .into(holder.mRepliedMessageLayoutImage);
+                                                    
+                                                    Log.d(TAG, "Loaded reply image preview: " + imageUrl);
+                                                } else {
+                                                    // Fallback to placeholder
+                                                    holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
+                                                }
+                                            } else {
+                                                // No attachments, hide image
+                                                holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
+                                            }
                                         } else {
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
+                                            // No attachments, hide image
+                                            holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
                                         }
                                     }
+                                    
+                                    if(holder.mRepliedMessageLayoutUsername != null) {
+                                        String username = repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName;
+                                        holder.mRepliedMessageLayoutUsername.setText(username);
+                                        Log.d(TAG, "Set reply username: " + username);
+                                        
+                                        // CRITICAL FIX: Use high-contrast colors for better visibility
+                                        if (isMyMessage) {
+                                            // For my messages (purple background), use white text
+                                            holder.mRepliedMessageLayoutUsername.setTextColor(Color.WHITE);
+                                        } else {
+                                            // For other's messages (white background), use dark text
+                                            holder.mRepliedMessageLayoutUsername.setTextColor(Color.parseColor("#1A1A1A"));
+                                        }
+                                    } else {
+                                        Log.w(TAG, "Reply username TextView is null");
+                                    }
+                                    
                                     if(holder.mRepliedMessageLayoutMessage != null) {
-                                        holder.mRepliedMessageLayoutMessage.setText(repliedText != null ? repliedText : "");
+                                        String messageText = repliedText != null ? repliedText : "";
+                                        holder.mRepliedMessageLayoutMessage.setText(messageText);
+                                        Log.d(TAG, "Set reply message: " + messageText);
+                                        
+                                        // CRITICAL FIX: Set message text color for better visibility
+                                        if (isMyMessage) {
+                                            holder.mRepliedMessageLayoutMessage.setTextColor(Color.parseColor("#E0E0E0"));
+                                        } else {
+                                            holder.mRepliedMessageLayoutMessage.setTextColor(Color.parseColor("#424242"));
+                                        }
+                                        
+                                        // CRITICAL FIX: Show/hide message text based on content
+                                        if (messageText.isEmpty()) {
+                                            holder.mRepliedMessageLayoutMessage.setVisibility(View.GONE);
+                                        } else {
+                                            holder.mRepliedMessageLayoutMessage.setVisibility(View.VISIBLE);
+                                        }
+                                    } else {
+                                        Log.w(TAG, "Reply message TextView is null");
                                     }
                                     
                                     if(holder.mRepliedMessageLayoutLeftBar != null) {
@@ -238,6 +335,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
                                         leftBarDrawable.setCornerRadius(dpToPx(100));
                                         holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
+                                    } else {
+                                        Log.w(TAG, "Reply left bar is null");
                                     }
 
                                     holder.mRepliedMessageLayout.setOnClickListener(v -> {
@@ -245,6 +344,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                             chatActivity.scrollToMessage(repliedId);
                                         }
                                     });
+                                    
+                                    Log.d(TAG, "Reply layout should now be visible with proper styling");
+                                } else {
+                                    Log.d(TAG, "Replied message not found or holder is null. Snapshot exists: " + (snapshot != null && snapshot.exists()) + ", Holder null: " + (holder.mRepliedMessageLayout == null));
                                 }
                             }
                             @Override
@@ -252,8 +355,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 Log.e(TAG, "Failed to load replied message: " + error.getMessage());
                             }
                         });
+                } else {
+                    Log.d(TAG, "Reply message ID is null or empty for position: " + position);
                 }
+            } else {
+                Log.d(TAG, "No replied_message_id found for position: " + position + ". Available keys: " + data.keySet());
             }
+        } else {
+            Log.w(TAG, "Reply layout holder is null for position: " + position);
         }
         
         if (holder.messageBG != null) {
@@ -291,16 +400,65 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
         }
         
-        if (holder.messageBG != null) {
-            View.OnLongClickListener longClickListener = v -> {
-                chatActivity._messageOverviewPopup(v, position, _data);
-                return true;
-            };
-            holder.messageBG.setOnLongClickListener(longClickListener);
-            if(holder.message_text != null) {
-                holder.message_text.setOnLongClickListener(longClickListener);
+        // CRITICAL FIX: Set up long click listener on the entire message layout for better touch detection
+        View.OnLongClickListener longClickListener = v -> {
+            Log.d(TAG, "=== LONG CLICK DETECTED ===");
+            Log.d(TAG, "Long click on view: " + v.getClass().getSimpleName() + " at position: " + position);
+            Log.d(TAG, "Message data: " + data.toString());
+            chatActivity._messageOverviewPopup(v, position, _data);
+            return true;
+        };
+        
+        // CRITICAL FIX: Enhanced touch event handling with multiple fallbacks
+        View.OnTouchListener touchListener = (v, event) -> {
+            // Log all touch events for debugging
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                Log.d(TAG, "=== TOUCH DOWN DETECTED ===");
+                Log.d(TAG, "Touch on view: " + v.getClass().getSimpleName() + " at position: " + position);
             }
+            
+            // Handle long press manually if needed
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                Log.d(TAG, "=== TOUCH UP DETECTED ===");
+            }
+            
+            return false; // Don't consume the event
+        };
+        
+        // Set long click listener on multiple views to ensure it works
+        if (holder.message_layout != null) {
+            holder.message_layout.setOnLongClickListener(longClickListener);
+            holder.message_layout.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on message_layout for position: " + position);
         }
+        if (holder.messageBG != null) {
+            holder.messageBG.setOnLongClickListener(longClickListener);
+            holder.messageBG.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on messageBG for position: " + position);
+        }
+        if (holder.message_text != null) {
+            holder.message_text.setOnLongClickListener(longClickListener);
+            holder.message_text.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on message_text for position: " + position);
+        }
+        if (holder.body != null) {
+            holder.body.setOnLongClickListener(longClickListener);
+            holder.body.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on body for position: " + position);
+        }
+        
+        // CRITICAL FIX: Also set on the entire item view as a fallback
+        holder.itemView.setOnLongClickListener(longClickListener);
+        holder.itemView.setOnTouchListener(touchListener);
+        Log.d(TAG, "Set long click listener on itemView for position: " + position);
+        
+        // CRITICAL FIX: Add a simple test long click listener to verify it works
+        holder.itemView.setOnLongClickListener(v -> {
+            Log.d(TAG, "=== ITEM VIEW LONG CLICK TEST ===");
+            Log.d(TAG, "Item view long click at position: " + position);
+            Toast.makeText(_context, "Long click detected at position: " + position, Toast.LENGTH_SHORT).show();
+            return true;
+        });
     }
 
     private void bindTextViewHolder(TextViewHolder holder, int position) {
@@ -311,6 +469,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void bindMediaViewHolder(MediaViewHolder holder, int position) {
+        Log.d(TAG, "bindMediaViewHolder called for position " + position);
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
         String msgText = data.getOrDefault("message_text", "").toString();
@@ -320,17 +479,24 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
+        Log.d(TAG, "Attachments found: " + (attachments != null ? attachments.size() : 0));
+        
         GridLayout gridLayout = holder.mediaGridLayout;
-        if (gridLayout == null) return;
+        if (gridLayout == null) {
+            Log.e(TAG, "mediaGridLayout is null in MediaViewHolder");
+            return;
+        }
 
         gridLayout.removeAllViews();
         gridLayout.setVisibility(View.VISIBLE);
 
         if (attachments == null || attachments.isEmpty()) {
+            Log.w(TAG, "No attachments found, hiding grid layout");
             gridLayout.setVisibility(View.GONE);
             return;
         }
 
+        Log.d(TAG, "Processing " + attachments.size() + " attachments");
         int count = attachments.size();
         int colCount = 2;
         int maxImages = 4;

@@ -31,6 +31,8 @@ class BaseMessageViewHolder extends RecyclerView.ViewHolder {
     TextView date, message_text, mRepliedMessageLayoutUsername, mRepliedMessageLayoutMessage;
     MaterialCardView mRepliedMessageLayout;
     ShimmerFrameLayout shimmer_container;
+    // CRITICAL FIX: Add ImageView for reply image previews
+    ImageView mRepliedMessageLayoutImage;
 
     public BaseMessageViewHolder(View view) {
         super(view);
@@ -50,6 +52,8 @@ class BaseMessageViewHolder extends RecyclerView.ViewHolder {
             mRepliedMessageLayoutUsername = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutUsername);
             mRepliedMessageLayoutMessage = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutMessage);
             mRepliedMessageLayoutLeftBar = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutLeftBar);
+            // CRITICAL FIX: Initialize reply image view
+            mRepliedMessageLayoutImage = mRepliedMessageLayout.findViewById(R.id.mRepliedMessageLayoutImage);
         }
     }
 
