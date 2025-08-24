@@ -2258,6 +2258,8 @@ public class ChatActivity extends AppCompatActivity {
 
 				// If it's a real message, proceed with the reply UI.
 				_showReplyUI(position);
+				// Smoothly reset the swiped item back into place
+				viewHolder.itemView.animate().translationX(0).setDuration(150).start();
 				chatAdapter.notifyItemChanged(position);
 			}
 
@@ -2275,43 +2277,66 @@ public class ChatActivity extends AppCompatActivity {
 			public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 				if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
 					View itemView = viewHolder.itemView;
-					Paint p = new Paint();
+					Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
 					Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_reply);
-
-					if (dX > 0) { // Swiping to the right
-						p.setColor(Color.parseColor("#3498db")); // Blue background
-						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
-
-						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
-						int iconTop = itemView.getTop() + iconMargin;
-						int iconBottom = iconTop + icon.getIntrinsicHeight();
-						int iconLeft = itemView.getLeft() + iconMargin;
-						int iconRight = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
-						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
-						icon.draw(c);
-					} else { // Swiping to the left
-						p.setColor(Color.parseColor("#3498db")); // Blue background
-						c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
+					if (icon != null) {
+						// Neutral icon color, no background rectangle
+						icon.setColorFilter(0xFF616161, PorterDuff.Mode.SRC_IN);
 
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
 						int iconTop = itemView.getTop() + iconMargin;
 						int iconBottom = iconTop + icon.getIntrinsicHeight();
-						int iconRight = itemView.getRight() - iconMargin;
-						int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
-						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
-						icon.draw(c);
+
+						float width = (float) itemView.getWidth();
+						float threshold = width * 0.25f;
+						float progress = Math.min(1f, Math.abs(dX) / threshold);
+						icon.setAlpha((int) (Math.max(0.25f, progress) * 255));
+
+						if (dX > 0) { // Swiping to the right
+							int iconLeft = itemView.getLeft() + iconMargin;
+							int iconRight = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
+							icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+							icon.draw(c);
+						} else { // Swiping to the left
+							int iconRight = itemView.getRight() - iconMargin;
+							int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
+							icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+							icon.draw(c);
+						}
 					}
-					// Fade out the item as it is swiped away
-					final float alpha = 1.0f - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
-					itemView.setAlpha(alpha);
-					itemView.setTranslationX(dX);
+
+					// Damped translation for a smoother feel (no alpha fade)
+					float dampedDx = dX * 0.75f;
+					itemView.setTranslationX(dampedDx);
+					itemView.setAlpha(1.0f);
 				} else {
 					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 				}
 			}
+
+			@Override
+			public float getSwipeThreshold(RecyclerView.ViewHolder viewHolder) {
+				return 0.25f; // require ~25% swipe to trigger
+			}
+
+			@Override
+			public float getSwipeEscapeVelocity(float defaultValue) {
+				return defaultValue * 1.5f; // slightly higher to avoid accidental triggers
+			}
+
+			@Override
+			public float getSwipeVelocityThreshold(float defaultValue) {
+				return defaultValue * 1.2f;
+			}
 		};
 		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
 		itemTouchHelper.attachToRecyclerView(ChatMessagesListRecycler);
+	}
+
+	public void performHapticFeedbackLight() {
+		if (vbr != null) {
+			vbr.vibrate((long)(24));
+		}
 	}
 
 	public String getChatId(String uid1, String uid2) {

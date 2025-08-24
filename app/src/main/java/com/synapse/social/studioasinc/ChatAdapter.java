@@ -405,6 +405,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.d(TAG, "=== LONG CLICK DETECTED ===");
             Log.d(TAG, "Long click on view: " + v.getClass().getSimpleName() + " at position: " + position);
             Log.d(TAG, "Message data: " + data.toString());
+            if (chatActivity != null) chatActivity.performHapticFeedbackLight();
             chatActivity._messageOverviewPopup(v, position, _data);
             return true;
         };
@@ -452,13 +453,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         holder.itemView.setOnTouchListener(touchListener);
         Log.d(TAG, "Set long click listener on itemView for position: " + position);
         
-        // CRITICAL FIX: Add a simple test long click listener to verify it works
-        holder.itemView.setOnLongClickListener(v -> {
-            Log.d(TAG, "=== ITEM VIEW LONG CLICK TEST ===");
-            Log.d(TAG, "Item view long click at position: " + position);
-            Toast.makeText(_context, "Long click detected at position: " + position, Toast.LENGTH_SHORT).show();
-            return true;
-        });
+        // Keep only one definitive long click handler to avoid conflicts
     }
 
     private void bindTextViewHolder(TextViewHolder holder, int position) {
