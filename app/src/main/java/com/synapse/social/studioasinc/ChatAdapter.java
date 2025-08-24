@@ -18,7 +18,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
@@ -66,19 +65,27 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (_data.get(position).containsKey("typingMessageStatus")) return VIEW_TYPE_TYPING;
         
         String type = _data.get(position).getOrDefault("TYPE", "MESSAGE").toString();
+        Log.d(TAG, "Message at position " + position + " has type: " + type);
+        
         if ("ATTACHMENT_MESSAGE".equals(type)) {
             ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) _data.get(position).get("attachments");
+            Log.d(TAG, "ATTACHMENT_MESSAGE detected with " + (attachments != null ? attachments.size() : 0) + " attachments");
+            
             if (attachments != null && attachments.size() == 1 && attachments.get(0).getOrDefault("publicId", "").toString().contains("|video")) {
+                Log.d(TAG, "Video message detected, returning VIEW_TYPE_VIDEO");
                 return VIEW_TYPE_VIDEO;
             }
+            Log.d(TAG, "Media message detected, returning VIEW_TYPE_MEDIA_GRID");
             return VIEW_TYPE_MEDIA_GRID;
         }
 
         String messageText = _data.get(position).getOrDefault("message_text", "").toString();
         if (LinkPreviewUtil.extractUrl(messageText) != null) {
+            Log.d(TAG, "Link preview message detected, returning VIEW_TYPE_LINK_PREVIEW");
             return VIEW_TYPE_LINK_PREVIEW;
         }
         
+        Log.d(TAG, "Text message detected, returning VIEW_TYPE_TEXT");
         return VIEW_TYPE_TEXT;
     }
 
@@ -201,10 +208,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         if (holder.mRepliedMessageLayout != null) {
             holder.mRepliedMessageLayout.setVisibility(View.GONE);
+            Log.d(TAG, "Checking for reply data at position " + position);
+            
             if (data.containsKey("replied_message_id")) {
                 String repliedId = data.get("replied_message_id").toString();
+                Log.d(TAG, "Found replied_message_id: " + repliedId + " for position: " + position);
+                
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
-                    Log.d(TAG, "Found reply message ID: " + repliedId + " for message at position: " + position);
+                    Log.d(TAG, "Processing reply for message ID: " + repliedId);
                     
                     String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     String theirUid = chatActivity.getIntent().getStringExtra("uid");
@@ -224,6 +235,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                     
                                     String repliedUid = snapshot.child("uid").getValue(String.class);
                                     String repliedText = snapshot.child("message_text").getValue(String.class);
+                                    
+                                    Log.d(TAG, "Replied message - UID: " + repliedUid + ", Text: " + repliedText);
                                     
                                     if(holder.mRepliedMessageLayoutUsername != null) {
                                         String username = repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName;
@@ -257,7 +270,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         }
                                     });
                                 } else {
-                                    Log.d(TAG, "Replied message not found or holder is null");
+                                    Log.d(TAG, "Replied message not found or holder is null. Snapshot exists: " + (snapshot != null && snapshot.exists()) + ", Holder null: " + (holder.mRepliedMessageLayout == null));
                                 }
                             }
                             @Override
@@ -269,7 +282,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     Log.d(TAG, "Reply message ID is null or empty for position: " + position);
                 }
             } else {
-                Log.d(TAG, "No replied_message_id found for position: " + position);
+                Log.d(TAG, "No replied_message_id found for position: " + position + ". Available keys: " + data.keySet());
             }
         } else {
             Log.w(TAG, "Reply layout holder is null for position: " + position);
@@ -330,6 +343,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void bindMediaViewHolder(MediaViewHolder holder, int position) {
+        Log.d(TAG, "bindMediaViewHolder called for position " + position);
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
         String msgText = data.getOrDefault("message_text", "").toString();
@@ -339,17 +353,24 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
+        Log.d(TAG, "Attachments found: " + (attachments != null ? attachments.size() : 0));
+        
         GridLayout gridLayout = holder.mediaGridLayout;
-        if (gridLayout == null) return;
+        if (gridLayout == null) {
+            Log.e(TAG, "mediaGridLayout is null in MediaViewHolder");
+            return;
+        }
 
         gridLayout.removeAllViews();
         gridLayout.setVisibility(View.VISIBLE);
 
         if (attachments == null || attachments.isEmpty()) {
+            Log.w(TAG, "No attachments found, hiding grid layout");
             gridLayout.setVisibility(View.GONE);
             return;
         }
 
+        Log.d(TAG, "Processing " + attachments.size() + " attachments");
         int count = attachments.size();
         int colCount = 2;
         int maxImages = 4;

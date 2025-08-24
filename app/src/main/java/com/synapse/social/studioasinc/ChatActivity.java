@@ -812,11 +812,18 @@ public class ChatActivity extends AppCompatActivity {
 			Log.e("ChatActivity", "Invalid position or data for message overview popup. Position: " + _position + ", Size: " + (_data != null ? _data.size() : "null"));
 			return;
 		}
+		
+		// Log the data being passed for debugging
+		Log.d("ChatActivity", "Popup called for position: " + _position + ", data size: " + _data.size());
+		
 		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
 
-		final PopupWindow pop1 = new PopupWindow(pop1V, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+		final PopupWindow pop1 = new PopupWindow(pop1V, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
 		pop1.setFocusable(true);
 		pop1.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
+		pop1.setOutsideTouchable(true);
+		pop1.setElevation(10f);
+		
 		final LinearLayout main = pop1V.findViewById(R.id.main);
 		final LinearLayout edit = pop1V.findViewById(R.id.edit);
 		final LinearLayout reply = pop1V.findViewById(R.id.reply);
@@ -824,9 +831,6 @@ public class ChatActivity extends AppCompatActivity {
 		final LinearLayout copy = pop1V.findViewById(R.id.copy);
 		final LinearLayout delete = pop1V.findViewById(R.id.delete);
 		pop1.setAnimationStyle(android.R.style.Animation_Dialog);
-		
-		// Measure the popup to get its dimensions
-		int popupWidth = ViewGroup.LayoutParams.MATCH_PARENT;
 		
 		// Use a post callback to ensure the popup is measured before positioning
 		pop1V.post(() -> {
@@ -836,41 +840,61 @@ public class ChatActivity extends AppCompatActivity {
 				anchorView.getLocationOnScreen(location);
 
 				int screenHeight = getApplicationContext().getResources().getDisplayMetrics().heightPixels;
+				int screenWidth = getApplicationContext().getResources().getDisplayMetrics().widthPixels;
 				int halfScreenHeight = screenHeight / 2;
 				int anchorViewHeight = anchorView.getHeight();
-				int popupHeight = pop1.getContentView().getHeight();
+				int popupHeight = pop1V.getHeight();
+				int popupWidth = pop1V.getWidth();
 
 				// Ensure we have valid dimensions
 				if (popupHeight <= 0) {
 					popupHeight = 200; // Fallback height in dp
 					popupHeight = (int) (popupHeight * getResources().getDisplayMetrics().density);
 				}
+				if (popupWidth <= 0) {
+					popupWidth = 200; // Fallback width in dp
+					popupWidth = (int) (popupWidth * getResources().getDisplayMetrics().density);
+				}
 
-				int x = location[0];
-				int y;
+				int x, y;
 
+				// Calculate X position - center horizontally relative to anchor view
+				x = location[0] + (anchorView.getWidth() / 2) - (popupWidth / 2);
+				
+				// Ensure popup doesn't go off-screen horizontally
+				if (x < 0) {
+					x = 10; // Small margin from left edge
+				} else if (x + popupWidth > screenWidth) {
+					x = screenWidth - popupWidth - 10; // Small margin from right edge
+				}
+
+				// Calculate Y position
 				if (location[1] < halfScreenHeight) {
 					// Show below the anchor view
-					y = location[1] + anchorViewHeight;
+					y = location[1] + anchorViewHeight + 10; // Small gap below
 				} else {
 					// Show above the anchor view
-					y = location[1] - popupHeight;
+					y = location[1] - popupHeight - 10; // Small gap above
 				}
 
-				// Ensure popup doesn't go off-screen
+				// Ensure popup doesn't go off-screen vertically
 				if (y < 0) {
-					y = 0;
+					y = 10; // Small margin from top edge
 				} else if (y + popupHeight > screenHeight) {
-					y = screenHeight - popupHeight;
+					y = screenHeight - popupHeight - 10; // Small margin from bottom edge
 				}
 
+				Log.d("ChatActivity", "Showing popup at x=" + x + ", y=" + y + " with dimensions " + popupWidth + "x" + popupHeight);
 				pop1.showAtLocation(anchorView, Gravity.NO_GRAVITY, x, y);
+				
 			} catch (Exception e) {
-				Log.e("ChatActivity", "Error positioning popup: " + e.getMessage());
-				// Fallback positioning
+				Log.e("ChatActivity", "Error positioning popup: " + e.getMessage(), e);
+				// Fallback positioning - center on screen
 				pop1.showAtLocation(_view, Gravity.CENTER, 0, 0);
 			}
 		});
+		
+		// Set up the popup content based on message ownership
 		if (_data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 			main.setGravity(Gravity.CENTER | Gravity.RIGHT);
 			edit.setVisibility(View.VISIBLE);
@@ -880,6 +904,7 @@ public class ChatActivity extends AppCompatActivity {
 			edit.setVisibility(View.GONE);
 			delete.setVisibility(View.GONE);
 		}
+		
 		_viewGraphics(edit, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(reply, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(summary, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
@@ -892,6 +917,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 		_viewGraphics(copy, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
 		_viewGraphics(delete, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
+		
 		main.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -1170,6 +1196,21 @@ public class ChatActivity extends AppCompatActivity {
 					if (dataSnapshot.exists()) {
 						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
+							// Debug logging for image messages
+							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
+							Log.d("ChatActivity", "New message received - Type: " + messageType + ", Key: " + newMessage.get(KEY_KEY));
+							
+							if ("ATTACHMENT_MESSAGE".equals(messageType)) {
+								ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) newMessage.get("attachments");
+								Log.d("ChatActivity", "Image message with " + (attachments != null ? attachments.size() : 0) + " attachments");
+								if (attachments != null) {
+									for (int i = 0; i < attachments.size(); i++) {
+										HashMap<String, Object> attachment = attachments.get(i);
+										Log.d("ChatActivity", "Attachment " + i + ": " + attachment.toString());
+									}
+								}
+							}
+							
 							// Check if message already exists to avoid duplicates
 							boolean exists = false;
 							for (HashMap<String, Object> msg : ChatMessagesList) {
@@ -1189,6 +1230,8 @@ public class ChatActivity extends AppCompatActivity {
 								ChatMessagesList.add(newMessage);
 								int newPosition = ChatMessagesList.size() - 1;
 								
+								Log.d("ChatActivity", "Added message to list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
+								
 								// Notify adapter of the new item
 								chatAdapter.notifyItemInserted(newPosition);
 								
@@ -1201,7 +1244,11 @@ public class ChatActivity extends AppCompatActivity {
 								ChatMessagesListRecycler.post(() -> {
 									scrollToBottom();
 								});
+							} else {
+								Log.d("ChatActivity", "Message already exists, skipping duplicate");
 							}
+						} else {
+							Log.w("ChatActivity", "New message is null or missing key");
 						}
 					}
 				}
