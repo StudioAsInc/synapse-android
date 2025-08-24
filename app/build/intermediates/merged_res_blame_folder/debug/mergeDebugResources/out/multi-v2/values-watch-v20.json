@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-90:/values-watch-v20/values-watch-v20.xml",
+            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-88:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
                     "source": "/home/ubuntu/.gradle/caches/8.13/transforms/eae17038374e54e76e98f708bffe74a8/transformed/jetified-play-services-auth-21.4.0/res/values-watch-v20/values.xml",

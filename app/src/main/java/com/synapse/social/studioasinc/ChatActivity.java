@@ -827,7 +827,6 @@ public class ChatActivity extends AppCompatActivity {
 		
 		// Measure the popup to get its dimensions
 		int popupWidth = ViewGroup.LayoutParams.MATCH_PARENT;
-		int popupHeight = ViewGroup.LayoutParams.WRAP_CONTENT;
 		
 		// Use a post callback to ensure the popup is measured before positioning
 		pop1V.post(() -> {

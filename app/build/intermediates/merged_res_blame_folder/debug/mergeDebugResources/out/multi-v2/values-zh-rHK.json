@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-90:/values-zh-rHK/values-zh-rHK.xml",
+            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-88:/values-zh-rHK/values-zh-rHK.xml",
             "map": [
                 {
                     "source": "/home/ubuntu/.gradle/caches/8.13/transforms/24ab95db4ff65e9d29ea24b3402dccba/transformed/navigation-ui-2.9.3/res/values-zh-rHK/values-zh-rHK.xml",
