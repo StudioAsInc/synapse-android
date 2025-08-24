@@ -562,16 +562,31 @@ public class ChatActivity extends AppCompatActivity {
 		if (_requestCode == REQ_CD_IMAGE_PICKER && _resultCode == Activity.RESULT_OK) {
 			if (_data != null) {
 				ArrayList<String> resolvedFilePaths = new ArrayList<>();
-				if (_data.getClipData() != null) {
-					for (int i = 0; i < _data.getClipData().getItemCount(); i++) {
-						Uri fileUri = _data.getClipData().getItemAt(i).getUri();
+				
+				try {
+					if (_data.getClipData() != null) {
+						for (int i = 0; i < _data.getClipData().getItemCount(); i++) {
+							Uri fileUri = _data.getClipData().getItemAt(i).getUri();
+							String path = StorageUtil.getPathFromUri(getApplicationContext(), fileUri);
+							if (path != null && !path.isEmpty()) {
+								resolvedFilePaths.add(path);
+							} else {
+								Log.w("ChatActivity", "Failed to resolve file path for clip data item " + i);
+							}
+						}
+					} else if (_data.getData() != null) {
+						Uri fileUri = _data.getData();
 						String path = StorageUtil.getPathFromUri(getApplicationContext(), fileUri);
-						if (path != null) resolvedFilePaths.add(path);
+						if (path != null && !path.isEmpty()) {
+							resolvedFilePaths.add(path);
+						} else {
+							Log.w("ChatActivity", "Failed to resolve file path for single data");
+						}
 					}
-				} else if (_data.getData() != null) {
-					Uri fileUri = _data.getData();
-					String path = StorageUtil.getPathFromUri(getApplicationContext(), fileUri);
-					if (path != null) resolvedFilePaths.add(path);
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error processing file picker result: " + e.getMessage());
+					Toast.makeText(this, "Error processing selected files", Toast.LENGTH_SHORT).show();
+					return;
 				}
 
 				if (!resolvedFilePaths.isEmpty()) {
@@ -580,31 +595,52 @@ public class ChatActivity extends AppCompatActivity {
 					int startingPosition = attactmentmap.size();
 
 					for (String filePath : resolvedFilePaths) {
-						HashMap<String, Object> itemMap = new HashMap<>();
-						itemMap.put("localPath", filePath);
-						itemMap.put("uploadState", "pending");
+						try {
+							HashMap<String, Object> itemMap = new HashMap<>();
+							itemMap.put("localPath", filePath);
+							itemMap.put("uploadState", "pending");
 
-						BitmapFactory.Options options = new BitmapFactory.Options();
-						options.inJustDecodeBounds = true;
-						BitmapFactory.decodeFile(filePath, options);
-						itemMap.put("width", options.outWidth);
-						itemMap.put("height", options.outHeight);
+							// Get image dimensions safely
+							BitmapFactory.Options options = new BitmapFactory.Options();
+							options.inJustDecodeBounds = true;
+							try {
+								BitmapFactory.decodeFile(filePath, options);
+								itemMap.put("width", options.outWidth > 0 ? options.outWidth : 100);
+								itemMap.put("height", options.outHeight > 0 ? options.outHeight : 100);
+							} catch (Exception e) {
+								Log.w("ChatActivity", "Could not decode image dimensions for: " + filePath);
+								itemMap.put("width", 100);
+								itemMap.put("height", 100);
+							}
 
-						attactmentmap.add(itemMap);
+							attactmentmap.add(itemMap);
+						} catch (Exception e) {
+							Log.e("ChatActivity", "Error processing file: " + filePath + ", Error: " + e.getMessage());
+						}
 					}
 
-					rv_attacmentList.getAdapter().notifyItemRangeInserted(startingPosition, resolvedFilePaths.size());
+					// Notify adapter of changes
+					if (rv_attacmentList.getAdapter() != null) {
+						rv_attacmentList.getAdapter().notifyItemRangeInserted(startingPosition, resolvedFilePaths.size());
+					}
 
+					// Start upload for each item
 					for (int i = 0; i < resolvedFilePaths.size(); i++) {
-						_startUploadForItem(startingPosition + i);
+						try {
+							_startUploadForItem(startingPosition + i);
+						} catch (Exception e) {
+							Log.e("ChatActivity", "Error starting upload for item " + i + ": " + e.getMessage());
+						}
 					}
+				} else {
+					Log.w("ChatActivity", "No valid file paths resolved from file picker");
+					Toast.makeText(this, "No valid files selected", Toast.LENGTH_SHORT).show();
 				}
 			}
 		}
 		switch (_requestCode) {
-
 			default:
-			break;
+				break;
 		}
 	}
 
@@ -644,7 +680,75 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+		
+		// Clean up typing indicator
+		if (auth.getCurrentUser() != null) {
+			try {
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error cleaning up typing indicator: " + e.getMessage());
+			}
+		}
+		
+		// Clean up Firebase listeners
+		_detachChatListener();
+		_detachUserStatusListener();
+		
+		// Clean up blocklist listener
+		if (_blocklist_child_listener != null) {
+			try {
+				blocklist.removeEventListener(_blocklist_child_listener);
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error removing blocklist listener: " + e.getMessage());
+			}
+		}
+		
+		// Clean up timers
+		if (_timer != null) {
+			_timer.cancel();
+			_timer = null;
+		}
+		
+		// Clean up media recorder
+		if (AudioMessageRecorder != null) {
+			try {
+				AudioMessageRecorder.release();
+				AudioMessageRecorder = null;
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error releasing media recorder: " + e.getMessage());
+			}
+		}
+		
+		// Clear lists to prevent memory leaks
+		if (ChatMessagesList != null) {
+			ChatMessagesList.clear();
+		}
+		if (attactmentmap != null) {
+			attactmentmap.clear();
+		}
+		
+		// Clean up progress dialog
+		if (SynapseLoadingDialog != null && SynapseLoadingDialog.isShowing()) {
+			try {
+				SynapseLoadingDialog.dismiss();
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error dismissing progress dialog: " + e.getMessage());
+			}
+			SynapseLoadingDialog = null;
+		}
+		
+		// Clean up adapters
+		if (chatAdapter != null) {
+			chatAdapter = null;
+		}
+		
+		// Clean up RecyclerViews
+		if (ChatMessagesListRecycler != null) {
+			ChatMessagesListRecycler.setAdapter(null);
+		}
+		if (rv_attacmentList != null) {
+			rv_attacmentList.setAdapter(null);
+		}
 	}
 
 	@Override
@@ -720,21 +824,54 @@ public class ChatActivity extends AppCompatActivity {
 		final LinearLayout copy = pop1V.findViewById(R.id.copy);
 		final LinearLayout delete = pop1V.findViewById(R.id.delete);
 		pop1.setAnimationStyle(android.R.style.Animation_Dialog);
-		int[] location = new int[2];
-		View anchorView = _view;
-		anchorView.getLocationOnScreen(location);
+		
+		// Measure the popup to get its dimensions
+		int popupWidth = ViewGroup.LayoutParams.MATCH_PARENT;
+		int popupHeight = ViewGroup.LayoutParams.WRAP_CONTENT;
+		
+		// Use a post callback to ensure the popup is measured before positioning
+		pop1V.post(() -> {
+			try {
+				int[] location = new int[2];
+				View anchorView = _view;
+				anchorView.getLocationOnScreen(location);
 
-		int screenHeight = getApplicationContext().getResources().getDisplayMetrics().heightPixels;
-		int halfScreenHeight = screenHeight / 2;
-		int anchorViewHeight = anchorView.getHeight();
+				int screenHeight = getApplicationContext().getResources().getDisplayMetrics().heightPixels;
+				int halfScreenHeight = screenHeight / 2;
+				int anchorViewHeight = anchorView.getHeight();
+				int popupHeight = pop1.getContentView().getHeight();
 
-		if (location[1] < halfScreenHeight) {
-			pop1.showAtLocation(anchorView, Gravity.NO_GRAVITY, location[0], location[1] + anchorViewHeight);
-		} else if (location[1] > halfScreenHeight) {
-			pop1.showAtLocation(anchorView, Gravity.NO_GRAVITY, location[0], location[1] - pop1.getHeight());
-		} else {
-			pop1.showAtLocation(anchorView, Gravity.NO_GRAVITY, location[0], location[1] + anchorViewHeight / 2 - pop1.getHeight() / 2);
-		}
+				// Ensure we have valid dimensions
+				if (popupHeight <= 0) {
+					popupHeight = 200; // Fallback height in dp
+					popupHeight = (int) (popupHeight * getResources().getDisplayMetrics().density);
+				}
+
+				int x = location[0];
+				int y;
+
+				if (location[1] < halfScreenHeight) {
+					// Show below the anchor view
+					y = location[1] + anchorViewHeight;
+				} else {
+					// Show above the anchor view
+					y = location[1] - popupHeight;
+				}
+
+				// Ensure popup doesn't go off-screen
+				if (y < 0) {
+					y = 0;
+				} else if (y + popupHeight > screenHeight) {
+					y = screenHeight - popupHeight;
+				}
+
+				pop1.showAtLocation(anchorView, Gravity.NO_GRAVITY, x, y);
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error positioning popup: " + e.getMessage());
+				// Fallback positioning
+				pop1.showAtLocation(_view, Gravity.CENTER, 0, 0);
+			}
+		});
 		if (_data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 			main.setGravity(Gravity.CENTER | Gravity.RIGHT);
 			edit.setVisibility(View.VISIBLE);
@@ -824,7 +961,7 @@ public class ChatActivity extends AppCompatActivity {
 				edittext1.setMovementMethod(new ScrollingMovementMethod());
 				edittext1.setScrollBarStyle(View.SCROLLBARS_INSIDE_INSET);
 
-				Dialogs.setPositiveButton("Chnage", new DialogInterface.OnClickListener() {
+				Dialogs.setPositiveButton("Change", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface _dialog, int _which) {
 						if (!(edittext1.getText().toString().length() == 0)) {
@@ -835,18 +972,22 @@ public class ChatActivity extends AppCompatActivity {
 							ChatSendMap.put(MESSAGE_TEXT_KEY, edittext1.getText().toString().trim());
 							ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 							ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
-							// Updating the chat reference
+							
+							// Update both chat nodes using setValue for proper real-time updates
 							_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-							.child(getIntent().getStringExtra(UID_KEY))  // Replacing with the UID from the intent extras
-							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // Replacing with the current user UID
-							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Using the key from your data
-							.updateChildren(ChatSendMap);  // Ensure ChatSendMap contains the necessary data for the update
-							// Updating the chat reference
+							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // Current user UID
+							.child(getIntent().getStringExtra(UID_KEY))  // Other user UID
+							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Message key
+							.setValue(ChatSendMap);
+							
 							_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // My UID
-							.child(getIntent().getStringExtra(UID_KEY))  // His UID from the intent extras
-							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Using the key from your data
-							.updateChildren(ChatSendMap);  // Ensure ChatSendMap contains the necessary data for the update
+							.child(getIntent().getStringExtra(UID_KEY))  // Other user UID
+							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // Current user UID
+							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Message key
+							.setValue(ChatSendMap);
+							
+							// Clear the edit dialog
+							edittext1.setText("");
 						} else {
 							SketchwareUtil.showMessage(getApplicationContext(), "Can't be empty");
 						}
@@ -928,16 +1069,33 @@ public class ChatActivity extends AppCompatActivity {
 		getFirstUserName.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if (dataSnapshot.exists()) {
-					FirstUserName = dataSnapshot.child("nickname").getValue(String.class).equals("null")
-					? "@" + dataSnapshot.child("username").getValue(String.class)
-					: dataSnapshot.child("nickname").getValue(String.class);
+				try {
+					if (dataSnapshot.exists()) {
+						String nickname = dataSnapshot.child("nickname").getValue(String.class);
+						String username = dataSnapshot.child("username").getValue(String.class);
+						
+						if (nickname != null && !"null".equals(nickname)) {
+							FirstUserName = nickname;
+						} else if (username != null && !"null".equals(username)) {
+							FirstUserName = "@" + username;
+						} else {
+							FirstUserName = "Unknown User";
+							Log.w("ChatActivity", "Both nickname and username are null or 'null'");
+						}
+					} else {
+						Log.w("ChatActivity", "User data snapshot doesn't exist");
+						FirstUserName = "Unknown User";
+					}
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error processing user data: " + e.getMessage());
+					FirstUserName = "Unknown User";
 				}
 			}
 
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				Log.e("ChatActivity", "Failed to get first user name: " + databaseError.getMessage());
+				FirstUserName = "Unknown User";
 			}
 		});
 
@@ -951,30 +1109,56 @@ public class ChatActivity extends AppCompatActivity {
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {
-					ChatMessagesListRecycler.setVisibility(View.VISIBLE);
-					noChatText.setVisibility(View.GONE);
-					// We clear the list here before the initial load
-					ChatMessagesList.clear();
-					ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
-					for (DataSnapshot _data : dataSnapshot.getChildren()) {
-						initialMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
-					}
+				try {
+					if(dataSnapshot.exists()) {
+						ChatMessagesListRecycler.setVisibility(View.VISIBLE);
+						noChatText.setVisibility(View.GONE);
+						// We clear the list here before the initial load
+						ChatMessagesList.clear();
+						ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
+						
+						for (DataSnapshot _data : dataSnapshot.getChildren()) {
+							try {
+								HashMap<String, Object> messageData = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
+									initialMessages.add(messageData);
+								} else {
+									Log.w("ChatActivity", "Skipping initial message without valid key: " + _data.getKey());
+								}
+							} catch (Exception e) {
+								Log.e("ChatActivity", "Error processing initial message data: " + e.getMessage());
+							}
+						}
 
-					if (!initialMessages.isEmpty() && initialMessages.get(0).get(KEY_KEY) != null) {
-						oldestMessageKey = initialMessages.get(0).get(KEY_KEY).toString();
-					}
+						if (!initialMessages.isEmpty()) {
+							// Safely get the oldest message key
+							HashMap<String, Object> oldestMessage = initialMessages.get(0);
+							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
+								oldestMessageKey = oldestMessage.get(KEY_KEY).toString();
+							}
 
-					ChatMessagesList.addAll(initialMessages);
-					chatAdapter.notifyDataSetChanged();
-					ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-				} else {
+							ChatMessagesList.addAll(initialMessages);
+							if (chatAdapter != null) {
+								chatAdapter.notifyDataSetChanged();
+							}
+							ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+						}
+					} else {
+						ChatMessagesListRecycler.setVisibility(View.GONE);
+						noChatText.setVisibility(View.VISIBLE);
+					}
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error processing initial chat messages: " + e.getMessage());
 					ChatMessagesListRecycler.setVisibility(View.GONE);
 					noChatText.setVisibility(View.VISIBLE);
 				}
 			}
-			@Override public void onCancelled(@NonNull DatabaseError databaseError) {
+			
+			@Override 
+			public void onCancelled(@NonNull DatabaseError databaseError) {
 				Log.e("ChatActivity", "Initial message load failed: " + databaseError.getMessage());
+				ChatMessagesListRecycler.setVisibility(View.GONE);
+				noChatText.setVisibility(View.VISIBLE);
 			}
 		});
 	}
@@ -1229,36 +1413,59 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				_hideLoadMoreIndicator();
-				if(dataSnapshot.exists()) {
-					ArrayList<HashMap<String, Object>> newMessages = new ArrayList<>();
-					for (DataSnapshot _data : dataSnapshot.getChildren()) {
-						newMessages.add(_data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {}));
-					}
+				try {
+					if(dataSnapshot.exists()) {
+						ArrayList<HashMap<String, Object>> newMessages = new ArrayList<>();
+						for (DataSnapshot _data : dataSnapshot.getChildren()) {
+							try {
+								HashMap<String, Object> messageData = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
+									newMessages.add(messageData);
+								} else {
+									Log.w("ChatActivity", "Skipping message without valid key: " + _data.getKey());
+								}
+							} catch (Exception e) {
+								Log.e("ChatActivity", "Error processing message data: " + e.getMessage());
+							}
+						}
 
-					if (!newMessages.isEmpty()) {
-						oldestMessageKey = newMessages.get(0).get(KEY_KEY).toString();
+						if (!newMessages.isEmpty()) {
+							// Safely get the oldest message key
+							HashMap<String, Object> oldestMessage = newMessages.get(0);
+							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
+								oldestMessageKey = oldestMessage.get(KEY_KEY).toString();
+							}
 
-						final LinearLayoutManager layoutManager = (LinearLayoutManager) ChatMessagesListRecycler.getLayoutManager();
-						int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
-						View firstVisibleView = layoutManager.findViewByPosition(firstVisiblePosition);
-						int topOffset = (firstVisibleView != null) ? firstVisibleView.getTop() : 0;
+							final LinearLayoutManager layoutManager = (LinearLayoutManager) ChatMessagesListRecycler.getLayoutManager();
+							if (layoutManager != null) {
+								int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
+								View firstVisibleView = layoutManager.findViewByPosition(firstVisiblePosition);
+								int topOffset = (firstVisibleView != null) ? firstVisibleView.getTop() : 0;
 
-						ChatMessagesList.addAll(0, newMessages);
-						chatAdapter.notifyItemRangeInserted(0, newMessages.size());
+								ChatMessagesList.addAll(0, newMessages);
+								if (chatAdapter != null) {
+									chatAdapter.notifyItemRangeInserted(0, newMessages.size());
+								}
 
-						// Restore scroll position to the item that was previously at the top
-						if (firstVisibleView != null) {
-							layoutManager.scrollToPositionWithOffset(firstVisiblePosition + newMessages.size(), topOffset);
+								// Restore scroll position to the item that was previously at the top
+								if (firstVisibleView != null) {
+									layoutManager.scrollToPositionWithOffset(firstVisiblePosition + newMessages.size(), topOffset);
+								}
+							}
 						}
 					}
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error processing old messages: " + e.getMessage());
+				} finally {
+					isLoading = false;
 				}
-				isLoading = false;
 			}
 
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				_hideLoadMoreIndicator();
 				isLoading = false;
+				Log.e("ChatActivity", "Failed to load old messages: " + databaseError.getMessage());
 			}
 		});
 	}
@@ -1674,51 +1881,116 @@ public class ChatActivity extends AppCompatActivity {
 		// Use the correct parameter name '_position' as defined by your More Block
 		final int itemPosition = (int) _position;
 
+		// Safety check for position bounds
+		if (itemPosition < 0 || itemPosition >= attactmentmap.size()) {
+			Log.e("ChatActivity", "Invalid position for upload: " + itemPosition + ", size: " + attactmentmap.size());
+			return;
+		}
+
 		// Check for internet connection first.
 		if (!SketchwareUtil.isConnected(getApplicationContext())) {
-			HashMap<String, Object> itemMap = attactmentmap.get(itemPosition);
-			itemMap.put("uploadState", "failed");
-			rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+			try {
+				HashMap<String, Object> itemMap = attactmentmap.get(itemPosition);
+				if (itemMap != null) {
+					itemMap.put("uploadState", "failed");
+					if (rv_attacmentList.getAdapter() != null) {
+						rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+					}
+				}
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error updating upload state: " + e.getMessage());
+			}
 			return;
 		}
 
 		HashMap<String, Object> itemMap = attactmentmap.get(itemPosition);
-		if (!"pending".equals(itemMap.get("uploadState"))) {
+		if (itemMap == null || !"pending".equals(itemMap.get("uploadState"))) {
 			return;
 		}
+		
 		itemMap.put("uploadState", "uploading");
 		itemMap.put("uploadProgress", 0.0);
-		rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+		
+		if (rv_attacmentList.getAdapter() != null) {
+			rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+		}
 
 		String filePath = itemMap.get("localPath").toString();
+		if (filePath == null || filePath.isEmpty()) {
+			Log.e("ChatActivity", "Invalid file path for upload");
+			itemMap.put("uploadState", "failed");
+			if (rv_attacmentList.getAdapter() != null) {
+				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+			}
+			return;
+		}
+
 		File file = new File(filePath);
+		if (!file.exists()) {
+			Log.e("ChatActivity", "File does not exist: " + filePath);
+			itemMap.put("uploadState", "failed");
+			if (rv_attacmentList.getAdapter() != null) {
+				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+			}
+			return;
+		}
 
 		UploadFiles.uploadFile(filePath, file.getName(), new UploadFiles.UploadCallback() {
 			@Override
 			public void onProgress(int percent) {
-				if (itemPosition >= attactmentmap.size()) return;
-				attactmentmap.get(itemPosition).put("uploadProgress", (double) percent);
-				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+				try {
+					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
+						HashMap<String, Object> currentItem = attactmentmap.get(itemPosition);
+						if (currentItem != null) {
+							currentItem.put("uploadProgress", (double) percent);
+							if (rv_attacmentList.getAdapter() != null) {
+								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+							}
+						}
+					}
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error updating upload progress: " + e.getMessage());
+				}
 			}
+			
 			@Override
 			public void onSuccess(String url, String publicId) {
-				if (itemPosition >= attactmentmap.size()) return;
-				HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
-				mapToUpdate.put("uploadState", "success");
-				mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
-				mapToUpdate.put("publicId", publicId);
-				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+				try {
+					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
+						HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
+						if (mapToUpdate != null) {
+							mapToUpdate.put("uploadState", "success");
+							mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
+							mapToUpdate.put("publicId", publicId);
+							if (rv_attacmentList.getAdapter() != null) {
+								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+							}
 
-				// Set the URL to the 'path' variable instead of message_et
-				path = url;
-
-				// Removed Toast and clipboard operations
+							// Set the URL to the 'path' variable instead of message_et
+							path = url;
+						}
+					}
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error updating upload success: " + e.getMessage());
+				}
 			}
+			
 			@Override
 			public void onFailure(String error) {
-				if (itemPosition >= attactmentmap.size()) return;
-				attactmentmap.get(itemPosition).put("uploadState", "failed");
-				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+				try {
+					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
+						HashMap<String, Object> currentItem = attactmentmap.get(itemPosition);
+						if (currentItem != null) {
+							currentItem.put("uploadState", "failed");
+							if (rv_attacmentList.getAdapter() != null) {
+								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+							}
+						}
+					}
+					Log.e("ChatActivity", "Upload failed: " + error);
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error updating upload failure: " + e.getMessage());
+				}
 			}
 		});
 	}
@@ -1735,7 +2007,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatInboxSend.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
 		ChatInboxSend.put(LAST_MESSAGE_STATE_KEY, "sended");
 		ChatInboxSend.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
-		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).updateChildren(ChatInboxSend);
+		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).setValue(ChatInboxSend);
 
 		// Update inbox for the other user
 		ChatInboxSend2 = new HashMap<>();
@@ -1744,7 +2016,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatInboxSend2.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
 		ChatInboxSend2.put(LAST_MESSAGE_STATE_KEY, "sended");
 		ChatInboxSend2.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
-		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(ChatInboxSend2);
+		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(ChatInboxSend2);
 	}
 
 
@@ -1984,81 +2256,143 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void updateUserProfile(DataSnapshot dataSnapshot) {
-		if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
+		// Add null checks for critical fields
+		if (dataSnapshot == null || !dataSnapshot.exists()) {
+			Log.w("ChatActivity", "User profile data snapshot is null or doesn't exist");
+			return;
+		}
+		
+		// Check if user is banned
+		String bannedStatus = dataSnapshot.child("banned").getValue(String.class);
+		if ("true".equals(bannedStatus)) {
 			topProfileLayoutProfileImage.setImageResource(R.drawable.banned_avatar);
 			SecondUserAvatar = "null_banned";
 			topProfileLayoutStatus.setTextColor(0xFF9E9E9E);
 			topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
 		} else {
+			// Handle avatar
 			String avatarUrl = dataSnapshot.child("avatar").getValue(String.class);
-			if ("null".equals(avatarUrl)) {
+			if (avatarUrl == null || "null".equals(avatarUrl)) {
 				topProfileLayoutProfileImage.setImageResource(R.drawable.avatar);
 				SecondUserAvatar = "null";
 			} else {
-				Glide.with(getApplicationContext()).load(Uri.parse(avatarUrl)).into(topProfileLayoutProfileImage);
-				SecondUserAvatar = avatarUrl;
+				try {
+					Glide.with(getApplicationContext()).load(Uri.parse(avatarUrl)).into(topProfileLayoutProfileImage);
+					SecondUserAvatar = avatarUrl;
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error loading avatar: " + e.getMessage());
+					topProfileLayoutProfileImage.setImageResource(R.drawable.avatar);
+					SecondUserAvatar = "null";
+				}
 			}
 		}
 
+		// Handle nickname/username
 		String nickname = dataSnapshot.child("nickname").getValue(String.class);
-		if ("null".equals(nickname)) {
-			SecondUserName = "@" + dataSnapshot.child("username").getValue(String.class);
+		if (nickname == null || "null".equals(nickname)) {
+			String username = dataSnapshot.child("username").getValue(String.class);
+			SecondUserName = username != null ? "@" + username : "Unknown User";
 		} else {
 			SecondUserName = nickname;
 		}
-		topProfileLayoutUsername.setText(SecondUserName);
+		
+		if (topProfileLayoutUsername != null) {
+			topProfileLayoutUsername.setText(SecondUserName);
+		}
 
-		((ChatAdapter) chatAdapter).setSecondUserName(SecondUserName);
-		((ChatAdapter) chatAdapter).setFirstUserName(FirstUserName);
-		((ChatAdapter) chatAdapter).setSecondUserAvatar(SecondUserAvatar);
+		// Update adapter with user info
+		if (chatAdapter != null) {
+			chatAdapter.setSecondUserName(SecondUserName);
+			chatAdapter.setFirstUserName(FirstUserName);
+			chatAdapter.setSecondUserAvatar(SecondUserAvatar);
+		}
 
+		// Handle status
 		String status = dataSnapshot.child("status").getValue(String.class);
-		if ("online".equals(status)) {
-			topProfileLayoutStatus.setText(getResources().getString(R.string.online));
-			topProfileLayoutStatus.setTextColor(0xFF2196F3);
-		} else {
-			if ("offline".equals(status)) {
-				topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+		if (topProfileLayoutStatus != null) {
+			if ("online".equals(status)) {
+				topProfileLayoutStatus.setText(getResources().getString(R.string.online));
+				topProfileLayoutStatus.setTextColor(0xFF2196F3);
 			} else {
-				_setUserLastSeen(Double.parseDouble(status), topProfileLayoutStatus);
+				if ("offline".equals(status)) {
+					topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+				} else {
+					try {
+						_setUserLastSeen(Double.parseDouble(status), topProfileLayoutStatus);
+					} catch (NumberFormatException e) {
+						Log.e("ChatActivity", "Invalid status timestamp: " + status);
+						topProfileLayoutStatus.setText(getResources().getString(R.string.offline));
+					}
+				}
+				topProfileLayoutStatus.setTextColor(0xFF757575);
 			}
-			topProfileLayoutStatus.setTextColor(0xFF757575);
 		}
 	}
 
 	private void updateUserBadges(DataSnapshot dataSnapshot) {
+		// Add null checks for critical fields
+		if (dataSnapshot == null || !dataSnapshot.exists()) {
+			Log.w("ChatActivity", "User badge data snapshot is null or doesn't exist");
+			return;
+		}
+		
+		// Handle gender badge
 		String gender = dataSnapshot.child("gender").getValue(String.class);
-		if ("hidden".equals(gender)) {
-			topProfileLayoutGenderBadge.setVisibility(View.GONE);
-		} else if ("male".equals(gender)) {
-			topProfileLayoutGenderBadge.setImageResource(R.drawable.male_badge);
-			topProfileLayoutGenderBadge.setVisibility(View.VISIBLE);
-		} else if ("female".equals(gender)) {
-			topProfileLayoutGenderBadge.setImageResource(R.drawable.female_badge);
-			topProfileLayoutGenderBadge.setVisibility(View.VISIBLE);
+		if (topProfileLayoutGenderBadge != null) {
+			if (gender == null || "hidden".equals(gender)) {
+				topProfileLayoutGenderBadge.setVisibility(View.GONE);
+			} else if ("male".equals(gender)) {
+				topProfileLayoutGenderBadge.setImageResource(R.drawable.male_badge);
+				topProfileLayoutGenderBadge.setVisibility(View.VISIBLE);
+			} else if ("female".equals(gender)) {
+				topProfileLayoutGenderBadge.setImageResource(R.drawable.female_badge);
+				topProfileLayoutGenderBadge.setVisibility(View.VISIBLE);
+			}
 		}
 
-		String accountType = dataSnapshot.child("account_type").getValue(String.class);
-		topProfileLayoutVerifiedBadge.setVisibility(View.VISIBLE);
-		switch (accountType) {
-			case "admin":
-			topProfileLayoutVerifiedBadge.setImageResource(R.drawable.admin_badge);
-			break;
-			case "moderator":
-			topProfileLayoutVerifiedBadge.setImageResource(R.drawable.moderator_badge);
-			break;
-			case "support":
-			topProfileLayoutVerifiedBadge.setImageResource(R.drawable.support_badge);
-			break;
-			default:
-			if ("true".equals(dataSnapshot.child("account_premium").getValue(String.class))) {
-				topProfileLayoutVerifiedBadge.setImageResource(R.drawable.premium_badge);
-			} else if ("true".equals(dataSnapshot.child("verify").getValue(String.class))) {
-				topProfileLayoutVerifiedBadge.setImageResource(R.drawable.verified_badge);
+		// Handle account type badge
+		if (topProfileLayoutVerifiedBadge != null) {
+			String accountType = dataSnapshot.child("account_type").getValue(String.class);
+			topProfileLayoutVerifiedBadge.setVisibility(View.VISIBLE);
+			
+			if (accountType != null) {
+				switch (accountType) {
+					case "admin":
+						topProfileLayoutVerifiedBadge.setImageResource(R.drawable.admin_badge);
+						break;
+					case "moderator":
+						topProfileLayoutVerifiedBadge.setImageResource(R.drawable.moderator_badge);
+						break;
+					case "support":
+						topProfileLayoutVerifiedBadge.setImageResource(R.drawable.support_badge);
+						break;
+					default:
+						// Check for premium or verified status
+						String accountPremium = dataSnapshot.child("account_premium").getValue(String.class);
+						String verifyStatus = dataSnapshot.child("verify").getValue(String.class);
+						
+						if ("true".equals(accountPremium)) {
+							topProfileLayoutVerifiedBadge.setImageResource(R.drawable.premium_badge);
+						} else if ("true".equals(verifyStatus)) {
+							topProfileLayoutVerifiedBadge.setImageResource(R.drawable.verified_badge);
+						} else {
+							topProfileLayoutVerifiedBadge.setVisibility(View.GONE);
+						}
+						break;
+				}
 			} else {
-				topProfileLayoutVerifiedBadge.setVisibility(View.GONE);
+				// No account type specified, check for premium or verified status
+				String accountPremium = dataSnapshot.child("account_premium").getValue(String.class);
+				String verifyStatus = dataSnapshot.child("verify").getValue(String.class);
+				
+				if ("true".equals(accountPremium)) {
+					topProfileLayoutVerifiedBadge.setImageResource(R.drawable.premium_badge);
+				} else if ("true".equals(verifyStatus)) {
+					topProfileLayoutVerifiedBadge.setImageResource(R.drawable.verified_badge);
+				} else {
+					topProfileLayoutVerifiedBadge.setVisibility(View.GONE);
+				}
 			}
-			break;
 		}
 	}
 
@@ -2143,8 +2477,20 @@ public class ChatActivity extends AppCompatActivity {
 			final com.google.android.material.progressindicator.CircularProgressIndicator uploadProgressCPI = _view.findViewById(R.id.uploadProgressCPI);
 			final ImageView closeIV = _view.findViewById(R.id.closeIV);
 
+			// Safety check for position bounds
+			if (_position < 0 || _position >= attactmentmap.size()) {
+				Log.w("ChatActivity", "Invalid position in attachment adapter: " + _position);
+				_view.setVisibility(View.GONE);
+				return;
+			}
+
 			// Get the data map using the block's parameters
 			HashMap<String, Object> itemData = attactmentmap.get(_position);
+			if (itemData == null) {
+				Log.w("ChatActivity", "Null item data at position: " + _position);
+				_view.setVisibility(View.GONE);
+				return;
+			}
 
 			// --- START: ROBUSTNESS FIX ---
 			// Safety Check: Verify that the required "localPath" key exists and is not null.
@@ -2159,65 +2505,110 @@ public class ChatActivity extends AppCompatActivity {
 			_view.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 			// --- END: ROBUSTNESS FIX ---
 
-			// Set the image preview directly by its ID
+			// Set the image preview with error handling
 			String localPath = itemData.get("localPath").toString();
-			previewIV.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(localPath, 1024, 1024));
+			try {
+				// Clear previous image to prevent recycling issues
+				previewIV.setImageDrawable(null);
+				
+				// Load new image
+				previewIV.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(localPath, 1024, 1024));
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error loading image preview: " + e.getMessage());
+				// Set a placeholder image on error
+				previewIV.setImageResource(R.drawable.ph_imgbluredsqure);
+			}
 
 			// Get the upload state and progress.
 			String uploadState = itemData.getOrDefault("uploadState", "pending").toString();
 			int progress = 0;
 			if (itemData.containsKey("uploadProgress")) {
-				progress = (int) Double.parseDouble(itemData.get("uploadProgress").toString());
+				try {
+					progress = (int) Double.parseDouble(itemData.get("uploadProgress").toString());
+				} catch (NumberFormatException e) {
+					Log.w("ChatActivity", "Invalid upload progress value: " + itemData.get("uploadProgress"));
+					progress = 0;
+				}
 			}
 
 			// Update the UI by accessing views directly by their ID.
 			switch (uploadState) {
 				case "uploading":
-				overlayLL.setVisibility(View.VISIBLE);
-				overlayLL.setBackgroundColor(0x80000000);
-				uploadProgressCPI.setVisibility(View.VISIBLE);
-				uploadProgressCPI.setProgress(progress);
-				closeIV.setVisibility(View.GONE);
-				break;
+					overlayLL.setVisibility(View.VISIBLE);
+					overlayLL.setBackgroundColor(0x80000000);
+					uploadProgressCPI.setVisibility(View.VISIBLE);
+					uploadProgressCPI.setProgress(progress);
+					closeIV.setVisibility(View.GONE);
+					break;
 
 				case "success":
-				overlayLL.setVisibility(View.GONE);
-				uploadProgressCPI.setVisibility(View.GONE);
-				closeIV.setVisibility(View.VISIBLE);
-				break;
+					overlayLL.setVisibility(View.GONE);
+					uploadProgressCPI.setVisibility(View.GONE);
+					closeIV.setVisibility(View.VISIBLE);
+					break;
 
 				case "failed":
-				overlayLL.setVisibility(View.VISIBLE);
-				overlayLL.setBackgroundColor(0x80D32F2F);
-				uploadProgressCPI.setVisibility(View.GONE);
-				closeIV.setVisibility(View.VISIBLE);
-				break;
+					overlayLL.setVisibility(View.VISIBLE);
+					overlayLL.setBackgroundColor(0x80D32F2F);
+					uploadProgressCPI.setVisibility(View.GONE);
+					closeIV.setVisibility(View.VISIBLE);
+					break;
 
 				default: // "pending" state
-				overlayLL.setVisibility(View.GONE);
-				uploadProgressCPI.setVisibility(View.GONE);
-				closeIV.setVisibility(View.VISIBLE);
-				break;
+					overlayLL.setVisibility(View.GONE);
+					uploadProgressCPI.setVisibility(View.GONE);
+					closeIV.setVisibility(View.VISIBLE);
+					break;
 			}
 
-			// Set the click listener on the close icon directly by its ID.
+			// Set the click listener on the close icon with proper position handling
 			closeIV.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					if (_position >= attactmentmap.size()) return; // Safety check
+					// Use final position to avoid closure issues
+					final int finalPosition = _position;
+					
+					if (finalPosition < 0 || finalPosition >= attactmentmap.size()) {
+						Log.w("ChatActivity", "Invalid position for removal: " + finalPosition);
+						return;
+					}
 
-					HashMap<String, Object> currentItemData = attactmentmap.get(_position);
+					HashMap<String, Object> currentItemData = attactmentmap.get(finalPosition);
+					if (currentItemData == null) {
+						Log.w("ChatActivity", "Null item data for removal at position: " + finalPosition);
+						return;
+					}
 
-					attactmentmap.remove(_position);
-					rv_attacmentList.getAdapter().notifyItemRemoved(_position);
-					rv_attacmentList.getAdapter().notifyItemRangeChanged(_position, attactmentmap.size());
+					// Remove the item
+					attactmentmap.remove(finalPosition);
+					
+					// Notify adapter of changes
+					if (rv_attacmentList.getAdapter() != null) {
+						rv_attacmentList.getAdapter().notifyItemRemoved(finalPosition);
+						// Update remaining items
+						rv_attacmentList.getAdapter().notifyItemRangeChanged(finalPosition, attactmentmap.size() - finalPosition);
+					}
 
+					// Delete from cloud storage if available
 					if (currentItemData.containsKey("publicId")) {
 						String publicId = currentItemData.get("publicId").toString();
-						UploadFiles.deleteByPublicId(publicId, new UploadFiles.DeleteCallback() {
-							@Override public void onSuccess() {}
-							@Override public void onFailure(String error) {}
-						});
+						if (publicId != null && !publicId.isEmpty()) {
+							UploadFiles.deleteByPublicId(publicId, new UploadFiles.DeleteCallback() {
+								@Override 
+								public void onSuccess() {
+									Log.d("ChatActivity", "Successfully deleted attachment: " + publicId);
+								}
+								@Override 
+								public void onFailure(String error) {
+									Log.e("ChatActivity", "Failed to delete attachment: " + error);
+								}
+							});
+						}
+					}
+
+					// Hide attachment holder if no more attachments
+					if (attactmentmap.isEmpty()) {
+						attachmentLayoutListHolder.setVisibility(View.GONE);
 					}
 				}
 			});
