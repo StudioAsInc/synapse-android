@@ -2494,7 +2494,7 @@ public class ChatActivity extends AppCompatActivity {
 		final ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
 
 		for (final HashMap<String, Object> attachmentData : attactmentmap) {
-			String filePath = attachmentData.get("filePath").toString();
+			String filePath = attachmentData.get("localPath").toString();
 			ImageUploader.uploadImageWithCompression(filePath, new ImageUploader.UploadCallback() {
 				@Override
 				public void onUploadComplete(String imageUrl) {
@@ -2581,8 +2581,8 @@ public class ChatActivity extends AppCompatActivity {
 	private List<String> _extractAttachmentPaths(ArrayList<HashMap<String, Object>> attachments) {
 		List<String> paths = new ArrayList<>();
 		for (HashMap<String, Object> attachment : attachments) {
-			if (attachment.containsKey("filePath")) {
-				paths.add(attachment.get("filePath").toString());
+			if (attachment.containsKey("localPath")) {
+				paths.add(attachment.get("localPath").toString());
 			}
 		}
 		return paths;
