@@ -200,77 +200,46 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         
         if (holder.mRepliedMessageLayout != null) {
-            // Always start with reply layout hidden
-            holder.mRepliedMessageLayout.setVisibility(View.GONE);
-            
-            // Only show reply layout if this message actually has reply data
-            if (data.containsKey("replied_message_id")) {
-                String repliedId = data.get("replied_message_id").toString();
-                Log.d("ChatAdapter", "Reply data found: " + repliedId);
-                Log.d("ChatAdapter", "Reply data type: " + (repliedId != null ? repliedId.getClass().getSimpleName() : "NULL"));
-                Log.d("ChatAdapter", "Reply data equals 'null': " + "null".equals(repliedId));
-                if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
-                    String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                    String theirUid = chatActivity.getIntent().getStringExtra("uid");
-                    Log.d("ChatAdapter", "Querying Firebase for reply - myUid: " + myUid + ", theirUid: " + theirUid + ", repliedId: " + repliedId);
-                    FirebaseDatabase.getInstance().getReference("skyline/chats")
-                        .child(myUid)
-                        .child(theirUid)
-                        .child(repliedId)
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot snapshot) {
-                                Log.d("ChatAdapter", "Firebase reply query result: " + (snapshot.exists() ? "exists" : "not found"));
-                                if (snapshot.exists() && holder.mRepliedMessageLayout != null) {
-                                    Log.d("ChatAdapter", "Making reply layout VISIBLE");
-                                    holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
-                                    String repliedUid = snapshot.child("uid").getValue(String.class);
-                                    String repliedText = snapshot.child("message_text").getValue(String.class);
-                                    Log.d("ChatAdapter", "Reply UID: " + repliedUid + ", Text: " + repliedText);
-                                    
-                                    if(holder.mRepliedMessageLayoutUsername != null) {
-                                        holder.mRepliedMessageLayoutUsername.setText(
-                                            repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName
-                                        );
-                                        if (isMyMessage) {
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(Color.WHITE);
-                                        } else {
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
-                                        }
-                                    }
-                                    if(holder.mRepliedMessageLayoutMessage != null) {
-                                        holder.mRepliedMessageLayoutMessage.setText(repliedText != null ? repliedText : "");
-                                    }
-                                    
-                                    if(holder.mRepliedMessageLayoutLeftBar != null) {
-                                        android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
-                                        leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
-                                        leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
-                                        leftBarDrawable.setCornerRadius(dpToPx(100));
-                                        holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
-                                    }
+            final String repliedMessageId = (String) data.get("replied_message_id");
+            final String repliedMessageText = (String) data.get("replied_message_text");
+            final String repliedMessageSenderUid = (String) data.get("replied_message_sender_uid");
 
-                                    holder.mRepliedMessageLayout.setOnClickListener(v -> {
-                                        if (chatActivity != null) {
-                                            Log.d("ChatAdapter", "Reply layout clicked, scrolling to message: " + repliedId);
-                                            chatActivity.scrollToMessage(repliedId);
-                                        }
-                                    });
-                                    Log.d("ChatAdapter", "Reply layout made visible for message: " + repliedId);
-                                    Log.d("ChatAdapter", "Reply layout visibility after setting: " + (holder.mRepliedMessageLayout.getVisibility() == View.VISIBLE ? "VISIBLE" : "NOT VISIBLE"));
-                                    
-                                    // Force the reply layout to be visible and bring to front
-                                    holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
-                                    holder.mRepliedMessageLayout.bringToFront();
-                                    Log.d("ChatAdapter", "Reply layout forced visible and brought to front");
-                                }
-                            }
-                            @Override
-                            public void onCancelled(DatabaseError error) {
-                                Log.e(TAG, "Failed to load replied message: " + error.getMessage());
-                            }
-                        });
+            if (repliedMessageId != null && !repliedMessageId.isEmpty() && !repliedMessageId.equals("null") &&
+                repliedMessageText != null && repliedMessageSenderUid != null) {
+
+                holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
+
+                if (holder.mRepliedMessageLayoutUsername != null) {
+                    holder.mRepliedMessageLayoutUsername.setText(
+                        repliedMessageSenderUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName
+                    );
+                    if (isMyMessage) {
+                        holder.mRepliedMessageLayoutUsername.setTextColor(Color.WHITE);
+                    } else {
+                        holder.mRepliedMessageLayoutUsername.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
+                    }
                 }
+
+                if (holder.mRepliedMessageLayoutMessage != null) {
+                    holder.mRepliedMessageLayoutMessage.setText(repliedMessageText);
+                }
+
+                if (holder.mRepliedMessageLayoutLeftBar != null) {
+                    android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
+                    leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+                    leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
+                    leftBarDrawable.setCornerRadius(dpToPx(100));
+                    holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
+                }
+
+                holder.mRepliedMessageLayout.setOnClickListener(v -> {
+                    if (chatActivity != null) {
+                        chatActivity.scrollToMessage(repliedMessageId);
+                    }
+                });
+
+            } else {
+                holder.mRepliedMessageLayout.setVisibility(View.GONE);
             }
         }
         

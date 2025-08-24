@@ -120,6 +120,8 @@ public class ChatActivity extends AppCompatActivity {
 	private static final String MESSAGE_STATE_KEY = "message_state";
 	private static final String PUSH_DATE_KEY = "push_date";
 	private static final String REPLIED_MESSAGE_ID_KEY = "replied_message_id";
+	private static final String REPLIED_MESSAGE_TEXT_KEY = "replied_message_text";
+	private static final String REPLIED_MESSAGE_SENDER_UID_KEY = "replied_message_sender_uid";
 	private static final String ATTACHMENTS_KEY = "attachments";
 	private static final String LAST_MESSAGE_UID_KEY = "last_message_uid";
 	private static final String LAST_MESSAGE_TEXT_KEY = "last_message_text";
@@ -407,7 +409,7 @@ public class ChatActivity extends AppCompatActivity {
 		btn_sendMessage.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				_send_btn();
+				_sendMessage();
 			}
 		});
 
@@ -629,7 +631,7 @@ public class ChatActivity extends AppCompatActivity {
 					for (String filePath : resolvedFilePaths) {
 						if (filePath != null && !filePath.isEmpty()) {
 							HashMap<String, Object> itemMap = new HashMap<>();
-							itemMap.put("localPath", filePath);
+							itemMap.put("filePath", filePath);
 							itemMap.put("uploadState", "pending");
 
 							try {
@@ -1677,48 +1679,115 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 
-	public void _send_btn() {
+	private void _sendMessage() {
 		final String messageText = message_et.getText().toString().trim();
-		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		if (attactmentmap.isEmpty() && messageText.isEmpty()) {
+			return; // Nothing to send
+		}
+
+		final String senderUid = auth.getCurrentUser().getUid();
 		final String recipientUid = getIntent().getStringExtra("uid");
+		final String uniqueMessageKey = main.push().getKey();
 
-		// The message sending logic is now wrapped inside a Realtime Database query.
-		// First, we fetch the recipient's OneSignal Player ID from the 'users' node.
-		_firebase.getReference(SKYLINE_REF).child(USERS_REF).child(recipientUid)
-			.addListenerForSingleValueEvent(new ValueEventListener() {
-				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-					String recipientOneSignalPlayerId = "missing_id"; // Default value
+		// Prepare the base message map
+		final HashMap<String, Object> messageMap = new HashMap<>();
+		messageMap.put(UID_KEY, senderUid);
+		messageMap.put(MESSAGE_TEXT_KEY, messageText);
+		messageMap.put(MESSAGE_STATE_KEY, "sended");
+		messageMap.put(KEY_KEY, uniqueMessageKey);
+		messageMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
-					if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
-						String fetchedId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
-						if (fetchedId != null && !fetchedId.isEmpty()) {
-							recipientOneSignalPlayerId = fetchedId;
-						} else {
-							Log.e("ChatActivity", "Recipient's OneSignal Player ID is null or empty in the database.");
-						}
-					} else {
-						Log.e("ChatActivity", "Recipient's user node or oneSignalPlayerId not found in Realtime Database.");
+		// Prepare attachments if they exist
+		ArrayList<HashMap<String, Object>> attachmentsToSend = new ArrayList<>();
+		if (!attactmentmap.isEmpty()) {
+			for (HashMap<String, Object> attachmentData : attactmentmap) {
+				if ("success".equals(attachmentData.get("uploadState")) && attachmentData.containsKey("url")) {
+					attachmentsToSend.add(attachmentData);
+				}
+			}
+			if (!attachmentsToSend.isEmpty()) {
+				messageMap.put(ATTACHMENTS_KEY, attachmentsToSend);
+			}
+		}
+
+		// This is the callback that will execute after all data is ready.
+		final Runnable onDataReady = () -> {
+			// Send to both chat nodes
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).updateChildren(messageMap);
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).updateChildren(messageMap);
+
+			// Remove typing status
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(TYPING_MESSAGE_REF).removeValue();
+
+			// Determine last message text for inbox
+			String lastMessage;
+			if (!messageText.isEmpty()) {
+				lastMessage = messageText;
+			} else if (!attachmentsToSend.isEmpty()) {
+				lastMessage = attachmentsToSend.size() + " attachment(s)";
+			} else {
+				lastMessage = "Message";
+			}
+			_updateInbox(lastMessage);
+
+			// Send notification
+			_firebase.getReference(SKYLINE_REF).child(USERS_REF).child(recipientUid).child("oneSignalPlayerId")
+				.addListenerForSingleValueEvent(new ValueEventListener() {
+					@Override
+					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+						String recipientOneSignalPlayerId = dataSnapshot.exists() ? dataSnapshot.getValue(String.class) : "missing_id";
+						List<String> attachmentPaths = _extractAttachmentPaths(attachmentsToSend);
+						String messageType = !ReplyMessageID.equals("null") ? "reply" : (attachmentsToSend.isEmpty() ? "text" : "attachment");
+						_sendNotification(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage, messageType, attachmentPaths, FirstUserName);
 					}
+					@Override
+					public void onCancelled(@NonNull DatabaseError databaseError) {
+						_sendNotification(senderUid, recipientUid, "missing_id", lastMessage, "text", Collections.emptyList(), FirstUserName);
+					}
+				});
 
-					// After fetching the ID (or failing), proceed with sending the message.
-					proceedWithMessageSending(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
+			// Clear UI
+			runOnUiThread(() -> {
+				message_et.setText("");
+				attactmentmap.clear();
+				if (rv_attacmentList.getAdapter() != null) {
+					rv_attacmentList.getAdapter().notifyDataSetChanged();
+				}
+				attachmentLayoutListHolder.setVisibility(View.GONE);
+				_resetAttachmentContainerHeight();
+				ReplyMessageID = "null";
+				mMessageReplyLayout.setVisibility(View.GONE);
+			});
+		};
+
+		// If it's a reply, fetch original message first to denormalize data
+		if (ReplyMessageID != null && !ReplyMessageID.equals("null")) {
+			messageMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
+
+			DatabaseReference originalMessageRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF)
+				.child(senderUid).child(recipientUid).child(ReplyMessageID);
+
+			originalMessageRef.addListenerForSingleValueEvent(new ValueEventListener() {
+				@Override
+				public void onDataChange(@NonNull DataSnapshot snapshot) {
+					if (snapshot.exists()) {
+						messageMap.put(REPLIED_MESSAGE_TEXT_KEY, snapshot.child(MESSAGE_TEXT_KEY).getValue(String.class));
+						messageMap.put(REPLIED_MESSAGE_SENDER_UID_KEY, snapshot.child(UID_KEY).getValue(String.class));
+					}
+					// Proceed with sending whether the original message was found or not
+					onDataReady.run();
 				}
 
 				@Override
-				public void onCancelled(@NonNull DatabaseError databaseError) {
-					Log.e("ChatActivity", "Failed to fetch recipient's data from RTDB. Sending message without notification.", databaseError.toException());
-					// Still send the message, just without the notification.
-					proceedWithMessageSending(messageText, senderUid, recipientUid, "missing_id");
+				public void onCancelled(@NonNull DatabaseError error) {
+					// Proceed even if the lookup fails
+					onDataReady.run();
 				}
 			});
-	}
-
-	/**
-	 * This helper method now delegates to the refactored message sending logic.
-	 */
-	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
-		_sendMessageWithAttachments(messageText);
+		} else {
+			// Not a reply, send immediately
+			onDataReady.run();
+		}
 	}
 
 
@@ -1823,7 +1892,7 @@ public class ChatActivity extends AppCompatActivity {
 		itemMap.put("uploadProgress", 0.0);
 		rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 
-		String filePath = itemMap.get("localPath").toString();
+		String filePath = itemMap.get("filePath").toString();
 		File file = new File(filePath);
 
 		UploadFiles.uploadFile(filePath, file.getName(), new UploadFiles.UploadCallback() {
@@ -1838,7 +1907,7 @@ public class ChatActivity extends AppCompatActivity {
 				if (itemPosition >= attactmentmap.size()) return;
 				HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
 				mapToUpdate.put("uploadState", "success");
-				mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
+				mapToUpdate.put("url", url);
 				mapToUpdate.put("publicId", publicId);
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 
@@ -2470,11 +2539,6 @@ public class ChatActivity extends AppCompatActivity {
 		// Remove typing status when sending message
 		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
 
-		// Add message to local list immediately for instant display
-		ChatMessagesList.add(ChatSendMap);
-		chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
-		ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-
 		// Send notification
 		_sendNotification(senderUid, recipientUid, recipientOneSignalPlayerId, messageText, 
 			!ReplyMessageID.equals("null") ? "reply" : "text", Collections.emptyList(), FirstUserName);
@@ -2488,43 +2552,19 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _sendMessageWithAttachmentsInternal(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
-		final int totalAttachments = attactmentmap.size();
-		final AtomicInteger completedUploads = new AtomicInteger(0);
-		final AtomicBoolean hasUploadError = new AtomicBoolean(false);
-		final ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
+		ArrayList<HashMap<String, Object>> attachmentsToSend = new ArrayList<>();
+		for (HashMap<String, Object> attachmentData : attactmentmap) {
+			// We only send attachments that have been successfully uploaded.
+			if ("success".equals(attachmentData.get("uploadState")) && attachmentData.containsKey("url")) {
+				attachmentsToSend.add(attachmentData);
+			}
+		}
 
-		for (final HashMap<String, Object> attachmentData : attactmentmap) {
-			String filePath = attachmentData.get("localPath").toString();
-			ImageUploader.uploadImageWithCompression(filePath, new ImageUploader.UploadCallback() {
-				@Override
-				public void onUploadComplete(String imageUrl) {
-					attachmentData.put("downloadUrl", imageUrl);
-					successfulAttachments.add(attachmentData);
-					
-					int completed = completedUploads.incrementAndGet();
-					if (completed == totalAttachments) {
-						// All uploads completed
-						if (!hasUploadError.get() && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
-							_sendAttachmentMessage(messageText, senderUid, recipientUid, recipientOneSignalPlayerId, successfulAttachments);
-						}
-					}
-				}
-
-				@Override
-				public void onUploadError(String errorMessage) {
-					hasUploadError.set(true);
-					Toast.makeText(getApplicationContext(), "Upload failed: " + errorMessage, Toast.LENGTH_SHORT).show();
-					
-					int completed = completedUploads.incrementAndGet();
-					if (completed == totalAttachments) {
-						// All uploads completed (some failed)
-						if (!messageText.isEmpty()) {
-							// Send text message without attachments
-							_sendTextMessage(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
-						}
-					}
-				}
-			}, true); // Enable compression
+		if (!attachmentsToSend.isEmpty() || !messageText.isEmpty()) {
+			_sendAttachmentMessage(messageText, senderUid, recipientUid, recipientOneSignalPlayerId, attachmentsToSend);
+		} else {
+			// Handle case where there are no successful uploads and no text
+			Toast.makeText(getApplicationContext(), "No attachments to send.", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -2546,11 +2586,6 @@ public class ChatActivity extends AppCompatActivity {
 
 		// Remove typing status when sending message
 		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
-
-		// Add message to local list immediately for instant display
-		ChatMessagesList.add(ChatSendMap);
-		chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
-		ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
 
 		// Extract file paths for notification
 		List<String> attachmentPaths = _extractAttachmentPaths(successfulAttachments);
@@ -2581,8 +2616,8 @@ public class ChatActivity extends AppCompatActivity {
 	private List<String> _extractAttachmentPaths(ArrayList<HashMap<String, Object>> attachments) {
 		List<String> paths = new ArrayList<>();
 		for (HashMap<String, Object> attachment : attachments) {
-			if (attachment.containsKey("localPath")) {
-				paths.add(attachment.get("localPath").toString());
+			if (attachment.containsKey("filePath")) {
+				paths.add(attachment.get("filePath").toString());
 			}
 		}
 		return paths;

@@ -33,7 +33,7 @@ object NotificationHelper {
         attachments: List<String> = emptyList(),
         senderName: String = ""
     ) {
-        val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/status/$recipientUid")
+        val recipientStatusRef = FirebaseDatabase.getInstance().getReference("skyline/users/$recipientUid/status")
 
         recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
             val recipientStatus = dataSnapshot.getValue(String::class.java)
@@ -69,6 +69,11 @@ object NotificationHelper {
         attachments: List<String> = emptyList(),
         senderName: String = ""
     ) {
+        if (recipientId.isNullOrEmpty() || recipientId == "missing_id") {
+            Log.w(TAG, "Notification not sent: recipientId is invalid ('$recipientId')")
+            return
+        }
+
         val client = OkHttpClient()
         val jsonBody = JSONObject()
         try {

@@ -8,9 +8,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class UploadFiles {
@@ -29,118 +27,25 @@ public class UploadFiles {
 
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    // --- FILE TYPE CONFIGURATION ---
-    private static final List<String> IMAGE_EXTENSIONS = Arrays.asList(
-            "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif", "webp", "heic", "pdf", "avif"
-    );
-
     // --- CLOUDINARY CONFIGURATION ---
     private static final String CLOUDINARY_API_KEY = "577882927131931";
     private static final String CLOUDINARY_API_SECRET = "M_w_0uQKjnLRUe-u34driUBqUQU";
     private static final String CLOUDINARY_CLOUD_NAME = "djw3fgbls";
     private static final String CLOUDINARY_UPLOAD_URL = "https://api.cloudinary.com/v1_1/" + CLOUDINARY_CLOUD_NAME + "/auto/upload";
 
-    // --- IMGBB CONFIGURATION ---
-    private static final String IMGBB_API_KEY = "faa85ffbac0217ff67b5f3c4baa7fb29";
-    private static final String IMGBB_UPLOAD_URL = "https://api.imgbb.com/1/upload?expiration=0&key=" + IMGBB_API_KEY;
-
     private static final Map<String, HttpURLConnection> activeUploads = new HashMap<>();
 
     /**
-     * Main upload method. Determines the service based on file extension and starts the upload.
+     * Main upload method. All files are sent to Cloudinary.
      */
     public static void uploadFile(String filePath, String fileName, UploadCallback callback) {
         new Thread(() -> {
-            String extension = getFileExtension(fileName).toLowerCase();
-            if (IMAGE_EXTENSIONS.contains(extension)) {
-                uploadToImgBB(filePath, fileName, callback);
-            } else {
-                uploadToCloudinary(filePath, fileName, callback);
-            }
+            uploadToCloudinary(filePath, fileName, callback);
         }).start();
     }
 
     /**
-     * Handles uploading image files to ImgBB.
-     */
-    private static void uploadToImgBB(String filePath, String fileName, UploadCallback callback) {
-        String boundary = "*****" + System.currentTimeMillis() + "*****";
-        String lineEnd = "\r\n";
-        String twoHyphens = "--";
-
-        File file = new File(filePath);
-        if (!file.exists()) {
-            postFailure(callback, "File not found");
-            return;
-        }
-
-        try {
-            URL url = new URL(IMGBB_UPLOAD_URL);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.setUseCaches(false);
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Connection", "Keep-Alive");
-            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-            conn.setChunkedStreamingMode(64 * 1024);
-            activeUploads.put(filePath, conn);
-
-            DataOutputStream dos = new DataOutputStream(
-                new BufferedOutputStream(conn.getOutputStream(), 64 * 1024)
-            );
-
-            dos.writeBytes(twoHyphens + boundary + lineEnd);
-            dos.writeBytes("Content-Disposition: form-data; name=\"image\"; filename=\"" + fileName + "\"" + lineEnd);
-            dos.writeBytes("Content-Type: " + getMimeType(getFileExtension(fileName)) + lineEnd + lineEnd);
-
-            FileInputStream fileInputStream = new FileInputStream(file);
-            byte[] buffer = new byte[64 * 1024];
-            long totalBytes = file.length();
-            long bytesSent = 0;
-            int bytesRead;
-            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                dos.write(buffer, 0, bytesRead);
-                bytesSent += bytesRead;
-                postProgress(callback, (int) ((bytesSent * 100) / totalBytes));
-            }
-            fileInputStream.close();
-
-            dos.writeBytes(lineEnd);
-            dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-            dos.flush();
-            dos.close();
-
-            int status = conn.getResponseCode();
-            InputStream respStream = (status == HttpURLConnection.HTTP_OK ? conn.getInputStream() : conn.getErrorStream());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(respStream));
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-            activeUploads.remove(filePath);
-            conn.disconnect();
-
-            if (status == HttpURLConnection.HTTP_OK) {
-                JSONObject json = new JSONObject(response.toString());
-                JSONObject data = json.getJSONObject("data");
-                String imageUrl = data.getString("url");
-                // For ImgBB, the publicId is "imgbb|" + the URL itself, as there's no separate ID or delete functionality.
-                postSuccess(callback, imageUrl, "imgbb|" + imageUrl);
-            } else {
-                postFailure(callback, "ImgBB Upload failed: " + response.toString());
-            }
-
-        } catch (Exception e) {
-            activeUploads.remove(filePath);
-            postFailure(callback, "ImgBB Exception: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Handles uploading other file types to Cloudinary.
+     * Handles uploading files to Cloudinary.
      */
     private static void uploadToCloudinary(String filePath, String fileName, UploadCallback callback) {
         String boundary = "----CloudinaryBoundary" + System.currentTimeMillis();
@@ -204,11 +109,10 @@ public class UploadFiles {
     }
 
     /**
-     * Deletes a file. Only works for Cloudinary uploads.
+     * Deletes a file from Cloudinary.
      */
     public static void deleteByPublicId(String publicIdWithType, DeleteCallback callback) {
-        if (publicIdWithType == null || publicIdWithType.startsWith("imgbb|")) {
-            // ImgBB files can't be deleted via this API, so we just succeed silently.
+        if (publicIdWithType == null || publicIdWithType.isEmpty()) {
             postDeleteSuccess(callback);
             return;
         }
@@ -288,7 +192,7 @@ public class UploadFiles {
         String LF = "\r\n";
         o.writeBytes("--" + b + LF);
         o.writeBytes("Content-Disposition: form-data; name=\"" + field + "\"; filename=\"" + fname + "\"" + LF);
-        o.writeBytes("Content-Type: application/octet-stream" + LF + LF);
+        o.writeBytes("Content-Type: " + getMimeType(getFileExtension(fname)) + LF + LF);
         FileInputStream in = new FileInputStream(f);
         byte[] buf = new byte[64 * 1024];
         long total = f.length(), sent = 0;
