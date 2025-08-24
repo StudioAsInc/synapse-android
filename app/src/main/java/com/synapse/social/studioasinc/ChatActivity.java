@@ -140,6 +140,8 @@ public class ChatActivity extends AppCompatActivity {
 	private String ReplyMessageID = "";
 	private String SecondUserName = "";
 	private String FirstUserName = "";
+	private double ChatMessagesLimit = 0;
+	private int ChatInitialSize = 0;
 	private String oldestMessageKey = null;
 	private static final int CHAT_PAGE_SIZE = 80;
 	private String object_clicked = "";
@@ -151,7 +153,6 @@ public class ChatActivity extends AppCompatActivity {
 	public final int REQ_CD_IMAGE_PICKER = 101;
 	private ChatAdapter chatAdapter;
 	private boolean isLoading = false;
-	private ChildEventListener _chat_child_listener;
 	private DatabaseReference chatMessagesRef;
 	private ValueEventListener _userStatusListener;
 	private DatabaseReference userRef;
@@ -484,6 +485,7 @@ public class ChatActivity extends AppCompatActivity {
 		SecondUserAvatar = "null";
 		ReplyMessageID = "null";
 		path = "";
+		ChatMessagesLimit = 80;
 		block_switch = 0;
 		// Set the Layout Manager
 		LinearLayoutManager ChatRecyclerLayoutManager = new LinearLayoutManager(this);
@@ -552,7 +554,6 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 		// Attach listeners after all references are safely initialized.
-		_attachChatListener();
 		_attachUserStatusListener();
 	}
 
@@ -635,7 +636,6 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	public void onStop() {
 		super.onStop();
-		_detachChatListener();
 		_detachUserStatusListener();
 		blocklist.removeEventListener(_blocklist_child_listener);
 		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
@@ -941,100 +941,51 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
+		_getChatMessagesRef();
+	}
+
+	public void _getChatMessagesRef() {
+		Query getChatsMessages = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).limitToLast((int)ChatMessagesLimit);
+		getChatsMessages.addValueEventListener(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				if(dataSnapshot.exists()) {
+					ChatMessagesListRecycler.setVisibility(View.VISIBLE);
+					noChatText.setVisibility(View.GONE);
+					ChatMessagesList.clear();
+
+					try {
+						GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+						for (DataSnapshot _data : dataSnapshot.getChildren()) {
+							HashMap<String, Object> _map = _data.getValue(_ind);
+							ChatMessagesList.add(_map);
+						}
+					} catch (Exception _e) {
+						_e.printStackTrace();
+					}
+
+					if (ChatMessagesList.size() > ChatInitialSize) {
+						ChatMessagesListRecycler.getAdapter().notifyDataSetChanged();
+						ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+					} else {
+						ChatMessagesListRecycler.getAdapter().notifyDataSetChanged();
+					}
+
+					ChatInitialSize = ChatMessagesList.size();
+				} else {
+					ChatMessagesListRecycler.setVisibility(View.GONE);
+					noChatText.setVisibility(View.VISIBLE);
+				}
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
+
+			}
+		});
 	}
 
 
-	private void _attachChatListener() {
-		if (_chat_child_listener == null) {
-			_chat_child_listener = new ChildEventListener() {
-				@Override
-				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
-					if (dataSnapshot.exists()) {
-						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-							// Check if message already exists to avoid duplicates from initial load
-							boolean exists = false;
-							for (HashMap<String, Object> msg : ChatMessagesList) {
-								if (msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY))) {
-									exists = true;
-									break;
-								}
-							}
-
-							if (!exists) {
-								if (ChatMessagesListRecycler.getVisibility() == View.GONE) {
-									ChatMessagesListRecycler.setVisibility(View.VISIBLE);
-									noChatText.setVisibility(View.GONE);
-								}
-								int previousSize = ChatMessagesList.size();
-								ChatMessagesList.add(newMessage);
-								chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
-								if (previousSize > 0) {
-									// This is to update the previous item's timestamp visibility
-									chatAdapter.notifyItemChanged(previousSize - 1);
-								}
-								ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-							}
-						}
-					}
-				}
-
-				@Override
-				public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-					if (snapshot.exists()) {
-						HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
-							String key = updatedMessage.get(KEY_KEY).toString();
-							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
-									ChatMessagesList.set(i, updatedMessage);
-									chatAdapter.notifyItemChanged(i);
-									break;
-								}
-							}
-						}
-					}
-				}
-
-				@Override
-				public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-					if (snapshot.exists()) {
-						String removedKey = snapshot.getKey();
-						if (removedKey != null) {
-							for (int i = ChatMessagesList.size() - 1; i >= 0; i--) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
-									ChatMessagesList.remove(i);
-									chatAdapter.notifyItemRemoved(i);
-									if (ChatMessagesList.isEmpty()) {
-										ChatMessagesListRecycler.setVisibility(View.GONE);
-										noChatText.setVisibility(View.VISIBLE);
-									} else {
-										// After any removal, the last item in the list might need to be updated
-										// to correctly display its timestamp.
-										chatAdapter.notifyItemChanged(ChatMessagesList.size() - 1);
-									}
-									break;
-								}
-							}
-						}
-					}
-				}
-
-				@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-				@Override public void onCancelled(@NonNull DatabaseError error) {
-					Log.e("ChatActivity", "Chat listener cancelled: " + error.getMessage());
-				}
-			};
-			chatMessagesRef.addChildEventListener(_chat_child_listener);
-		}
-	}
-
-	private void _detachChatListener() {
-		if (_chat_child_listener != null) {
-			chatMessagesRef.removeEventListener(_chat_child_listener);
-			_chat_child_listener = null;
-		}
-	}
 
 	private void _attachUserStatusListener() {
 		if (_userStatusListener == null) {

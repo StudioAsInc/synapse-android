@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardMediaItem"
-    android:layout_width="wrap_content"
+    android:layout_width="100dp"
     android:layout_height="100dp"
     android:layout_margin="4dp"
     app:cardElevation="2dp"
@@ -11,16 +11,13 @@
 
     <RelativeLayout
         android:id="@+id/imageWrapperRL"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ImageView
             android:id="@+id/previewIV"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:adjustViewBounds="true"
-            android:minWidth="60dp"
-            android:maxWidth="150dp"
             android:scaleType="centerCrop"
             android:src="@drawable/ph_imgbluredsqure" />
 
