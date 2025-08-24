@@ -2496,8 +2496,8 @@ public class ChatActivity extends AppCompatActivity {
 			String filePath = attachmentData.get("filePath").toString();
 			ImageUploader.uploadImageWithCompression(filePath, new ImageUploader.UploadCallback() {
 				@Override
-				public void onSuccess(String downloadUrl) {
-					attachmentData.put("downloadUrl", downloadUrl);
+				public void onUploadComplete(String imageUrl) {
+					attachmentData.put("downloadUrl", imageUrl);
 					successfulAttachments.add(attachmentData);
 					
 					int completed = completedUploads.incrementAndGet();
@@ -2510,9 +2510,9 @@ public class ChatActivity extends AppCompatActivity {
 				}
 
 				@Override
-				public void onFailure(String error) {
+				public void onUploadError(String errorMessage) {
 					hasUploadError.set(true);
-					Toast.makeText(getApplicationContext(), "Upload failed: " + error, Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "Upload failed: " + errorMessage, Toast.LENGTH_SHORT).show();
 					
 					int completed = completedUploads.incrementAndGet();
 					if (completed == totalAttachments) {
