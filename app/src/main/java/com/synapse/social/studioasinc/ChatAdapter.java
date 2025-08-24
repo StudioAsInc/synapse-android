@@ -402,6 +402,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if(holder.message_text != null) holder.message_text.setTextColor(Color.BLACK);
             }
             holder.messageBG.setBackground(bubbleDrawable);
+
+            // Rounded ripple foreground to match bubble corners
+            int rippleColor = isMyMessage ? 0x33FFFFFF : 0x22000000;
+            android.graphics.drawable.GradientDrawable rippleMask = new android.graphics.drawable.GradientDrawable();
+            rippleMask.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+            rippleMask.setCornerRadius(density * cornerRadius);
+            rippleMask.setColor(Color.WHITE);
+            android.content.res.ColorStateList rippleColors = new android.content.res.ColorStateList(new int[][]{ new int[]{} }, new int[]{ rippleColor });
+            android.graphics.drawable.RippleDrawable ripple = new android.graphics.drawable.RippleDrawable(rippleColors, null, rippleMask);
+            holder.messageBG.setForeground(ripple);
+            holder.messageBG.setClickable(true);
+            holder.messageBG.setLongClickable(true);
         }
 
         int textSize = 16;
