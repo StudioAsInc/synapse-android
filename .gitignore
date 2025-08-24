@@ -1,3 +1,7 @@
 # Keystores & credentials
 *.keystore
 keystore.properties
+
+# Google services JSON (managed by CI)
+app/google-services.json
+**/google-services.json
