@@ -47,8 +47,8 @@ public class TonalButtonPreference extends Preference {
 			button.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					// Delegate to preference click listener
-					callClickListener();
+					// Delegate to Preference's click flow
+					TonalButtonPreference.this.performClick();
 				}
 			});
 		}
