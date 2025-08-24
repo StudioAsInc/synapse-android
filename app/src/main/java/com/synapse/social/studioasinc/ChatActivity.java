@@ -497,6 +497,7 @@ public class ChatActivity extends AppCompatActivity {
 		
 		// Create, configure, and set the new ChatAdapter
 		chatAdapter = new ChatAdapter(ChatMessagesList);
+		chatAdapter.setHasStableIds(true);
 		chatAdapter.setChatActivity(this);
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
 		
@@ -1264,7 +1265,7 @@ public class ChatActivity extends AppCompatActivity {
 								Log.d("ChatActivity", "Added new Firebase message to list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
 								
 								// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
-								chatAdapter.notifyDataSetChanged();
+								chatAdapter.notifyItemInserted(newPosition);
 								
 								// Update previous item's timestamp if needed
 								if (newPosition > 0) {
@@ -1860,8 +1861,8 @@ public class ChatActivity extends AppCompatActivity {
 				ChatMessagesList.add(ChatSendMap);
 				int newPosition = ChatMessagesList.size() - 1;
 				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-				// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
-				chatAdapter.notifyDataSetChanged();
+				// Use more granular insertion notification for smooth updates
+				chatAdapter.notifyItemInserted(newPosition);
 				
 				// Scroll to the new message immediately
 				ChatMessagesListRecycler.post(() -> {
@@ -1921,8 +1922,7 @@ public class ChatActivity extends AppCompatActivity {
 			ChatMessagesList.add(ChatSendMap);
 			int newPosition = ChatMessagesList.size() - 1;
 			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
-			chatAdapter.notifyDataSetChanged();
+			chatAdapter.notifyItemInserted(newPosition);
 			
 			// Scroll to the new message immediately
 			ChatMessagesListRecycler.post(() -> {

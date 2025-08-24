@@ -93,6 +93,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     @Override
+    public long getItemId(int position) {
+        try {
+            Object keyObj = _data.get(position).getOrDefault("key", position);
+            return String.valueOf(keyObj).hashCode();
+        } catch (Exception e) {
+            return position;
+        }
+    }
+
+    @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         _context = parent.getContext();
         appSettings = _context.getSharedPreferences("appSettings", Context.MODE_PRIVATE);
