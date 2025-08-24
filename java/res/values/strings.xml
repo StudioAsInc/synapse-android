@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SocialApp</string>
+    <string name="settings_title">Settings</string>
+    <string name="content_desc_avatar">Profile avatar</string>
+    <string name="sample_display_name">Alex Johnson</string>
+    <string name="sample_handle">@alex</string>
+
+    <!-- Categories -->
+    <string name="pref_cat_account">Account</string>
+    <string name="pref_cat_privacy_safety">Privacy &amp; Safety</string>
+    <string name="pref_cat_notifications">Notifications</string>
+    <string name="pref_cat_appearance">Appearance</string>
+    <string name="pref_cat_security">Security</string>
+    <string name="pref_cat_data_storage">Data &amp; Storage</string>
+    <string name="pref_cat_connected_accounts">Connected Accounts</string>
+    <string name="pref_cat_ai_api">AI &amp; API</string>
+    <string name="pref_cat_about_legal">About &amp; Legal</string>
+    <string name="pref_cat_danger_zone">Danger Zone</string>
+
+    <!-- Account -->
+    <string name="pref_title_edit_profile">Edit profile</string>
+    <string name="pref_summary_edit_profile">Update your display name, handle, and bio</string>
+
+    <!-- Privacy &amp; Safety -->
+    <string name="pref_title_private_account">Private account</string>
+    <string name="pref_summary_private_account">Only approved followers can see your posts</string>
+    <string name="pref_title_profile_visibility">Profile visibility</string>
+    <string name="pref_summary_profile_visibility">Choose who can view your profile</string>
+    <string name="pref_title_blocked_users">Blocked users</string>
+    <string name="pref_summary_blocked_users">Manage your block list</string>
+    <string name="pref_title_muted_accounts">Muted accounts</string>
+    <string name="pref_summary_muted_accounts">Manage muted accounts</string>
+
+    <!-- Notifications -->
+    <string name="pref_title_push_notifications">Push notifications</string>
+    <string name="pref_summary_push_notifications">Enable or disable all push notifications</string>
+    <string name="pref_title_mentions">Mentions</string>
+    <string name="pref_title_likes">Likes</string>
+    <string name="pref_title_comments">Comments</string>
+    <string name="pref_title_follows">Follows</string>
+    <string name="pref_title_quiet_hours">Quiet hours</string>
+    <string name="pref_summary_quiet_hours">Silence notifications during specific times</string>
+    <string name="pref_title_email_notifications">Email notifications</string>
+    <string name="pref_summary_email_notifications">Choose what emails you want to receive</string>
+
+    <!-- Appearance -->
+    <string name="pref_title_theme">Theme</string>
+    <string name="pref_summary_theme">System, Light, or Dark</string>
+    <string name="pref_title_font_size">Font size</string>
+    <string name="pref_summary_font_size">Adjust reading size</string>
+    <string name="pref_title_accent_color">Accent color</string>
+    <string name="pref_summary_accent_color">Choose a Material 3 accent</string>
+
+    <!-- Security -->
+    <string name="pref_title_change_password">Change password</string>
+    <string name="pref_summary_change_password">Update your account password</string>
+    <string name="pref_title_two_factor">Two-factor authentication</string>
+    <string name="pref_summary_two_factor">Add an extra layer of security</string>
+    <string name="pref_title_app_lock">App lock</string>
+    <string name="pref_summary_app_lock">Require biometrics to open the app</string>
+
+    <!-- Data &amp; Storage -->
+    <string name="pref_title_clear_cache">Clear cache</string>
+    <string name="pref_summary_clear_cache">Free up storage by clearing cached data</string>
+    <string name="pref_title_download_my_data">Download my data</string>
+    <string name="pref_summary_download_my_data">Request an export of your data</string>
+    <string name="pref_title_manage_media_storage">Manage media storage</string>
+    <string name="pref_summary_manage_media_storage">Set limits for stored media</string>
+
+    <!-- Connected Accounts -->
+    <string name="pref_title_connect_google">Connect Google</string>
+    <string name="pref_summary_connect_google">Link your Google account</string>
+    <string name="pref_title_connect_facebook">Connect Facebook</string>
+    <string name="pref_summary_connect_facebook">Link your Facebook account</string>
+    <string name="pref_title_connect_twitter">Connect Twitter</string>
+    <string name="pref_summary_connect_twitter">Link your Twitter account</string>
+
+    <!-- AI &amp; API -->
+    <string name="pref_title_ai_assistant">AI Assistant</string>
+    <string name="pref_summary_ai_assistant">Choose your default assistant</string>
+    <string name="pref_title_ai_model">Assistant model</string>
+    <string name="pref_summary_ai_model">Select a model for the assistant</string>
+    <string name="pref_title_connect_cloudinary">Connect Cloudinary</string>
+    <string name="pref_summary_connect_cloudinary">Enable media CDN integration</string>
+    <string name="pref_title_connect_cloudflare">Connect Cloudflare</string>
+    <string name="pref_summary_connect_cloudflare">Enable edge and security features</string>
+    <string name="pref_title_connect_github">Connect GitHub</string>
+    <string name="pref_summary_connect_github">Link your GitHub account</string>
+    <string name="pref_title_connect_google_services">Connect Google</string>
+    <string name="pref_summary_connect_google_services">Enable Google services</string>
+
+    <!-- About &amp; Legal -->
+    <string name="pref_title_app_version">App version</string>
+    <string name="pref_summary_app_version">Version %1$s</string>
+    <string name="pref_title_terms">Terms of Service</string>
+    <string name="pref_summary_terms">Read our terms</string>
+    <string name="pref_title_privacy_policy">Privacy Policy</string>
+    <string name="pref_summary_privacy_policy">Read our privacy policy</string>
+    <string name="pref_title_oss_licenses">Open-source licenses</string>
+    <string name="pref_summary_oss_licenses">View third-party licenses</string>
+
+    <!-- Danger Zone -->
+    <string name="pref_title_sign_out">Sign out</string>
+    <string name="pref_summary_sign_out">Log out of your account</string>
+    <string name="pref_title_delete_account">Delete account</string>
+    <string name="pref_summary_delete_account">Permanently remove your account</string>
+
+    <!-- Arrays -->
+    <string-array name="profile_visibility_entries">
+        <item>Public</item>
+        <item>Followers only</item>
+    </string-array>
+    <string-array name="profile_visibility_values">
+        <item>public</item>
+        <item>followers</item>
+    </string-array>
+
+    <string-array name="theme_entries">
+        <item>System</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>system</item>
+        <item>light</item>
+        <item>dark</item>
+    </string-array>
+
+    <string-array name="font_size_entries">
+        <item>Small</item>
+        <item>Normal</item>
+        <item>Large</item>
+    </string-array>
+    <string-array name="font_size_values">
+        <item>small</item>
+        <item>normal</item>
+        <item>large</item>
+    </string-array>
+
+    <string-array name="ai_assistant_entries">
+        <item>Gemini</item>
+        <item>ChatGPT</item>
+        <item>Claude</item>
+        <item>DeepSeek</item>
+    </string-array>
+    <string-array name="ai_assistant_values">
+        <item>gemini</item>
+        <item>chatgpt</item>
+        <item>claude</item>
+        <item>deepseek</item>
+    </string-array>
+
+    <string-array name="ai_model_entries">
+        <item>gpt-4</item>
+        <item>gemini-pro</item>
+        <item>claude-3-opus</item>
+    </string-array>
+    <string-array name="ai_model_values">
+        <item>gpt-4</item>
+        <item>gemini-pro</item>
+        <item>claude-3-opus</item>
+    </string-array>
+
+    <!-- Dialog texts -->
+    <string name="dialog_title_sign_out">Sign out?</string>
+    <string name="dialog_message_sign_out">Are you sure you want to sign out?</string>
+    <string name="dialog_positive">Yes</string>
+    <string name="dialog_negative">Cancel</string>
+    <string name="dialog_title_delete_account">Delete account</string>
+    <string name="dialog_message_delete_account">Type DELETE to confirm and enter your password.</string>
+    <string name="toast_stub">Feature not yet implemented</string>
+    <string name="menu_navigate_up">Navigate up</string>
+
+</resources>
+

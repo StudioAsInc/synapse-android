@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Account -->
+    <PreferenceCategory
+        android:key="category_account"
+        android:title="@string/pref_cat_account"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="edit_profile"
+        android:title="@string/pref_title_edit_profile"
+        android:summary="@string/pref_summary_edit_profile"
+        android:icon="@android:drawable/ic_menu_edit"
+        app:iconSpaceReserved="true" />
+
+    <!-- Privacy & Safety -->
+    <PreferenceCategory
+        android:key="category_privacy"
+        android:title="@string/pref_cat_privacy_safety"
+        android:icon="@android:drawable/ic_lock_lock"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="privacy_private_account"
+        android:title="@string/pref_title_private_account"
+        android:summary="@string/pref_summary_private_account"
+        android:icon="@android:drawable/ic_lock_idle_lock"
+        app:iconSpaceReserved="true" />
+
+    <ListPreference
+        android:key="privacy_profile_visibility"
+        android:title="@string/pref_title_profile_visibility"
+        android:summary="@string/pref_summary_profile_visibility"
+        android:icon="@android:drawable/ic_menu_view"
+        app:entries="@array/profile_visibility_entries"
+        app:entryValues="@array/profile_visibility_values"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="privacy_blocked_users"
+        android:title="@string/pref_title_blocked_users"
+        android:summary="@string/pref_summary_blocked_users"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="privacy_muted_accounts"
+        android:title="@string/pref_title_muted_accounts"
+        android:summary="@string/pref_summary_muted_accounts"
+        android:icon="@android:drawable/ic_lock_silent_mode"
+        app:iconSpaceReserved="true" />
+
+    <!-- Notifications -->
+    <PreferenceCategory
+        android:key="category_notifications"
+        android:title="@string/pref_cat_notifications"
+        android:icon="@android:drawable/ic_dialog_email"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="notif_enabled"
+        android:title="@string/pref_title_push_notifications"
+        android:summary="@string/pref_summary_push_notifications"
+        android:icon="@android:drawable/ic_popup_reminder"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="notif_mentions"
+        android:title="@string/pref_title_mentions"
+        android:icon="@android:drawable/ic_menu_call"
+        app:dependency="notif_enabled"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="notif_likes"
+        android:title="@string/pref_title_likes"
+        android:icon="@android:drawable/ic_menu_share"
+        app:dependency="notif_enabled"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="notif_comments"
+        android:title="@string/pref_title_comments"
+        android:icon="@android:drawable/ic_menu_edit"
+        app:dependency="notif_enabled"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="notif_follows"
+        android:title="@string/pref_title_follows"
+        android:icon="@android:drawable/ic_input_add"
+        app:dependency="notif_enabled"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="notif_quiet_hours"
+        android:title="@string/pref_title_quiet_hours"
+        android:summary="@string/pref_summary_quiet_hours"
+        android:icon="@android:drawable/ic_menu_recent_history"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="notif_email_prefs"
+        android:title="@string/pref_title_email_notifications"
+        android:summary="@string/pref_summary_email_notifications"
+        android:icon="@android:drawable/ic_dialog_email"
+        app:iconSpaceReserved="true" />
+
+    <!-- Appearance -->
+    <PreferenceCategory
+        android:key="category_appearance"
+        android:title="@string/pref_cat_appearance"
+        android:icon="@android:drawable/ic_menu_gallery"
+        app:iconSpaceReserved="true" />
+
+    <ListPreference
+        android:key="appearance_theme"
+        android:title="@string/pref_title_theme"
+        android:summary="@string/pref_summary_theme"
+        android:icon="@android:drawable/ic_menu_manage"
+        app:entries="@array/theme_entries"
+        app:entryValues="@array/theme_values"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="true" />
+
+    <ListPreference
+        android:key="appearance_font_size"
+        android:title="@string/pref_title_font_size"
+        android:summary="@string/pref_summary_font_size"
+        android:icon="@android:drawable/ic_menu_zoom"
+        app:entries="@array/font_size_entries"
+        app:entryValues="@array/font_size_values"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="appearance_accent_color"
+        android:title="@string/pref_title_accent_color"
+        android:summary="@string/pref_summary_accent_color"
+        android:icon="@android:drawable/ic_menu_slideshow"
+        app:iconSpaceReserved="true" />
+
+    <!-- Security -->
+    <PreferenceCategory
+        android:key="category_security"
+        android:title="@string/pref_cat_security"
+        android:icon="@android:drawable/ic_secure"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="security_change_password"
+        android:title="@string/pref_title_change_password"
+        android:summary="@string/pref_summary_change_password"
+        android:icon="@android:drawable/ic_lock_lock"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="security_two_factor"
+        android:title="@string/pref_title_two_factor"
+        android:summary="@string/pref_summary_two_factor"
+        android:icon="@android:drawable/ic_lock_idle_lock"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="security_app_lock"
+        android:title="@string/pref_title_app_lock"
+        android:summary="@string/pref_summary_app_lock"
+        android:icon="@android:drawable/ic_lock_silent_mode"
+        app:iconSpaceReserved="true" />
+
+    <!-- Data & Storage -->
+    <PreferenceCategory
+        android:key="category_data_storage"
+        android:title="@string/pref_cat_data_storage"
+        android:icon="@android:drawable/ic_menu_save"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="data_clear_cache"
+        android:title="@string/pref_title_clear_cache"
+        android:summary="@string/pref_summary_clear_cache"
+        android:icon="@android:drawable/ic_menu_delete"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="data_download_my_data"
+        android:title="@string/pref_title_download_my_data"
+        android:summary="@string/pref_summary_download_my_data"
+        android:icon="@android:drawable/ic_menu_save"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="data_manage_media_storage"
+        android:title="@string/pref_title_manage_media_storage"
+        android:summary="@string/pref_summary_manage_media_storage"
+        android:icon="@android:drawable/ic_menu_manage"
+        app:iconSpaceReserved="true" />
+
+    <!-- Connected Accounts -->
+    <PreferenceCategory
+        android:key="category_connected_accounts"
+        android:title="@string/pref_cat_connected_accounts"
+        android:icon="@android:drawable/ic_menu_share"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="connect_google"
+        android:title="@string/pref_title_connect_google"
+        android:summary="@string/pref_summary_connect_google"
+        android:icon="@android:drawable/ic_menu_compass"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="connect_facebook"
+        android:title="@string/pref_title_connect_facebook"
+        android:summary="@string/pref_summary_connect_facebook"
+        android:icon="@android:drawable/ic_menu_share"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="connect_twitter"
+        android:title="@string/pref_title_connect_twitter"
+        android:summary="@string/pref_summary_connect_twitter"
+        android:icon="@android:drawable/ic_menu_send"
+        app:iconSpaceReserved="true" />
+
+    <!-- AI & API (NEW) -->
+    <PreferenceCategory
+        android:key="category_ai_api"
+        android:title="@string/pref_cat_ai_api"
+        android:icon="@android:drawable/ic_menu_search"
+        app:iconSpaceReserved="true" />
+
+    <ListPreference
+        android:key="ai_assistant"
+        android:title="@string/pref_title_ai_assistant"
+        android:summary="@string/pref_summary_ai_assistant"
+        android:icon="@android:drawable/ic_menu_search"
+        app:entries="@array/ai_assistant_entries"
+        app:entryValues="@array/ai_assistant_values"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="true" />
+
+    <ListPreference
+        android:key="ai_model"
+        android:title="@string/pref_title_ai_model"
+        android:summary="@string/pref_summary_ai_model"
+        android:icon="@android:drawable/ic_menu_manage"
+        app:entries="@array/ai_model_entries"
+        app:entryValues="@array/ai_model_values"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="ai_connect_cloudinary"
+        android:title="@string/pref_title_connect_cloudinary"
+        android:summary="@string/pref_summary_connect_cloudinary"
+        android:icon="@android:drawable/ic_menu_upload"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="ai_connect_cloudflare"
+        android:title="@string/pref_title_connect_cloudflare"
+        android:summary="@string/pref_summary_connect_cloudflare"
+        android:icon="@android:drawable/ic_menu_compass"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="ai_connect_github"
+        android:title="@string/pref_title_connect_github"
+        android:summary="@string/pref_summary_connect_github"
+        android:icon="@android:drawable/ic_menu_set_as"
+        app:iconSpaceReserved="true" />
+
+    <SwitchPreferenceCompat
+        android:key="ai_connect_google"
+        android:title="@string/pref_title_connect_google_services"
+        android:summary="@string/pref_summary_connect_google_services"
+        android:icon="@android:drawable/ic_menu_compass"
+        app:iconSpaceReserved="true" />
+
+    <!-- About & Legal -->
+    <PreferenceCategory
+        android:key="category_about"
+        android:title="@string/pref_cat_about_legal"
+        android:icon="@android:drawable/ic_dialog_info"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="about_version"
+        android:title="@string/pref_title_app_version"
+        android:summary="@string/pref_summary_app_version"
+        android:icon="@android:drawable/ic_dialog_info"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="about_terms"
+        android:title="@string/pref_title_terms"
+        android:summary="@string/pref_summary_terms"
+        android:icon="@android:drawable/ic_menu_info_details"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="about_privacy"
+        android:title="@string/pref_title_privacy_policy"
+        android:summary="@string/pref_summary_privacy_policy"
+        android:icon="@android:drawable/ic_menu_info_details"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="about_licenses"
+        android:title="@string/pref_title_oss_licenses"
+        android:summary="@string/pref_summary_oss_licenses"
+        android:icon="@android:drawable/ic_menu_info_details"
+        app:iconSpaceReserved="true" />
+
+    <!-- Danger Zone -->
+    <PreferenceCategory
+        android:key="category_danger"
+        android:title="@string/pref_cat_danger_zone"
+        android:icon="@android:drawable/ic_menu_delete"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="danger_sign_out"
+        android:title="@string/pref_title_sign_out"
+        android:summary="@string/pref_summary_sign_out"
+        android:icon="@android:drawable/ic_lock_power_off"
+        app:iconSpaceReserved="true" />
+
+    <Preference
+        android:key="danger_delete_account"
+        android:title="@string/pref_title_delete_account"
+        android:summary="@string/pref_summary_delete_account"
+        android:icon="@android:drawable/ic_menu_delete"
+        app:iconSpaceReserved="true" />
+
+</PreferenceScreen>
+

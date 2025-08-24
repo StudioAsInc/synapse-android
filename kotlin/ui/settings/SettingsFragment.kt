@@ -72,14 +72,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         // Examples wiring preferences to VM later
-        findPreference<SwitchPreferenceCompat>("privacy_private_account")?.setOnPreferenceChangeListener { _, newValue ->
-            viewModel.setPrivateAccount(newValue as Boolean)
-            true
+        findPreference<SwitchPreferenceCompat>("privacy_private_account")?.let { pref ->
+            pref.setOnPreferenceChangeListener { _, newValue ->
+                viewModel.setPrivateAccount(newValue as Boolean)
+                true
+            }
         }
 
-        findPreference<ListPreference>("appearance_theme")?.setOnPreferenceChangeListener { _, newValue ->
-            viewModel.setThemeMode(newValue as String)
-            true
+        findPreference<ListPreference>("appearance_theme")?.let { theme ->
+            theme.setOnPreferenceChangeListener { _, newValue ->
+                viewModel.setThemeMode(newValue as String)
+                true
+            }
         }
     }
 

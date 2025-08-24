@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">সেটিংস</string>
+    <string name="content_desc_avatar">প্রোফাইল অ্যাভাটার</string>
+    <string name="pref_cat_account">অ্যাকাউন্ট</string>
+    <string name="pref_cat_privacy_safety">গোপনীয়তা ও নিরাপত্তা</string>
+    <string name="pref_cat_notifications">বিজ্ঞপ্তি</string>
+    <string name="pref_cat_appearance">চেহারা</string>
+    <string name="pref_cat_security">নিরাপত্তা</string>
+    <string name="pref_cat_data_storage">ডাটা ও স্টোরেজ</string>
+    <string name="pref_cat_connected_accounts">সংযুক্ত অ্যাকাউন্ট</string>
+    <string name="pref_cat_ai_api">এআই ও এপিআই</string>
+    <string name="pref_cat_about_legal">অ্যাপ ও আইনগত</string>
+    <string name="pref_cat_danger_zone">বিপজ্জনক এলাকা</string>
+
+    <string name="pref_title_edit_profile">প্রোফাইল সম্পাদনা</string>
+    <string name="pref_title_private_account">প্রাইভেট অ্যাকাউন্ট</string>
+    <string name="pref_title_profile_visibility">প্রোফাইল দৃশ্যমানতা</string>
+    <string name="pref_title_blocked_users">ব্লক করা ব্যবহারকারী</string>
+    <string name="pref_title_muted_accounts">মিউট করা অ্যাকাউন্ট</string>
+
+    <string name="pref_title_push_notifications">পুশ নোটিফিকেশন</string>
+    <string name="pref_title_mentions">উল্লেখ</string>
+    <string name="pref_title_likes">লাইক</string>
+    <string name="pref_title_comments">কমেন্ট</string>
+    <string name="pref_title_follows">ফলো</string>
+    <string name="pref_title_quiet_hours">নীরব সময়</string>
+
+    <string name="pref_title_theme">থিম</string>
+    <string name="pref_title_font_size">ফন্ট সাইজ</string>
+    <string name="pref_title_accent_color">অ্যাকসেন্ট কালার</string>
+
+    <string name="pref_title_change_password">পাসওয়ার্ড পরিবর্তন</string>
+    <string name="pref_title_two_factor">টু-ফ্যাক্টর অথেনটিকেশন</string>
+    <string name="pref_title_app_lock">অ্যাপ লক</string>
+
+    <string name="pref_title_clear_cache">ক্যাশ মুছুন</string>
+    <string name="pref_title_download_my_data">আমার ডাটা ডাউনলোড</string>
+    <string name="pref_title_manage_media_storage">মিডিয়া স্টোরেজ ম্যানেজ</string>
+
+    <string name="pref_title_connect_google">গুগল সংযুক্ত করুন</string>
+    <string name="pref_title_connect_facebook">ফেসবুক সংযুক্ত করুন</string>
+    <string name="pref_title_connect_twitter">টুইটার সংযুক্ত করুন</string>
+
+    <string name="pref_title_ai_assistant">এআই অ্যাসিস্ট্যান্ট</string>
+    <string name="pref_title_ai_model">অ্যাসিস্ট্যান্ট মডেল</string>
+
+    <string name="pref_title_app_version">অ্যাপ সংস্করণ</string>
+    <string name="pref_title_terms">টার্মস অফ সার্ভিস</string>
+    <string name="pref_title_privacy_policy">প্রাইভেসি পলিসি</string>
+    <string name="pref_title_oss_licenses">ওপেন-সোর্স লাইসেন্স</string>
+
+    <string-array name="profile_visibility_entries">
+        <item>পাবলিক</item>
+        <item>শুধু ফলোয়ার</item>
+    </string-array>
+    <string-array name="theme_entries">
+        <item>সিস্টেম</item>
+        <item>লাইট</item>
+        <item>ডার্ক</item>
+    </string-array>
+    <string-array name="font_size_entries">
+        <item>ছোট</item>
+        <item>স্বাভাবিক</item>
+        <item>বড়</item>
+    </string-array>
+    <string-array name="ai_assistant_entries">
+        <item>জেমিনি</item>
+        <item>চ্যাটজিপিটি</item>
+        <item>ক্লড</item>
+        <item>ডিপসিক</item>
+    </string-array>
+
+</resources>
+

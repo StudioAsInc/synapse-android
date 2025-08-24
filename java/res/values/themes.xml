@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Material 3 Dynamic Color theme with expressive rounded shapes -->
+    <style name="Theme.SocialMedia.Settings" parent="Theme.Material3.DynamicColors.DayNight">
+        <!-- Expressive corners -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Expressive.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Expressive.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Expressive.LargeComponent</item>
+
+        <!-- Use container colors for prominent surfaces -->
+        <item name="colorSurfaceTint">?attr/colorTertiary</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
+        <item name="toolbarStyle">@style/Widget.Material3.Toolbar</item>
+    </style>
+
+    <style name="ShapeAppearance.Expressive.SmallComponent" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Expressive.MediumComponent" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Expressive.LargeComponent" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+
+</resources>
+
