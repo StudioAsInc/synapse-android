@@ -2006,11 +2006,12 @@ public class ChatActivity extends AppCompatActivity {
 		}
 		if (position != -1) {
 			Log.d("ChatActivity", "Found message at position: " + position + ", scrolling...");
-			ChatMessagesListRecycler.scrollToPosition(position);
+			final int finalPosition = position;
+			ChatMessagesListRecycler.scrollToPosition(finalPosition);
 			
 			// Highlight the message briefly
 			ChatMessagesListRecycler.post(() -> {
-				RecyclerView.ViewHolder holder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
+				RecyclerView.ViewHolder holder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(finalPosition);
 				if (holder != null && holder.itemView != null) {
 					holder.itemView.setBackgroundColor(0x30FFD700); // Light yellow highlight
 					holder.itemView.postDelayed(() -> {
