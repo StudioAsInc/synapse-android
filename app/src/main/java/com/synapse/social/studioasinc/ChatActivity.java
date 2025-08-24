@@ -2407,8 +2407,8 @@ public class ChatActivity extends AppCompatActivity {
 			HashMap<String, Object> itemData = attactmentmap.get(_position);
 
 			// --- START: ROBUSTNESS FIX ---
-			// Safety Check: Verify that the required "localPath" key exists and is not null.
-			if (!itemData.containsKey("localPath") || itemData.get("localPath") == null) {
+			// Safety Check: Verify that the required "filePath" key exists and is not null.
+			if (!itemData.containsKey("filePath") || itemData.get("filePath") == null) {
 				// If the data is invalid, hide this item completely to prevent a crash.
 				_view.setVisibility(View.GONE);
 				_view.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
@@ -2422,7 +2422,7 @@ public class ChatActivity extends AppCompatActivity {
 			// --- END: ROBUSTNESS FIX ---
 
 			// Set the image preview directly by its ID
-			String localPath = itemData.get("localPath").toString();
+			String localPath = itemData.get("filePath").toString();
 			previewIV.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(localPath, 1024, 1024));
 
 			// Get the upload state and progress.
