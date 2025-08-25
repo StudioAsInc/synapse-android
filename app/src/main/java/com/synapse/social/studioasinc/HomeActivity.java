@@ -159,6 +159,9 @@ public class HomeActivity extends AppCompatActivity {
 	private FirebaseAuth auth;
 	private ChildEventListener _udb_child_listener;
 	private Calendar cc = Calendar.getInstance();
+
+	private Query postsQuery;
+	private ValueEventListener postsListener;
 	
 	class c {
 		Context co;
@@ -610,6 +613,14 @@ public class HomeActivity extends AppCompatActivity {
 		});
 		zorry.create().show();
 	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		if (postsQuery != null && postsListener != null) {
+			postsQuery.removeEventListener(postsListener);
+		}
+	}
 	
 	public void _stateColor(final int _statusColor, final int _navigationColor) {
 		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
@@ -679,6 +690,9 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 	public void _loadPosts(final String filterType) {
+		if (postsQuery != null && postsListener != null) {
+			postsQuery.removeEventListener(postsListener);
+		}
 		swipeLayout.setRefreshing(true); // Always show refresh indicator when starting to load posts
 
         // Initially hide lists and show loading only if no data is present immediately from cache.
@@ -687,14 +701,13 @@ public class HomeActivity extends AppCompatActivity {
         // PublicPostsListNotFound.setVisibility(View.GONE);
         // loadingBody.setVisibility(View.VISIBLE); // Let finalize handle visibility based on data presence
 
-		Query query = null;
 		String notFoundMessage = "There are no public posts available at the moment."; 
 		
 		switch (filterType) {
 			case "PUBLIC":
-				query = postsRef.orderByChild("publish_date");
+				postsQuery = postsRef.orderByChild("publish_date");
 				notFoundMessage = "There are no public posts available at the moment.";
-				_fetchAndDisplayPosts(query, notFoundMessage);
+				_fetchAndDisplayPosts(postsQuery, notFoundMessage);
 				break;
 			case "LOCAL":
 				udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
@@ -703,8 +716,8 @@ public class HomeActivity extends AppCompatActivity {
 					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 						if (dataSnapshot.exists() && dataSnapshot.child("user_region").exists()) {
 							String userRegion = dataSnapshot.child("user_region").getValue(String.class);
-							Query localPostsQuery = postsRef.orderByChild("post_region").equalTo(userRegion);
-							_fetchAndDisplayPosts(localPostsQuery, "No regional posts found for your area.");
+							postsQuery = postsRef.orderByChild("post_region").equalTo(userRegion);
+							_fetchAndDisplayPosts(postsQuery, "No regional posts found for your area.");
 						} else {
 							// If no region or user data, display specific message
 							_finalizePostDisplay("No regional posts found or your region is not set.", false);
@@ -856,7 +869,7 @@ public class HomeActivity extends AppCompatActivity {
 			return;
 		}
 		
-		query.addListenerForSingleValueEvent(new ValueEventListener() {
+		postsListener = new ValueEventListener() {
 			@Override
 			public void onDataChange(DataSnapshot _dataSnapshot) {
 				PostsList.clear();
@@ -881,7 +894,8 @@ public class HomeActivity extends AppCompatActivity {
 				Toast.makeText(getApplicationContext(), "Failed to fetch latest posts, showing cached data. Error: " + _databaseError.getMessage(), Toast.LENGTH_LONG).show();
 				_finalizePostDisplay(notFoundMessage, false); 
 			}
-		});
+		};
+		query.addValueEventListener(postsListener);
 	}
 	
 	private void _finalizePostDisplay(String notFoundMessage, boolean sortAndNotify) {
