@@ -7,14 +7,18 @@ from git import Repo
 # Load environment variables
 # ==============================
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GITHUB_PAT = os.getenv("GITHUB_PAT")
+PAT = os.getenv("PAT")  # Secret name is PAT
 GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
+
+# Check PAT
+if not PAT:
+    raise ValueError("PAT is not set! Make sure 'PAT' secret exists in GitHub Actions.")
 
 # ==============================
 # GitHub setup
 # ==============================
-g = Github(GITHUB_PAT)
+g = Github(PAT)
 repo = g.get_user(GITHUB_USERNAME).get_repo(GITHUB_REPO)
 
 LOCAL_REPO_PATH = f"/github/workspace/{GITHUB_REPO}"  # GitHub Actions context path
@@ -25,7 +29,7 @@ LOCAL_REPO_PATH = f"/github/workspace/{GITHUB_REPO}"  # GitHub Actions context p
 if not os.path.exists(LOCAL_REPO_PATH):
     print("[*] Cloning repo...")
     Repo.clone_from(
-        repo.clone_url.replace("https://", f"https://{GITHUB_PAT}@"), 
+        repo.clone_url.replace("https://", f"https://{PAT}@"), 
         LOCAL_REPO_PATH
     )
 else:
