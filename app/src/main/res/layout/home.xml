@@ -10,7 +10,7 @@
 		android:id="@+id/body"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="#FFFFFF"
+		android:background="?attr/colorSurface"
 		android:orientation="vertical">
 		<LinearLayout
 			android:id="@+id/middleLayout"
@@ -45,7 +45,7 @@
 								android:layout_width="match_parent"
 								android:layout_height="1dp"
 								android:padding="8dp"
-								android:background="#F5F5F5"
+								android:background="?attr/colorSurfaceVariant"
 								android:orientation="horizontal" />
 							<LinearLayout
 								android:id="@+id/stories"
@@ -58,7 +58,7 @@
 									android:layout_height="wrap_content"
 									android:paddingLeft="16dp"
 									android:paddingRight="16dp"
-									android:background="#FFFFFF"
+									android:background="?attr/colorSurface"
 									android:gravity="center_vertical"
 									android:orientation="horizontal">
 									<TextView
@@ -207,7 +207,7 @@
 										android:padding="8dp"
 										android:background="@android:color/transparent"
 										android:textSize="18sp"
-										android:textColor="#000000"
+										android:textColor="?attr/colorOnSurface"
 										android:hint="@string/whats_new_today"
 										android:textColorHint="#757575"
 										android:layout_gravity="center_vertical"
@@ -218,7 +218,7 @@
 									android:layout_width="match_parent"
 									android:layout_height="1dp"
 									android:padding="8dp"
-									android:background="#F5F5F5"
+									android:background="?attr/colorSurfaceVariant"
 									android:orientation="horizontal" />
 								<LinearLayout
 									android:id="@+id/miniPostLayoutBottom"
@@ -283,7 +283,7 @@
 										android:background="#757575"
 										android:text="@string/share"
 										android:textSize="16sp"
-										android:textColor="#FFFFFF"
+										android:textColor="?attr/colorOnSurface"
 										android:fontFamily="@font/product_sans" />
 								</LinearLayout>
 								<LinearLayout
@@ -291,7 +291,7 @@
 									android:layout_width="match_parent"
 									android:layout_height="1dp"
 									android:padding="8dp"
-									android:background="#F5F5F5"
+									android:background="?attr/colorSurfaceVariant"
 									android:orientation="horizontal" />
 							</LinearLayout>
 							<HorizontalScrollView
@@ -367,7 +367,7 @@
 							android:layout_width="match_parent"
 							android:layout_height="1dp"
 							android:padding="4dp"
-							android:background="#F5F5F5"
+							android:background="?attr/colorSurfaceVariant"
 							android:orientation="horizontal" />
 					</com.google.android.material.appbar.CollapsingToolbarLayout>
 					<LinearLayout
@@ -375,7 +375,7 @@
 						android:layout_width="match_parent"
 						android:layout_height="1dp"
 						android:padding="8dp"
-						android:background="#F5F5F5"
+						android:background="?attr/colorSurfaceVariant"
 						android:orientation="horizontal" />
 				</com.google.android.material.appbar.AppBarLayout>
 				<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -406,7 +406,7 @@
 								android:gravity="center_horizontal|center_vertical"
 								android:text="There are no public posts available \nat the moment."
 								android:textSize="16sp"
-								android:textColor="#757575" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 					</LinearLayout>
 				</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
@@ -432,7 +432,7 @@
 					android:layout_marginBottom="16dp"
 					android:textSize="20sp"
 					android:textStyle="bold"
-					android:textColor="#000000"
+					android:textColor="?attr/colorOnSurface"
 					tools:replace="android:text"
 					android:text="@string/oh_there_us_a_problem" />
 				<TextView
@@ -442,7 +442,7 @@
 					android:layout_marginBottom="16dp"
 					android:text="Reasons may be:\n\n• You have no or weak internet connection.\n• The application may be under maintenance.\n• There may be technical problems on our side."
 					android:textSize="18sp"
-					android:textColor="#757575" />
+					android:textColor="?attr/colorOnSurfaceVariant" />
 				<TextView
 					android:id="@+id/noInternetBodyRetry"
 					android:layout_width="wrap_content"
@@ -453,7 +453,7 @@
 					android:paddingBottom="8dp"
 					android:background="#2196F3"
 					android:textSize="18sp"
-					android:textColor="#FFFFFF"
+					android:textColor="?attr/colorOnSurface"
 					tools:replace="android:text"
 					android:text="@string/retry" />
 			</LinearLayout>
@@ -477,7 +477,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="1dp"
 			android:padding="8dp"
-			android:background="#F5F5F5"
+			android:background="?attr/colorSurfaceVariant"
 			android:orientation="horizontal" />
 	</LinearLayout>
 </LinearLayout>

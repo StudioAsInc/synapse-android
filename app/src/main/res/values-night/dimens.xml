@@ -1,0 +1,12 @@
+<resources>
+    <!-- Dark mode dimension overrides -->
+    
+    <!-- Maintain the same dimensions as light theme for consistency -->
+    <!-- These can be customized if specific dark mode adjustments are needed -->
+    
+    <!-- Example: If you want to adjust spacing for dark mode -->
+    <!-- <dimen name="dark_mode_spacing">16dp</dimen> -->
+    
+    <!-- Example: If you want to adjust text sizes for dark mode -->
+    <!-- <dimen name="dark_mode_text_size">14sp</dimen> -->
+</resources>

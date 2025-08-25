@@ -1,0 +1,10 @@
+<resources>
+    <!-- Dark mode string overrides -->
+    
+    <!-- This file can contain dark mode specific string resources if needed -->
+    <!-- For now, we'll inherit from the main strings.xml file -->
+    
+    <!-- Example: If you want to add dark mode specific strings -->
+    <!-- <string name="dark_mode_enabled">Dark mode is enabled</string> -->
+    <!-- <string name="dark_mode_disabled">Dark mode is disabled</string> -->
+</resources>
