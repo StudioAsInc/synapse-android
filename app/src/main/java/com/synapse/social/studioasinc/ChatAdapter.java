@@ -95,7 +95,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public long getItemId(int position) {
         try {
-            Object keyObj = _data.get(position).getOrDefault("key", position);
+            // CRITICAL FIX: Use the correct key constant that matches ChatActivity
+            Object keyObj = _data.get(position).getOrDefault("key", _data.get(position).getOrDefault("KEY_KEY", position));
             return String.valueOf(keyObj).hashCode();
         } catch (Exception e) {
             return position;

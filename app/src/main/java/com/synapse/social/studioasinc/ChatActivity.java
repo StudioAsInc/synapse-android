@@ -505,6 +505,11 @@ public class ChatActivity extends AppCompatActivity {
 		chatAdapter.setChatActivity(this);
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
 		
+		// CRITICAL FIX: Ensure RecyclerView is properly configured for smooth updates
+		ChatMessagesListRecycler.setItemViewCacheSize(50);
+		ChatMessagesListRecycler.setDrawingCacheEnabled(true);
+		ChatMessagesListRecycler.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+		
 		// CRITICAL FIX: Set up Firebase reference to listen to the correct chat node
 		// We need to listen to the chat node where messages are being sent/received
 		String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -1027,6 +1032,13 @@ public class ChatActivity extends AppCompatActivity {
 						}
 
 						if (!initialMessages.isEmpty()) {
+							// CRITICAL FIX: Sort initial messages by timestamp to ensure proper order
+							initialMessages.sort((msg1, msg2) -> {
+								long time1 = _getMessageTimestamp(msg1);
+								long time2 = _getMessageTimestamp(msg2);
+								return Long.compare(time1, time2);
+							});
+							
 							// Safely get the oldest message key
 							HashMap<String, Object> oldestMessage = initialMessages.get(0);
 							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
@@ -1072,27 +1084,16 @@ public class ChatActivity extends AppCompatActivity {
 						Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
 						
 						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-							// Debug logging for image messages
+							String messageKey = newMessage.get(KEY_KEY).toString();
 							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
-							Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + newMessage.get(KEY_KEY));
-							
-							if ("ATTACHMENT_MESSAGE".equals(messageType)) {
-								ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) newMessage.get("attachments");
-								Log.d("ChatActivity", "Image message with " + (attachments != null ? attachments.size() : 0) + " attachments");
-								if (attachments != null) {
-									for (int i = 0; i < attachments.size(); i++) {
-										HashMap<String, Object> attachment = attachments.get(i);
-										Log.d("ChatActivity", "Attachment " + i + ": " + attachment.toString());
-									}
-								}
-							}
+							Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + messageKey);
 							
 							// Check if message already exists to avoid duplicates
 							boolean exists = false;
 							int existingPosition = -1;
 							for (int i = 0; i < ChatMessagesList.size(); i++) {
 								HashMap<String, Object> msg = ChatMessagesList.get(i);
-								if (msg.get(KEY_KEY) != null && msg.get(KEY_KEY).equals(newMessage.get(KEY_KEY))) {
+								if (msg.get(KEY_KEY) != null && msg.get(KEY_KEY).toString().equals(messageKey)) {
 									exists = true;
 									existingPosition = i;
 									break;
@@ -1103,29 +1104,33 @@ public class ChatActivity extends AppCompatActivity {
 
 							if (!exists) {
 								// This is a truly new message from Firebase
-								if (ChatMessagesListRecycler.getVisibility() == View.GONE) {
-									ChatMessagesListRecycler.setVisibility(View.VISIBLE);
-									noChatText.setVisibility(View.GONE);
+								_safeUpdateRecyclerView();
+								
+								// CRITICAL FIX: Determine the correct position to insert the message
+								int insertPosition = _findCorrectInsertPosition(newMessage);
+								
+								// Insert message at the correct position
+								ChatMessagesList.add(insertPosition, newMessage);
+								
+								Log.d("ChatActivity", "Added new Firebase message to list at position " + insertPosition + ", total messages: " + ChatMessagesList.size());
+								
+								// Notify adapter of the insertion
+								chatAdapter.notifyItemInserted(insertPosition);
+								
+								// Update adjacent items if needed
+								if (insertPosition > 0) {
+									chatAdapter.notifyItemChanged(insertPosition - 1);
+								}
+								if (insertPosition < ChatMessagesList.size() - 1) {
+									chatAdapter.notifyItemChanged(insertPosition + 1);
 								}
 								
-								// Add new message to the end
-								ChatMessagesList.add(newMessage);
-								int newPosition = ChatMessagesList.size() - 1;
-								
-								Log.d("ChatActivity", "Added new Firebase message to list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-								
-								// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
-								chatAdapter.notifyItemInserted(newPosition);
-								
-								// Update previous item's timestamp if needed
-								if (newPosition > 0) {
-									chatAdapter.notifyItemChanged(newPosition - 1);
+								// Scroll to the new message if it's the most recent
+								if (insertPosition == ChatMessagesList.size() - 1) {
+									ChatMessagesListRecycler.post(() -> {
+										scrollToBottom();
+									});
 								}
-								
-								// Scroll to the new message with a slight delay to ensure layout is complete
-								ChatMessagesListRecycler.post(() -> {
-									scrollToBottom();
-								});
 							} else {
 								// Message already exists, but check if we need to update it (e.g., remove local flag)
 								Log.d("ChatActivity", "Message already exists at position " + existingPosition + ", checking if update needed");
@@ -1195,8 +1200,7 @@ public class ChatActivity extends AppCompatActivity {
 									
 									// Check if list is empty
 									if (ChatMessagesList.isEmpty()) {
-										ChatMessagesListRecycler.setVisibility(View.GONE);
-										noChatText.setVisibility(View.VISIBLE);
+										_safeUpdateRecyclerView();
 									}
 									break;
 								}
@@ -1211,6 +1215,126 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			};
 			chatMessagesRef.addChildEventListener(_chat_child_listener);
+		}
+	}
+
+	/**
+	 * CRITICAL FIX: Find the correct position to insert a new message based on timestamp
+	 * This ensures messages are always in chronological order
+	 */
+	private int _findCorrectInsertPosition(HashMap<String, Object> newMessage) {
+		if (ChatMessagesList.isEmpty()) {
+			return 0;
+		}
+		
+		// Get the timestamp of the new message
+		long newMessageTime = _getMessageTimestamp(newMessage);
+		
+		// Find the correct position by comparing timestamps
+		for (int i = 0; i < ChatMessagesList.size(); i++) {
+			long existingMessageTime = _getMessageTimestamp(ChatMessagesList.get(i));
+			
+			// If new message is older than or equal to existing message, insert before it
+			if (newMessageTime <= existingMessageTime) {
+				return i;
+			}
+		}
+		
+		// If new message is the newest, add to the end
+		return ChatMessagesList.size();
+	}
+	
+	/**
+	 * Helper method to extract timestamp from message
+	 */
+	private long _getMessageTimestamp(HashMap<String, Object> message) {
+		try {
+			Object pushDateObj = message.get("push_date");
+			if (pushDateObj != null) {
+				String pushDateStr = pushDateObj.toString();
+				if (pushDateStr.contains(".")) {
+					// Handle double values
+					return (long) Double.parseDouble(pushDateStr);
+				} else {
+					// Handle long values
+					return Long.parseLong(pushDateStr);
+				}
+			}
+		} catch (Exception e) {
+			Log.w("ChatActivity", "Error parsing message timestamp: " + e.getMessage());
+		}
+		// Return current time if parsing fails
+		return System.currentTimeMillis();
+	}
+	
+	/**
+	 * CRITICAL FIX: Force refresh the RecyclerView when needed
+	 */
+	private void _forceRefreshRecyclerView() {
+		if (chatAdapter != null && ChatMessagesListRecycler != null) {
+			ChatMessagesListRecycler.post(() -> {
+				chatAdapter.notifyDataSetChanged();
+			});
+		}
+	}
+	
+	/**
+	 * CRITICAL FIX: Safely update the RecyclerView with proper error handling
+	 */
+	private void _safeUpdateRecyclerView() {
+		try {
+			if (chatAdapter != null && ChatMessagesListRecycler != null) {
+				ChatMessagesListRecycler.post(() -> {
+					try {
+						if (ChatMessagesList.isEmpty()) {
+							ChatMessagesListRecycler.setVisibility(View.GONE);
+							noChatText.setVisibility(View.VISIBLE);
+						} else {
+							ChatMessagesListRecycler.setVisibility(View.VISIBLE);
+							noChatText.setVisibility(View.GONE);
+						}
+					} catch (Exception e) {
+						Log.e("ChatActivity", "Error updating RecyclerView visibility: " + e.getMessage());
+					}
+				});
+			}
+		} catch (Exception e) {
+			Log.e("ChatActivity", "Error in safe update: " + e.getMessage());
+		}
+	}
+	
+	/**
+	 * CRITICAL FIX: Reorder messages if they are out of chronological order
+	 */
+	private void _reorderMessagesIfNeeded() {
+		try {
+			if (ChatMessagesList.size() > 1) {
+				boolean needsReorder = false;
+				for (int i = 0; i < ChatMessagesList.size() - 1; i++) {
+					long currentTime = _getMessageTimestamp(ChatMessagesList.get(i));
+					long nextTime = _getMessageTimestamp(ChatMessagesList.get(i + 1));
+					if (currentTime > nextTime) {
+						needsReorder = true;
+						break;
+					}
+				}
+				
+				if (needsReorder) {
+					Log.d("ChatActivity", "Messages are out of order, reordering...");
+					ChatMessagesList.sort((msg1, msg2) -> {
+						long time1 = _getMessageTimestamp(msg1);
+						long time2 = _getMessageTimestamp(msg2);
+						return Long.compare(time1, time2);
+					});
+					
+					if (chatAdapter != null) {
+						chatAdapter.notifyDataSetChanged();
+					}
+					Log.d("ChatActivity", "Messages reordered successfully");
+				}
+			}
+		} catch (Exception e) {
+			Log.e("ChatActivity", "Error reordering messages: " + e.getMessage());
 		}
 	}
 
@@ -1361,7 +1485,19 @@ public class ChatActivity extends AppCompatActivity {
 							try {
 								HashMap<String, Object> messageData = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
-									newMessages.add(messageData);
+									// CRITICAL FIX: Check if message already exists to prevent duplicates
+									boolean messageExists = false;
+									for (HashMap<String, Object> existingMsg : ChatMessagesList) {
+										if (existingMsg.get(KEY_KEY) != null && 
+											existingMsg.get(KEY_KEY).toString().equals(messageData.get(KEY_KEY).toString())) {
+											messageExists = true;
+											break;
+										}
+									}
+									
+									if (!messageExists) {
+										newMessages.add(messageData);
+									}
 								} else {
 									Log.w("ChatActivity", "Skipping message without valid key: " + _data.getKey());
 								}
@@ -1371,6 +1507,13 @@ public class ChatActivity extends AppCompatActivity {
 						}
 
 						if (!newMessages.isEmpty()) {
+							// CRITICAL FIX: Sort messages by timestamp before adding
+							newMessages.sort((msg1, msg2) -> {
+								long time1 = _getMessageTimestamp(msg1);
+								long time2 = _getMessageTimestamp(msg2);
+								return Long.compare(time1, time2);
+							});
+							
 							// Safely get the oldest message key
 							HashMap<String, Object> oldestMessage = newMessages.get(0);
 							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
@@ -1383,6 +1526,7 @@ public class ChatActivity extends AppCompatActivity {
 								View firstVisibleView = layoutManager.findViewByPosition(firstVisiblePosition);
 								int topOffset = (firstVisibleView != null) ? firstVisibleView.getTop() : 0;
 
+								// CRITICAL FIX: Insert messages at the beginning in correct order
 								ChatMessagesList.addAll(0, newMessages);
 								if (chatAdapter != null) {
 									chatAdapter.notifyItemRangeInserted(0, newMessages.size());
@@ -1406,7 +1550,7 @@ public class ChatActivity extends AppCompatActivity {
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				_hideLoadMoreIndicator();
 				isLoading = false;
-				Log.e("ChatActivity", "Failed to load old messages: " + databaseError.getMessage());
+				Log.e("ChatActivity", "Error processing old messages: " + databaseError.getMessage());
 			}
 		});
 	}
@@ -1708,6 +1852,7 @@ public class ChatActivity extends AppCompatActivity {
 
 				// CRITICAL FIX: Immediately add the message to local list for instant feedback
 				ChatSendMap.put("isLocalMessage", true); // Mark as local message
+				// Add to the end since this is a new message being sent
 				ChatMessagesList.add(ChatSendMap);
 				int newPosition = ChatMessagesList.size() - 1;
 				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
@@ -1769,6 +1914,7 @@ public class ChatActivity extends AppCompatActivity {
 
 			// CRITICAL FIX: Immediately add the message to local list for instant feedback
 			ChatSendMap.put("isLocalMessage", true); // Mark as local message
+			// Add to the end since this is a new message being sent
 			ChatMessagesList.add(ChatSendMap);
 			int newPosition = ChatMessagesList.size() - 1;
 			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
