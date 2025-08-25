@@ -1,9 +1,9 @@
-name: AI Automation
+name: Auto Fix with Gemini
 
 on:
   schedule:
     - cron: '0 * * * *' # প্রতি ঘণ্টায় রান করবে
-  workflow_dispatch: # ম্যানুয়ালি ট্রিগার করার জন্য
+  workflow_dispatch:
 
 jobs:
   auto_fix:
@@ -26,7 +26,7 @@ jobs:
     - name: Run Coding Agent
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+        GITHUB_PAT: ${{ secrets.PAT }}
         GITHUB_USERNAME: StudioAsInc
         GITHUB_REPO: synapse-android
       run: |
