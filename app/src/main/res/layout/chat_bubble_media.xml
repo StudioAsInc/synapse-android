@@ -46,7 +46,10 @@
 				android:paddingTop="4dp"
 				android:paddingRight="4dp"
 				android:paddingBottom="8dp"
-				android:background="#CFD8DC"
+				android:background="#00000000"
+				android:clickable="true"
+				android:focusable="true"
+				android:foreground="?attr/selectableItemBackgroundBorderless"
 				android:orientation="vertical">
 				<androidx.cardview.widget.CardView
 					android:id="@+id/mediaContainerCard"

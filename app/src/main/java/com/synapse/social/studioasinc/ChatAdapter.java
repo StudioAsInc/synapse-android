@@ -74,7 +74,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) _data.get(position).get("attachments");
             Log.d(TAG, "ATTACHMENT_MESSAGE detected with " + (attachments != null ? attachments.size() : 0) + " attachments");
             
-            if (attachments != null && attachments.size() == 1 && attachments.get(0).getOrDefault("publicId", "").toString().contains("|video")) {
+            if (attachments != null && attachments.size() == 1 && String.valueOf(attachments.get(0).getOrDefault("publicId", "")).contains("|video")) {
                 Log.d(TAG, "Video message detected, returning VIEW_TYPE_VIDEO");
                 return VIEW_TYPE_VIDEO;
             }
@@ -82,7 +82,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return VIEW_TYPE_MEDIA_GRID;
         }
 
-        String messageText = _data.get(position).getOrDefault("message_text", "").toString();
+        String messageText = String.valueOf(_data.get(position).getOrDefault("message_text", ""));
         if (LinkPreviewUtil.extractUrl(messageText) != null) {
             Log.d(TAG, "Link preview message detected, returning VIEW_TYPE_LINK_PREVIEW");
             return VIEW_TYPE_LINK_PREVIEW;
@@ -90,6 +90,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         Log.d(TAG, "Text message detected, returning VIEW_TYPE_TEXT");
         return VIEW_TYPE_TEXT;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        try {
+            Object keyObj = _data.get(position).getOrDefault("key", position);
+            return String.valueOf(keyObj).hashCode();
+        } catch (Exception e) {
+            return position;
+        }
     }
 
     @Override
@@ -125,7 +135,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private void bindCommonMessageProperties(BaseMessageViewHolder holder, int position) {
         HashMap<String, Object> data = _data.get(position);
-        boolean isMyMessage = data.get("uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        String myUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        String msgUid = data != null && data.get("uid") != null ? String.valueOf(data.get("uid")) : "";
+        boolean isMyMessage = msgUid.equals(myUid);
         
         if (holder.message_layout != null) {
             ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.message_layout.getLayoutParams();
@@ -154,14 +166,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 HashMap<String, Object> currentMsg = _data.get(position);
                 HashMap<String, Object> nextMsg = _data.get(position + 1);
 
-                boolean nextIsDifferentUser = !nextMsg.get("uid").toString().equals(currentMsg.get("uid").toString());
+                String nextUid = nextMsg != null && nextMsg.get("uid") != null ? String.valueOf(nextMsg.get("uid")) : "";
+                String currUid = currentMsg != null && currentMsg.get("uid") != null ? String.valueOf(currentMsg.get("uid")) : "";
+                boolean nextIsDifferentUser = !nextUid.equals(currUid);
                 boolean nextIsTyping = nextMsg.containsKey("typingMessageStatus");
 
                 boolean timeIsSignificant = false;
-                if (currentMsg.containsKey("push_date") && nextMsg.containsKey("push_date")) {
+                if (currentMsg.containsKey("push_date") && nextMsg.containsKey("push_date") && currentMsg.get("push_date") != null && nextMsg.get("push_date") != null) {
                     try {
-                        long currentTime = (long) Double.parseDouble(currentMsg.get("push_date").toString());
-                        long nextTime = (long) Double.parseDouble(nextMsg.get("push_date").toString());
+                        long currentTime = (long) Double.parseDouble(String.valueOf(currentMsg.get("push_date")));
+                        long nextTime = (long) Double.parseDouble(String.valueOf(nextMsg.get("push_date")));
                         if ((nextTime - currentTime) > (5 * 60 * 1000)) { // 5 minutes
                             timeIsSignificant = true;
                         }
@@ -179,12 +193,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             
             if (showMessageInfo) {
                 Calendar push = Calendar.getInstance();
-                push.setTimeInMillis((long) Double.parseDouble(data.get("push_date").toString()));
+                try {
+                    double pushVal = Double.parseDouble(String.valueOf(data.get("push_date")));
+                    push.setTimeInMillis((long) pushVal);
+                } catch (Exception e) {
+                    push.setTimeInMillis(System.currentTimeMillis());
+                }
                 holder.date.setText(new SimpleDateFormat("hh:mm a").format(push.getTime()));
                 
                 holder.message_state.setVisibility(isMyMessage ? View.VISIBLE : View.GONE);
                 if (isMyMessage) {
-                    String state = data.get("message_state").toString();
+                    String state = data.get("message_state") != null ? String.valueOf(data.get("message_state")) : "";
                     holder.message_state.setImageResource("seen".equals(state) ? R.drawable.icon_done_all_round : R.drawable.icon_done_round);
                     holder.message_state.setColorFilter("seen".equals(state) ? _context.getResources().getColor(R.color.colorPrimary) : 0xFF424242, PorterDuff.Mode.SRC_ATOP);
                 }
@@ -193,7 +212,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (holder.mProfileCard != null && holder.mProfileImage != null) {
             if (!isMyMessage) {
-                boolean isFirstOfGroup = (position == 0) || (position - 1 >= 0 && !_data.get(position - 1).get("uid").toString().equals(data.get("uid").toString()));
+                String currUid = data != null && data.get("uid") != null ? String.valueOf(data.get("uid")) : "";
+                String prevUid = (position - 1 >= 0 && _data.get(position - 1) != null && _data.get(position - 1).get("uid") != null) ? String.valueOf(_data.get(position - 1).get("uid")) : "";
+                boolean isFirstOfGroup = (position == 0) || (position - 1 >= 0 && !prevUid.equals(currUid));
                 holder.mProfileCard.setVisibility(isFirstOfGroup ? View.VISIBLE : View.GONE);
                 if (isFirstOfGroup) {
                     if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
@@ -220,7 +241,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
                     Log.d(TAG, "Processing reply for message ID: " + repliedId);
                     
-                    String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     String theirUid = chatActivity.getIntent().getStringExtra("uid");
                     
                     Log.d(TAG, "Looking for replied message in chat: " + myUid + "/" + theirUid + " with ID: " + repliedId);
@@ -382,6 +402,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if(holder.message_text != null) holder.message_text.setTextColor(Color.BLACK);
             }
             holder.messageBG.setBackground(bubbleDrawable);
+
+            // Rounded ripple foreground to match bubble corners
+            int rippleColor = isMyMessage ? 0x33FFFFFF : 0x22000000;
+            android.graphics.drawable.GradientDrawable rippleMask = new android.graphics.drawable.GradientDrawable();
+            rippleMask.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+            rippleMask.setCornerRadius(density * cornerRadius);
+            rippleMask.setColor(Color.WHITE);
+            android.content.res.ColorStateList rippleColors = new android.content.res.ColorStateList(new int[][]{ new int[]{} }, new int[]{ rippleColor });
+            android.graphics.drawable.RippleDrawable ripple = new android.graphics.drawable.RippleDrawable(rippleColors, null, rippleMask);
+            holder.messageBG.setForeground(ripple);
+            holder.messageBG.setClickable(true);
+            holder.messageBG.setLongClickable(true);
         }
 
         int textSize = 16;
@@ -391,10 +423,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder.mRepliedMessageLayoutUsername != null) holder.mRepliedMessageLayoutUsername.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize - 2);
         if (holder.mRepliedMessageLayoutMessage != null) holder.mRepliedMessageLayoutMessage.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
 
-        if (!isMyMessage && data.containsKey("message_state") && "sended".equals(data.get("message_state").toString())) {
+        if (!isMyMessage && data.containsKey("message_state") && "sended".equals(String.valueOf(data.get("message_state")))) {
             String otherUserUid = chatActivity.getIntent().getStringExtra("uid");
-            String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            String messageKey = data.get("key").toString();
+            
+            String messageKey = String.valueOf(data.get("key"));
             FirebaseDatabase.getInstance().getReference("skyline/chats").child(otherUserUid).child(myUid).child(messageKey).child("message_state").setValue("seen");
             FirebaseDatabase.getInstance().getReference("skyline/chats").child(myUid).child(otherUserUid).child(messageKey).child("message_state").setValue("seen");
             FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
@@ -405,7 +437,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.d(TAG, "=== LONG CLICK DETECTED ===");
             Log.d(TAG, "Long click on view: " + v.getClass().getSimpleName() + " at position: " + position);
             Log.d(TAG, "Message data: " + data.toString());
-            chatActivity._messageOverviewPopup(v, position, _data);
+            if (chatActivity != null) chatActivity.performHapticFeedbackLight();
+            // Prefer passing the bubble view as anchor if available
+            View anchor = holder.messageBG != null ? holder.messageBG : v;
+            chatActivity._messageOverviewPopup(anchor, position, _data);
             return true;
         };
         
@@ -441,6 +476,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             holder.message_text.setOnTouchListener(touchListener);
             Log.d(TAG, "Set long click listener on message_text for position: " + position);
         }
+        // Also attach to the entire item view as a fallback
+        if (holder.itemView != null) {
+            holder.itemView.setOnLongClickListener(longClickListener);
+            holder.itemView.setOnTouchListener(touchListener);
+            Log.d(TAG, "Set long click listener on itemView for position: " + position);
+        }
         if (holder.body != null) {
             holder.body.setOnLongClickListener(longClickListener);
             holder.body.setOnTouchListener(touchListener);
@@ -452,18 +493,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         holder.itemView.setOnTouchListener(touchListener);
         Log.d(TAG, "Set long click listener on itemView for position: " + position);
         
-        // CRITICAL FIX: Add a simple test long click listener to verify it works
-        holder.itemView.setOnLongClickListener(v -> {
-            Log.d(TAG, "=== ITEM VIEW LONG CLICK TEST ===");
-            Log.d(TAG, "Item view long click at position: " + position);
-            Toast.makeText(_context, "Long click detected at position: " + position, Toast.LENGTH_SHORT).show();
-            return true;
-        });
+        // Keep only one definitive long click handler to avoid conflicts
     }
 
     private void bindTextViewHolder(TextViewHolder holder, int position) {
         bindCommonMessageProperties(holder, position);
-        String text = _data.get(position).get("message_text").toString();
+        String text = String.valueOf(_data.get(position).getOrDefault("message_text", ""));
         holder.message_text.setVisibility(View.VISIBLE);
         textStylingUtil.applyStyling(text, holder.message_text);
     }
@@ -599,7 +634,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private ImageView createImageView(HashMap<String, Object> attachment, int width, boolean adjustBounds) {
-        String url = attachment.get("url").toString();
+        String url = String.valueOf(attachment.get("url"));
         ImageView imageView = new ImageView(_context);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
@@ -646,7 +681,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (!msgText.isEmpty()) textStylingUtil.applyStyling(msgText, holder.message_text);
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
         if (attachments != null && !attachments.isEmpty()) {
-            String videoUrl = attachments.get(0).get("url").toString();
+            String videoUrl = String.valueOf(attachments.get(0).get("url"));
             if(holder.videoThumbnail != null) Glide.with(_context).load(videoUrl).into(holder.videoThumbnail);
             
             // --- CRITICAL FIX: Attach click listener to videoContainerCard ---
@@ -679,7 +714,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void bindLinkPreviewViewHolder(LinkPreviewViewHolder holder, int position) {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
-        String messageText = data.get("message_text").toString();
+        String messageText = String.valueOf(data.getOrDefault("message_text", ""));
         holder.message_text.setVisibility(View.VISIBLE);
         textStylingUtil.applyStyling(messageText, holder.message_text);
 

@@ -62,6 +62,9 @@ public final class ChatBubbleLinkPreviewBinding implements ViewBinding {
   public final MaterialCardView mRepliedMessageLayout;
 
   @NonNull
+  public final ImageView mRepliedMessageLayoutImage;
+
+  @NonNull
   public final LinearLayout mRepliedMessageLayoutLeftBar;
 
   @NonNull
@@ -95,6 +98,7 @@ public final class ChatBubbleLinkPreviewBinding implements ViewBinding {
       @NonNull ImageView linkPreviewImage, @NonNull TextView linkPreviewTitle,
       @NonNull CardView mProfileCard, @NonNull ImageView mProfileImage,
       @NonNull MaterialCardView mRepliedMessageLayout,
+      @NonNull ImageView mRepliedMessageLayoutImage,
       @NonNull LinearLayout mRepliedMessageLayoutLeftBar,
       @NonNull TextView mRepliedMessageLayoutMessage,
       @NonNull LinearLayout mRepliedMessageLayoutRightBody,
@@ -115,6 +119,7 @@ public final class ChatBubbleLinkPreviewBinding implements ViewBinding {
     this.mProfileCard = mProfileCard;
     this.mProfileImage = mProfileImage;
     this.mRepliedMessageLayout = mRepliedMessageLayout;
+    this.mRepliedMessageLayoutImage = mRepliedMessageLayoutImage;
     this.mRepliedMessageLayoutLeftBar = mRepliedMessageLayoutLeftBar;
     this.mRepliedMessageLayoutMessage = mRepliedMessageLayoutMessage;
     this.mRepliedMessageLayoutRightBody = mRepliedMessageLayoutRightBody;
@@ -231,6 +236,12 @@ public final class ChatBubbleLinkPreviewBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.mRepliedMessageLayoutImage;
+      ImageView mRepliedMessageLayoutImage = ViewBindings.findChildViewById(rootView, id);
+      if (mRepliedMessageLayoutImage == null) {
+        break missingId;
+      }
+
       id = R.id.mRepliedMessageLayoutLeftBar;
       LinearLayout mRepliedMessageLayoutLeftBar = ViewBindings.findChildViewById(rootView, id);
       if (mRepliedMessageLayoutLeftBar == null) {
@@ -288,7 +299,7 @@ public final class ChatBubbleLinkPreviewBinding implements ViewBinding {
       return new ChatBubbleLinkPreviewBinding((LinearLayout) rootView, body, date, linear11,
           linear2, linear2Replied, linkPreviewContainer, linkPreviewDescription, linkPreviewDomain,
           linkPreviewImage, linkPreviewTitle, mProfileCard, mProfileImage, mRepliedMessageLayout,
-          mRepliedMessageLayoutLeftBar, mRepliedMessageLayoutMessage,
+          mRepliedMessageLayoutImage, mRepliedMessageLayoutLeftBar, mRepliedMessageLayoutMessage,
           mRepliedMessageLayoutRightBody, mRepliedMessageLayoutUsername, messageBG, messageLayout,
           messageState, messageText, myMessageInfo);
     }

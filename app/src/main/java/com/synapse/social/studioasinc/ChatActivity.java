@@ -66,6 +66,10 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import androidx.appcompat.widget.PopupMenu;
+import android.view.Menu;
+import android.view.MenuItem;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -497,6 +501,7 @@ public class ChatActivity extends AppCompatActivity {
 		
 		// Create, configure, and set the new ChatAdapter
 		chatAdapter = new ChatAdapter(ChatMessagesList);
+		chatAdapter.setHasStableIds(true);
 		chatAdapter.setChatActivity(this);
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
 		
@@ -833,223 +838,69 @@ public class ChatActivity extends AppCompatActivity {
 		Log.d("ChatActivity", "Popup called for position: " + _position + ", data size: " + _data.size());
 		Log.d("ChatActivity", "Message data: " + _data.get((int)_position).toString());
 		
-		View pop1V = getLayoutInflater().inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
-		Log.d("ChatActivity", "Popup layout inflated successfully");
-
-		final PopupWindow pop1 = new PopupWindow(pop1V, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
-		pop1.setFocusable(true);
-		pop1.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
-		pop1.setOutsideTouchable(true);
-		pop1.setElevation(10f);
+		// Build a compact, robust PopupMenu (no dependency on PopupWindow tokens)
 		
-		Log.d("ChatActivity", "PopupWindow created with focusable: " + pop1.isFocusable());
-		
-		final LinearLayout main = pop1V.findViewById(R.id.main);
-		final LinearLayout edit = pop1V.findViewById(R.id.edit);
-		final LinearLayout reply = pop1V.findViewById(R.id.reply);
-		final LinearLayout summary = pop1V.findViewById(R.id.summary);
-		final LinearLayout copy = pop1V.findViewById(R.id.copy);
-		final LinearLayout delete = pop1V.findViewById(R.id.delete);
-		pop1.setAnimationStyle(android.R.style.Animation_Dialog);
-		
-		// Use a post callback to ensure the popup is measured before positioning
-		pop1V.post(() -> {
-			try {
-				int[] location = new int[2];
-				View anchorView = _view;
-				anchorView.getLocationOnScreen(location);
-
-				int screenHeight = getApplicationContext().getResources().getDisplayMetrics().heightPixels;
-				int screenWidth = getApplicationContext().getResources().getDisplayMetrics().widthPixels;
-				int halfScreenHeight = screenHeight / 2;
-				int anchorViewHeight = anchorView.getHeight();
-				int popupHeight = pop1V.getHeight();
-				int popupWidth = pop1V.getWidth();
-
-				// Ensure we have valid dimensions
-				if (popupHeight <= 0) {
-					popupHeight = 200; // Fallback height in dp
-					popupHeight = (int) (popupHeight * getResources().getDisplayMetrics().density);
-				}
-				if (popupWidth <= 0) {
-					popupWidth = 200; // Fallback width in dp
-					popupWidth = (int) (popupWidth * getResources().getDisplayMetrics().density);
-				}
-
-				int x, y;
-
-				// Calculate X position - center horizontally relative to anchor view
-				x = location[0] + (anchorView.getWidth() / 2) - (popupWidth / 2);
-				
-				// Ensure popup doesn't go off-screen horizontally
-				if (x < 0) {
-					x = 10; // Small margin from left edge
-				} else if (x + popupWidth > screenWidth) {
-					x = screenWidth - popupWidth - 10; // Small margin from right edge
-				}
-
-				// Calculate Y position
-				if (location[1] < halfScreenHeight) {
-					// Show below the anchor view
-					y = location[1] + anchorViewHeight + 10; // Small gap below
-				} else {
-					// Show above the anchor view
-					y = location[1] - popupHeight - 10; // Small gap above
-				}
-
-				// Ensure popup doesn't go off-screen vertically
-				if (y < 0) {
-					y = 10; // Small margin from top edge
-				} else if (y + popupHeight > screenHeight) {
-					y = screenHeight - popupHeight - 10; // Small margin from bottom edge
-				}
-
-				Log.d("ChatActivity", "Showing popup at x=" + x + ", y=" + y + " with dimensions " + popupWidth + "x" + popupHeight);
-				pop1.showAtLocation(anchorView, Gravity.NO_GRAVITY, x, y);
-				
-			} catch (Exception e) {
-				Log.e("ChatActivity", "Error positioning popup: " + e.getMessage(), e);
-				// Fallback positioning - center on screen
-				pop1.showAtLocation(_view, Gravity.CENTER, 0, 0);
-			}
-		});
-		
-		// Set up the popup content based on message ownership
-		if (_data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-			main.setGravity(Gravity.CENTER | Gravity.RIGHT);
-			edit.setVisibility(View.VISIBLE);
-			delete.setVisibility(View.VISIBLE);
-		} else {
-			main.setGravity(Gravity.CENTER | Gravity.LEFT);
-			edit.setVisibility(View.GONE);
-			delete.setVisibility(View.GONE);
+		// Show compact contextual menu anchored to the bubble
+		View anchorView = _view;
+		if (anchorView.getId() != R.id.messageBG && anchorView.getParent() instanceof View) {
+			View possible = ((View) anchorView.getParent()).findViewById(R.id.messageBG);
+			if (possible != null) anchorView = possible;
 		}
-		
-		_viewGraphics(edit, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-		_viewGraphics(reply, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-		_viewGraphics(summary, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-
-		String messageTextForSummary = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
-		if (messageTextForSummary.length() > 200) {
-			summary.setVisibility(View.VISIBLE);
-		} else {
-			summary.setVisibility(View.GONE);
-		}
-		_viewGraphics(copy, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-		_viewGraphics(delete, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, 0xFFFFFFFF);
-		
-		main.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				pop1.dismiss();
-			}
-		});
-		reply.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
+		final boolean isMine = _data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		String messageTextForSummary = _data.get((int)_position).get(MESSAGE_TEXT_KEY) != null ? _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString() : "";
+		final int ID_EDIT = 1, ID_REPLY = 2, ID_SUMMARY = 3, ID_COPY = 4, ID_DELETE = 5;
+		PopupMenu pm = new PopupMenu(this, anchorView, Gravity.END);
+		Menu m = pm.getMenu();
+		if (isMine) m.add(Menu.NONE, ID_EDIT, 0, getString(R.string.m_edit));
+		m.add(Menu.NONE, ID_REPLY, 1, getString(R.string.m_reply));
+		if (messageTextForSummary.length() > 200) m.add(Menu.NONE, ID_SUMMARY, 2, "Summary");
+		m.add(Menu.NONE, ID_COPY, 3, getString(R.string.m_copy));
+		if (isMine) m.add(Menu.NONE, ID_DELETE, 4, getString(R.string.m_delete));
+		pm.setOnMenuItemClickListener(item -> {
+			int id = item.getItemId();
+			if (id == ID_REPLY) {
 				ReplyMessageID = _data.get((int)_position).get(KEY_KEY).toString();
-				if (_data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-					mMessageReplyLayoutBodyRightUsername.setText(FirstUserName);
-				} else {
-					mMessageReplyLayoutBodyRightUsername.setText(SecondUserName);
-				}
+				mMessageReplyLayoutBodyRightUsername.setText(isMine ? FirstUserName : SecondUserName);
 				mMessageReplyLayoutBodyRightMessage.setText(_data.get((int)_position).get(MESSAGE_TEXT_KEY).toString());
 				mMessageReplyLayout.setVisibility(View.VISIBLE);
 				vbr.vibrate((long)(48));
-				pop1.dismiss();
-			}
-		});
-		summary.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				String messageText = _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString();
-				String prompt = "Summarize the following text in a few sentences:\n\n" + messageText;
-
-				RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
-				if (viewHolder instanceof BaseMessageViewHolder) {
-					callGeminiForSummary(prompt, (BaseMessageViewHolder) viewHolder);
-				}
-
-				pop1.dismiss();
-			}
-		});
-		copy.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				((ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString()));
+				return true;
+			} else if (id == ID_SUMMARY) {
+				String prompt = "Summarize the following text in a few sentences:\n\n" + messageTextForSummary;
+				RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
+				if (vh instanceof BaseMessageViewHolder) callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
+				return true;
+			} else if (id == ID_COPY) {
+				((ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", messageTextForSummary));
 				vbr.vibrate((long)(48));
-				pop1.dismiss();
-			}
-		});
-		delete.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
+				return true;
+			} else if (id == ID_DELETE) {
 				_DeleteMessageDialog(_data, _position);
-				pop1.dismiss();
-			}
-		});
-		edit.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				pop1.dismiss();
+				return true;
+			} else if (id == ID_EDIT) {
 				MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(ChatActivity.this);
 				Dialogs.setTitle("Edit message");
 				View EdittextDesign = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
 				Dialogs.setView(EdittextDesign);
-
-				final EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
-				final TextInputLayout textinputlayout1 = EdittextDesign.findViewById(R.id.textinputlayout1);
-				edittext1.setFocusableInTouchMode(true);
-				edittext1.setText(_data.get((int)_position).get(MESSAGE_TEXT_KEY).toString());
-				edittext1.setMaxLines(10);
-				edittext1.setVerticalScrollBarEnabled(true);
-				edittext1.setMovementMethod(new ScrollingMovementMethod());
-				edittext1.setScrollBarStyle(View.SCROLLBARS_INSIDE_INSET);
-
-				Dialogs.setPositiveButton("Change", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface _dialog, int _which) {
-						if (!(edittext1.getText().toString().length() == 0)) {
-							ChatSendMap = new HashMap<>();
-							ChatSendMap.put(UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
-							ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-							ChatSendMap.put("message_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-							ChatSendMap.put(MESSAGE_TEXT_KEY, edittext1.getText().toString().trim());
-							ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-							ChatSendMap.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
-							
-							// Update both chat nodes using setValue for proper real-time updates
-							_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // Current user UID
-							.child(getIntent().getStringExtra(UID_KEY))  // Other user UID
-							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Message key
-							.setValue(ChatSendMap);
-							
-							_firebase.getReference(SKYLINE_REF).child(CHATS_REF)
-							.child(getIntent().getStringExtra(UID_KEY))  // Other user UID
-							.child(FirebaseAuth.getInstance().getCurrentUser().getUid())  // Current user UID
-							.child(_data.get((int)_position).get(KEY_KEY).toString())  // Message key
-							.setValue(ChatSendMap);
-							
-							// Clear the edit dialog
-							edittext1.setText("");
-						} else {
-							SketchwareUtil.showMessage(getApplicationContext(), "Can't be empty");
-						}
-					}
+				EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
+				edittext1.setText(messageTextForSummary);
+				Dialogs.setPositiveButton("Save", (d, w) -> {
+					String newText = edittext1.getText().toString();
+					String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+					String otherUid = getIntent().getStringExtra("uid");
+					String msgKey = _data.get((int)_position).get(KEY_KEY).toString();
+					_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey).child(MESSAGE_TEXT_KEY).setValue(newText);
+					_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey).child(MESSAGE_TEXT_KEY).setValue(newText);
 				});
-				Dialogs.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface _dialog, int _which) {
-
-					}
-				});
-				androidx.appcompat.app.AlertDialog edittextDialog = Dialogs.create();
-
-				edittextDialog.setCancelable(true);
-				edittextDialog.show();
+				Dialogs.setNegativeButton("Cancel", null);
+				Dialogs.show();
+				return true;
 			}
+			return false;
 		});
+		pm.show();
+		
+		// Legacy inline layout-based popup actions removed in favor of PopupMenu
 	}
 
 
@@ -1264,7 +1115,7 @@ public class ChatActivity extends AppCompatActivity {
 								Log.d("ChatActivity", "Added new Firebase message to list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
 								
 								// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
-								chatAdapter.notifyDataSetChanged();
+								chatAdapter.notifyItemInserted(newPosition);
 								
 								// Update previous item's timestamp if needed
 								if (newPosition > 0) {
@@ -1860,8 +1711,8 @@ public class ChatActivity extends AppCompatActivity {
 				ChatMessagesList.add(ChatSendMap);
 				int newPosition = ChatMessagesList.size() - 1;
 				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-				// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
-				chatAdapter.notifyDataSetChanged();
+				// Use more granular insertion notification for smooth updates
+				chatAdapter.notifyItemInserted(newPosition);
 				
 				// Scroll to the new message immediately
 				ChatMessagesListRecycler.post(() -> {
@@ -1921,8 +1772,7 @@ public class ChatActivity extends AppCompatActivity {
 			ChatMessagesList.add(ChatSendMap);
 			int newPosition = ChatMessagesList.size() - 1;
 			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
-			chatAdapter.notifyDataSetChanged();
+			chatAdapter.notifyItemInserted(newPosition);
 			
 			// Scroll to the new message immediately
 			ChatMessagesListRecycler.post(() -> {
@@ -2258,6 +2108,8 @@ public class ChatActivity extends AppCompatActivity {
 
 				// If it's a real message, proceed with the reply UI.
 				_showReplyUI(position);
+				// Smoothly reset the swiped item back into place
+				viewHolder.itemView.animate().translationX(0).setDuration(150).start();
 				chatAdapter.notifyItemChanged(position);
 			}
 
@@ -2275,43 +2127,66 @@ public class ChatActivity extends AppCompatActivity {
 			public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 				if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
 					View itemView = viewHolder.itemView;
-					Paint p = new Paint();
+					Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
 					Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_reply);
-
-					if (dX > 0) { // Swiping to the right
-						p.setColor(Color.parseColor("#3498db")); // Blue background
-						c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
-
-						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
-						int iconTop = itemView.getTop() + iconMargin;
-						int iconBottom = iconTop + icon.getIntrinsicHeight();
-						int iconLeft = itemView.getLeft() + iconMargin;
-						int iconRight = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
-						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
-						icon.draw(c);
-					} else { // Swiping to the left
-						p.setColor(Color.parseColor("#3498db")); // Blue background
-						c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), p);
+					if (icon != null) {
+						// Neutral icon color, no background rectangle
+						icon.setColorFilter(0xFF616161, PorterDuff.Mode.SRC_IN);
 
 						int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
 						int iconTop = itemView.getTop() + iconMargin;
 						int iconBottom = iconTop + icon.getIntrinsicHeight();
-						int iconRight = itemView.getRight() - iconMargin;
-						int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
-						icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
-						icon.draw(c);
+
+						float width = (float) itemView.getWidth();
+						float threshold = width * 0.25f;
+						float progress = Math.min(1f, Math.abs(dX) / threshold);
+						icon.setAlpha((int) (Math.max(0.25f, progress) * 255));
+
+						if (dX > 0) { // Swiping to the right
+							int iconLeft = itemView.getLeft() + iconMargin;
+							int iconRight = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
+							icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+							icon.draw(c);
+						} else { // Swiping to the left
+							int iconRight = itemView.getRight() - iconMargin;
+							int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
+							icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+							icon.draw(c);
+						}
 					}
-					// Fade out the item as it is swiped away
-					final float alpha = 1.0f - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
-					itemView.setAlpha(alpha);
-					itemView.setTranslationX(dX);
+
+					// Damped translation for a smoother feel (no alpha fade)
+					float dampedDx = dX * 0.75f;
+					itemView.setTranslationX(dampedDx);
+					itemView.setAlpha(1.0f);
 				} else {
 					super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 				}
 			}
+
+			@Override
+			public float getSwipeThreshold(RecyclerView.ViewHolder viewHolder) {
+				return 0.25f; // require ~25% swipe to trigger
+			}
+
+			@Override
+			public float getSwipeEscapeVelocity(float defaultValue) {
+				return defaultValue * 1.5f; // slightly higher to avoid accidental triggers
+			}
+
+			@Override
+			public float getSwipeVelocityThreshold(float defaultValue) {
+				return defaultValue * 1.2f;
+			}
 		};
 		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
 		itemTouchHelper.attachToRecyclerView(ChatMessagesListRecycler);
+	}
+
+	public void performHapticFeedbackLight() {
+		if (vbr != null) {
+			vbr.vibrate((long)(24));
+		}
 	}
 
 	public String getChatId(String uid1, String uid2) {
