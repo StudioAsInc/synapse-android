@@ -29,7 +29,8 @@ object NotificationHelper {
         recipientOneSignalPlayerId: String,
         message: String
     ) {
-        val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/status/$recipientUid")
+        // Align with PresenceManager: /skyline/users/{uid}/status
+        val recipientStatusRef = FirebaseDatabase.getInstance().getReference("skyline/users/$recipientUid/status")
 
         recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
             val recipientStatus = dataSnapshot.getValue(String::class.java)

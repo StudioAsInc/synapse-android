@@ -97,6 +97,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Collections;
+import java.util.Comparator;
 
 
 public class ChatActivity extends AppCompatActivity {
@@ -157,8 +159,11 @@ public class ChatActivity extends AppCompatActivity {
 	private boolean isLoading = false;
 	private ChildEventListener _chat_child_listener;
 	private DatabaseReference chatMessagesRef;
+	private com.google.firebase.database.Query chatMessagesQuery;
 	private ValueEventListener _userStatusListener;
 	private DatabaseReference userRef;
+	private String newestMessageKey = null;
+	private boolean initialDataLoaded = false;
 
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
@@ -569,8 +574,8 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
-		// Attach listeners after all references are safely initialized.
-		_attachChatListener();
+		// Attach listeners after references are initialized.
+		// We'll attach chat listener after initial messages load in _getChatMessagesRef
 		_attachUserStatusListener();
 	}
 
@@ -1000,8 +1005,8 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _getChatMessagesRef() {
-		// Initial load
-		Query getChatsMessages = chatMessagesRef.limitToLast(CHAT_PAGE_SIZE);
+		// Initial load (ordered by key)
+		Query getChatsMessages = chatMessagesRef.orderByKey().limitToLast(CHAT_PAGE_SIZE);
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -1009,8 +1014,7 @@ public class ChatActivity extends AppCompatActivity {
 					if(dataSnapshot.exists()) {
 						ChatMessagesListRecycler.setVisibility(View.VISIBLE);
 						noChatText.setVisibility(View.GONE);
-						// We clear the list here before the initial load
-						ChatMessagesList.clear();
+						// Don't clear to avoid flicker; we will merge and dedupe
 						ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
 						
 						for (DataSnapshot _data : dataSnapshot.getChildren()) {
@@ -1027,18 +1031,42 @@ public class ChatActivity extends AppCompatActivity {
 						}
 
 						if (!initialMessages.isEmpty()) {
-							// Safely get the oldest message key
+							// Safely get oldest and newest keys
 							HashMap<String, Object> oldestMessage = initialMessages.get(0);
 							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
 								oldestMessageKey = oldestMessage.get(KEY_KEY).toString();
 							}
-
-							ChatMessagesList.addAll(initialMessages);
-							if (chatAdapter != null) {
-								chatAdapter.notifyDataSetChanged();
+							HashMap<String, Object> newestMessage = initialMessages.get(initialMessages.size() - 1);
+							if (newestMessage != null && newestMessage.containsKey(KEY_KEY) && newestMessage.get(KEY_KEY) != null) {
+								newestMessageKey = newestMessage.get(KEY_KEY).toString();
 							}
+
+							// Merge without duplicates
+							for (HashMap<String, Object> msg : initialMessages) {
+								Object k = msg.get(KEY_KEY);
+								boolean exists = false;
+								if (k != null) {
+									for (int i = 0; i < ChatMessagesList.size(); i++) {
+										Object ek = ChatMessagesList.get(i).get(KEY_KEY);
+										if (ek != null && ek.toString().equals(k.toString())) { exists = true; break; }
+									}
+								}
+								if (!exists) { ChatMessagesList.add(msg); }
+							}
+							// Ensure order by key (Firebase push ids are time ordered lexicographically)
+							java.util.Collections.sort(ChatMessagesList, new java.util.Comparator<HashMap<String, Object>>() {
+								@Override public int compare(HashMap<String, Object> a, HashMap<String, Object> b) {
+									String ka = a.get(KEY_KEY) != null ? a.get(KEY_KEY).toString() : "";
+									String kb = b.get(KEY_KEY) != null ? b.get(KEY_KEY).toString() : "";
+									return ka.compareTo(kb);
+								}
+							});
+							if (chatAdapter != null) chatAdapter.notifyDataSetChanged();
 							ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
 						}
+						// Mark initial load done and attach live listener starting from newest key
+						initialDataLoaded = true;
+						_attachChatListener();
 					} else {
 						ChatMessagesListRecycler.setVisibility(View.GONE);
 						noChatText.setVisibility(View.VISIBLE);
@@ -1210,7 +1238,15 @@ public class ChatActivity extends AppCompatActivity {
 					Log.e("ChatActivity", "Chat listener cancelled: " + error.getMessage());
 				}
 			};
-			chatMessagesRef.addChildEventListener(_chat_child_listener);
+			try {
+				chatMessagesQuery = chatMessagesRef.orderByKey();
+				if (newestMessageKey != null && !newestMessageKey.isEmpty()) {
+					chatMessagesQuery = ((com.google.firebase.database.Query) chatMessagesQuery).startAt(newestMessageKey);
+				}
+				((com.google.firebase.database.Query) chatMessagesQuery).addChildEventListener(_chat_child_listener);
+			} catch (Exception e) {
+				chatMessagesRef.addChildEventListener(_chat_child_listener);
+			}
 		}
 	}
 
@@ -1234,8 +1270,15 @@ public class ChatActivity extends AppCompatActivity {
 
 	private void _detachChatListener() {
 		if (_chat_child_listener != null) {
-			chatMessagesRef.removeEventListener(_chat_child_listener);
+			try {
+				if (chatMessagesQuery != null) {
+					((com.google.firebase.database.Query) chatMessagesQuery).removeEventListener(_chat_child_listener);
+				} else if (chatMessagesRef != null) {
+					chatMessagesRef.removeEventListener(_chat_child_listener);
+				}
+			} catch (Exception ignored) {}
 			_chat_child_listener = null;
+			chatMessagesQuery = null;
 		}
 	}
 
@@ -1713,6 +1756,13 @@ public class ChatActivity extends AppCompatActivity {
 				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
 				// Use more granular insertion notification for smooth updates
 				chatAdapter.notifyItemInserted(newPosition);
+				// Ensure list visible immediately
+				ChatMessagesListRecycler.setVisibility(View.VISIBLE);
+				noChatText.setVisibility(View.GONE);
+				// Track newest key for listener scoping
+				if (ChatSendMap.get(KEY_KEY) != null) {
+					newestMessageKey = ChatSendMap.get(KEY_KEY).toString();
+				}
 				
 				// Scroll to the new message immediately
 				ChatMessagesListRecycler.post(() -> {
@@ -1773,6 +1823,13 @@ public class ChatActivity extends AppCompatActivity {
 			int newPosition = ChatMessagesList.size() - 1;
 			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
 			chatAdapter.notifyItemInserted(newPosition);
+			// Ensure list visible immediately
+			ChatMessagesListRecycler.setVisibility(View.VISIBLE);
+			noChatText.setVisibility(View.GONE);
+			// Track newest key for listener scoping
+			if (ChatSendMap.get(KEY_KEY) != null) {
+				newestMessageKey = ChatSendMap.get(KEY_KEY).toString();
+			}
 			
 			// Scroll to the new message immediately
 			ChatMessagesListRecycler.post(() -> {
