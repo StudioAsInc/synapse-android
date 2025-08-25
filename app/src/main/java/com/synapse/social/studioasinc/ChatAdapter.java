@@ -174,13 +174,27 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 boolean timeIsSignificant = false;
                 if (currentMsg.containsKey("push_date") && nextMsg.containsKey("push_date") && currentMsg.get("push_date") != null && nextMsg.get("push_date") != null) {
                     try {
-                        long currentTime = (long) Double.parseDouble(String.valueOf(currentMsg.get("push_date")));
-                        long nextTime = (long) Double.parseDouble(String.valueOf(nextMsg.get("push_date")));
+                        long currentTime;
+                        Object currentObj = currentMsg.get("push_date");
+                        if (currentObj instanceof Long) {
+                            currentTime = (Long) currentObj;
+                        } else {
+                            currentTime = (long) Double.parseDouble(String.valueOf(currentObj));
+                        }
+
+                        long nextTime;
+                        Object nextObj = nextMsg.get("push_date");
+                         if (nextObj instanceof Long) {
+                            nextTime = (Long) nextObj;
+                        } else {
+                            nextTime = (long) Double.parseDouble(String.valueOf(nextObj));
+                        }
+
                         if ((nextTime - currentTime) > (5 * 60 * 1000)) { // 5 minutes
                             timeIsSignificant = true;
                         }
-                    } catch (NumberFormatException e) {
-                        // Handle case where push_date is not a valid double
+                    } catch (Exception e) {
+                        // Handle case where push_date is not a valid double or long
                         timeIsSignificant = false;
                     }
                 }
@@ -194,8 +208,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (showMessageInfo) {
                 Calendar push = Calendar.getInstance();
                 try {
-                    double pushVal = Double.parseDouble(String.valueOf(data.get("push_date")));
-                    push.setTimeInMillis((long) pushVal);
+                    Object pushValObj = data.get("push_date");
+                    if (pushValObj instanceof Long) {
+                        push.setTimeInMillis((long) pushValObj);
+                    } else {
+                         double pushVal = Double.parseDouble(String.valueOf(pushValObj));
+                         push.setTimeInMillis((long) pushVal);
+                    }
                 } catch (Exception e) {
                     push.setTimeInMillis(System.currentTimeMillis());
                 }

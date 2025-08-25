@@ -81,6 +81,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
@@ -1115,29 +1116,12 @@ public class ChatActivity extends AppCompatActivity {
 								Log.d("ChatActivity", "Added new Firebase message to list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
 								
 								// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
-								chatAdapter.notifyItemInserted(newPosition);
-								
-								// Update previous item's timestamp if needed
-								if (newPosition > 0) {
-									chatAdapter.notifyItemChanged(newPosition - 1);
-								}
+								chatAdapter.notifyDataSetChanged();
 								
 								// Scroll to the new message with a slight delay to ensure layout is complete
 								ChatMessagesListRecycler.post(() -> {
 									scrollToBottom();
 								});
-							} else {
-								// Message already exists, but check if we need to update it (e.g., remove local flag)
-								Log.d("ChatActivity", "Message already exists at position " + existingPosition + ", checking if update needed");
-								
-								HashMap<String, Object> existingMsg = ChatMessagesList.get(existingPosition);
-								if (existingMsg.containsKey("isLocalMessage")) {
-									// Remove local flag and update the message
-									newMessage.remove("isLocalMessage");
-									ChatMessagesList.set(existingPosition, newMessage);
-									chatAdapter.notifyItemChanged(existingPosition);
-									Log.d("ChatActivity", "Updated local message with Firebase data at position " + existingPosition);
-								}
 							}
 						} else {
 							Log.w("ChatActivity", "New message is null or missing key");
@@ -1697,7 +1681,7 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
+				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
 
 				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
 				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
@@ -1705,19 +1689,6 @@ public class ChatActivity extends AppCompatActivity {
 				// Send to both chat nodes using setValue for proper real-time updates
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
-
-				// CRITICAL FIX: Immediately add the message to local list for instant feedback
-				ChatSendMap.put("isLocalMessage", true); // Mark as local message
-				ChatMessagesList.add(ChatSendMap);
-				int newPosition = ChatMessagesList.size() - 1;
-				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-				// Use more granular insertion notification for smooth updates
-				chatAdapter.notifyItemInserted(newPosition);
-				
-				// Scroll to the new message immediately
-				ChatMessagesListRecycler.post(() -> {
-					scrollToBottom();
-				});
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 
@@ -1758,7 +1729,7 @@ public class ChatActivity extends AppCompatActivity {
 			ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 			if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
+			ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
 
 			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
 			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
@@ -1766,18 +1737,6 @@ public class ChatActivity extends AppCompatActivity {
 			// Send to both chat nodes using setValue for proper real-time updates
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
 			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
-
-			// CRITICAL FIX: Immediately add the message to local list for instant feedback
-			ChatSendMap.put("isLocalMessage", true); // Mark as local message
-			ChatMessagesList.add(ChatSendMap);
-			int newPosition = ChatMessagesList.size() - 1;
-			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			chatAdapter.notifyItemInserted(newPosition);
-			
-			// Scroll to the new message immediately
-			ChatMessagesListRecycler.post(() -> {
-				scrollToBottom();
-			});
 
 			// Smart Notification Check
 			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText);
@@ -2033,7 +1992,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatInboxSend.put(LAST_MESSAGE_UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
 		ChatInboxSend.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
 		ChatInboxSend.put(LAST_MESSAGE_STATE_KEY, "sended");
-		ChatInboxSend.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+		ChatInboxSend.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
 		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).setValue(ChatInboxSend);
 
 		// Update inbox for the other user
@@ -2042,7 +2001,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatInboxSend2.put(LAST_MESSAGE_UID_KEY, FirebaseAuth.getInstance().getCurrentUser().getUid());
 		ChatInboxSend2.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
 		ChatInboxSend2.put(LAST_MESSAGE_STATE_KEY, "sended");
-		ChatInboxSend2.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+		ChatInboxSend2.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
 		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(ChatInboxSend2);
 	}
 
