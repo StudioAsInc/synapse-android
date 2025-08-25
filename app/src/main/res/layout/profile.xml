@@ -10,7 +10,7 @@
 		android:id="@+id/ProfilePageBody"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="#FFFFFF"
+		android:background="?attr/colorSurface"
 		android:orientation="vertical">
 		<LinearLayout
 			android:id="@+id/ProfilePageTopBar"
@@ -60,7 +60,7 @@
 				android:id="@+id/ProfilePageTabLayout"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:background="#FFFFFF"
+				android:background="?attr/colorSurface"
 				app:tabGravity="fill"
 				app:tabMode="fixed"
 				app:tabIndicatorHeight="3dp"
@@ -69,7 +69,7 @@
 				android:id="@+id/ProfilePageSwipeLayout"
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
-				android:background="#FFFFFF">
+				android:background="?attr/colorSurface">
 				<LinearLayout
 					android:id="@+id/ProfilePageSwipeLayoutBody"
 					android:layout_width="match_parent"
@@ -84,14 +84,14 @@
 							android:id="@+id/ProfilePageTabUserInfoBody"
 							android:layout_width="match_parent"
 							android:layout_height="match_parent"
-							android:background="#FFFFFF"
+							android:background="?attr/colorSurface"
 							android:orientation="vertical">
 							<LinearLayout
 								android:id="@+id/ProfilePageTabUserInfoCoverLayout"
 								android:layout_width="match_parent"
 								android:layout_height="200dp"
 								android:layout_marginBottom="8dp"
-								android:background="#F5F5F5"
+								android:background="?attr/colorSurfaceVariant"
 								android:gravity="center_horizontal|center_vertical"
 								android:orientation="horizontal">
 								<ImageView
