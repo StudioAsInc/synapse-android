@@ -18,7 +18,6 @@
     <color name="colorOnSecondary">#FFFFFF</color>
     <color name="colorOnBackground">#F0F3F8</color>
     <color name="colorOnSurface">#F0F3F8</color>
-    <color name="colorOnError">#FFFFFF</color>
     
     <!-- Error colors for dark mode -->
     <color name="colorError">#CF6679</color>
