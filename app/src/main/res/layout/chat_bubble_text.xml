@@ -90,7 +90,7 @@
 								android:textSize="12sp"
 								android:textColor="#445E91"
 								android:singleLine="true" />
-							<!-- CRITICAL FIX: Add ImageView for reply image previews -->
+							<!-- CRITICAL FIX: Add ImageView for reply image previews with rounded corners -->
 							<ImageView
 								android:id="@+id/mRepliedMessageLayoutImage"
 								android:layout_width="60dp"
@@ -99,7 +99,8 @@
 								android:layout_marginBottom="4dp"
 								android:scaleType="centerCrop"
 								android:background="@drawable/ph_imgbluredsqure"
-								android:visibility="gone" />
+								android:visibility="gone"
+								android:clipToOutline="true" />
 							<TextView
 								android:id="@+id/mRepliedMessageLayoutMessage"
 								android:focusable="false"

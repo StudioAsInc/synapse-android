@@ -22,6 +22,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.text.Editable;
 import android.text.Spannable;
@@ -101,6 +102,9 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 
 
 public class ChatActivity extends AppCompatActivity {
@@ -569,8 +573,10 @@ public class ChatActivity extends AppCompatActivity {
 				super.onScrolled(recyclerView, dx, dy);
 				LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
 				if (dy < 0) { //check for scroll up
-					if (layoutManager != null && layoutManager.findFirstVisibleItemPosition() == 0) {
-						if (!isLoading) {
+					if (layoutManager != null && layoutManager.findFirstVisibleItemPosition() <= 2) {
+						// CRITICAL FIX: Only load more if we have an oldest message key and not already loading
+						// Also check if we've reached the end to prevent unnecessary work
+						if (!isLoading && oldestMessageKey != null && !oldestMessageKey.isEmpty() && !oldestMessageKey.equals("null")) {
 							_getOldChatMessagesRef();
 						}
 					}
@@ -932,7 +938,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 
-		// --- Safer positioning and dismissal for PopupWindow ---
+		// CRITICAL FIX: Improved positioning for compact popup
 		popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
 		int popupWidth = popupView.getMeasuredWidth();
 		int popupHeight = popupView.getMeasuredHeight();
@@ -940,21 +946,21 @@ public class ChatActivity extends AppCompatActivity {
 		int[] location = new int[2];
 		_view.getLocationOnScreen(location);
 
-		// Compute initial centered-above coordinates
+		// Compute initial centered-above coordinates with better positioning
 		int x = location[0] + (_view.getWidth() / 2) - (popupWidth / 2);
-		int aboveY = location[1] - popupHeight;
-		int belowY = location[1] + _view.getHeight();
+		int aboveY = location[1] - popupHeight - 8; // Add small gap
+		int belowY = location[1] + _view.getHeight() + 8; // Add small gap
 
 		// Constrain within the visible window and flip below if there's no room above
 		Rect visibleFrame = new Rect();
 		_view.getWindowVisibleDisplayFrame(visibleFrame);
 
-		// Horizontal clamp
-		x = Math.max(visibleFrame.left, Math.min(x, visibleFrame.right - popupWidth));
+		// Horizontal clamp with better margins
+		x = Math.max(visibleFrame.left + 16, Math.min(x, visibleFrame.right - popupWidth - 16));
 
 		// Vertical position: prefer above, otherwise below, and clamp
-		int y = (aboveY >= visibleFrame.top) ? aboveY : Math.min(belowY, visibleFrame.bottom - popupHeight);
-		y = Math.max(visibleFrame.top, Math.min(y, visibleFrame.bottom - popupHeight));
+		int y = (aboveY >= visibleFrame.top + 16) ? aboveY : Math.min(belowY, visibleFrame.bottom - popupHeight - 16);
+		y = Math.max(visibleFrame.top + 16, Math.min(y, visibleFrame.bottom - popupHeight - 16));
 
 		// Enable outside touch dismissal and proper shadow rendering
 		popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1516,7 +1522,8 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _getOldChatMessagesRef() {
-		if (isLoading || oldestMessageKey == null) {
+		// CRITICAL FIX: Robust pagination check - prevent loading when no more messages
+		if (isLoading || oldestMessageKey == null || oldestMessageKey.isEmpty() || oldestMessageKey.equals("null")) {
 			return;
 		}
 		isLoading = true;
@@ -1569,7 +1576,7 @@ public class ChatActivity extends AppCompatActivity {
 								return Long.compare(time1, time2);
 							});
 							
-							// Safely get the oldest message key
+							// CRITICAL FIX: Update oldest message key for next pagination
 							HashMap<String, Object> oldestMessage = newMessages.get(0);
 							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
 								oldestMessageKey = oldestMessage.get(KEY_KEY).toString();
@@ -1592,6 +1599,12 @@ public class ChatActivity extends AppCompatActivity {
 									layoutManager.scrollToPositionWithOffset(firstVisiblePosition + newMessages.size(), topOffset);
 								}
 							}
+						} else {
+							// CRITICAL FIX: No more messages to load, set oldestMessageKey to null
+							// and ensure UI state is properly reset
+							oldestMessageKey = null;
+							_hideLoadMoreIndicator();
+							Log.d("ChatActivity", "No more messages to load, pagination complete");
 						}
 					}
 				} catch (Exception e) {
@@ -1605,6 +1618,7 @@ public class ChatActivity extends AppCompatActivity {
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				_hideLoadMoreIndicator();
 				isLoading = false;
+				// CRITICAL FIX: Don't reset oldestMessageKey on error to allow retry
 				Log.e("ChatActivity", "Error processing old messages: " + databaseError.getMessage());
 			}
 		});
@@ -1939,8 +1953,9 @@ public class ChatActivity extends AppCompatActivity {
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 
-				// Smart Notification Check
-				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage);
+				// Enhanced Smart Notification Check with chat ID for deep linking
+				String chatId = senderUid + "_" + recipientUid;
+				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage, chatId);
 
 				_updateInbox(lastMessage);
 
@@ -1998,8 +2013,9 @@ public class ChatActivity extends AppCompatActivity {
 				scrollToBottom();
 			});
 
-			// Smart Notification Check
-			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText);
+			// Enhanced Smart Notification Check with chat ID for deep linking
+			String chatId = senderUid + "_" + recipientUid;
+			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText, chatId);
 
 			_updateInbox(messageText);
 
@@ -2417,18 +2433,93 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	public void scrollToMessage(final String _messageKey) {
-		int position = -1;
-		for (int i = 0; i < ChatMessagesList.size(); i++) {
-			if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(_messageKey)) {
-				position = i;
-				break;
-			}
-		}
+		final int position = _findMessagePosition(_messageKey);
 		if (position != -1) {
+			// CRITICAL FIX: Scroll to message with animation and highlight effect
 			ChatMessagesListRecycler.smoothScrollToPosition(position);
+			
+			// Add highlight animation after scroll completes
+			new Handler().postDelayed(() -> {
+				// CRITICAL FIX: Check if activity is still valid before highlighting
+				if (!isFinishing() && !isDestroyed() && ChatMessagesListRecycler != null) {
+					RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
+					if (viewHolder != null) {
+						_highlightMessage(viewHolder.itemView);
+					}
+				}
+			}, 500); // Wait for scroll to complete
 		} else {
 			Toast.makeText(getApplicationContext(), "Original message not found", Toast.LENGTH_SHORT).show();
 		}
+	}
+	
+	// CRITICAL FIX: Helper method to find message position
+	private int _findMessagePosition(String messageKey) {
+		for (int i = 0; i < ChatMessagesList.size(); i++) {
+			if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(messageKey)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	// CRITICAL FIX: Add highlight animation for replied messages with NPE protection
+	private void _highlightMessage(View messageView) {
+		// CRITICAL FIX: Check if activity is finishing to prevent crashes
+		if (isFinishing() || isDestroyed()) {
+			return;
+		}
+		
+		// Store original background safely
+		Drawable originalBackground = messageView.getBackground();
+		
+		// Create highlight animation
+		ValueAnimator highlightAnimator = ValueAnimator.ofFloat(0f, 1f);
+		highlightAnimator.setDuration(800);
+		highlightAnimator.addUpdateListener(animation -> {
+			// CRITICAL FIX: Check if activity is still valid during animation
+			if (isFinishing() || isDestroyed() || messageView == null) {
+				animation.cancel();
+				return;
+			}
+			
+			float progress = (Float) animation.getAnimatedValue();
+			
+			// Create a pulsing highlight effect
+			int alpha = (int) (100 * (1 - progress));
+			int color = Color.argb(alpha, 107, 76, 255); // Purple with fading alpha
+			
+			GradientDrawable highlightDrawable = new GradientDrawable();
+			highlightDrawable.setColor(color);
+			highlightDrawable.setCornerRadius(dpToPx(27)); // Match message bubble corner radius
+			
+			// CRITICAL FIX: Use setBackgroundDrawable for better compatibility
+			messageView.setBackgroundDrawable(highlightDrawable);
+		});
+		
+		highlightAnimator.addListener(new AnimatorListenerAdapter() {
+			@Override
+			public void onAnimationEnd(Animator animation) {
+				// CRITICAL FIX: Safely restore original background
+				if (!isFinishing() && !isDestroyed() && messageView != null) {
+					messageView.setBackgroundDrawable(originalBackground);
+				}
+			}
+		});
+		
+		highlightAnimator.start();
+	}
+	
+	private int dpToPx(int dp) {
+		// CRITICAL FIX: Safe dp to px conversion with null checks
+		try {
+			if (getResources() != null && getResources().getDisplayMetrics() != null) {
+				return (int) (dp * getResources().getDisplayMetrics().density);
+			}
+		} catch (Exception e) {
+			Log.e("ChatActivity", "Error converting dp to px: " + e.getMessage());
+		}
+		return dp; // Fallback to dp value
 	}
 
 	private void startActivityWithUid(Class<?> activityClass) {
@@ -2910,9 +3001,4 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
-	// Helper method to convert dp to pixels
-	private int dpToPx(int dp) {
-		float density = getResources().getDisplayMetrics().density;
-		return Math.round(dp * density);
-	}
 }
