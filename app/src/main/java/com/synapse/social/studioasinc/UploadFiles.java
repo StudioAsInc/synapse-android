@@ -44,9 +44,13 @@ public class UploadFiles {
 	private static final String IMGBB_API_KEY = "faa85ffbac0217ff67b5f3c4baa7fb29";
 	private static final String IMGBB_UPLOAD_URL = "https://api.imgbb.com/1/upload?expiration=0&key=" + IMGBB_API_KEY;
 
-	// --- POSTIMAGES.ORG CONFIGURATION (Fallback for images) ---
+	// --- POSTIMAGES.ORG CONFIGURATION (Fallback 1 for images) ---
 	private static final String POSTIMAGES_API_KEY = "7746820ffe9cebd5769618ca22fc9ca8";
 	private static final String POSTIMAGES_UPLOAD_URL = "https://api.postimage.org/1/upload";
+
+	// --- IMGHIPPO CONFIGURATION (Fallback 2 for images) ---
+	private static final String IMGHIPPO_API_KEY = "8c9f1370410a15045f10c055ed656032";
+	private static final String IMGHIPPO_UPLOAD_URL = "https://www.imghippo.com/api/1/upload";
 
 	// Reasonable network timeouts (ms)
 	private static final int CONNECT_TIMEOUT_MS = 15000;
@@ -160,7 +164,8 @@ public class UploadFiles {
 
 		File file = new File(filePath);
 		if (!file.exists()) {
-			postFailure(callback, previousError + " | File not found for Postimages");
+			// Try ImgHippo if file exists check fails for some reason
+			uploadToImgHippo(filePath, fileName, callback, previousError + " | File not found for Postimages");
 			return;
 		}
 
@@ -239,13 +244,105 @@ public class UploadFiles {
 				if (urlStr != null && !urlStr.isEmpty()) {
 					postSuccess(callback, urlStr, "postimages|" + urlStr);
 				} else {
-					postFailure(callback, previousError + " | Postimages success but no URL in response: " + resp);
+					// Chain to ImgHippo if URL missing
+					uploadToImgHippo(filePath, fileName, callback, previousError + " | Postimages success but no URL in response: " + resp);
 				}
 			} else {
-				postFailure(callback, previousError + " | Postimages Upload failed (" + code + "): " + resp);
+				// Chain to ImgHippo on non-200
+				uploadToImgHippo(filePath, fileName, callback, previousError + " | Postimages Upload failed (" + code + "): " + resp);
 			}
 		} catch (Exception e) {
-			postFailure(callback, previousError + " | Postimages Exception: " + e.getMessage());
+			// Chain to ImgHippo on exception
+			uploadToImgHippo(filePath, fileName, callback, previousError + " | Postimages Exception: " + e.getMessage());
+		}
+	}
+
+	// Fallback 2: Upload to ImgHippo
+	private static void uploadToImgHippo(String filePath, String fileName, UploadCallback callback, String previousError) {
+		String boundary = "----ImgHippoBoundary" + System.currentTimeMillis();
+		String LF = "\r\n";
+
+		File file = new File(filePath);
+		if (!file.exists()) {
+			postFailure(callback, previousError + " | File not found for ImgHippo");
+			return;
+		}
+
+		try {
+			URL url = new URL(IMGHIPPO_UPLOAD_URL);
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setUseCaches(false);
+			conn.setDoOutput(true);
+			conn.setDoInput(true);
+			conn.setRequestMethod("POST");
+			conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+			conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
+			conn.setReadTimeout(READ_TIMEOUT_MS);
+
+			DataOutputStream out = new DataOutputStream(
+				new BufferedOutputStream(conn.getOutputStream(), 64 * 1024)
+			);
+
+			// API key field - as per docs, use field name "api_key"
+			out.writeBytes("--" + boundary + LF);
+			out.writeBytes("Content-Disposition: form-data; name=\"api_key\"" + LF + LF);
+			out.writeBytes(IMGHIPPO_API_KEY + LF);
+
+			// Image field - common names include file/image; prefer "image"
+			out.writeBytes("--" + boundary + LF);
+			out.writeBytes("Content-Disposition: form-data; name=\"image\"; filename=\"" + fileName + "\"" + LF);
+			out.writeBytes("Content-Type: " + getMimeType(getFileExtension(fileName)) + LF + LF);
+
+			FileInputStream in = new FileInputStream(file);
+			byte[] buf = new byte[64 * 1024];
+			long total = file.length(), sent = 0;
+			int r;
+			while ((r = in.read(buf)) != -1) {
+				out.write(buf, 0, r);
+				sent += r;
+				postProgress(callback, (int)((sent * 100) / total));
+			}
+			in.close();
+			out.writeBytes(LF);
+
+			out.writeBytes("--" + boundary + "--" + LF);
+			out.flush();
+			out.close();
+
+			int code = conn.getResponseCode();
+			InputStream respStream = (code == 200 ? conn.getInputStream() : conn.getErrorStream());
+			BufferedReader reader = new BufferedReader(new InputStreamReader(respStream));
+			StringBuilder resp = new StringBuilder();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				resp.append(line);
+			}
+			reader.close();
+			conn.disconnect();
+
+			if (code == 200) {
+				String urlStr = null;
+				try {
+					JSONObject json = new JSONObject(resp.toString());
+					// Based on docs: { success: true, data: { url: "..." } }
+					if (json.has("data")) {
+						JSONObject data = json.getJSONObject("data");
+						if (data.has("url")) urlStr = data.getString("url");
+					} else if (json.has("url")) {
+						urlStr = json.getString("url");
+					}
+				} catch (Exception ignored) {}
+
+				if (urlStr != null && !urlStr.isEmpty()) {
+					postSuccess(callback, urlStr, "imghippo|" + urlStr);
+				} else {
+					postFailure(callback, previousError + " | ImgHippo success but no URL in response: " + resp);
+				}
+			} else {
+				postFailure(callback, previousError + " | ImgHippo Upload failed (" + code + "): " + resp);
+			}
+		} catch (Exception e) {
+			postFailure(callback, previousError + " | ImgHippo Exception: " + e.getMessage());
 		}
 	}
 
