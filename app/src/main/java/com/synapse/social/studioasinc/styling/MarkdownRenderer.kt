@@ -8,6 +8,7 @@ import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.util.Log
+import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
 import androidx.browser.customtabs.CustomTabsIntent
@@ -20,6 +21,11 @@ import io.noties.markwon.ext.tasklist.TaskListPlugin
 import io.noties.markwon.image.glide.GlideImagesPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
 import io.noties.markwon.LinkResolver
+import io.noties.markwon.core.CorePlugin
+import io.noties.markwon.html.HtmlPlugin
+import io.noties.markwon.core.spans.CodeSpan
+import io.noties.markwon.core.spans.EmphasisSpan
+import io.noties.markwon.core.spans.StrongEmphasisSpan
 
 class MarkdownRenderer private constructor(private val markwon: Markwon) {
 
@@ -53,10 +59,12 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
             }
 
             val markwon = Markwon.builder(context)
+                .usePlugin(CorePlugin.create())
                 .usePlugin(GlideImagesPlugin.create(context))
                 .usePlugin(TablePlugin.create(context))
                 .usePlugin(TaskListPlugin.create(context))
                 .usePlugin(LinkifyPlugin.create())
+                .usePlugin(HtmlPlugin.create())
                 .usePlugin(object : AbstractMarkwonPlugin() {
                     override fun configureTheme(builder: MarkwonTheme.Builder) {
                         builder.linkColor(Color.parseColor("#445E91")).isLinkUnderlined(true)
@@ -69,6 +77,8 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                     override fun afterSetText(textView: TextView) {
                         super.afterSetText(textView)
                         applyMentionHashtagSpans(textView)
+                        applyTableStyling(textView)
+                        applyCustomTableStyling(textView)
                     }
                 })
                 .build()
@@ -108,6 +118,76 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                 }
                 text.setSpan(span, start, end, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
+        }
+
+        private fun applyTableStyling(textView: TextView) {
+            val text = textView.text
+            if (text !is android.text.Spannable) return
+            
+            // Find table patterns and ensure they're properly styled
+            // Improved pattern to detect markdown tables with better accuracy
+            val tablePattern = java.util.regex.Pattern.compile("\\|[^\\n]*\\|")
+            val matcher = tablePattern.matcher(text)
+            
+            if (matcher.find()) {
+                // Force text view to redraw to ensure table styling is applied
+                textView.post {
+                    textView.requestLayout()
+                    textView.invalidate()
+                }
+                
+                // Set text size for better table readability
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                
+                Log.d("MarkdownRenderer", "Table styling applied to: ${text}")
+            }
+        }
+
+        private fun applyCustomTableStyling(textView: TextView) {
+            val text = textView.text
+            if (text !is android.text.Spannable) return
+            
+            // Look for table patterns and apply custom styling
+            // Improved pattern to detect markdown tables
+            val tablePattern = java.util.regex.Pattern.compile("\\|[^\\n]*\\|")
+            val matcher = tablePattern.matcher(text)
+            
+            if (matcher.find()) {
+                // Apply custom table styling
+                textView.post {
+                    // Set background color for better table visibility
+                    textView.setBackgroundColor(Color.parseColor("#F5F5F5"))
+                    
+                    // Set padding for better table spacing
+                    val padding = TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP, 
+                        8f, 
+                        textView.resources.displayMetrics
+                    ).toInt()
+                    textView.setPadding(padding, padding, padding, padding)
+                    
+                    // Force redraw
+                    textView.requestLayout()
+                    textView.invalidate()
+                }
+                
+                Log.d("MarkdownRenderer", "Table detected and styled: ${text}")
+            }
+        }
+
+        /**
+         * Test method to verify table rendering
+         */
+        fun testTableRendering(textView: TextView) {
+            val testTable = """
+                | Name | Age | City |
+                |------|-----|------|
+                | Ashik | 18 | Dinajpur |
+                | Rina | 17 | Dhaka |
+                | Tuhin | 19 | Chittagong |
+            """.trimIndent()
+            
+            render(textView, testTable)
         }
     }
 }

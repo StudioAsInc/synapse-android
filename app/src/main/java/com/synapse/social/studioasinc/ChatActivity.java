@@ -699,6 +699,28 @@ public class ChatActivity extends AppCompatActivity {
 			String recipientUid = getIntent().getStringExtra("uid");
 			PresenceManager.setChattingWith(auth.getCurrentUser().getUid(), recipientUid);
 		}
+		
+		// CRITICAL FIX: Reattach chat listener when returning to the activity
+		// This ensures real-time message updates work when user returns from screen off
+		if (_chat_child_listener == null) {
+			_attachChatListener();
+		}
+		
+		// CRITICAL FIX: Refresh messages to show any that were sent while screen was off
+		_refreshMessagesOnReturn();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		
+		// CRITICAL FIX: Ensure chat listener is active when resuming
+		if (_chat_child_listener == null) {
+			_attachChatListener();
+		}
+		
+		// CRITICAL FIX: Refresh messages when resuming to catch any missed updates
+		_refreshMessagesOnReturn();
 	}
 
 	@Override
@@ -1448,6 +1470,47 @@ public class ChatActivity extends AppCompatActivity {
 		if (_userStatusListener != null) {
 			userRef.removeEventListener(_userStatusListener);
 			_userStatusListener = null;
+		}
+	}
+
+	/**
+	 * CRITICAL FIX: Refresh messages when user returns to the activity
+	 * This ensures any messages sent while the screen was off are displayed
+	 */
+	private void _refreshMessagesOnReturn() {
+		try {
+			if (chatMessagesRef != null && _chat_child_listener != null) {
+				// Force a refresh by temporarily removing and re-adding the listener
+				// This ensures we get the latest messages from Firebase
+				chatMessagesRef.removeEventListener(_chat_child_listener);
+				chatMessagesRef.addChildEventListener(_chat_child_listener);
+				
+				Log.d("ChatActivity", "Chat listener refreshed on return to activity");
+				
+				// Also refresh the RecyclerView to ensure proper display
+				if (chatAdapter != null) {
+					chatAdapter.notifyDataSetChanged();
+				}
+				
+				// Scroll to bottom to show latest messages
+				scrollToBottomImmediate();
+			}
+		} catch (Exception e) {
+			Log.e("ChatActivity", "Error refreshing messages on return: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * CRITICAL FIX: Handle screen state changes to ensure message updates
+	 */
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		if (hasFocus && _chat_child_listener == null) {
+			// Reattach listener if it was detached
+			_attachChatListener();
+			// Refresh messages to show any that were sent while screen was off
+			_refreshMessagesOnReturn();
 		}
 	}
 
