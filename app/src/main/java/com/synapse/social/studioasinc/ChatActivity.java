@@ -164,6 +164,7 @@ public class ChatActivity extends AppCompatActivity {
 	private ChatAdapter chatAdapter;
 	private boolean isLoading = false;
 	private ChildEventListener _chat_child_listener;
+	private boolean _isChatListenerAttached = false;
 	private DatabaseReference chatMessagesRef;
 	private ValueEventListener _userStatusListener;
 	private DatabaseReference userRef;
@@ -700,27 +701,20 @@ public class ChatActivity extends AppCompatActivity {
 			PresenceManager.setChattingWith(auth.getCurrentUser().getUid(), recipientUid);
 		}
 		
-		// CRITICAL FIX: Reattach chat listener when returning to the activity
-		// This ensures real-time message updates work when user returns from screen off
+		// CRITICAL FIX: Ensure chat listener is attached when starting
+		// Only attach if not already attached to prevent duplicates
 		if (_chat_child_listener == null) {
 			_attachChatListener();
 		}
-		
-		// CRITICAL FIX: Refresh messages to show any that were sent while screen was off
-		_refreshMessagesOnReturn();
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
 		
-		// CRITICAL FIX: Ensure chat listener is active when resuming
-		if (_chat_child_listener == null) {
-			_attachChatListener();
-		}
-		
 		// CRITICAL FIX: Refresh messages when resuming to catch any missed updates
-		_refreshMessagesOnReturn();
+		// Use a single refresh mechanism to avoid race conditions
+		_refreshMessagesOnResume();
 	}
 
 	@Override
@@ -1155,8 +1149,14 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _attachChatListener() {
-		if (_chat_child_listener == null) {
-			_chat_child_listener = new ChildEventListener() {
+		// CRITICAL FIX: Prevent duplicate listener attachments
+		if (_isChatListenerAttached || _chat_child_listener != null) {
+			Log.d("ChatActivity", "Chat listener already attached, skipping duplicate attachment");
+			return;
+		}
+		
+		Log.d("ChatActivity", "Attaching new chat listener");
+		_chat_child_listener = new ChildEventListener() {
 				@Override
 				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
 					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
@@ -1298,6 +1298,8 @@ public class ChatActivity extends AppCompatActivity {
 				}
 			};
 			chatMessagesRef.addChildEventListener(_chat_child_listener);
+			_isChatListenerAttached = true;
+			Log.d("ChatActivity", "Chat listener successfully attached");
 		}
 	}
 
@@ -1440,9 +1442,11 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _detachChatListener() {
-		if (_chat_child_listener != null) {
+		if (_chat_child_listener != null && _isChatListenerAttached) {
+			Log.d("ChatActivity", "Detaching chat listener");
 			chatMessagesRef.removeEventListener(_chat_child_listener);
 			_chat_child_listener = null;
+			_isChatListenerAttached = false;
 		}
 	}
 
@@ -1476,41 +1480,83 @@ public class ChatActivity extends AppCompatActivity {
 	/**
 	 * CRITICAL FIX: Refresh messages when user returns to the activity
 	 * This ensures any messages sent while the screen was off are displayed
+	 * Uses a single value event to avoid duplicate listener issues
 	 */
-	private void _refreshMessagesOnReturn() {
+	private void _refreshMessagesOnResume() {
+		// CRITICAL FIX: Prevent excessive refreshes
+		// Only refresh if we have a valid chat reference and listener
+		if (chatMessagesRef == null || !_isChatListenerAttached) {
+			Log.d("ChatActivity", "Skipping message refresh - chat not properly initialized");
+			return;
+		}
+		
+		// Add a small delay to prevent rapid successive refreshes
+		new Handler().postDelayed(() -> {
+			_performMessageRefresh();
+		}, 100);
+	}
+	
+	/**
+	 * Performs the actual message refresh operation
+	 */
+	private void _performMessageRefresh() {
 		try {
-			if (chatMessagesRef != null && _chat_child_listener != null) {
-				// Force a refresh by temporarily removing and re-adding the listener
-				// This ensures we get the latest messages from Firebase
-				chatMessagesRef.removeEventListener(_chat_child_listener);
-				chatMessagesRef.addChildEventListener(_chat_child_listener);
+			if (chatMessagesRef != null) {
+				Log.d("ChatActivity", "Refreshing messages on resume using single value event");
 				
-				Log.d("ChatActivity", "Chat listener refreshed on return to activity");
-				
-				// Also refresh the RecyclerView to ensure proper display
-				if (chatAdapter != null) {
-					chatAdapter.notifyDataSetChanged();
-				}
-				
-				// Scroll to bottom to show latest messages
-				scrollToBottomImmediate();
+				// Use a single value event to get the latest messages without duplicate listeners
+				// This is much more efficient and prevents message duplication
+				chatMessagesRef.addListenerForSingleValueEvent(new ValueEventListener() {
+					@Override
+					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+						try {
+							// Check if we have new messages that aren't in our current list
+							boolean hasNewMessages = false;
+							for (DataSnapshot messageSnapshot : dataSnapshot.getChildren()) {
+								if (messageSnapshot.exists()) {
+									HashMap<String, Object> messageData = messageSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+									if (messageData != null && messageData.get(KEY_KEY) != null) {
+										String messageKey = messageData.get(KEY_KEY).toString();
+										
+										// Check if this message is already in our list
+										boolean exists = false;
+										for (HashMap<String, Object> existingMsg : ChatMessagesList) {
+											if (existingMsg.get(KEY_KEY) != null && 
+												existingMsg.get(KEY_KEY).toString().equals(messageKey)) {
+												exists = true;
+												break;
+											}
+										}
+										
+										if (!exists) {
+											hasNewMessages = true;
+											break;
+										}
+									}
+								}
+							}
+							
+							if (hasNewMessages) {
+								Log.d("ChatActivity", "New messages detected, refreshing adapter");
+								// Only refresh if we actually have new messages
+								if (chatAdapter != null) {
+									chatAdapter.notifyDataSetChanged();
+								}
+								scrollToBottomImmediate();
+							}
+						} catch (Exception e) {
+							Log.e("ChatActivity", "Error processing message refresh: " + e.getMessage());
+						}
+					}
+					
+					@Override
+					public void onCancelled(@NonNull DatabaseError databaseError) {
+						Log.e("ChatActivity", "Message refresh cancelled: " + databaseError.getMessage());
+					}
+				});
 			}
 		} catch (Exception e) {
-			Log.e("ChatActivity", "Error refreshing messages on return: " + e.getMessage());
-		}
-	}
-
-	/**
-	 * CRITICAL FIX: Handle screen state changes to ensure message updates
-	 */
-	@Override
-	public void onWindowFocusChanged(boolean hasFocus) {
-		super.onWindowFocusChanged(hasFocus);
-		if (hasFocus && _chat_child_listener == null) {
-			// Reattach listener if it was detached
-			_attachChatListener();
-			// Refresh messages to show any that were sent while screen was off
-			_refreshMessagesOnReturn();
+			Log.e("ChatActivity", "Error refreshing messages on resume: " + e.getMessage());
 		}
 	}
 

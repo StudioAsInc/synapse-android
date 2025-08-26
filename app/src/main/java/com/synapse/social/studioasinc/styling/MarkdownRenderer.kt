@@ -23,15 +23,32 @@ import io.noties.markwon.linkify.LinkifyPlugin
 import io.noties.markwon.LinkResolver
 import io.noties.markwon.core.CorePlugin
 import io.noties.markwon.html.HtmlPlugin
-import io.noties.markwon.core.spans.CodeSpan
-import io.noties.markwon.core.spans.EmphasisSpan
-import io.noties.markwon.core.spans.StrongEmphasisSpan
 
 class MarkdownRenderer private constructor(private val markwon: Markwon) {
 
     fun render(textView: TextView, markdown: String) {
+        // CRITICAL FIX: Reset TextView styling before rendering to prevent RecyclerView pollution
+        resetTextViewStyling(textView)
+        
         textView.movementMethod = LinkMovementMethod.getInstance()
         markwon.setMarkdown(textView, markdown)
+    }
+    
+    /**
+     * Resets TextView styling to prevent RecyclerView recycling issues
+     * This ensures each message gets a clean state
+     */
+    private fun resetTextViewStyling(textView: TextView) {
+        textView.post {
+            // Reset background to transparent
+            textView.setBackgroundColor(Color.TRANSPARENT)
+            
+            // Reset padding to default
+            textView.setPadding(0, 0, 0, 0)
+            
+            // Reset text size to default (will be overridden by markdown if needed)
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+        }
     }
 
     companion object {
@@ -77,8 +94,7 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                     override fun afterSetText(textView: TextView) {
                         super.afterSetText(textView)
                         applyMentionHashtagSpans(textView)
-                        applyTableStyling(textView)
-                        applyCustomTableStyling(textView)
+                        applyRobustTableStyling(textView)
                     }
                 })
                 .build()
@@ -120,48 +136,42 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
             }
         }
 
-        private fun applyTableStyling(textView: TextView) {
+        /**
+         * Robust table detection and styling that only applies to actual markdown tables
+         * Uses a more sophisticated pattern to avoid false positives
+         */
+        private fun applyRobustTableStyling(textView: TextView) {
             val text = textView.text
             if (text !is android.text.Spannable) return
             
-            // Find table patterns and ensure they're properly styled
-            // Improved pattern to detect markdown tables with better accuracy
-            val tablePattern = java.util.regex.Pattern.compile("\\|[^\\n]*\\|")
-            val matcher = tablePattern.matcher(text)
+            // More robust table detection - looks for proper markdown table structure
+            // Must have at least 2 pipe-delimited lines with proper separator line
+            val lines = text.toString().split("\n")
+            if (lines.size < 3) return // Need at least header, separator, and one data row
             
-            if (matcher.find()) {
-                // Force text view to redraw to ensure table styling is applied
-                textView.post {
-                    textView.requestLayout()
-                    textView.invalidate()
-                }
-                
-                // Set text size for better table readability
-                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
-                
-                Log.d("MarkdownRenderer", "Table styling applied to: ${text}")
+            val hasTableStructure = lines.any { line ->
+                line.trim().startsWith("|") && line.trim().endsWith("|") && 
+                line.contains("|") && line.split("|").size > 2
             }
-        }
-
-        private fun applyCustomTableStyling(textView: TextView) {
-            val text = textView.text
-            if (text !is android.text.Spannable) return
             
-            // Look for table patterns and apply custom styling
-            // Improved pattern to detect markdown tables
-            val tablePattern = java.util.regex.Pattern.compile("\\|[^\\n]*\\|")
-            val matcher = tablePattern.matcher(text)
+            val hasSeparator = lines.any { line ->
+                val trimmed = line.trim()
+                trimmed.startsWith("|") && trimmed.endsWith("|") &&
+                trimmed.replace("|", "").replace("-", "").replace(":", "").isEmpty()
+            }
             
-            if (matcher.find()) {
-                // Apply custom table styling
+            if (hasTableStructure && hasSeparator) {
+                Log.d("MarkdownRenderer", "Valid table detected, applying styling")
+                
+                // Apply table-specific styling only to this TextView
                 textView.post {
-                    // Set background color for better table visibility
-                    textView.setBackgroundColor(Color.parseColor("#F5F5F5"))
+                    // Use a subtle background for table content
+                    textView.setBackgroundColor(Color.parseColor("#FAFAFA"))
                     
-                    // Set padding for better table spacing
+                    // Add padding for better table readability
                     val padding = TypedValue.applyDimension(
                         TypedValue.COMPLEX_UNIT_DIP, 
-                        8f, 
+                        4f, 
                         textView.resources.displayMetrics
                     ).toInt()
                     textView.setPadding(padding, padding, padding, padding)
@@ -170,8 +180,6 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                     textView.requestLayout()
                     textView.invalidate()
                 }
-                
-                Log.d("MarkdownRenderer", "Table detected and styled: ${text}")
             }
         }
 
