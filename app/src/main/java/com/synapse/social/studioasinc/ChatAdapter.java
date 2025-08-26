@@ -53,7 +53,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private String firstUserName = "";
     private String secondUserName = "";
     private SharedPreferences appSettings;
-    private TextStylingUtil textStylingUtil;
+    // private TextStylingUtil textStylingUtil;
     private ChatActivity chatActivity;
 
     public ChatAdapter(ArrayList<HashMap<String, Object>> _arr) { _data = _arr; }

@@ -31,6 +31,7 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
     companion object {
         @Volatile private var instance: MarkdownRenderer? = null
 
+        @JvmStatic
         fun get(context: Context): MarkdownRenderer {
             return instance ?: synchronized(this) {
                 instance ?: build(context.applicationContext).also { instance = it }
@@ -83,8 +84,8 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
             while (matcher.find()) {
                 val start = matcher.start()
                 val end = matcher.end()
-                val symbol = matcher.group(1)
-                val full = matcher.group(0)
+                val symbol = matcher.group(1) ?: continue
+                val full = matcher.group(0) ?: continue
                 val span = if (symbol == "@") object : ClickableSpan() {
                     override fun onClick(widget: View) {
                         val ctx = widget.context
