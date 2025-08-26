@@ -1953,8 +1953,9 @@ public class ChatActivity extends AppCompatActivity {
 
 				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
 
-				// Smart Notification Check
-				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage);
+				// Enhanced Smart Notification Check with chat ID for deep linking
+				String chatId = senderUid + "_" + recipientUid;
+				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage, chatId);
 
 				_updateInbox(lastMessage);
 
@@ -2012,8 +2013,9 @@ public class ChatActivity extends AppCompatActivity {
 				scrollToBottom();
 			});
 
-			// Smart Notification Check
-			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText);
+			// Enhanced Smart Notification Check with chat ID for deep linking
+			String chatId = senderUid + "_" + recipientUid;
+			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText, chatId);
 
 			_updateInbox(messageText);
 
