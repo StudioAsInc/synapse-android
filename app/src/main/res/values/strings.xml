@@ -8,7 +8,7 @@
     <string name="create_account">Create account</string>
     <string name="please_accept_terms_and_conditions">You must accept all terms and conditions!</string>
     <string name="google_sign_not_available">Sign in with Google is not yet available.</string>
-    <string name="welcome_again">Welcome back 👋🏻</string>
+    <string name="welcome_again">Welcome back</string>
     <string name="login_your_account">Login to your Synapse account now.</string>
     <string name="email">E-Mail</string>
     <string name="password">Password</string>
@@ -16,8 +16,8 @@
     <string name="continue_button">Continue</string>
     <string name="please_enter_email">Please enter E-Mail</string>
     <string name="please_enter_password">Please enter Password</string>
-    <string name="skyline_create_account">Create Account 🎉</string>
-    <string name="join_skyline_community">Join the Synapse community by creating your account now 😊</string>
+    <string name="skyline_create_account">Create Account</string>
+    <string name="join_skyline_community">Join the Synapse community by creating your account now</string>
     <string name="complete_profile_title">Complete your profile</string>
     <string name="complete_profile_subtitle">Now finish account creation by completing your profile or skip profile completion step using skip button.</string>
     <string name="primary_details_title">Primary details</string>
@@ -66,9 +66,9 @@
     <string name="post_publish_success">Posted successfully</string>
     <string name="oh_there_us_a_problem">Oh! Something went wrong:(</string>
     <string name="reasons_may_be">Possible reasons:</string>
-    <string name="err_no_internet">• You have no or weak internet connection.</string>
-    <string name="err_app_maintenance">• The application may be under maintenance.</string>
-    <string name="err_problem_on_our_side">• There may be technical problems on our side.</string>
+    <string name="err_no_internet">- You have no or weak internet connection.</string>
+    <string name="err_app_maintenance">- The application may be under maintenance.</string>
+    <string name="err_problem_on_our_side">- There may be technical problems on our side.</string>
     <string name="retry">Retry</string>
     <string name="stories">Stories</string>
     <string name="image_posts">Image Posts</string>
@@ -147,7 +147,7 @@
     <string name="use_url">Use Url</string>
     <string name="profile_image_url">Profile Image Url</string>
     <string name="profile_cover_image_url">Cover Image Url</string>
-    <string name="fill_all_items">Fill All İtems</string>
+    <string name="fill_all_items">Fill All Items</string>
     <string name="changes_saved">Changes Saved</string>
     <string name="local_psts">Local</string>
     <string name="public_psts">Global</string>
@@ -243,7 +243,7 @@
     <string name="notif_preview_text">%1$s: %2$s</string>
     <string name="notif_preview_sender_only">%1$s</string>
     <string name="notif_preview_attachment_only">%1$s sent %2$s</string>
-    <string name="notif_preview_text_with_attachments">%1$s: %2$s • %3$s</string>
+    <string name="notif_preview_text_with_attachments">%1$s: %2$s - %3$s</string>
     <string name="sent_attachments">sent %1$s</string>
     <plurals name="attachment_count">
         <item quantity="one">%d attachment</item>
