@@ -1560,7 +1560,6 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
-
 	public void _AudioRecorderStart() {
 		cc = Calendar.getInstance();
 		recordMs = 0;
