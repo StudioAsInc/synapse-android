@@ -831,81 +831,99 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _messageOverviewPopup(final View _view, final double _position, final ArrayList<HashMap<String, Object>> _data) {
-		Log.d("ChatActivity", "=== POPUP MENU CALLED ===");
-		Log.d("ChatActivity", "View: " + _view + ", Position: " + _position + ", Data size: " + (_data != null ? _data.size() : "null"));
-		
 		if (_data == null || (int)_position >= _data.size() || (int)_position < 0) {
-			Log.e("ChatActivity", "Invalid position or data for message overview popup. Position: " + _position + ", Size: " + (_data != null ? _data.size() : "null"));
 			return;
 		}
-		
-		// Log the data being passed for debugging
-		Log.d("ChatActivity", "Popup called for position: " + _position + ", data size: " + _data.size());
-		Log.d("ChatActivity", "Message data: " + _data.get((int)_position).toString());
-		
-		// Build a compact, robust PopupMenu (no dependency on PopupWindow tokens)
-		
-		// Show compact contextual menu anchored to the bubble
-		View anchorView = _view;
-		if (anchorView.getId() != R.id.messageBG && anchorView.getParent() instanceof View) {
-			View possible = ((View) anchorView.getParent()).findViewById(R.id.messageBG);
-			if (possible != null) anchorView = possible;
-		}
-		final boolean isMine = _data.get((int)_position).get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid());
-		String messageTextForSummary = _data.get((int)_position).get(MESSAGE_TEXT_KEY) != null ? _data.get((int)_position).get(MESSAGE_TEXT_KEY).toString() : "";
-		final int ID_EDIT = 1, ID_REPLY = 2, ID_SUMMARY = 3, ID_COPY = 4, ID_DELETE = 5;
-		PopupMenu pm = new PopupMenu(this, anchorView, Gravity.END);
-		Menu m = pm.getMenu();
-		if (isMine) m.add(Menu.NONE, ID_EDIT, 0, getString(R.string.m_edit));
-		m.add(Menu.NONE, ID_REPLY, 1, getString(R.string.m_reply));
-		if (messageTextForSummary.length() > 200) m.add(Menu.NONE, ID_SUMMARY, 2, "Summary");
-		m.add(Menu.NONE, ID_COPY, 3, getString(R.string.m_copy));
-		if (isMine) m.add(Menu.NONE, ID_DELETE, 4, getString(R.string.m_delete));
-		pm.setOnMenuItemClickListener(item -> {
-			int id = item.getItemId();
-			if (id == ID_REPLY) {
-				ReplyMessageID = _data.get((int)_position).get(KEY_KEY).toString();
-				mMessageReplyLayoutBodyRightUsername.setText(isMine ? FirstUserName : SecondUserName);
-				mMessageReplyLayoutBodyRightMessage.setText(_data.get((int)_position).get(MESSAGE_TEXT_KEY).toString());
-				mMessageReplyLayout.setVisibility(View.VISIBLE);
-				vbr.vibrate((long)(48));
-				return true;
-			} else if (id == ID_SUMMARY) {
-				String prompt = "Summarize the following text in a few sentences:\n\n" + messageTextForSummary;
-				RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
-				if (vh instanceof BaseMessageViewHolder) callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
-				return true;
-			} else if (id == ID_COPY) {
-				((ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", messageTextForSummary));
-				vbr.vibrate((long)(48));
-				return true;
-			} else if (id == ID_DELETE) {
-				_DeleteMessageDialog(_data, _position);
-				return true;
-			} else if (id == ID_EDIT) {
-				MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(ChatActivity.this);
-				Dialogs.setTitle("Edit message");
-				View EdittextDesign = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
-				Dialogs.setView(EdittextDesign);
-				EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
-				edittext1.setText(messageTextForSummary);
-				Dialogs.setPositiveButton("Save", (d, w) -> {
-					String newText = edittext1.getText().toString();
-					String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-					String otherUid = getIntent().getStringExtra("uid");
-					String msgKey = _data.get((int)_position).get(KEY_KEY).toString();
-					_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey).child(MESSAGE_TEXT_KEY).setValue(newText);
-					_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey).child(MESSAGE_TEXT_KEY).setValue(newText);
-				});
-				Dialogs.setNegativeButton("Cancel", null);
-				Dialogs.show();
-				return true;
-			}
-			return false;
+
+		final HashMap<String, Object> messageData = _data.get((int)_position);
+		final boolean isMine = messageData.get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		final String messageText = messageData.get(MESSAGE_TEXT_KEY) != null ? messageData.get(MESSAGE_TEXT_KEY).toString() : "";
+
+		// Inflate the custom popup layout
+		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		View popupView = inflater.inflate(R.layout.chat_msg_options_popup_cv_synapse, null);
+
+		// Create the PopupWindow
+		final PopupWindow popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+		popupWindow.setElevation(24);
+
+		// Find views in the popup layout
+		LinearLayout editLayout = popupView.findViewById(R.id.edit);
+		LinearLayout replyLayout = popupView.findViewById(R.id.reply);
+		LinearLayout summaryLayout = popupView.findViewById(R.id.summary);
+		LinearLayout copyLayout = popupView.findViewById(R.id.copy);
+		LinearLayout deleteLayout = popupView.findViewById(R.id.delete);
+
+		// Configure visibility based on message owner and content
+		editLayout.setVisibility(isMine ? View.VISIBLE : View.GONE);
+		deleteLayout.setVisibility(isMine ? View.VISIBLE : View.GONE);
+		summaryLayout.setVisibility(messageText.length() > 200 ? View.VISIBLE : View.GONE);
+
+		// Set click listeners
+		replyLayout.setOnClickListener(v -> {
+			ReplyMessageID = messageData.get(KEY_KEY).toString();
+			mMessageReplyLayoutBodyRightUsername.setText(isMine ? FirstUserName : SecondUserName);
+			mMessageReplyLayoutBodyRightMessage.setText(messageText);
+			mMessageReplyLayout.setVisibility(View.VISIBLE);
+			vbr.vibrate(48);
+			popupWindow.dismiss();
 		});
-		pm.show();
+
+		copyLayout.setOnClickListener(v -> {
+			((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", messageText));
+			vbr.vibrate(48);
+			popupWindow.dismiss();
+		});
+
+		deleteLayout.setOnClickListener(v -> {
+			_DeleteMessageDialog(_data, _position);
+			popupWindow.dismiss();
+		});
+
+		editLayout.setOnClickListener(v -> {
+			MaterialAlertDialogBuilder dialog = new MaterialAlertDialogBuilder(ChatActivity.this);
+			dialog.setTitle("Edit message");
+			View dialogView = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
+			dialog.setView(dialogView);
+			final EditText editText = dialogView.findViewById(R.id.edittext1);
+			editText.setText(messageText);
+			dialog.setPositiveButton("Save", (d, w) -> {
+				String newText = editText.getText().toString();
+				String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+				String otherUid = getIntent().getStringExtra("uid");
+				String msgKey = messageData.get(KEY_KEY).toString();
+				DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
+				DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
+				msgRef1.child(MESSAGE_TEXT_KEY).setValue(newText);
+				msgRef2.child(MESSAGE_TEXT_KEY).setValue(newText);
+			});
+			dialog.setNegativeButton("Cancel", null);
+			dialog.show();
+			popupWindow.dismiss();
+		});
 		
-		// Legacy inline layout-based popup actions removed in favor of PopupMenu
+		summaryLayout.setOnClickListener(v -> {
+			String prompt = "Summarize the following text in a few sentences:\n\n" + messageText;
+			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
+			if (vh instanceof BaseMessageViewHolder) {
+				callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
+			}
+			popupWindow.dismiss();
+		});
+
+
+		// --- FIX: Show PopupWindow above the anchor view ---
+		popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+		int popupWidth = popupView.getMeasuredWidth();
+		int popupHeight = popupView.getMeasuredHeight();
+
+		int[] location = new int[2];
+		_view.getLocationOnScreen(location);
+
+		int x = location[0] + (_view.getWidth() / 2) - (popupWidth / 2);
+		int y = location[1] - popupHeight;
+
+		popupWindow.showAtLocation(_view, Gravity.NO_GRAVITY, x, y);
 	}
 
 
@@ -1566,8 +1584,20 @@ public class ChatActivity extends AppCompatActivity {
 		zorry.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface _dialog, int _which) {
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get(KEY_KEY).toString()).removeValue();
+				// Get the key before the item is removed
+				String messageKey = _data.get((int)_position).get(KEY_KEY).toString();
+
+				// Remove from Firebase
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(messageKey).removeValue();
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(messageKey).removeValue();
+
+				// FIX: Manually remove from the local list and notify the adapter
+				// This ensures the UI updates instantly, even if the listener is delayed or fails.
+				if ((int)_position < ChatMessagesList.size()) {
+					ChatMessagesList.remove((int)_position);
+					chatAdapter.notifyItemRemoved((int)_position);
+					chatAdapter.notifyItemRangeChanged((int)_position, ChatMessagesList.size());
+				}
 			}
 		});
 		zorry.setNegativeButton("No", new DialogInterface.OnClickListener() {
