@@ -19,15 +19,7 @@ import io.noties.markwon.ext.tasklist.TaskListPlugin
 import io.noties.markwon.image.glide.GlideImagesPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
 import io.noties.markwon.LinkResolver
-import io.noties.markwon.syntax.Prism4jSyntaxHighlight
-import io.noties.markwon.syntax.Prism4jThemeDarkula
-import io.noties.prism4j.Prism4j
-import io.noties.prism4j.annotations.PrismBundle
 
-@PrismBundle(include = [
-    "markup", "css", "clike", "javascript", "java", "kotlin", "swift", "python",
-    "bash", "c", "cpp", "csharp", "go", "json", "yaml", "xml", "sql", "php",
-], grammarLocatorClassName = "com.synapse.social.studioasinc.styling.PrismLocator")
 class MarkdownRenderer private constructor(private val markwon: Markwon) {
 
     fun render(textView: TextView, markdown: String) {
@@ -45,8 +37,6 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
         }
 
         private fun build(context: Context): MarkdownRenderer {
-            val prism4j = Prism4j(PrismLocator())
-
             val linkResolver = LinkResolver { view, link ->
                 try {
                     CustomTabsIntent.Builder().build().launchUrl(view.context, Uri.parse(link))
@@ -70,7 +60,6 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                         builder.linkColor(Color.parseColor("#445E91")).isLinkUnderlined(true)
                     }
                 })
-                .usePlugin(Prism4jSyntaxHighlight.create(prism4j, Prism4jThemeDarkula.create()))
                 .usePlugin(object : AbstractMarkwonPlugin() {
                     override fun configureConfiguration(builder: Markwon.Configuration.Builder) {
                         builder.linkResolver(linkResolver)
