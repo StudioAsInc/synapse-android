@@ -105,7 +105,6 @@ import java.util.TimerTask;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
-import android.os.Handler;
 
 
 public class ChatActivity extends AppCompatActivity {
@@ -2996,9 +2995,4 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
-	// Helper method to convert dp to pixels
-	private int dpToPx(int dp) {
-		float density = getResources().getDisplayMetrics().density;
-		return Math.round(dp * density);
-	}
 }
