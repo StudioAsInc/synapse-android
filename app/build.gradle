@@ -182,3 +182,17 @@ dependencies {
 
     // Testing
 }
+
+// Disable Google Services processing when google-services.json is missing
+def gsCandidates = [
+        new File(projectDir, 'google-services.json'),
+        new File(projectDir, 'src/debug/google-services.json'),
+        new File(projectDir, 'src/release/google-services.json')
+]
+def hasGoogleServices = gsCandidates.any { it.exists() }
+if (!hasGoogleServices) {
+    logger.lifecycle('google-services.json not found; disabling Google Services tasks for local build')
+    tasks.matching { it.name.contains('GoogleServices') }.configureEach { task ->
+        task.enabled = false
+    }
+}

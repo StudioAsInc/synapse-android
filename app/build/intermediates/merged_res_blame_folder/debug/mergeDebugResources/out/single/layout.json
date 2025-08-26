@@ -1,0 +1,366 @@
+[
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/buypremium_cbsv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/buypremium_cbsv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/bg_wallpapers.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/bg_wallpapers.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/profile_edit.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/profile_edit.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/dp_preview.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/dp_preview.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/imageviewer.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/imageviewer.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/complete_profile.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/complete_profile.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/create_line_video_next_step.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/create_line_video_next_step.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_dialog_bg_view.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_dialog_bg_view.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_bubble_typing.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_bubble_typing.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/create_line_video.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/create_line_video.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/languages.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/languages.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/globalsearch.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/globalsearch.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_recommended_users_cv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_recommended_users_cv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/disappearing_message_settings.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/disappearing_message_settings.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/error_dialog.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/error_dialog.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_bubble_video.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_bubble_video.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_dialog.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_dialog.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/user_follows_list.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/user_follows_list.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/add_dp_with_url_synapse.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/add_dp_with_url_synapse.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/profile_cover_image_history_add_dialog.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/profile_cover_image_history_add_dialog.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/update_dialog.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/update_dialog.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/profile_photo_history.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/profile_photo_history.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/line_video_player.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/line_video_player.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/banned_dialog.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/banned_dialog.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/banned_users.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/banned_users.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/select_region.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/select_region.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_post_cv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_post_cv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/layout_zoominimage.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/layout_zoominimage.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/register.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/register.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chatsettings.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chatsettings.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/bottom_sheet_summary.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/bottom_sheet_summary.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_create_img_post_image_cv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_create_img_post_image_cv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/block_chat_bscv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/block_chat_bscv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_msg_options_popup_cv_synapse.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_msg_options_popup_cv_synapse.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/report_requests_preview.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/report_requests_preview.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_2nd_user_more_settings.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_2nd_user_more_settings.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/home.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/home.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/add_image_from_url_dialog.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/add_image_from_url_dialog.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/single_et.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/single_et.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/messages.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/messages.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/profile_cover_image_history_list.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/profile_cover_image_history_list.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/users_list.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/users_list.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/labs.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/labs.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/language.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/language.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/more_btn_profile_cbsd.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/more_btn_profile_cbsd.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_bubble_loading_more.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_bubble_loading_more.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/settings.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/settings.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/badge_overview_cbsd.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/badge_overview_cbsd.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/report_requests_bind.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/report_requests_bind.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_attactment.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_attactment.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/main.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/main.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/inbox_msg_list_cv_synapse.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/inbox_msg_list_cv_synapse.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/post_settings_cbsd.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/post_settings_cbsd.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/auth.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/auth.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_story_cv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_story_cv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/options.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/options.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_msg_cv_synapse.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_msg_cv_synapse.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_users_list_cv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_users_list_cv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/frag_inbox_chats.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/frag_inbox_chats.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/loading_synapse.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/loading_synapse.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_bubble_text.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_bubble_text.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/profile_cover_photo_history.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/profile_cover_photo_history.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/create_image_post_next_step.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/create_image_post_next_step.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/frag_inbox_stories.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/frag_inbox_stories.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/search.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/search.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_comments_cbsd.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_comments_cbsd.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_comment_got_heart_cv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_comment_got_heart_cv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/region_list_synapse.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/region_list_synapse.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/dialog_et_single_button.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/dialog_et_single_button.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/debug.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/debug.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/reply_comments_synapse.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/reply_comments_synapse.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/rocket_pay.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/rocket_pay.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/checkpermission.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/checkpermission.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/_drawer_search.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/_drawer_search.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/create_image_post.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/create_image_post.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_bubble_media.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_bubble_media.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/call.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/call.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/inbox.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/inbox.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/inbox_bs.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/inbox_bs.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/user_followers_list.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/user_followers_list.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/delete_chat_c_dialog.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/delete_chat_c_dialog.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_reels_cv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_reels_cv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/dp_history_cv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/dp_history_cv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/frag_inbox_calls.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/frag_inbox_calls.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/cv_item_wallpapers.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/cv_item_wallpapers.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/change_profile_image.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/change_profile_image.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/chat_bubble_link_preview.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/chat_bubble_link_preview.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/profile.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/profile.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/synapse_comments_list_cv.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/synapse_comments_list_cv.xml"
+    },
+    {
+        "merged": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/layout/report_requests.xml",
+        "source": "com.synapse.social.studioasinc.app-main-96:/layout/report_requests.xml"
+    }
+]

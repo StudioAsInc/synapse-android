@@ -23,6 +23,7 @@ import android.view.*;
 import android.view.View;
 import android.view.View.*;
 import android.view.animation.*;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.*;
 import android.widget.*;
 import android.widget.EditText;
@@ -61,6 +62,7 @@ import java.io.*;
 import java.io.InputStream;
 import java.text.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.*;
@@ -78,7 +80,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Map;
+
 
 public class SearchActivity extends AppCompatActivity {
 	
@@ -131,6 +134,10 @@ public class SearchActivity extends AppCompatActivity {
 	private RequestNetwork.RequestListener _request_request_listener;
 	private DatabaseReference maindb = _firebase.getReference("/");
 	private ChildEventListener _maindb_child_listener;
+	private Handler searchHandler;
+	private Runnable searchRunnable;
+	private static final long SEARCH_DEBOUNCE_MS = 350;
+	private String lastSearchText = "";
 	
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -169,7 +176,7 @@ public class SearchActivity extends AppCompatActivity {
 		SearchUserLayoutNoUserFound = findViewById(R.id.SearchUserLayoutNoUserFound);
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		auth = FirebaseAuth.getInstance();
-		request = new RequestNetwork(this);
+		searchHandler = new Handler(Looper.getMainLooper());
 		
 		bottom_home.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -218,6 +225,11 @@ public class SearchActivity extends AppCompatActivity {
 			public void onClick(View _view) {
 				SearchUserLayout.setVisibility(View.GONE);
 				topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.GONE);
+				topLayoutBarMiddleSearchInput.setText("");
+				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				if (imm != null) {
+					imm.hideSoftInputFromWindow(topLayoutBarMiddleSearchInput.getWindowToken(), 0);
+				}
 			}
 		});
 		
@@ -231,7 +243,7 @@ public class SearchActivity extends AppCompatActivity {
 					topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.GONE);
 					_ImageColor(topLayoutBarMiddleSearchLayoutIc, 0xFF757575);
 				} else {
-					_search();
+					scheduleDebouncedSearch(_charSeq.trim());
 					topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.VISIBLE);
 					_TransitionManager(topLayoutBarMiddleSearchLayout, 100);
 					_ImageColor(topLayoutBarMiddleSearchLayoutIc, 0xFF2962FF);
@@ -255,7 +267,7 @@ public class SearchActivity extends AppCompatActivity {
 				if (topLayoutBarMiddleSearchInput.getText().toString().trim().equals("")) {
 					_showAllUser();
 				} else {
-					_getSearchedUserReference();
+					performSearch(topLayoutBarMiddleSearchInput.getText().toString().trim());
 				}
 			}
 		});
@@ -313,51 +325,7 @@ public class SearchActivity extends AppCompatActivity {
 		};
 		main.addChildEventListener(_main_child_listener);
 		
-		_request_request_listener = new RequestNetwork.RequestListener() {
-			@Override
-			public void onResponse(String _param1, String _param2, HashMap<String, Object> _param3) {
-				final String _tag = _param1;
-				final String _response = _param2;
-				final HashMap<String, Object> _responseHeaders = _param3;
-				DatabaseReference searchRef = FirebaseDatabase.getInstance().getReference("skyline/users");
-				Query searchQuery = searchRef.orderByChild("username").startAt(topLayoutBarMiddleSearchInput.getText().toString()).endAt(topLayoutBarMiddleSearchInput.getText().toString() + "\uf8ff").limitToLast(50);
-				searchQuery.addListenerForSingleValueEvent(new ValueEventListener() {
-					@Override
-					public void onDataChange(@NonNull DataSnapshot snapshot) {
-						if (snapshot.exists()) {
-							SearchUserLayoutRecyclerView.setVisibility(View.VISIBLE);
-							SearchUserLayoutNoUserFound.setVisibility(View.GONE);
-							
-							searchedUsersList.clear();
-							
-							for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-								HashMap<String, Object> searchMap = new HashMap<String, Object>((Map<String, Object>) dataSnapshot.getValue());
-								searchedUsersList.add(searchMap);
-							}
-							
-							SearchUserLayoutRecyclerView.getAdapter().notifyDataSetChanged();
-							
-						} else {
-							SearchUserLayoutRecyclerView.setVisibility(View.GONE);
-							SearchUserLayoutNoUserFound.setVisibility(View.VISIBLE);
-						}
-					}
-					
-					@Override
-					public void onCancelled(@NonNull DatabaseError error) {
-						
-					}
-				});
-				
-			}
-			
-			@Override
-			public void onErrorResponse(String _param1, String _param2) {
-				final String _tag = _param1;
-				final String _message = _param2;
-				
-			}
-		};
+		// RequestNetwork-based stub removed; direct Firebase queries are used in performSearch()
 		
 		_maindb_child_listener = new ChildEventListener() {
 			@Override
@@ -499,6 +467,7 @@ public class SearchActivity extends AppCompatActivity {
 		_ImageColor(bottom_videos_ic, 0xFFBDBDBD);
 		_ImageColor(bottom_chats_ic, 0xFFBDBDBD);
 		_ImageColor(bottom_profile_ic, 0xFFBDBDBD);
+		topLayoutBarMiddleSearchLayoutIc.setImageResource(R.drawable.icon_search_round);
 		SearchUserLayoutRecyclerView.setAdapter(new SearchUserLayoutRecyclerViewAdapter(searchedUsersList));
 		SearchUserLayoutRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 		topLayoutBarMiddleSearchInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -552,9 +521,9 @@ public class SearchActivity extends AppCompatActivity {
 	
 	
 	public void _getSearchedUserReference() {
-		request.startRequestNetwork(RequestNetworkController.POST, "https://google.com", "google", _request_request_listener);
 		SearchUserLayout.setVisibility(View.VISIBLE);
 		topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.VISIBLE);
+		performSearch(topLayoutBarMiddleSearchInput.getText().toString().trim());
 	}
 	
 	
@@ -612,9 +581,87 @@ public class SearchActivity extends AppCompatActivity {
 	
 	
 	public void _search() {
-		request.startRequestNetwork(RequestNetworkController.POST, "https://google.com", "google", _request_request_listener);
 		SearchUserLayout.setVisibility(View.VISIBLE);
 		topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.VISIBLE);
+		scheduleDebouncedSearch(topLayoutBarMiddleSearchInput.getText().toString().trim());
+	}
+
+	private void scheduleDebouncedSearch(final String query) {
+		if (searchHandler == null) {
+			return;
+		}
+		if (searchRunnable != null) {
+			searchHandler.removeCallbacks(searchRunnable);
+		}
+		lastSearchText = query;
+		searchRunnable = new Runnable() {
+			@Override
+			public void run() {
+				performSearch(lastSearchText);
+			}
+		};
+		searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_MS);
+	}
+
+	private void performSearch(final String query) {
+		if (query == null || query.trim().isEmpty()) {
+			_showAllUser();
+			return;
+		}
+		SearchUserLayout.setVisibility(View.VISIBLE);
+		topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.VISIBLE);
+
+		final String activeText = topLayoutBarMiddleSearchInput.getText().toString().trim();
+		final DatabaseReference searchRef = FirebaseDatabase.getInstance().getReference("skyline/users");
+
+		final Map<String, HashMap<String, Object>> uidToUser = new LinkedHashMap<>();
+		final AtomicInteger pending = new AtomicInteger(2);
+
+		ValueEventListener aggregateListener = new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot snapshot) {
+				for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+					@SuppressWarnings("unchecked")
+					HashMap<String, Object> userMap = new HashMap<String, Object>((Map<String, Object>) dataSnapshot.getValue());
+					String uid = userMap.containsKey("uid") ? String.valueOf(userMap.get("uid")) : dataSnapshot.getKey();
+					uidToUser.put(uid, userMap);
+				}
+				if (pending.decrementAndGet() == 0) {
+					// Drop stale results if user changed input
+					if (!activeText.equals(topLayoutBarMiddleSearchInput.getText().toString().trim())) {
+						return;
+					}
+					searchedUsersList.clear();
+					searchedUsersList.addAll(uidToUser.values());
+					if (searchedUsersList.isEmpty()) {
+						SearchUserLayoutRecyclerView.setVisibility(View.GONE);
+						SearchUserLayoutNoUserFound.setVisibility(View.VISIBLE);
+					} else {
+						SearchUserLayoutRecyclerView.setVisibility(View.VISIBLE);
+						SearchUserLayoutNoUserFound.setVisibility(View.GONE);
+					}
+					RecyclerView.Adapter adapter = SearchUserLayoutRecyclerView.getAdapter();
+					if (adapter != null) {
+						adapter.notifyDataSetChanged();
+					}
+				}
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError error) {
+				if (pending.decrementAndGet() == 0) {
+					if (searchedUsersList.isEmpty()) {
+						SearchUserLayoutRecyclerView.setVisibility(View.GONE);
+						SearchUserLayoutNoUserFound.setVisibility(View.VISIBLE);
+					}
+				}
+			}
+		};
+
+		Query usernameQuery = searchRef.orderByChild("username").startAt(query).endAt(query + "\uf8ff").limitToLast(50);
+		Query nicknameQuery = searchRef.orderByChild("nickname").startAt(query).endAt(query + "\uf8ff").limitToLast(50);
+		usernameQuery.addListenerForSingleValueEvent(aggregateListener);
+		nicknameQuery.addListenerForSingleValueEvent(aggregateListener);
 	}
 	
 	
@@ -923,4 +970,4 @@ private static class GradientDrawableCreator {
 			}
 		}
 	}
-}
+}
