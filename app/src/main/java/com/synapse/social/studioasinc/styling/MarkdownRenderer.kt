@@ -13,11 +13,13 @@ import android.widget.TextView
 import androidx.browser.customtabs.CustomTabsIntent
 import io.noties.markwon.AbstractMarkwonPlugin
 import io.noties.markwon.Markwon
-import io.noties.markwon.core.spans.LinkSpan
+import io.noties.markwon.core.MarkwonTheme
 import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.ext.tasklist.TaskListPlugin
 import io.noties.markwon.image.glide.GlideImagesPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
+import io.noties.markwon.linkify.internal.LinkifyCompatImpl
+import io.noties.markwon.LinkResolver
 import io.noties.markwon.syntax.Prism4jSyntaxHighlight
 import io.noties.markwon.syntax.Prism4jThemeDarkula
 import io.noties.prism4j.Prism4j
@@ -46,39 +48,34 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
         private fun build(context: Context): MarkdownRenderer {
             val prism4j = Prism4j(PrismLocator())
 
+            val linkResolver = LinkResolver { view, link ->
+                try {
+                    CustomTabsIntent.Builder().build().launchUrl(view.context, Uri.parse(link))
+                } catch (e: Exception) {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+                    if (intent.resolveActivity(view.context.packageManager) != null) {
+                        view.context.startActivity(intent)
+                    } else {
+                        Log.e("MarkdownRenderer", "No activity for URL: $link")
+                    }
+                }
+            }
+
             val markwon = Markwon.builder(context)
                 .usePlugin(GlideImagesPlugin.create(context))
                 .usePlugin(TablePlugin.create(context))
                 .usePlugin(TaskListPlugin.create(context))
-                .usePlugin(LinkifyPlugin.create())
+                .usePlugin(LinkifyPlugin.create(LinkifyCompatImpl.create()))
                 .usePlugin(object : AbstractMarkwonPlugin() {
-                    override fun configureSpansFactory(builder: io.noties.markwon.SpansFactory.Builder) {
-                        super.configureSpansFactory(builder)
-                        builder.setFactory(LinkSpan::class.java) { configuration, props ->
-                            val dest = io.noties.markwon.core.MarkwonTheme.getLinkDest(props)
-                            arrayOf(object : ClickableSpan() {
-                                override fun onClick(widget: View) {
-                                    try {
-                                        CustomTabsIntent.Builder().build().launchUrl(widget.context, Uri.parse(dest))
-                                    } catch (e: Exception) {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(dest))
-                                        if (intent.resolveActivity(widget.context.packageManager) != null) {
-                                            widget.context.startActivity(intent)
-                                        } else {
-                                            Log.e("MarkdownRenderer", "No activity for URL: $dest")
-                                        }
-                                    }
-                                }
-                                override fun updateDrawState(ds: TextPaint) {
-                                    ds.color = Color.parseColor("#445E91")
-                                    ds.isUnderlineText = true
-                                }
-                            })
-                        }
+                    override fun configureTheme(builder: MarkwonTheme.Builder) {
+                        builder.linkColor(Color.parseColor("#445E91")).isLinkUnderlined(true)
                     }
                 })
                 .usePlugin(Prism4jSyntaxHighlight.create(prism4j, Prism4jThemeDarkula.create()))
                 .usePlugin(object : AbstractMarkwonPlugin() {
+                    override fun configureConfiguration(builder: Markwon.Configuration.Builder) {
+                        builder.linkResolver(linkResolver)
+                    }
                     override fun afterSetText(textView: TextView) {
                         super.afterSetText(textView)
                         applyMentionHashtagSpans(textView)
@@ -101,7 +98,6 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                 val full = matcher.group(0)
                 val span = if (symbol == "@") object : ClickableSpan() {
                     override fun onClick(widget: View) {
-                        // Keep behavior same as TextStylingUtil.ProfileSpan by delegating to ProfileActivity via Firebase lookup there if needed
                         val ctx = widget.context
                         ctx.startActivity(Intent(ctx, com.synapse.social.studioasinc.ProfileActivity::class.java).putExtra("username", full.substring(1)))
                     }
