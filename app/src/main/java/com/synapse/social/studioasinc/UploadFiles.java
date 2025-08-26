@@ -58,6 +58,28 @@ public class UploadFiles {
 
 	private static final Map<String, HttpURLConnection> activeUploads = new HashMap<>();
 
+	// --- R2 (S3-compatible) CONFIGURATION (Fallback for non-images) ---
+	// Defaults are disabled; call configureR2(...) at app startup to enable
+	private static volatile boolean R2_ENABLED = false;
+	private static volatile String R2_ENDPOINT = "https://76bea77fbdac3cdf71e6cf580f270ea6.r2.cloudflarestorage.com";
+	private static volatile String R2_BUCKET = "synapse";
+	private static volatile String R2_ACCESS_KEY = "";
+	private static volatile String R2_SECRET_KEY = "";
+	private static volatile String R2_KEY_PREFIX = "uploads/";
+
+	public static void configureR2(String endpoint, String bucket, String accessKey, String secretKey, String keyPrefix) {
+		R2_ENDPOINT = endpoint != null && !endpoint.isEmpty() ? endpoint : R2_ENDPOINT;
+		R2_BUCKET = bucket != null && !bucket.isEmpty() ? bucket : R2_BUCKET;
+		R2_ACCESS_KEY = accessKey != null ? accessKey : "";
+		R2_SECRET_KEY = secretKey != null ? secretKey : "";
+		R2_KEY_PREFIX = keyPrefix != null ? keyPrefix : R2_KEY_PREFIX;
+		R2_ENABLED = !R2_ACCESS_KEY.isEmpty() && !R2_SECRET_KEY.isEmpty();
+	}
+
+	// Region for R2 SigV4. For R2, use "auto" per Cloudflare docs.
+	private static final String R2_REGION = "auto";
+	private static final String S3_SERVICE = "s3";
+
 	/**
 	 * Main upload method. Determines the service based on file extension and starts the upload.
 	 */
@@ -416,21 +438,168 @@ public class UploadFiles {
 				String resourceType = json.getString("resource_type");
 				postSuccess(callback, urlStr, publicId + "|" + resourceType);
 			} else {
-				postFailure(callback, "Cloudinary Upload failed: " + resp);
+				// Try R2 if enabled
+				if (R2_ENABLED) {
+					uploadToR2(filePath, fileName, callback, "Cloudinary Upload failed: " + resp);
+				} else {
+					postFailure(callback, "Cloudinary Upload failed: " + resp);
+				}
 			}
 		} catch (Exception e) {
 			activeUploads.remove(filePath);
-			postFailure(callback, "Cloudinary Exception: " + e.getMessage());
+			// Try R2 if enabled
+			if (R2_ENABLED) {
+				uploadToR2(filePath, fileName, callback, "Cloudinary Exception: " + e.getMessage());
+			} else {
+				postFailure(callback, "Cloudinary Exception: " + e.getMessage());
+			}
 		}
+	}
+
+	// R2 S3-compatible upload via AWS SigV4
+	private static void uploadToR2(String filePath, String fileName, UploadCallback callback, String previousError) {
+		File file = new File(filePath);
+		if (!file.exists()) {
+			postFailure(callback, previousError + " | File not found for R2");
+			return;
+		}
+		String objectKey = R2_KEY_PREFIX + System.currentTimeMillis() + "_" + safeKey(fileName);
+		String contentType = "application/octet-stream";
+		String host = R2_ENDPOINT.replace("https://", "").replace("http://", "");
+		String path = "/" + R2_BUCKET + "/" + objectKey;
+		String urlStr = R2_ENDPOINT + path;
+
+		try {
+			URL url = new URL(urlStr);
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setDoOutput(true);
+			conn.setRequestMethod("PUT");
+			conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
+			conn.setReadTimeout(READ_TIMEOUT_MS);
+			conn.setRequestProperty("Host", host);
+			conn.setRequestProperty("x-amz-content-sha256", "UNSIGNED-PAYLOAD");
+			conn.setRequestProperty("x-amz-date", amzDate());
+			conn.setRequestProperty("Content-Type", contentType);
+
+			// Sign request (SigV4 with UNSIGNED-PAYLOAD)
+			signS3(conn, "PUT", path, R2_REGION, host);
+
+			// Stream file body
+			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(conn.getOutputStream(), 64 * 1024));
+			FileInputStream in = new FileInputStream(file);
+			byte[] buf = new byte[64 * 1024];
+			int r;
+			long total = file.length(), sent = 0;
+			while ((r = in.read(buf)) != -1) {
+				out.write(buf, 0, r);
+				sent += r;
+				postProgress(callback, (int)((sent * 100) / total));
+			}
+			in.close();
+			out.flush();
+			out.close();
+
+			int code = conn.getResponseCode();
+			if (code == 200 || code == 201) {
+				String finalUrl = urlStr; // Public R2 URL if bucket/public configured or proxied
+				postSuccess(callback, finalUrl, "r2|" + objectKey + "|raw");
+			} else {
+				InputStream err = conn.getErrorStream();
+				StringBuilder resp = new StringBuilder();
+				if (err != null) {
+					int c;
+					while ((c = err.read()) != -1) resp.append((char)c);
+					err.close();
+				}
+				postFailure(callback, previousError + " | R2 Upload failed (" + code + "): " + resp);
+			}
+			conn.disconnect();
+		} catch (Exception e) {
+			postFailure(callback, previousError + " | R2 Exception: " + e.getMessage());
+		}
+	}
+
+	private static String safeKey(String name) {
+		return name.replaceAll("[^A-Za-z0-9._-]", "_");
+	}
+
+	// Minimal SigV4 signer for S3-compatible R2 with UNSIGNED-PAYLOAD
+	private static void signS3(HttpURLConnection conn, String method, String canonicalPath, String region, String host) throws Exception {
+		String amzDate = conn.getRequestProperty("x-amz-date");
+		String dateStamp = amzDate.substring(0, 8);
+		String signedHeaders = "content-type;host;x-amz-content-sha256;x-amz-date";
+		String contentType = conn.getRequestProperty("Content-Type");
+		String payloadHash = "UNSIGNED-PAYLOAD";
+		String canonicalQuery = "";
+		String canonicalHeaders = "content-type:" + contentType + "\n" +
+				"host:" + host + "\n" +
+				"x-amz-content-sha256:" + payloadHash + "\n" +
+				"x-amz-date:" + amzDate + "\n";
+		String canonicalRequest = method + "\n" + canonicalPath + "\n" + canonicalQuery + "\n" + canonicalHeaders + "\n" + signedHeaders + "\n" + payloadHash;
+		String credentialScope = dateStamp + "/" + region + "/" + S3_SERVICE + "/aws4_request";
+		String stringToSign = "AWS4-HMAC-SHA256\n" + amzDate + "\n" + credentialScope + "\n" + sha256Hex(canonicalRequest);
+		byte[] signingKey = getSignatureKey(R2_SECRET_KEY, dateStamp, region, S3_SERVICE);
+		String signature = bytesToHex(hmacSHA256(signingKey, stringToSign));
+		String authorization = "AWS4-HMAC-SHA256 Credential=" + R2_ACCESS_KEY + "/" + credentialScope + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature;
+		conn.setRequestProperty("Authorization", authorization);
+	}
+
+	private static String amzDate() {
+		java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
+		df.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+		return df.format(new java.util.Date());
+	}
+
+	private static String sha256Hex(String s) throws Exception {
+		java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+		byte[] d = md.digest(s.getBytes("UTF-8"));
+		StringBuilder sb = new StringBuilder();
+		for (byte b : d) sb.append(String.format("%02x", b));
+		return sb.toString();
+	}
+
+	private static byte[] hmacSHA256(byte[] key, String data) throws Exception {
+		javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+		javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(key, "HmacSHA256");
+		mac.init(keySpec);
+		return mac.doFinal(data.getBytes("UTF-8"));
+	}
+
+	private static byte[] getSignatureKey(String key, String dateStamp, String regionName, String serviceName) throws Exception {
+		byte[] kSecret = ("AWS4" + key).getBytes("UTF-8");
+		byte[] kDate = hmacSHA256(kSecret, dateStamp);
+		byte[] kRegion = hmacSHA256(kDate, regionName);
+		byte[] kService = hmacSHA256(kRegion, serviceName);
+		return hmacSHA256(kService, "aws4_request");
+	}
+
+	private static String bytesToHex(byte[] bytes) {
+		StringBuilder sb = new StringBuilder();
+		for (byte b : bytes) sb.append(String.format("%02x", b));
+		return sb.toString();
 	}
 
 	/**
 	 * Deletes a file. Only works for Cloudinary uploads.
 	 */
 	public static void deleteByPublicId(String publicIdWithType, DeleteCallback callback) {
-		if (publicIdWithType == null || publicIdWithType.startsWith("imgbb|") || publicIdWithType.startsWith("postimages|")) {
-			// ImgBB and Postimages files can't be deleted via this API, so we just succeed silently.
+		if (publicIdWithType == null || publicIdWithType.startsWith("imgbb|") || publicIdWithType.startsWith("postimages|") || publicIdWithType.startsWith("imghippo|")) {
+			// ImgBB, Postimages, ImgHippo cannot be deleted here.
 			postDeleteSuccess(callback);
+			return;
+		}
+
+		if (publicIdWithType.startsWith("r2|")) {
+			String key = publicIdWithType.substring(3);
+			String objectKey = key;
+			String resourceType = null;
+			// support r2|key|type
+			if (key.contains("|")) {
+				String[] parts = key.split("\\|", 2);
+				objectKey = parts[0];
+				resourceType = parts.length > 1 ? parts[1] : null;
+			}
+			deleteFromR2(objectKey, callback);
 			return;
 		}
 
@@ -486,6 +655,35 @@ public class UploadFiles {
 				}
 			} catch (Exception e) {
 				postDeleteFailure(callback, e.getMessage());
+			}
+		}).start();
+	}
+
+	private static void deleteFromR2(String objectKey, DeleteCallback callback) {
+		if (!R2_ENABLED) { postDeleteSuccess(callback); return; }
+		String host = R2_ENDPOINT.replace("https://", "").replace("http://", "");
+		String path = "/" + R2_BUCKET + "/" + objectKey;
+		String urlStr = R2_ENDPOINT + path;
+		new Thread(() -> {
+			try {
+				URL url = new URL(urlStr);
+				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+				conn.setRequestMethod("DELETE");
+				conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
+				conn.setReadTimeout(READ_TIMEOUT_MS);
+				conn.setRequestProperty("Host", host);
+				conn.setRequestProperty("x-amz-content-sha256", "UNSIGNED-PAYLOAD");
+				conn.setRequestProperty("x-amz-date", amzDate());
+				signS3(conn, "DELETE", path, R2_REGION, host);
+				int code = conn.getResponseCode();
+				conn.disconnect();
+				if (code == 204 || code == 200) {
+					postDeleteSuccess(callback);
+				} else {
+					postDeleteFailure(callback, "R2 delete failed: " + code);
+				}
+			} catch (Exception e) {
+				postDeleteFailure(callback, "R2 delete exception: " + e.getMessage());
 			}
 		}).start();
 	}
