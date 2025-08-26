@@ -66,7 +66,7 @@ import com.google.firebase.database.Query;
 // import androidx.appcompat.widget.Toolbar;
 
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
-import com.synapse.social.studioasinc.styling.TextStylingUtil;
+// import com.synapse.social.studioasinc.styling.TextStylingUtil;
 
 import java.io.*;
 import java.text.*;
@@ -1223,8 +1223,7 @@ public class HomeActivity extends AppCompatActivity {
 			
 			if (_data.get((int)_position).containsKey("post_text")) {
 				String postText = _data.get((int)_position).get("post_text").toString();
-				TextStylingUtil textStylingUtil = new TextStylingUtil(postMessageTextMiddle.getContext());
-				textStylingUtil.applyStyling(postText, postMessageTextMiddle);
+				com.synapse.social.studioasinc.styling.MarkdownRenderer.get(postMessageTextMiddle.getContext()).render(postMessageTextMiddle, postText);
 				postMessageTextMiddle.setVisibility(View.VISIBLE);
 				
 			} else {

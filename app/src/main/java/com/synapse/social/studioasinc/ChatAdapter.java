@@ -25,7 +25,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.synapse.social.studioasinc.styling.TextStylingUtil;
+// import com.synapse.social.studioasinc.styling.TextStylingUtil;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +53,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private String firstUserName = "";
     private String secondUserName = "";
     private SharedPreferences appSettings;
-    private TextStylingUtil textStylingUtil;
+    // private TextStylingUtil textStylingUtil;
     private ChatActivity chatActivity;
 
     public ChatAdapter(ArrayList<HashMap<String, Object>> _arr) { _data = _arr; }
@@ -107,7 +107,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         _context = parent.getContext();
         appSettings = _context.getSharedPreferences("appSettings", Context.MODE_PRIVATE);
-        textStylingUtil = new TextStylingUtil(_context);
+        // textStylingUtil = new TextStylingUtil(_context);
         LayoutInflater inflater = LayoutInflater.from(_context);
         switch (viewType) {
             case VIEW_TYPE_MEDIA_GRID: return new MediaViewHolder(inflater.inflate(R.layout.chat_bubble_media, parent, false));
@@ -501,7 +501,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         bindCommonMessageProperties(holder, position);
         String text = String.valueOf(_data.get(position).getOrDefault("message_text", ""));
         holder.message_text.setVisibility(View.VISIBLE);
-        textStylingUtil.applyStyling(text, holder.message_text);
+        com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, text);
     }
 
     private void bindMediaViewHolder(MediaViewHolder holder, int position) {
@@ -511,7 +511,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         String msgText = data.getOrDefault("message_text", "").toString();
         holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
         if (!msgText.isEmpty()) {
-            textStylingUtil.applyStyling(msgText, holder.message_text);
+            com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
         }
 
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
@@ -679,7 +679,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         HashMap<String, Object> data = _data.get(position);
         String msgText = data.getOrDefault("message_text", "").toString();
         holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
-        if (!msgText.isEmpty()) textStylingUtil.applyStyling(msgText, holder.message_text);
+        if (!msgText.isEmpty()) com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
         if (attachments != null && !attachments.isEmpty()) {
             String videoUrl = String.valueOf(attachments.get(0).get("url"));
@@ -717,7 +717,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         HashMap<String, Object> data = _data.get(position);
         String messageText = String.valueOf(data.getOrDefault("message_text", ""));
         holder.message_text.setVisibility(View.VISIBLE);
-        textStylingUtil.applyStyling(messageText, holder.message_text);
+        com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, messageText);
 
         String urlToPreview = LinkPreviewUtil.extractUrl(messageText);
         if (urlToPreview != null) {
