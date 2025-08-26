@@ -294,16 +294,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                                 String publicId = firstAttachment.getOrDefault("publicId", "").toString();
                                                 
                                                 if (!publicId.isEmpty()) {
-                                                    // CRITICAL FIX: Load image from Cloudinary with rounded corners (20dp)
-                                                    String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill,r_20/" + publicId;
-                                                    Glide.with(_context)
-                                                        .load(imageUrl)
-                                                        .placeholder(R.drawable.ph_imgbluredsqure)
-                                                        .error(R.drawable.ph_imgbluredsqure)
-                                                        .transform(new com.bumptech.glide.load.resource.bitmap.RoundedCorners(dpToPx(20)))
-                                                        .into(holder.mRepliedMessageLayoutImage);
-                                                    
-                                                    Log.d(TAG, "Loaded reply image preview with rounded corners: " + imageUrl);
+                                                    // CRITICAL FIX: Load image from Cloudinary - use transform only to avoid double rounding
+                                                    // Also check context validity
+                                                    if (_context != null) {
+                                                        String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
+                                                        Glide.with(_context)
+                                                            .load(imageUrl)
+                                                            .placeholder(R.drawable.ph_imgbluredsqure)
+                                                            .error(R.drawable.ph_imgbluredsqure)
+                                                            .transform(new RoundedCorners(dpToPx(20)))
+                                                            .into(holder.mRepliedMessageLayoutImage);
+                                                        
+                                                        Log.d(TAG, "Loaded reply image preview with client-side rounded corners: " + imageUrl);
+                                                    } else {
+                                                        Log.w(TAG, "Context is null, cannot load reply image");
+                                                    }
                                                 } else {
                                                     // Fallback to placeholder
                                                     holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
@@ -786,7 +791,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private int dpToPx(int dp) {
-        return (int) (dp * _context.getResources().getDisplayMetrics().density);
+        // CRITICAL FIX: Safe dp to px conversion with null checks
+        try {
+            if (_context != null && _context.getResources() != null && _context.getResources().getDisplayMetrics() != null) {
+                return (int) (dp * _context.getResources().getDisplayMetrics().density);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error converting dp to px: " + e.getMessage());
+        }
+        return dp; // Fallback to dp value
     }
     
     // CRITICAL FIX: Smart timestamp visibility logic

@@ -576,7 +576,8 @@ public class ChatActivity extends AppCompatActivity {
 				if (dy < 0) { //check for scroll up
 					if (layoutManager != null && layoutManager.findFirstVisibleItemPosition() <= 2) {
 						// CRITICAL FIX: Only load more if we have an oldest message key and not already loading
-						if (!isLoading && oldestMessageKey != null && !oldestMessageKey.isEmpty()) {
+						// Also check if we've reached the end to prevent unnecessary work
+						if (!isLoading && oldestMessageKey != null && !oldestMessageKey.isEmpty() && !oldestMessageKey.equals("null")) {
 							_getOldChatMessagesRef();
 						}
 					}
@@ -1583,7 +1584,10 @@ public class ChatActivity extends AppCompatActivity {
 							}
 						} else {
 							// CRITICAL FIX: No more messages to load, set oldestMessageKey to null
+							// and ensure UI state is properly reset
 							oldestMessageKey = null;
+							_hideLoadMoreIndicator();
+							Log.d("ChatActivity", "No more messages to load, pagination complete");
 						}
 
 							final LinearLayoutManager layoutManager = (LinearLayoutManager) ChatMessagesListRecycler.getLayoutManager();
@@ -1616,6 +1620,7 @@ public class ChatActivity extends AppCompatActivity {
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				_hideLoadMoreIndicator();
 				isLoading = false;
+				// CRITICAL FIX: Don't reset oldestMessageKey on error to allow retry
 				Log.e("ChatActivity", "Error processing old messages: " + databaseError.getMessage());
 			}
 		});
@@ -2441,9 +2446,12 @@ public class ChatActivity extends AppCompatActivity {
 			
 			// Add highlight animation after scroll completes
 			new Handler().postDelayed(() -> {
-				RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
-				if (viewHolder != null) {
-					_highlightMessage(viewHolder.itemView);
+				// CRITICAL FIX: Check if activity is still valid before highlighting
+				if (!isFinishing() && !isDestroyed() && ChatMessagesListRecycler != null) {
+					RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
+					if (viewHolder != null) {
+						_highlightMessage(viewHolder.itemView);
+					}
 				}
 			}, 500); // Wait for scroll to complete
 		} else {
@@ -2451,15 +2459,26 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
-	// CRITICAL FIX: Add highlight animation for replied messages
+	// CRITICAL FIX: Add highlight animation for replied messages with NPE protection
 	private void _highlightMessage(View messageView) {
-		// Store original background
+		// CRITICAL FIX: Check if activity is finishing to prevent crashes
+		if (isFinishing() || isDestroyed()) {
+			return;
+		}
+		
+		// Store original background safely
 		Drawable originalBackground = messageView.getBackground();
 		
 		// Create highlight animation
 		ValueAnimator highlightAnimator = ValueAnimator.ofFloat(0f, 1f);
 		highlightAnimator.setDuration(800);
 		highlightAnimator.addUpdateListener(animation -> {
+			// CRITICAL FIX: Check if activity is still valid during animation
+			if (isFinishing() || isDestroyed() || messageView == null) {
+				animation.cancel();
+				return;
+			}
+			
 			float progress = (Float) animation.getAnimatedValue();
 			
 			// Create a pulsing highlight effect
@@ -2470,14 +2489,17 @@ public class ChatActivity extends AppCompatActivity {
 			highlightDrawable.setColor(color);
 			highlightDrawable.setCornerRadius(dpToPx(27)); // Match message bubble corner radius
 			
-			messageView.setBackground(highlightDrawable);
+			// CRITICAL FIX: Use setBackgroundDrawable for better compatibility
+			messageView.setBackgroundDrawable(highlightDrawable);
 		});
 		
 		highlightAnimator.addListener(new AnimatorListenerAdapter() {
 			@Override
 			public void onAnimationEnd(Animator animation) {
-				// Restore original background
-				messageView.setBackground(originalBackground);
+				// CRITICAL FIX: Safely restore original background
+				if (!isFinishing() && !isDestroyed() && messageView != null) {
+					messageView.setBackgroundDrawable(originalBackground);
+				}
 			}
 		});
 		
@@ -2485,7 +2507,15 @@ public class ChatActivity extends AppCompatActivity {
 	}
 	
 	private int dpToPx(int dp) {
-		return (int) (dp * getResources().getDisplayMetrics().density);
+		// CRITICAL FIX: Safe dp to px conversion with null checks
+		try {
+			if (getResources() != null && getResources().getDisplayMetrics() != null) {
+				return (int) (dp * getResources().getDisplayMetrics().density);
+			}
+		} catch (Exception e) {
+			Log.e("ChatActivity", "Error converting dp to px: " + e.getMessage());
+		}
+		return dp; // Fallback to dp value
 	}
 
 	private void startActivityWithUid(Class<?> activityClass) {
