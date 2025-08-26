@@ -364,7 +364,7 @@
 								android:textSize="14sp"
 								android:textColor="#424242"
 								tools:replace="android:text"
-								android:text="@string/disable_saving_to_favorites_subtitle" />
+																	android:text="@string/app_disable_saving_to_favorites_subtitle" />
 						</LinearLayout>
 						<LinearLayout
 							android:id="@+id/post_settings_privacy_disable_comments"

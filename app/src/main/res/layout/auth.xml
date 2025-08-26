@@ -155,7 +155,7 @@
 							android:layout_marginRight="12dp"
 							android:background="@android:color/transparent"
 							android:gravity="center_vertical"
-							android:text="@string/age_agreement"
+							android:text="@string/app_age_agreement"
 							android:textSize="12sp"
 							android:textStyle="bold"
 							android:textColor="?colorOnSurface"

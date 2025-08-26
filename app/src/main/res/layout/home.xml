@@ -208,10 +208,10 @@
 										android:background="@android:color/transparent"
 										android:textSize="18sp"
 										android:textColor="?attr/colorOnSurface"
-										android:hint="@string/whats_new_today"
-										android:textColorHint="#757575"
-										android:layout_gravity="center_vertical"
-										android:maxLength="1500" />
+																					android:hint="@string/app_whats_new_today"
+											android:textColorHint="#757575"
+											android:layout_gravity="center_vertical"
+											android:maxLength="1500" />
 								</LinearLayout>
 								<LinearLayout
 									android:id="@+id/miniPostLayoutMiddleSpc"

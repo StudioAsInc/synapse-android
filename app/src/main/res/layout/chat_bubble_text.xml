@@ -107,7 +107,7 @@
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:paddingRight="4dp"
-								android:text="@string/ph_replied_message"
+								android:text="@string/app_ph_replied_message"
 								android:textSize="16sp"
 								android:autoLink="all"
 								android:maxLines="3"
@@ -126,7 +126,7 @@
 						android:focusable="false"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						android:text="@string/ph_message"
+						android:text="@string/app_ph_message"
 						android:textSize="16sp"
 						android:autoLink="all"
 						android:textColorLink="#FF0000" />

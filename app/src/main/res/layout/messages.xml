@@ -57,7 +57,7 @@
 							android:textSize="18sp"
 							android:textColor="#757575"
 							tools:replace="android:text"
-							android:text="@string/m_no_inbox" />
+							android:text="@string/app_m_no_inbox" />
 					</LinearLayout>
 				</LinearLayout>
 			</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
