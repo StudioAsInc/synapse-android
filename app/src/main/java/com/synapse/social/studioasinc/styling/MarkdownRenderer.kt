@@ -18,7 +18,6 @@ import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.ext.tasklist.TaskListPlugin
 import io.noties.markwon.image.glide.GlideImagesPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
-import io.noties.markwon.linkify.internal.LinkifyCompatImpl
 import io.noties.markwon.LinkResolver
 import io.noties.markwon.syntax.Prism4jSyntaxHighlight
 import io.noties.markwon.syntax.Prism4jThemeDarkula
@@ -65,7 +64,7 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                 .usePlugin(GlideImagesPlugin.create(context))
                 .usePlugin(TablePlugin.create(context))
                 .usePlugin(TaskListPlugin.create(context))
-                .usePlugin(LinkifyPlugin.create(LinkifyCompatImpl.create()))
+                .usePlugin(LinkifyPlugin.create())
                 .usePlugin(object : AbstractMarkwonPlugin() {
                     override fun configureTheme(builder: MarkwonTheme.Builder) {
                         builder.linkColor(Color.parseColor("#445E91")).isLinkUnderlined(true)
