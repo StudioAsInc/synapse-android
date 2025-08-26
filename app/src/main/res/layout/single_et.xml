@@ -20,7 +20,6 @@
 		app:boxCornerRadiusBottomEnd="18dp">
 		<EditText
 			android:id="@+id/edittext1"
-			android:focusable="false"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:padding="15dp"

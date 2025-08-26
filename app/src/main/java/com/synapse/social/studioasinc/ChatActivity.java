@@ -38,6 +38,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -910,7 +911,14 @@ public class ChatActivity extends AppCompatActivity {
 				msgRef2.child(MESSAGE_TEXT_KEY).setValue(newText);
 			});
 			dialog.setNegativeButton("Cancel", null);
-			dialog.show();
+			AlertDialog shownDialog = dialog.show();
+
+			// Request focus and show keyboard
+			editText.requestFocus();
+			if (shownDialog.getWindow() != null) {
+				shownDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+			}
+
 			popupWindow.dismiss();
 		});
 		
