@@ -1148,160 +1148,13 @@ public class ChatActivity extends AppCompatActivity {
 		});
 	}
 
-	private void _attachChatListener() {
-		// CRITICAL FIX: Prevent duplicate listener attachments
-		if (_isChatListenerAttached || _chat_child_listener != null) {
-			Log.d("ChatActivity", "Chat listener already attached, skipping duplicate attachment");
-			return;
-		}
-		
-		Log.d("ChatActivity", "Attaching new chat listener");
-		_chat_child_listener = new ChildEventListener() {
-				@Override
-				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
-					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
-					Log.d("ChatActivity", "Snapshot key: " + dataSnapshot.getKey() + ", Previous child: " + previousChildName);
-					
-					if (dataSnapshot.exists()) {
-						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
-						
-						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-							String messageKey = newMessage.get(KEY_KEY).toString();
-							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
-							Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + messageKey);
-							
-							// Check if message already exists to avoid duplicates
-							boolean exists = false;
-							int existingPosition = -1;
-							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								HashMap<String, Object> msg = ChatMessagesList.get(i);
-								if (msg.get(KEY_KEY) != null && msg.get(KEY_KEY).toString().equals(messageKey)) {
-									exists = true;
-									existingPosition = i;
-									break;
-								}
-							}
+	// REMOVED: Duplicate _attachChatListener method - moved to after helper methods
 
-							Log.d("ChatActivity", "Message exists check - Exists: " + exists + ", Position: " + existingPosition + ", Current list size: " + ChatMessagesList.size());
 
-							if (!exists) {
-								// This is a truly new message from Firebase
-								_safeUpdateRecyclerView();
-								
-								// CRITICAL FIX: Determine the correct position to insert the message
-								int insertPosition = _findCorrectInsertPosition(newMessage);
-								
-								// Insert message at the correct position
-								ChatMessagesList.add(insertPosition, newMessage);
-								
-								Log.d("ChatActivity", "Added new Firebase message to list at position " + insertPosition + ", total messages: " + ChatMessagesList.size());
-								
-								// Notify adapter of the insertion
-								chatAdapter.notifyItemInserted(insertPosition);
-								
-								// Update adjacent items if needed
-								if (insertPosition > 0) {
-									chatAdapter.notifyItemChanged(insertPosition - 1);
-								}
-								if (insertPosition < ChatMessagesList.size() - 1) {
-									chatAdapter.notifyItemChanged(insertPosition + 1);
-								}
-								
-								// Scroll to the new message if it's the most recent
-								if (insertPosition == ChatMessagesList.size() - 1) {
-									ChatMessagesListRecycler.post(() -> {
-										scrollToBottom();
-									});
-								}
-							} else {
-								// Message already exists, but check if we need to update it (e.g., remove local flag)
-								Log.d("ChatActivity", "Message already exists at position " + existingPosition + ", checking if update needed");
-								
-								HashMap<String, Object> existingMsg = ChatMessagesList.get(existingPosition);
-								if (existingMsg.containsKey("isLocalMessage")) {
-									// Remove local flag and update the message
-									newMessage.remove("isLocalMessage");
-									ChatMessagesList.set(existingPosition, newMessage);
-									chatAdapter.notifyItemChanged(existingPosition);
-									Log.d("ChatActivity", "Updated local message with Firebase data at position " + existingPosition);
-								}
-							}
-						} else {
-							Log.w("ChatActivity", "New message is null or missing key");
-						}
-					} else {
-						Log.w("ChatActivity", "DataSnapshot does not exist");
-					}
-					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded END ===");
-				}
 
-				@Override
-				public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-					if (snapshot.exists()) {
-						HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
-							String key = updatedMessage.get(KEY_KEY).toString();
-							
-							// Find the exact position of the message to update
-							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null && 
-									ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
-									
-									// Update the message in the list
-									ChatMessagesList.set(i, updatedMessage);
-									
-									// Notify adapter of the specific item change
-									chatAdapter.notifyItemChanged(i);
-									break;
-								}
-							}
-						}
-					}
-				}
 
-				@Override
-				public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-					if (snapshot.exists()) {
-						String removedKey = snapshot.getKey();
-						if (removedKey != null) {
-							// Find and remove the message by key (not by position)
-							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null && 
-									ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
-									
-									// Remove the message from the list
-									ChatMessagesList.remove(i);
-									
-									// Notify adapter of the removal
-									chatAdapter.notifyItemRemoved(i);
-									
-									// Update the last item's timestamp if needed
-									if (!ChatMessagesList.isEmpty() && i < ChatMessagesList.size()) {
-										chatAdapter.notifyItemChanged(Math.min(i, ChatMessagesList.size() - 1));
-									}
-									
-									// Check if list is empty
-									if (ChatMessagesList.isEmpty()) {
-										_safeUpdateRecyclerView();
-									}
-									break;
-								}
-							}
-						}
-					}
-				}
 
-				@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-				@Override public void onCancelled(@NonNull DatabaseError error) {
-					Log.e("ChatActivity", "Chat listener cancelled: " + error.getMessage());
-				}
-			};
-			chatMessagesRef.addChildEventListener(_chat_child_listener);
-			_isChatListenerAttached = true;
-			Log.d("ChatActivity", "Chat listener successfully attached");
-		}
-	}
+
 
 	/**
 	 * CRITICAL FIX: Find the correct position to insert a new message based on timestamp
@@ -1475,6 +1328,164 @@ public class ChatActivity extends AppCompatActivity {
 			userRef.removeEventListener(_userStatusListener);
 			_userStatusListener = null;
 		}
+	}
+
+	/**
+	 * CRITICAL FIX: Attach chat listener for real-time message updates
+	 * This method is placed after all helper methods to avoid forward reference issues
+	 */
+	private void _attachChatListener() {
+		// CRITICAL FIX: Prevent duplicate listener attachments
+		if (_isChatListenerAttached || _chat_child_listener != null) {
+			Log.d("ChatActivity", "Chat listener already attached, skipping duplicate attachment");
+			return;
+		}
+		
+		Log.d("ChatActivity", "Attaching new chat listener");
+		_chat_child_listener = new ChildEventListener() {
+			@Override
+			public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
+				Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
+				Log.d("ChatActivity", "Snapshot key: " + dataSnapshot.getKey() + ", Previous child: " + previousChildName);
+				
+				if (dataSnapshot.exists()) {
+					HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
+					
+					if (newMessage != null && newMessage.get(KEY_KEY) != null) {
+						String messageKey = newMessage.get(KEY_KEY).toString();
+						String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
+						Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + messageKey);
+						
+						// Check if message already exists to avoid duplicates
+						boolean exists = false;
+						int existingPosition = -1;
+						for (int i = 0; i < ChatMessagesList.size(); i++) {
+							HashMap<String, Object> msg = ChatMessagesList.get(i);
+							if (msg.get(KEY_KEY) != null && msg.get(KEY_KEY).toString().equals(messageKey)) {
+								exists = true;
+								existingPosition = i;
+								break;
+							}
+						}
+
+						Log.d("ChatActivity", "Message exists check - Exists: " + exists + ", Position: " + existingPosition + ", Current list size: " + ChatMessagesList.size());
+
+						if (!exists) {
+							// This is a truly new message from Firebase
+							_safeUpdateRecyclerView();
+							
+							// CRITICAL FIX: Determine the correct position to insert the message
+							int insertPosition = _findCorrectInsertPosition(newMessage);
+							
+							// Insert message at the correct position
+							ChatMessagesList.add(insertPosition, newMessage);
+							
+							Log.d("ChatActivity", "Added new Firebase message to list at position " + insertPosition + ", total messages: " + ChatMessagesList.size());
+							
+							// Notify adapter of the insertion
+							chatAdapter.notifyItemInserted(insertPosition);
+							
+							// Update adjacent items if needed
+							if (insertPosition > 0) {
+								chatAdapter.notifyItemChanged(insertPosition - 1);
+							}
+							if (insertPosition < ChatMessagesList.size() - 1) {
+								chatAdapter.notifyItemChanged(insertPosition + 1);
+							}
+							
+							// Scroll to the new message if it's the most recent
+							if (insertPosition == ChatMessagesList.size() - 1) {
+								ChatMessagesListRecycler.post(() -> {
+									scrollToBottom();
+								});
+							}
+						} else {
+							// Message already exists, but check if we need to update it (e.g., remove local flag)
+							Log.d("ChatActivity", "Message already exists at position " + existingPosition + ", checking if update needed");
+							
+							HashMap<String, Object> existingMsg = ChatMessagesList.get(existingPosition);
+							if (existingMsg.containsKey("isLocalMessage")) {
+								// Remove local flag and update the message
+								newMessage.remove("isLocalMessage");
+								ChatMessagesList.set(existingPosition, newMessage);
+								chatAdapter.notifyItemChanged(existingPosition);
+								Log.d("ChatActivity", "Updated local message with Firebase data at position " + existingPosition);
+							}
+						}
+					} else {
+						Log.w("ChatActivity", "New message is null or missing key");
+					}
+				} else {
+					Log.w("ChatActivity", "DataSnapshot does not exist");
+				}
+				Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded END ===");
+			}
+
+			@Override
+			public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+				if (snapshot.exists()) {
+					HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
+						String key = updatedMessage.get(KEY_KEY).toString();
+						
+						// Find the exact position of the message to update
+						for (int i = 0; i < ChatMessagesList.size(); i++) {
+							if (ChatMessagesList.get(i).get(KEY_KEY) != null && 
+								ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
+								
+								// Update the message in the list
+								ChatMessagesList.set(i, updatedMessage);
+								
+								// Notify adapter of the specific item change
+								chatAdapter.notifyItemChanged(i);
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			@Override
+			public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					String removedKey = snapshot.getKey();
+					if (removedKey != null) {
+						// Find and remove the message by key (not by position)
+						for (int i = 0; i < ChatMessagesList.size(); i++) {
+							if (ChatMessagesList.get(i).get(KEY_KEY) != null && 
+								ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
+								
+								// Remove the message from the list
+								ChatMessagesList.remove(i);
+								
+								// Notify adapter of the removal
+								chatAdapter.notifyItemRemoved(i);
+								
+								// Update the last item's timestamp if needed
+								if (!ChatMessagesList.isEmpty() && i < ChatMessagesList.size()) {
+									chatAdapter.notifyItemChanged(Math.min(i, ChatMessagesList.size() - 1));
+								}
+								
+								// Check if list is empty
+								if (ChatMessagesList.isEmpty()) {
+									_safeUpdateRecyclerView();
+								}
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
+			@Override public void onCancelled(@NonNull DatabaseError error) {
+				Log.e("ChatActivity", "Chat listener cancelled: " + error.getMessage());
+			}
+		};
+		chatMessagesRef.addChildEventListener(_chat_child_listener);
+		_isChatListenerAttached = true;
+		Log.d("ChatActivity", "Chat listener successfully attached");
 	}
 
 	/**
