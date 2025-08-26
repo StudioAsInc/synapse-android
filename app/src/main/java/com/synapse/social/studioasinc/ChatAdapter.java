@@ -20,6 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -200,7 +201,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 } catch (Exception e) {
                     push.setTimeInMillis(System.currentTimeMillis());
                 }
-                holder.date.setText(new SimpleDateFormat("hh:mm a").format(push.getTime()));
+                // CRITICAL FIX: Smart timestamp visibility logic
+                boolean shouldShowTime = _shouldShowTimestamp(position, data);
+                holder.date.setVisibility(shouldShowTime ? View.VISIBLE : View.GONE);
+                if (shouldShowTime) {
+                    holder.date.setText(new SimpleDateFormat("hh:mm a").format(push.getTime()));
+                }
                 
                 holder.message_state.setVisibility(isMyMessage ? View.VISIBLE : View.GONE);
                 if (isMyMessage) {
@@ -288,15 +294,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                                 String publicId = firstAttachment.getOrDefault("publicId", "").toString();
                                                 
                                                 if (!publicId.isEmpty()) {
-                                                    // Load image from Cloudinary
-                                                    String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
+                                                    // CRITICAL FIX: Load image from Cloudinary with rounded corners (20dp)
+                                                    String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill,r_20/" + publicId;
                                                     Glide.with(_context)
                                                         .load(imageUrl)
                                                         .placeholder(R.drawable.ph_imgbluredsqure)
                                                         .error(R.drawable.ph_imgbluredsqure)
+                                                        .transform(new com.bumptech.glide.load.resource.bitmap.RoundedCorners(dpToPx(20)))
                                                         .into(holder.mRepliedMessageLayoutImage);
                                                     
-                                                    Log.d(TAG, "Loaded reply image preview: " + imageUrl);
+                                                    Log.d(TAG, "Loaded reply image preview with rounded corners: " + imageUrl);
                                                 } else {
                                                     // Fallback to placeholder
                                                     holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
@@ -360,11 +367,30 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         Log.w(TAG, "Reply left bar is null");
                                     }
 
+                                    // CRITICAL FIX: Make the entire reply layout clickable, not just the main layout
                                     holder.mRepliedMessageLayout.setOnClickListener(v -> {
                                         if (chatActivity != null) {
                                             chatActivity.scrollToMessage(repliedId);
                                         }
                                     });
+                                    
+                                    // Also make the reply text area clickable
+                                    if (holder.mRepliedMessageLayoutMessage != null) {
+                                        holder.mRepliedMessageLayoutMessage.setOnClickListener(v -> {
+                                            if (chatActivity != null) {
+                                                chatActivity.scrollToMessage(repliedId);
+                                            }
+                                        });
+                                    }
+                                    
+                                    // Make the reply image clickable too
+                                    if (holder.mRepliedMessageLayoutImage != null) {
+                                        holder.mRepliedMessageLayoutImage.setOnClickListener(v -> {
+                                            if (chatActivity != null) {
+                                                chatActivity.scrollToMessage(repliedId);
+                                            }
+                                        });
+                                    }
                                     
                                     Log.d(TAG, "Reply layout should now be visible with proper styling");
                                 } else {
@@ -761,5 +787,47 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private int dpToPx(int dp) {
         return (int) (dp * _context.getResources().getDisplayMetrics().density);
+    }
+    
+    // CRITICAL FIX: Smart timestamp visibility logic
+    private boolean _shouldShowTimestamp(int position, HashMap<String, Object> currentMessage) {
+        // Always show timestamp for the last message
+        if (position == _data.size() - 1) {
+            return true;
+        }
+        
+        // Show timestamp if there's a significant time gap (more than 5 minutes)
+        if (position < _data.size() - 1) {
+            try {
+                HashMap<String, Object> nextMessage = _data.get(position + 1);
+                long currentTime = _getMessageTimestamp(currentMessage);
+                long nextTime = _getMessageTimestamp(nextMessage);
+                
+                // Show timestamp if gap is more than 5 minutes (300000 ms)
+                return Math.abs(currentTime - nextTime) > 300000;
+            } catch (Exception e) {
+                Log.e(TAG, "Error calculating timestamp visibility: " + e.getMessage());
+                return false;
+            }
+        }
+        
+        return false;
+    }
+    
+    // Helper method to get message timestamp
+    private long _getMessageTimestamp(HashMap<String, Object> message) {
+        try {
+            Object pushDateObj = message.get("push_date");
+            if (pushDateObj != null) {
+                if (pushDateObj instanceof Long) {
+                    return (Long) pushDateObj;
+                } else if (pushDateObj instanceof String) {
+                    return Long.parseLong((String) pushDateObj);
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Error parsing message timestamp: " + e.getMessage());
+        }
+        return System.currentTimeMillis();
     }
 }
