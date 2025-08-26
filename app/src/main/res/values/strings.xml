@@ -232,13 +232,13 @@
     <string name="error_loading_user_data">Error Loading User Data</string>
     <string name="disappearing_message_description">For more privacy and storage, new messages will disappear from this chat for everyone after the selected duration except when kept. Anyone in the chat can change this setting. Learn more</string>
     <string name="text_loading">...</string>
-    <string name="cant_reply">You can\'t reply to this conversation. Learn more.</string>
+    <string name="cant_reply">You can't reply to this conversation. Learn more.</string>
     <string name="ph_name">Name</string>
     <string name="ph_username">username</string>
     <string name="write_message">Write a message</string>
-    <string name="ph_message">I\'m also good, man.</string>
-    <string name="age_agreement">I confirm that I\'m at least 12 years of age.</string>
-    <string name="ph_replied_message">I\'m good, you?</string>
+    <string name="ph_message">I'm also good, man.</string>
+    <string name="age_agreement">I confirm that I'm at least 12 years of age.</string>
+    <string name="ph_replied_message">I'm good, you?</string>
     <string name="someone">Someone</string>
     <string name="notif_preview_text">%1$s: %2$s</string>
     <string name="notif_preview_sender_only">%1$s</string>
