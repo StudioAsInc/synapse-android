@@ -1959,9 +1959,9 @@ public class ChatActivity extends AppCompatActivity {
 				String notificationPreview;
 				if (!successfulAttachments.isEmpty()) {
 					if (TextUtils.isEmpty(messageText)) {
-						notificationPreview = "Also sent an attachment";
+						notificationPreview = "Sent an attachment";
 					} else {
-						notificationPreview = messageText + " + Also sent an attachment";
+						notificationPreview = messageText + " + Sent an attachment";
 					}
 				} else {
 					notificationPreview = messageText;
