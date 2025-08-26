@@ -40,7 +40,7 @@
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:layout_marginBottom="20dp"
-						android:text="Delete conversation\\?"
+						android:text="Delete conversation?"
 						android:textSize="20sp"
 						android:textColor="#445E91"
 						android:focusable="false" />
@@ -76,7 +76,7 @@
 						android:layout_marginTop="20dp"
 						android:layout_marginBottom="20dp"
 						android:paddingRight="20dp"
-						android:text="Permanently delete the chats with \\@nickname"
+						android:text="Permanently delete the chats with @nickname"
 						android:textSize="16sp"
 						android:textColor="#494C54"
 						android:focusable="false" />
@@ -86,7 +86,7 @@
 						android:layout_height="wrap_content"
 						android:layout_marginBottom="15dp"
 						android:gravity="left|center_vertical"
-						android:text="Also, delete for \\@nickname"
+						android:text="Also, delete for @nickname"
 						android:textSize="14sp"
 						android:textColor="#494C54"
 						android:focusable="false" />

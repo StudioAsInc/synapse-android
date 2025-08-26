@@ -35,7 +35,7 @@
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:padding="8dp"
-					android:text="Logout\?"
+					android:text="Logout?"
 					android:textSize="20sp"
 					android:textStyle="bold"
 					android:textColor="#000000" />
@@ -61,7 +61,7 @@
 						android:layout_height="wrap_content"
 						android:padding="8dp"
 						android:gravity="center_horizontal|center_vertical"
-						android:text="Are you certain that you wish to log out of this account\? Please be informed that you will require a Google account to sign in here."
+						android:text="Are you certain that you wish to log out of this account? Please be informed that you will require a Google account to sign in here."
 						android:textSize="16sp"
 						android:textColor="#000000" />
 				</LinearLayout>
