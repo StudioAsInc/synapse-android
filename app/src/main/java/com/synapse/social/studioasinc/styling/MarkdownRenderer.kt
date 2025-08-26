@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.browser.customtabs.CustomTabsIntent
 import io.noties.markwon.AbstractMarkwonPlugin
 import io.noties.markwon.Markwon
+import io.noties.markwon.MarkwonConfiguration
 import io.noties.markwon.core.MarkwonTheme
 import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.ext.tasklist.TaskListPlugin
@@ -61,7 +62,7 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                     }
                 })
                 .usePlugin(object : AbstractMarkwonPlugin() {
-                    override fun configureConfiguration(builder: Markwon.Configuration.Builder) {
+                    override fun configureConfiguration(builder: MarkwonConfiguration.Builder) {
                         builder.linkResolver(linkResolver)
                     }
                     override fun afterSetText(textView: TextView) {
