@@ -22,7 +22,7 @@ import io.noties.markwon.image.glide.GlideImagesPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
 import io.noties.markwon.LinkResolver
 import io.noties.markwon.core.CorePlugin
-import io.noties.markwon.html.HtmlPlugin
+// import io.noties.markwon.html.HtmlPlugin  // Not available in this version
 
 class MarkdownRenderer private constructor(private val markwon: Markwon) {
 
@@ -81,7 +81,6 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                 .usePlugin(TablePlugin.create(context))
                 .usePlugin(TaskListPlugin.create(context))
                 .usePlugin(LinkifyPlugin.create())
-                .usePlugin(HtmlPlugin.create())
                 .usePlugin(object : AbstractMarkwonPlugin() {
                     override fun configureTheme(builder: MarkwonTheme.Builder) {
                         builder.linkColor(Color.parseColor("#445E91")).isLinkUnderlined(true)
@@ -195,7 +194,8 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                 | Tuhin | 19 | Chittagong |
             """.trimIndent()
             
-            render(textView, testTable)
+            // Get instance and call render method
+            get(textView.context).render(textView, testTable)
         }
     }
 }
