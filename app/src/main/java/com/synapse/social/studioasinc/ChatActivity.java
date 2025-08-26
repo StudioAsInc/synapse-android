@@ -1955,7 +1955,19 @@ public class ChatActivity extends AppCompatActivity {
 
 				// Enhanced Smart Notification Check with chat ID for deep linking
 				String chatId = senderUid + "_" + recipientUid;
-				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, lastMessage, chatId);
+				String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
+				String notificationPreview;
+				if (!successfulAttachments.isEmpty()) {
+					if (TextUtils.isEmpty(messageText)) {
+						notificationPreview = "Sent an attachment";
+					} else {
+						notificationPreview = messageText + " + Sent an attachment";
+					}
+				} else {
+					notificationPreview = messageText;
+				}
+				String notificationMessage = senderDisplayName + ": " + notificationPreview;
+				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, notificationMessage, chatId);
 
 				_updateInbox(lastMessage);
 
@@ -2015,7 +2027,10 @@ public class ChatActivity extends AppCompatActivity {
 
 			// Enhanced Smart Notification Check with chat ID for deep linking
 			String chatId = senderUid + "_" + recipientUid;
-			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, messageText, chatId);
+			String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
+			String notificationPreview = messageText;
+			String notificationMessage = senderDisplayName + ": " + notificationPreview;
+			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, notificationMessage, chatId);
 
 			_updateInbox(messageText);
 
