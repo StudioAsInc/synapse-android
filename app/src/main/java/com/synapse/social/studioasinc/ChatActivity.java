@@ -1582,13 +1582,6 @@ public class ChatActivity extends AppCompatActivity {
 							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
 								oldestMessageKey = oldestMessage.get(KEY_KEY).toString();
 							}
-						} else {
-							// CRITICAL FIX: No more messages to load, set oldestMessageKey to null
-							// and ensure UI state is properly reset
-							oldestMessageKey = null;
-							_hideLoadMoreIndicator();
-							Log.d("ChatActivity", "No more messages to load, pagination complete");
-						}
 
 							final LinearLayoutManager layoutManager = (LinearLayoutManager) ChatMessagesListRecycler.getLayoutManager();
 							if (layoutManager != null) {
@@ -1607,6 +1600,12 @@ public class ChatActivity extends AppCompatActivity {
 									layoutManager.scrollToPositionWithOffset(firstVisiblePosition + newMessages.size(), topOffset);
 								}
 							}
+						} else {
+							// CRITICAL FIX: No more messages to load, set oldestMessageKey to null
+							// and ensure UI state is properly reset
+							oldestMessageKey = null;
+							_hideLoadMoreIndicator();
+							Log.d("ChatActivity", "No more messages to load, pagination complete");
 						}
 					}
 				} catch (Exception e) {
