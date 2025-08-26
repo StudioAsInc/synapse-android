@@ -2431,13 +2431,7 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	public void scrollToMessage(final String _messageKey) {
-		int position = -1;
-		for (int i = 0; i < ChatMessagesList.size(); i++) {
-			if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(_messageKey)) {
-				position = i;
-				break;
-			}
-		}
+		final int position = _findMessagePosition(_messageKey);
 		if (position != -1) {
 			// CRITICAL FIX: Scroll to message with animation and highlight effect
 			ChatMessagesListRecycler.smoothScrollToPosition(position);
@@ -2455,6 +2449,16 @@ public class ChatActivity extends AppCompatActivity {
 		} else {
 			Toast.makeText(getApplicationContext(), "Original message not found", Toast.LENGTH_SHORT).show();
 		}
+	}
+	
+	// CRITICAL FIX: Helper method to find message position
+	private int _findMessagePosition(String messageKey) {
+		for (int i = 0; i < ChatMessagesList.size(); i++) {
+			if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(messageKey)) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	// CRITICAL FIX: Add highlight animation for replied messages with NPE protection
