@@ -74,6 +74,9 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -836,7 +839,9 @@ public class ChatActivity extends AppCompatActivity {
 		}
 
 		final HashMap<String, Object> messageData = _data.get((int)_position);
-		final boolean isMine = messageData.get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+		String senderUid = messageData.get(UID_KEY) != null ? String.valueOf(messageData.get(UID_KEY)) : null;
+		final boolean isMine = currentUser != null && senderUid != null && senderUid.equals(currentUser.getUid());
 		final String messageText = messageData.get(MESSAGE_TEXT_KEY) != null ? messageData.get(MESSAGE_TEXT_KEY).toString() : "";
 
 		// Inflate the custom popup layout
@@ -889,9 +894,16 @@ public class ChatActivity extends AppCompatActivity {
 			editText.setText(messageText);
 			dialog.setPositiveButton("Save", (d, w) -> {
 				String newText = editText.getText().toString();
-				String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+				FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
+				String myUid = cu != null ? cu.getUid() : null;
+				if (myUid == null) {
+					return;
+				}
 				String otherUid = getIntent().getStringExtra("uid");
-				String msgKey = messageData.get(KEY_KEY).toString();
+				String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
+				if (otherUid == null || msgKey == null) {
+					return;
+				}
 				DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
 				DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
 				msgRef1.child(MESSAGE_TEXT_KEY).setValue(newText);
@@ -912,7 +924,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 
-		// --- FIX: Show PopupWindow above the anchor view ---
+		// --- Safer positioning and dismissal for PopupWindow ---
 		popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
 		int popupWidth = popupView.getMeasuredWidth();
 		int popupHeight = popupView.getMeasuredHeight();
@@ -920,8 +932,25 @@ public class ChatActivity extends AppCompatActivity {
 		int[] location = new int[2];
 		_view.getLocationOnScreen(location);
 
+		// Compute initial centered-above coordinates
 		int x = location[0] + (_view.getWidth() / 2) - (popupWidth / 2);
-		int y = location[1] - popupHeight;
+		int aboveY = location[1] - popupHeight;
+		int belowY = location[1] + _view.getHeight();
+
+		// Constrain within the visible window and flip below if there's no room above
+		Rect visibleFrame = new Rect();
+		_view.getWindowVisibleDisplayFrame(visibleFrame);
+
+		// Horizontal clamp
+		x = Math.max(visibleFrame.left, Math.min(x, visibleFrame.right - popupWidth));
+
+		// Vertical position: prefer above, otherwise below, and clamp
+		int y = (aboveY >= visibleFrame.top) ? aboveY : Math.min(belowY, visibleFrame.bottom - popupHeight);
+		y = Math.max(visibleFrame.top, Math.min(y, visibleFrame.bottom - popupHeight));
+
+		// Enable outside touch dismissal and proper shadow rendering
+		popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+		popupWindow.setOutsideTouchable(true);
 
 		popupWindow.showAtLocation(_view, Gravity.NO_GRAVITY, x, y);
 	}
@@ -1591,12 +1620,18 @@ public class ChatActivity extends AppCompatActivity {
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra(UID_KEY)).child(messageKey).removeValue();
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(messageKey).removeValue();
 
-				// FIX: Manually remove from the local list and notify the adapter
-				// This ensures the UI updates instantly, even if the listener is delayed or fails.
-				if ((int)_position < ChatMessagesList.size()) {
-					ChatMessagesList.remove((int)_position);
-					chatAdapter.notifyItemRemoved((int)_position);
-					chatAdapter.notifyItemRangeChanged((int)_position, ChatMessagesList.size());
+				// Safely remove by key to avoid incorrect index removals and double-removals
+				int idx = -1;
+				for (int i = 0; i < ChatMessagesList.size(); i++) {
+					Object k = ChatMessagesList.get(i).get(KEY_KEY);
+					if (k != null && messageKey.equals(String.valueOf(k))) {
+						idx = i;
+						break;
+					}
+				}
+				if (idx != -1) {
+					ChatMessagesList.remove(idx);
+					chatAdapter.notifyItemRemoved(idx);
 				}
 			}
 		});
