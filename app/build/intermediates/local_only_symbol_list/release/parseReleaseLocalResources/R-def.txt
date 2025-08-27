@@ -12,8 +12,12 @@ attr? maxLayoutWidth
 attr? shimmer_auto_start
 attr? shimmer_color
 attr? shimmer_duration
+color bars_colors
 color black
 color blue_500
+color colorControlHighlight
+color colorPrimary
+color colorSurface
 color green_500
 color green_600
 color green_700
@@ -158,12 +162,14 @@ color md_theme_tertiaryFixed_mediumContrast
 color md_theme_tertiary_highContrast
 color md_theme_tertiary_mediumContrast
 color orange_500
+color pureWhite
 color purple_200
 color purple_500
 color purple_700
 color red_500
 color sel_m3_switch_thumb
 color sel_m3_switch_track
+color semi_trans
 color teal_200
 color teal_700
 color white

@@ -1,0 +1,27 @@
+package com.synapse.social.studioasinc.groupchat;
+
+@dagger.hilt.android.HiltAndroidApp()
+@kotlin.Metadata(mv = {2, 2, 0}, k = 1, xi = 48, d1 = {"\u0000 \n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\b\u0003\n\u0002\u0018\u0002\n\u0002\b\u0005\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\u0002\n\u0000\b\u0007\u0018\u00002\u00020\u0001B\u0007\u00a2\u0006\u0004\b\u0002\u0010\u0003J\b\u0010\f\u001a\u00020\rH\u0016R\u001e\u0010\u0004\u001a\u00020\u00058\u0006@\u0006X\u0087.\u00a2\u0006\u000e\n\u0000\u001a\u0004\b\u0006\u0010\u0007\"\u0004\b\b\u0010\tR\u000e\u0010\n\u001a\u00020\u000bX\u0082\u0004\u00a2\u0006\u0002\n\u0000\u00a8\u0006\u000e"}, d2 = {"Lcom/synapse/social/studioasinc/groupchat/GroupChatApplication;", "Landroid/app/Application;", "<init>", "()V", "userRepository", "Lcom/synapse/social/studioasinc/groupchat/data/repository/impl/UserRepositoryImpl;", "getUserRepository", "()Lcom/synapse/social/studioasinc/groupchat/data/repository/impl/UserRepositoryImpl;", "setUserRepository", "(Lcom/synapse/social/studioasinc/groupchat/data/repository/impl/UserRepositoryImpl;)V", "applicationScope", "Lkotlinx/coroutines/CoroutineScope;", "onCreate", "", "app_release"})
+public final class GroupChatApplication extends android.app.Application {
+    @javax.inject.Inject()
+    public com.synapse.social.studioasinc.groupchat.data.repository.impl.UserRepositoryImpl userRepository;
+    @org.jetbrains.annotations.NotNull()
+    private final kotlinx.coroutines.CoroutineScope applicationScope = null;
+    
+    public GroupChatApplication() {
+        super();
+    }
+    
+    @org.jetbrains.annotations.NotNull()
+    public final com.synapse.social.studioasinc.groupchat.data.repository.impl.UserRepositoryImpl getUserRepository() {
+        return null;
+    }
+    
+    public final void setUserRepository(@org.jetbrains.annotations.NotNull()
+    com.synapse.social.studioasinc.groupchat.data.repository.impl.UserRepositoryImpl p0) {
+    }
+    
+    @java.lang.Override()
+    public void onCreate() {
+    }
+}
