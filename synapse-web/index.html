@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>Synapse - AI Social Network</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/app.css">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- App Shell -->
+    <div id="app" class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <h1 class="text-xl font-bold text-gray-900">Synapse</h1>
+                        <span class="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">Web</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div id="user-menu" class="relative">
+                            <button id="user-avatar" class="w-8 h-8 rounded-full bg-gray-300"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-4xl mx-auto px-4 py-6">
+            <!-- Login Screen -->
+            <div id="login-screen" class="hidden">
+                <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-center mb-6">Welcome to Synapse</h2>
+                    <button id="google-login" class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">
+                        Sign in with Google
+                    </button>
+                </div>
+            </div>
+
+            <!-- Feed Screen -->
+            <div id="feed-screen" class="hidden">
+                <!-- Create Post -->
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <div class="flex items-start space-x-3">
+                        <img id="current-user-avatar" class="w-10 h-10 rounded-full" src="" alt="">
+                        <div class="flex-1">
+                            <textarea 
+                                id="post-input" 
+                                placeholder="What's on your mind?" 
+                                class="w-full p-3 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                rows="3"
+                            ></textarea>
+                            <div class="flex justify-between items-center mt-3">
+                                <div class="flex space-x-2">
+                                    <button class="text-gray-500 hover:text-gray-700">📷</button>
+                                    <button class="text-gray-500 hover:text-gray-700">🎥</button>
+                                    <button class="text-gray-500 hover:text-gray-700">😊</button>
+                                </div>
+                                <button 
+                                    id="post-button" 
+                                    class="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 disabled:opacity-50"
+                                    disabled
+                                >
+                                    Post
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Posts Feed -->
+                <div id="posts-container" class="space-y-6">
+                    <!-- Posts will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Chat Screen -->
+            <div id="chat-screen" class="hidden">
+                <div class="bg-white rounded-lg shadow-sm h-96 flex flex-col">
+                    <!-- Chat Header -->
+                    <div class="p-4 border-b">
+                        <h3 class="font-semibold">Chat</h3>
+                    </div>
+                    
+                    <!-- Messages -->
+                    <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-3">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                    
+                    <!-- Message Input -->
+                    <div class="p-4 border-t">
+                        <div class="flex space-x-2">
+                            <input 
+                                id="message-input" 
+                                type="text" 
+                                placeholder="Type a message... (try @syra)" 
+                                class="flex-1 p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
+                            >
+                            <button 
+                                id="send-button" 
+                                class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600"
+                            >
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t">
+            <div class="flex justify-around py-2">
+                <button id="nav-feed" class="nav-item active flex flex-col items-center p-2">
+                    <span class="text-xl">🏠</span>
+                    <span class="text-xs">Feed</span>
+                </button>
+                <button id="nav-chat" class="nav-item flex flex-col items-center p-2">
+                    <span class="text-xl">💬</span>
+                    <span class="text-xs">Chat</span>
+                </button>
+                <button id="nav-profile" class="nav-item flex flex-col items-center p-2">
+                    <span class="text-xl">👤</span>
+                    <span class="text-xs">Profile</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- AI Bot Indicator -->
+        <div id="syra-indicator" class="fixed top-20 right-4 bg-purple-500 text-white p-2 rounded-full shadow-lg hidden">
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span class="text-sm">Syra is typing...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-lg">
+            <div class="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
+            <p class="mt-4 text-center">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/posts.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/ai-bot.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
