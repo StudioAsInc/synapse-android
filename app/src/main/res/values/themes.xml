@@ -1,6 +1,6 @@
 <resources>
     <!--Main App Theme combining all attributes from both files-->
-    <style name="AppTheme" parent="Theme.Material3Expressive.DynamicColors.DayNight.NoActionBar">
+    <style name="AppTheme" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
         <item name="colorPrimary">@color/md_theme_primary</item>
         <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
@@ -58,9 +58,15 @@
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:forceDarkAllowed">false</item>
         <item name="android:windowDisablePreview">true</item>
+        
+        <!-- Material 3 Expressive Design -->
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Material3.Expressive.Small</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Material3.Expressive.Medium</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Expressive.Large</item>
+        
+        <!-- Material component styles for better compatibility -->
+        <item name="toolbarStyle">@style/Widget.Material3.Toolbar.OnSurface</item>
+        <item name="appBarLayoutStyle">@style/Widget.Material3.AppBarLayout</item>
     </style>
     <!--All additional styles from themes.xml-->
     <style name="AppTheme.FullScreen" parent="AppTheme">
