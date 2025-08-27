@@ -696,9 +696,12 @@ public class ChatActivity extends AppCompatActivity {
 
 		// Reattach chat listener to ensure we receive real-time messages
 		// This fixes the issue where messages sent while screen is off don't appear
-		// Only attach if the references have been initialized
-		if (chatMessagesRef != null && userRef != null) {
+		// Check each listener independently to avoid one blocking the other
+		if (chatMessagesRef != null && ChatMessagesList != null && chatAdapter != null) {
 			_attachChatListener();
+		}
+		
+		if (userRef != null) {
 			_attachUserStatusListener();
 		}
 
@@ -1141,8 +1144,23 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _attachChatListener() {
-		if (_chat_child_listener == null) {
-			_chat_child_listener = new ChildEventListener() {
+		// Extra safety: ensure all required dependencies are available
+		if (chatMessagesRef == null || ChatMessagesList == null || chatAdapter == null) {
+			Log.w("ChatActivity", "Cannot attach chat listener - missing dependencies");
+			return;
+		}
+		
+		// Ensure idempotency: remove existing listener if it exists but isn't null
+		if (_chat_child_listener != null) {
+			try {
+				chatMessagesRef.removeEventListener(_chat_child_listener);
+			} catch (Exception e) {
+				Log.w("ChatActivity", "Error removing existing chat listener: " + e.getMessage());
+			}
+			_chat_child_listener = null;
+		}
+		
+		_chat_child_listener = new ChildEventListener() {
 				@Override
 				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
 					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
@@ -1183,19 +1201,21 @@ public class ChatActivity extends AppCompatActivity {
 								
 								Log.d("ChatActivity", "Added new Firebase message to list at position " + insertPosition + ", total messages: " + ChatMessagesList.size());
 								
-								// Notify adapter of the insertion
-								chatAdapter.notifyItemInserted(insertPosition);
+								// Notify adapter of the insertion - guard against null adapter
+								if (chatAdapter != null) {
+									chatAdapter.notifyItemInserted(insertPosition);
 								
-								// Update adjacent items if needed
-								if (insertPosition > 0) {
-									chatAdapter.notifyItemChanged(insertPosition - 1);
-								}
-								if (insertPosition < ChatMessagesList.size() - 1) {
-									chatAdapter.notifyItemChanged(insertPosition + 1);
+									// Update adjacent items if needed
+									if (insertPosition > 0) {
+										chatAdapter.notifyItemChanged(insertPosition - 1);
+									}
+									if (insertPosition < ChatMessagesList.size() - 1) {
+										chatAdapter.notifyItemChanged(insertPosition + 1);
+									}
 								}
 								
 								// Scroll to the new message if it's the most recent
-								if (insertPosition == ChatMessagesList.size() - 1) {
+								if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
 									ChatMessagesListRecycler.post(() -> {
 										scrollToBottom();
 									});
@@ -1209,7 +1229,9 @@ public class ChatActivity extends AppCompatActivity {
 									// Remove local flag and update the message
 									newMessage.remove("isLocalMessage");
 									ChatMessagesList.set(existingPosition, newMessage);
-									chatAdapter.notifyItemChanged(existingPosition);
+									if (chatAdapter != null) {
+										chatAdapter.notifyItemChanged(existingPosition);
+									}
 									Log.d("ChatActivity", "Updated local message with Firebase data at position " + existingPosition);
 								}
 							}
@@ -1238,7 +1260,9 @@ public class ChatActivity extends AppCompatActivity {
 									ChatMessagesList.set(i, updatedMessage);
 									
 									// Notify adapter of the specific item change
-									chatAdapter.notifyItemChanged(i);
+									if (chatAdapter != null) {
+										chatAdapter.notifyItemChanged(i);
+									}
 									break;
 								}
 							}
@@ -1260,11 +1284,13 @@ public class ChatActivity extends AppCompatActivity {
 									ChatMessagesList.remove(i);
 									
 									// Notify adapter of the removal
-									chatAdapter.notifyItemRemoved(i);
-									
-									// Update the last item's timestamp if needed
-									if (!ChatMessagesList.isEmpty() && i < ChatMessagesList.size()) {
-										chatAdapter.notifyItemChanged(Math.min(i, ChatMessagesList.size() - 1));
+									if (chatAdapter != null) {
+										chatAdapter.notifyItemRemoved(i);
+										
+										// Update the last item's timestamp if needed
+										if (!ChatMessagesList.isEmpty() && i < ChatMessagesList.size()) {
+											chatAdapter.notifyItemChanged(Math.min(i, ChatMessagesList.size() - 1));
+										}
 									}
 									
 									// Check if list is empty
@@ -1283,8 +1309,7 @@ public class ChatActivity extends AppCompatActivity {
 					Log.e("ChatActivity", "Chat listener cancelled: " + error.getMessage());
 				}
 			};
-			chatMessagesRef.addChildEventListener(_chat_child_listener);
-		}
+		chatMessagesRef.addChildEventListener(_chat_child_listener);
 	}
 
 	/**
@@ -1433,23 +1458,37 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _attachUserStatusListener() {
-		if (_userStatusListener == null) {
-			_userStatusListener = new ValueEventListener() {
-				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-					if (dataSnapshot.exists()) {
-						updateUserProfile(dataSnapshot);
-						updateUserBadges(dataSnapshot);
-					}
-				}
-
-				@Override
-				public void onCancelled(@NonNull DatabaseError databaseError) {
-					Log.e("ChatActivity", "Failed to get user reference: " + databaseError.getMessage());
-				}
-			};
-			userRef.addValueEventListener(_userStatusListener);
+		// Extra safety: ensure userRef is available
+		if (userRef == null) {
+			Log.w("ChatActivity", "Cannot attach user status listener - userRef is null");
+			return;
 		}
+		
+		// Ensure idempotency: remove existing listener if it exists
+		if (_userStatusListener != null) {
+			try {
+				userRef.removeEventListener(_userStatusListener);
+			} catch (Exception e) {
+				Log.w("ChatActivity", "Error removing existing user status listener: " + e.getMessage());
+			}
+			_userStatusListener = null;
+		}
+		
+		_userStatusListener = new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				if (dataSnapshot.exists()) {
+					updateUserProfile(dataSnapshot);
+					updateUserBadges(dataSnapshot);
+				}
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
+				Log.e("ChatActivity", "Failed to get user reference: " + databaseError.getMessage());
+			}
+		};
+		userRef.addValueEventListener(_userStatusListener);
 	}
 
 	private void _detachUserStatusListener() {
