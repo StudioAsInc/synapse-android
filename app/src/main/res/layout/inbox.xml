@@ -1,11 +1,15 @@
-<LinearLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical"
 	android:id="@+id/_main">
+
+<LinearLayout
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
 	<LinearLayout
 		android:id="@+id/parentLayout"
 		android:layout_width="match_parent"
@@ -94,3 +98,22 @@
 		</LinearLayout>
 	</LinearLayout>
 </LinearLayout>
+
+<!-- FAB for creating new groups -->
+<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+	android:id="@+id/fabCreateGroup"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:layout_gravity="bottom|end"
+	android:layout_margin="24dp"
+	android:text="New Group"
+	app:icon="@drawable/ic_group_add"
+	app:iconTint="?attr/colorOnPrimary"
+	app:backgroundTint="?attr/colorPrimary"
+	app:tint="?attr/colorOnPrimary"
+	app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Full"
+	app:elevation="6dp"
+	app:pressedTranslationZ="8dp"
+	app:rippleColor="?attr/colorOnPrimary" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
