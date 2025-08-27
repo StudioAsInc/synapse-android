@@ -1,14 +1,19 @@
 <div align="center">
+  <img src="https://i.postimg.cc/6QMqSrqB/20250810-190421.png" width="120" height="120" style="border-radius:50%">
   
   # Synapse
   
   **✨ Express yourself in a better way ✨**  
   *A next-gen, open-source social platform*
 
+  [![License](https://img.shields.io/badge/license-Custom-blue.svg)](LICENSE.md)
+  [![Release](https://img.shields.io/github/v/release/StudioAsInc/synapse-android?include_prereleases)](https://github.com/StudioAsInc/synapse-android/releases)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTE.md)
+  [![Build Status](https://img.shields.io/github/actions/workflow/status/StudioAsInc/synapse-android/android.yml?label=build)](https://github.com/StudioAsInc/synapse-android/actions)
+  [![Stars](https://img.shields.io/github/stars/StudioAsInc/synapse-android?style=social)](https://github.com/StudioAsInc/synapse-android/stargazers)
+
   [Website](https://dl-synapse.pages.dev) • [Docs](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues/new?template=bug_report.md) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues/new?template=feature_request.md)
 </div>
-
-> **Note**: External badges and images have been removed to ensure offline compatibility and reduce dependency on third-party services. For current build status and releases, please check the GitHub repository directly.
 
 ---
 
@@ -23,19 +28,8 @@
 
 ---
 
-## 📚 Documentation
-
-All project documentation is organized in the `Docs/` folder:
-
-- **[Source Map](Docs/Source%20Map.md)** - Complete project structure and architecture overview
-- **[Contributing Guidelines](Docs/CONTRIBUTE.md)** - How to contribute to the project
-- **[License](Docs/LICENSE.md)** - Project license and terms
-- **[Agent Instructions](Docs/agent.md)** - Guidelines for AI agents working on this project
-
----
-
 ## 📜 License  
-Synapse uses a [custom open-source license](Docs/LICENSE.md) designed to:  
+Synapse uses a [custom open-source license](LICENSE.md) designed to:  
 - Protect project integrity  
 - Encourage community contributions  
 - Ensure long-term sustainability  
@@ -63,7 +57,7 @@ Synapse uses a [custom open-source license](Docs/LICENSE.md) designed to:
 
 ## 📊 Project Stats  
 - **Active Development**: 2023 – Present  
-- **Codebase**: Primarily Java with Kotlin components (see [Source Map](Docs/Source%20Map.md) for current statistics)
+- **Codebase**: 87% Java, 11% html, 2% Kotlin  
 - **Contributors**: 3+ (and growing)  
 
 ---
@@ -77,7 +71,7 @@ Special thanks to:
 <div align="center">
   
   **A Project by [StudioAs Inc.](https://studioas.dev)**  
-  *"Empowering connections through transparency"*
+  *"Empowering connections through transparency"*  
 
   [⭐ Star on GitHub](https://github.com/StudioAsInc/synapse-android) • [Join Our Community](https://web-synapse.pages.dev) • [Contact](mailto:mashikahamed0@gmail.com)  
 
