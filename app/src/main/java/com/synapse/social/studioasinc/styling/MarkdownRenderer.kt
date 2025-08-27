@@ -63,18 +63,13 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                 .usePlugin(TaskListPlugin.create(context))
                 .usePlugin(LinkifyPlugin.create())
                 .usePlugin(StrikethroughPlugin.create())
-                .usePlugin(JLatexMathPlugin.create(context))
+                .usePlugin(JLatexMathPlugin.create(16.0f))
                 .usePlugin(HtmlPlugin.create())
                 .usePlugin(object : AbstractMarkwonPlugin() {
                     override fun configureTheme(builder: MarkwonTheme.Builder) {
                         builder
                             .linkColor(Color.parseColor("#445E91"))
                             .isLinkUnderlined(true)
-                            .tableBorderColor(Color.parseColor("#888888"))
-                            .tableBorderWidth(3)
-                            .tableCellPadding(24)
-                            .tableHeaderRowBackgroundColor(Color.parseColor("#E8E8E8"))
-                            .tableOddRowBackgroundColor(Color.parseColor("#F0F0F0"))
                     }
                 })
                 .usePlugin(object : AbstractMarkwonPlugin() {
