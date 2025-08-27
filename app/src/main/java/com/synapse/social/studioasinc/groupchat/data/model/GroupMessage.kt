@@ -42,11 +42,11 @@ data class GroupMessage(
     
     fun getServerTimestamp(): Map<String, String> = ServerValue.TIMESTAMP
     
-    fun getMessageType(): MessageType = MessageType.fromString(messageType)
+    fun toMessageType(): MessageType = MessageType.fromString(messageType)
     
-    fun getDeliveryStatus(): DeliveryStatus = DeliveryStatus.fromString(deliveryStatus)
+    fun toDeliveryStatus(): DeliveryStatus = DeliveryStatus.fromString(deliveryStatus)
     
-    fun getPriority(): MessagePriority = MessagePriority.fromString(priority)
+    fun toPriority(): MessagePriority = MessagePriority.fromString(priority)
     
     fun hasAttachments(): Boolean = attachments.isNotEmpty()
     
@@ -63,7 +63,7 @@ data class GroupMessage(
     }
     
     fun canBeEditedBy(userId: String): Boolean {
-        return senderId == userId && !isDeleted && getMessageType() == MessageType.TEXT
+        return senderId == userId && !isDeleted && toMessageType() == MessageType.TEXT
     }
 }
 

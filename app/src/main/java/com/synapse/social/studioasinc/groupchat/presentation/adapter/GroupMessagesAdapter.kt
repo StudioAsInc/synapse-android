@@ -86,7 +86,7 @@ class GroupMessagesAdapter(
                 tvEdited.visibility = if (message.isEdited) View.VISIBLE else View.GONE
                 
                 // Show delivery status
-                updateDeliveryStatus(message.getDeliveryStatus())
+                updateDeliveryStatus(message.toDeliveryStatus())
                 
                 // Show attachments if any
                 setupAttachments(message.attachments)
