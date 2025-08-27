@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-114:/values-ldrtl-v17/values-ldrtl-v17.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/16f3030c40cd408cb2c1d000e1af68e6/transformed/material-1.14.0-alpha04/res/values-ldrtl-v17/values-ldrtl-v17.xml",
+                    "source": "/home/ubuntu/.gradle/caches/transforms-4/bbde43d03c6ddd327bb56e221cebd575/transformed/material-1.14.0-alpha04/res/values-ldrtl-v17/values-ldrtl-v17.xml",
                     "from": {
                         "startLines": "2,3",
                         "startColumns": "4,4",

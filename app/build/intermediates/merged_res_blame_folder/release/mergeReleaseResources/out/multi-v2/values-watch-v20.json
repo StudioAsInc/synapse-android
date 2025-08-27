@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-114:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/f4fd1e005d5dd5f14704dc9bafacb97e/transformed/jetified-play-services-auth-21.4.0/res/values-watch-v20/values.xml",
+                    "source": "/home/ubuntu/.gradle/caches/transforms-4/266a01906a847bd36e2df7834716f34f/transformed/jetified-play-services-auth-21.4.0/res/values-watch-v20/values.xml",
                     "from": {
                         "startLines": "4,5,6,7,8,9,10,11",
                         "startColumns": "0,0,0,0,0,0,0,0",
@@ -21,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/4a6940534268c0402786263a22d851f4/transformed/appcompat-1.7.0/res/values-watch-v20/values-watch-v20.xml",
+                    "source": "/home/ubuntu/.gradle/caches/transforms-4/50d65831fd8055ba35a1e2ae84ea7f3c/transformed/appcompat-1.7.0/res/values-watch-v20/values-watch-v20.xml",
                     "from": {
                         "startLines": "2,5,8",
                         "startColumns": "4,4,4",
