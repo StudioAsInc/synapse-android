@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-id/values-id.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/c7790292c893782bec2ee791ad0bd461/transformed/android-image-cropper-2.8.0/res/values-id/values-id.xml",
+                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/982388d460a1b0e1778be28facc124f6/transformed/android-image-cropper-2.8.0/res/values-id/values-id.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",

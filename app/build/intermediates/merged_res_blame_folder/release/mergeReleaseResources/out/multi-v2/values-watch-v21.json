@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-watch-v21/values-watch-v21.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/553b87b4c7aed259d4482ead973441ab/transformed/appcompat-1.7.0/res/values-watch-v21/values-watch-v21.xml",
+                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/8987f5c5df8ad3bd0d4c91e04a9423a1/transformed/appcompat-1.7.0/res/values-watch-v21/values-watch-v21.xml",
                     "from": {
                         "startLines": "2,6,10",
                         "startColumns": "4,4,4",
