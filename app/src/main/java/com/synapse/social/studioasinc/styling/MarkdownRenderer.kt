@@ -33,6 +33,8 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
 
     fun render(textView: TextView, markdown: String) {
         textView.movementMethod = LinkMovementMethod.getInstance()
+        // Enable horizontal scrolling for tables if needed
+        textView.setHorizontallyScrolling(false)
         markwon.setMarkdown(textView, markdown)
     }
 
@@ -61,8 +63,8 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
             }
 
             val markwon = Markwon.builder(context)
-                .usePlugin(GlideImagesPlugin.create(context))
                 .usePlugin(TablePlugin.create(context))
+                .usePlugin(GlideImagesPlugin.create(context))
                 .usePlugin(TaskListPlugin.create(context))
                 .usePlugin(LinkifyPlugin.create())
                 .usePlugin(StrikethroughPlugin.create())
@@ -71,7 +73,14 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                 .usePlugin(SyntaxHighlightPlugin.create(Prism4j(GrammarLocatorDef.create()), Prism4jTheme.defaultTheme()))
                 .usePlugin(object : AbstractMarkwonPlugin() {
                     override fun configureTheme(builder: MarkwonTheme.Builder) {
-                        builder.linkColor(Color.parseColor("#445E91")).isLinkUnderlined(true)
+                        builder
+                            .linkColor(Color.parseColor("#445E91"))
+                            .isLinkUnderlined(true)
+                            .tableBorderColor(Color.parseColor("#888888"))
+                            .tableBorderWidth(3)
+                            .tableCellPadding(24)
+                            .tableHeaderRowBackgroundColor(Color.parseColor("#E8E8E8"))
+                            .tableOddRowBackgroundColor(Color.parseColor("#F0F0F0"))
                     }
                 })
                 .usePlugin(object : AbstractMarkwonPlugin() {
