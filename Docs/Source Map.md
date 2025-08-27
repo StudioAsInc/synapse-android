@@ -5,10 +5,12 @@
 **Synapse** is a next-generation open-source social platform for Android, developed by StudioAs Inc. The project combines speed, privacy, and customization with real-time communication features, zero ads, and a non-profit model.
 
 ### Project Statistics
-- **Language Distribution**: 87% Java, 11% HTML, 2% Kotlin
+> **⚠️ Note**: These statistics are current as of the last documentation update. For current values, check the build.gradle files directly.
+
+- **Language Distribution**: Primarily Java with Kotlin components (exact distribution may vary)
 - **Package**: `com.synapse.social.studioasinc`
-- **Version**: 1.0.0-alpha06 (versionCode: 14)
-- **Min SDK**: 26, Target SDK: 32, Compile SDK: 36
+- **Version**: 1.0.0-alpha06 (versionCode: 14) *- Check app/build.gradle for current version*
+- **Min SDK**: 26, Target SDK: 32, Compile SDK: 36 *- Check app/build.gradle for current SDK levels*
 
 ## Project Structure
 
@@ -161,9 +163,11 @@ com.synapse.social.studioasinc/
 ## Build Configuration
 
 ### Gradle Setup
-- **Android Gradle Plugin**: 8.12.0
-- **Kotlin**: 2.2.0
-- **Java Version**: 17
+> **📋 Current versions** (check build.gradle files for latest):
+
+- **Android Gradle Plugin**: 8.12.0 *- Check build.gradle*
+- **Kotlin**: 2.2.0 *- Check build.gradle*
+- **Java Version**: 17 *- Check app/build.gradle*
 - **Multi-dex enabled** for large app support
 
 ### Build Variants
@@ -245,6 +249,36 @@ com.synapse.social.studioasinc/
 - Advanced content discovery
 - Community groups
 - Enhanced AI integration
+
+---
+
+## Documentation Maintenance
+
+> **🔄 Keep Documentation Current**: This source map contains references to specific files, versions, and statistics that may change over time. 
+
+### Regular Updates Needed:
+- **Version numbers** in Project Statistics section
+- **SDK levels** and **Gradle plugin versions**
+- **Dependency versions** as they are updated
+- **File lists** when new activities/components are added
+- **Language distribution** statistics
+
+### Quick Verification Commands:
+```bash
+# Check current versions
+grep "versionName\|versionCode" app/build.gradle
+grep "minSdk\|targetSdk\|compileSdk" app/build.gradle
+
+# Count source files
+find app/src/main/java -name "*.java" | wc -l
+find app/src/main/java -name "*.kt" | wc -l
+```
+
+### Recommended Review Schedule:
+- **After major releases** - Update version information
+- **After dependency updates** - Update library versions
+- **Monthly** - Verify file lists and statistics
+- **When adding new features** - Update architecture descriptions
 
 ---
 
