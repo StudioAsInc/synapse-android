@@ -694,6 +694,14 @@ public class ChatActivity extends AppCompatActivity {
 		super.onStart();
 		blocklist.addChildEventListener(_blocklist_child_listener);
 
+		// Reattach chat listener to ensure we receive real-time messages
+		// This fixes the issue where messages sent while screen is off don't appear
+		// Only attach if the references have been initialized
+		if (chatMessagesRef != null && userRef != null) {
+			_attachChatListener();
+			_attachUserStatusListener();
+		}
+
 		// Set user status to indicate they are in this chat
 		if (auth.getCurrentUser() != null) {
 			String recipientUid = getIntent().getStringExtra("uid");
