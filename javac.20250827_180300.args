@@ -1,0 +1,5 @@
+-cp
+./gradle/wrapper/gradle-wrapper.jar:
+-sourcepath
+app/src/main/java
+app/src/main/java/com/synapse/social/studioasinc/HomeActivity.java
