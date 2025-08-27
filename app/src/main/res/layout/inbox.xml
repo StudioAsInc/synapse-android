@@ -38,6 +38,16 @@
 				android:gravity="right|center_vertical"
 				android:orientation="horizontal"
 				android:animateLayoutChanges="true">
+				<com.google.android.material.button.MaterialButton
+					android:id="@+id/btnGroups"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginEnd="8dp"
+					android:text="Groups"
+					android:textSize="12sp"
+					style="@style/Widget.Material3.Button.TextButton"
+					app:iconSize="16dp"
+					app:icon="@drawable/ic_group" />
 				<ImageView
 					android:id="@+id/imageview3"
 					android:layout_width="25dp"
