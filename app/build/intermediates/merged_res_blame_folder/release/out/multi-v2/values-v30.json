@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-v30/values-v30.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/transforms-3/83bd685848a36dd3832488c1139930c5/transformed/material3-release/res/values-v30/values-v30.xml",
+                    "source": "/home/ubuntu/.gradle/caches/transforms-3/f906f0095ad4cc71599b4c9426c1be4c/transformed/material3-release/res/values-v30/values-v30.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

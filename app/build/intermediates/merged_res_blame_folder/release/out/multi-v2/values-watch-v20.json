@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/transforms-3/c5bfe0865045f75dd1ba10b44527015f/transformed/play-services-auth-21.4.0/res/values-watch-v20/values.xml",
+                    "source": "/home/ubuntu/.gradle/caches/transforms-3/31c812d6b0f081aedfbe7c6e728e987d/transformed/play-services-auth-21.4.0/res/values-watch-v20/values.xml",
                     "from": {
                         "startLines": "4,5,6,7,8,9,10,11",
                         "startColumns": "0,0,0,0,0,0,0,0",
@@ -21,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "/home/ubuntu/.gradle/caches/transforms-3/6811a50919274bb42407082838f951d6/transformed/appcompat-1.7.0/res/values-watch-v20/values-watch-v20.xml",
+                    "source": "/home/ubuntu/.gradle/caches/transforms-3/6b7571d7ec5d8c22437cb3f6f9e84cb9/transformed/appcompat-1.7.0/res/values-watch-v20/values-watch-v20.xml",
                     "from": {
                         "startLines": "2,5,8",
                         "startColumns": "4,4,4",

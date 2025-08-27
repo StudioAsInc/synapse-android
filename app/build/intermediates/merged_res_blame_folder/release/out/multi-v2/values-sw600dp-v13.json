@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-sw600dp-v13/values-sw600dp-v13.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/transforms-3/6811a50919274bb42407082838f951d6/transformed/appcompat-1.7.0/res/values-sw600dp-v13/values-sw600dp-v13.xml",
+                    "source": "/home/ubuntu/.gradle/caches/transforms-3/6b7571d7ec5d8c22437cb3f6f9e84cb9/transformed/appcompat-1.7.0/res/values-sw600dp-v13/values-sw600dp-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
@@ -14,7 +14,7 @@
                     }
                 },
                 {
-                    "source": "/home/ubuntu/.gradle/caches/transforms-3/7e1f5639778787ac0b311258ecfeb881/transformed/material-1.14.0-alpha04/res/values-sw600dp-v13/values-sw600dp-v13.xml",
+                    "source": "/home/ubuntu/.gradle/caches/transforms-3/e324f09ee9ee4b2fc5d78020342e4370/transformed/material-1.14.0-alpha04/res/values-sw600dp-v13/values-sw600dp-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,10,11,12,13,14",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4",
