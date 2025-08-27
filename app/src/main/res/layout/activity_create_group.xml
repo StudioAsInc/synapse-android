@@ -195,13 +195,13 @@
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
                     <!-- Private Group Switch -->
-                    <com.google.android.material.materialswitch.MaterialSwitch
+                    <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/switchPrivateGroup"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
                         android:text="Private Group"
-                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
 
                     <TextView
                         android:layout_width="match_parent"
