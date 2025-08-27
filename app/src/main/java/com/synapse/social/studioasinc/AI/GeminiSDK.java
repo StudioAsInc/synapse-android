@@ -4,9 +4,9 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.google.genai.GenerativeModel;
-import com.google.genai.GenerativeModelFutures;
-import com.google.genai.type.GenerateContentResponse;
+import com.google.ai.client.generativeai.GenerativeModel;
+import com.google.ai.client.generativeai.java.GenerativeModelFutures;
+import com.google.ai.client.generativeai.type.GenerateContentResponse;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -206,8 +206,8 @@ public class GeminiSDK {
             
             // Create the generative model
             GenerativeModel gm = new GenerativeModel(
-                    model,
-                    selectedApiKey
+                    /* modelName */ model,
+                    /* apiKey */ selectedApiKey
             );
             
             GenerativeModelFutures modelFutures = GenerativeModelFutures.from(gm);
