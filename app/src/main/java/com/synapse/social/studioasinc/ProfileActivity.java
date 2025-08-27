@@ -633,7 +633,9 @@ class c {
 		_loadRequest();
 		ProfilePageTabUserInfoNickname.setTypeface(Typeface.DEFAULT, 1);
 		ProfilePageNoInternetBodyRetry.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)0, 0xFFFFFDE7, 0xFF445E91));
-		if (getIntent().getStringExtra("uid").equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+		String intentUid = getIntent().getStringExtra("uid");
+		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+		if (intentUid != null && currentUser != null && intentUid.equals(currentUser.getUid())) {
 			ProfilePageTabUserInfoSecondaryButtons.setVisibility(View.GONE);
 			btnEditProfile.setVisibility(View.VISIBLE);
 		} else {
