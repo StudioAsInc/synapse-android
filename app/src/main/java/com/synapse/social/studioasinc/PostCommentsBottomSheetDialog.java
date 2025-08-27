@@ -71,11 +71,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Calendar;
 import java.util.regex.*;
-import java.util.concurrent.ExecutorService;
+impimport java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import com.synapse.social.studioasinc.styling.TextStylingUtil;
 
 public class PostCommentsBottomSheetDialog extends DialogFragment {
-		
 		private View rootView;
 		private Intent intent = new Intent();
 		
@@ -537,13 +537,12 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						_ImageColor(top_popular_3_fire_ic, 0xFFFF9800);
 
 						if (commentData.get("comment") != null) {
-								comment_text.setText(commentData.get("comment").toString());
+								comment_text.setText(commen						if (commentData.get("comment") != null) {
+								String commentTextContent = commentData.get("comment").toString();
+								TextStylingUtil textStylingUtil = new TextStylingUtil(getContext());
+								textStylingUtil.applyStyling(commentTextContent, comment_text);
 						} else {
-								comment_text.setText("");
-						}
-						
-						other_replies_list.setAdapter(new CommentsRepliesAdapter(commentsRepliesListMap));
-						other_replies_list.setLayoutManager(new LinearLayoutManager(getActivity()));
+								comment_text.setText("");LayoutManager(getActivity()));
 						
 						{
 								ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
@@ -1091,12 +1090,13 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						}
 						
 						if (postPublisherAvatar.equals("null")) {
-								likedByPublisherLayoutAvatar.setImageResource(R.drawable.avatar);
+								likedByPublisherLayoutAvatar.setImageResource(R.drawabl						if (replyData.get("comment") != null) {
+								String commentTextContent = replyData.get("comment").toString();
+								TextStylingUtil textStylingUtil = new TextStylingUtil(getContext());
+								textStylingUtil.applyStyling(commentTextContent, comment_text);
 						} else {
-								Glide.with(getContext()).load(Uri.parse(postPublisherAvatar)).into(likedByPublisherLayoutAvatar);
-						}
-						
-						if (UserInfoCacheMap.containsKey("uid-".concat(uid))) {
+								comment_text.setText("");
+						}foCacheMap.containsKey("uid-".concat(uid))) {
 								body.setVisibility(View.VISIBLE);
 								if (String.valueOf(UserInfoCacheMap.get("banned-".concat(uid))).equals("true")) {
 										profileImage.setImageResource(R.drawable.avatar);

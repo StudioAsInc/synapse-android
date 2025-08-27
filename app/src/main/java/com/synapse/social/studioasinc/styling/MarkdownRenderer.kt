@@ -99,7 +99,20 @@ class MarkdownRenderer private constructor(private val markwon: Markwon) {
                 val span = if (symbol == "@") object : ClickableSpan() {
                     override fun onClick(widget: View) {
                         val ctx = widget.context
-                        ctx.startActivity(Intent(ctx, com.synapse.social.studioasinc.ProfileActivity::class.java).putExtra("username", full.substring(1)))
+                        val username = full.substring(1)
+                        // Look up the user by username to get their UID
+                        val db = com.google.firebase.database.FirebaseDatabase.getInstance().getReference("skyline/username").child(username)
+                        db.addListenerForSingleValueEvent(object : com.google.firebase.database.ValueEventListener {
+                            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+                                val uid = snapshot.child("uid").getValue(String::class.java)
+                                if (uid != null && uid != "null") {
+                                    ctx.startActivity(Intent(ctx, com.synapse.social.studioasinc.ProfileActivity::class.java).putExtra("uid", uid))
+                                }
+                            }
+                            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+                                android.util.Log.e("MarkdownRenderer", "Database error", error.toException())
+                            }
+                        })
                     }
                     override fun updateDrawState(ds: TextPaint) {
                         ds.color = Color.parseColor("#445E91")

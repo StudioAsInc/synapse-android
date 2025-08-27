@@ -116,7 +116,7 @@ public class ChatActivity extends AppCompatActivity {
 	private static final String INBOX_REF = "inbox";
 	private static final String BLOCKLIST_REF = "blocklist";
 	private static final String TYPING_MESSAGE_REF = "typing-message";
-	private static final String USERNAME_REF = "username";
+	private static final String USERNAME_REF = "skyline/username";
 
 	private static final String UID_KEY = "uid";
 	private static final String ORIGIN_KEY = "origin";

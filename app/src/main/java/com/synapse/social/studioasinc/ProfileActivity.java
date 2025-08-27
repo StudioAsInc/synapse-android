@@ -661,7 +661,6 @@ class c {
 	
 	
 	public void _getUserReference() {
-		DatabaseRef	public void _getUserReference() {
 		String uid = getIntent().getStringExtra("uid");
 		if (uid == null || uid.isEmpty()) {
 			// Handle null or empty UID by showing error or finishing activity
@@ -675,7 +674,8 @@ class c {
 		getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {IBLE);
+				if(dataSnapshot.exists()) {
+					ProfilePageSwipeLayout.setVisibility(View.VISIBLE);
 					ProfilePageNoInternetBody.setVisibility(View.GONE);
 					ProfilePageLoadingBody.setVisibility(View.GONE);
 					user_uid_layout_text.setText(dataSnapshot.child("uid").getValue(String.class));

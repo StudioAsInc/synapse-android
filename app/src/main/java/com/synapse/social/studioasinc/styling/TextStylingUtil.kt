@@ -290,7 +290,7 @@ class TextStylingUtil(private val context: Context) {
     private class ProfileSpan(private val context: Context, private val handle: String) : ClickableSpan() {
         override fun onClick(view: View) {
             val username = handle.substring(1)
-            val db = FirebaseDatabase.getInstance().getReference("synapse/username").child(username)
+            val db = FirebaseDatabase.getInstance().getReference("skyline/username").child(username)
             db.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val uid = snapshot.child("uid").getValue(String::class.java)
