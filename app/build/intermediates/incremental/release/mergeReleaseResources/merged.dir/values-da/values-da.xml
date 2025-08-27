@@ -33,7 +33,6 @@
     <string msgid="1656852541809559762" name="abc_toolbar_collapse_description">"Skjul"</string>
     <string msgid="8397015543330865059" name="android.credentials.TYPE_PASSWORD_CREDENTIAL">"Adgangskode"</string>
     <string msgid="3929015085059320822" name="androidx.credentials.TYPE_PUBLIC_KEY_CREDENTIAL">"Adgangsnøgle"</string>
-    <string msgid="9020470552698189270" name="autofill">"Autofyld"</string>
     <string name="bottomsheet_action_collapse">Skjul</string>
     <string name="bottomsheet_action_collapse_description">Skjul feltet i bunden</string>
     <string name="bottomsheet_action_expand">Udvid</string>
@@ -230,7 +229,6 @@
     <string name="searchview_navigation_content_description">Tilbage</string>
     <string msgid="6043586758067023" name="selected">"Valgt"</string>
     <string name="side_sheet_accessibility_pane_title">Felt i siden</string>
-    <string msgid="2792228137354697160" name="snackbar_pane_title">"Underretning"</string>
     <string msgid="4139871816613051306" name="state_empty">"Tom"</string>
     <string msgid="5834637030682409883" name="state_off">"Fra"</string>
     <string msgid="1490883874751719580" name="state_on">"Til"</string>

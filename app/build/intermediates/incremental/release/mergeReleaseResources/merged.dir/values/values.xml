@@ -252,8 +252,6 @@
         <enum name="aligned" value="2"/>
         <enum name="chain2" value="3"/>
     </attr>
-    <attr format="string" name="fontProviderSystemFontFamily"/>
-    <attr format="string" name="fontVariationSettings"/>
     <attr format="integer" name="framePosition"/>
     <attr format="boolean" name="guidelineUseRtl"/>
     <attr format="reference" name="headerLayout"/>
@@ -2631,7 +2629,6 @@
     <item name="view_transition" type="id"/>
     <id name="view_tree_disjoint_parent"/>
     <id name="view_tree_lifecycle_owner"/>
-    <id name="view_tree_navigation_event_dispatcher_owner"/>
     <id name="view_tree_on_back_pressed_dispatcher_owner"/>
     <id name="view_tree_saved_state_registry_owner"/>
     <id name="view_tree_view_model_store_owner"/>
@@ -2755,7 +2752,6 @@
     <string name="androidx_startup" translatable="false">androidx.startup</string>
     <string name="app_name">Synapse</string>
     <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
-    <string name="autofill">Autofill</string>
     <string name="banned_access_denied">Access Denied</string>
     <string name="banned_access_denied_subtext">Recently, we observed that you have been doing activities against our community guidelines on your account, and as a result, we have blocked your account.</string>
     <string name="banned_create_request">Create Request</string>
@@ -3258,7 +3254,6 @@
     <string name="sign_with_google">Continue with Google</string>
     <string name="skip_button">Skip</string>
     <string name="skyline_create_account">Create Account 🎉</string>
-    <string name="snackbar_pane_title">Alert</string>
     <string name="something_went_wrong">Something went wrong</string>
     <string name="state_empty">Empty</string>
     <string name="state_off">Off</string>
@@ -7405,7 +7400,6 @@
     <style name="FloatingDialogWindowTheme">
         <item name="android:windowClipToOutline">false</item>
         <item name="android:dialogTheme">@style/FloatingDialogTheme</item>
-        <item name="android:backgroundDimEnabled">true</item>
     </style>
     <style name="HomeCustomTabLayout" parent="TextAppearance.Material3.TitleMedium">
         <item name="textAllCaps">false</item>
@@ -15396,7 +15390,7 @@
             <enum name="forever" value="-1"/>
         </attr>
         
-        <attr name="fontProviderSystemFontFamily"/>
+        <attr format="string" name="fontProviderSystemFontFamily"/>
     </declare-styleable>
     <declare-styleable name="FontFamilyFont">
         
@@ -15409,7 +15403,7 @@
         
         <attr format="integer" name="fontWeight"/>
         
-        <attr name="fontVariationSettings"/>
+        <attr format="string" name="fontVariationSettings"/>
         
         <attr format="integer" name="ttcIndex"/>
         
@@ -15418,14 +15412,6 @@
         <attr name="android:fontWeight"/>
         <attr name="android:fontVariationSettings"/>
         <attr name="android:ttcIndex"/>
-    </declare-styleable>
-    <declare-styleable name="FontFamilyProviderFallback">
-        
-        <attr name="fontProviderQuery"/>
-        
-        <attr name="fontProviderSystemFontFamily"/>
-        
-        <attr name="fontVariationSettings"/>
     </declare-styleable>
     <declare-styleable name="ForegroundLinearLayout">
     <attr name="android:foreground"/>

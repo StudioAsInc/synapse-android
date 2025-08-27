@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
+            "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-114:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/6c3ddcec755796cd3a501f56d9e56a0f/transformed/material-1.14.0-alpha04/res/values-w360dp-port-v13/values-w360dp-port-v13.xml",
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/16f3030c40cd408cb2c1d000e1af68e6/transformed/material-1.14.0-alpha04/res/values-w360dp-port-v13/values-w360dp-port-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",

@@ -16,19 +16,6 @@ public final class ShimmerFrameLayout extends android.widget.FrameLayout {
     
     @kotlin.jvm.JvmOverloads()
     public ShimmerFrameLayout(@org.jetbrains.annotations.NotNull()
-    android.content.Context context) {
-        super(null);
-    }
-    
-    @kotlin.jvm.JvmOverloads()
-    public ShimmerFrameLayout(@org.jetbrains.annotations.NotNull()
-    android.content.Context context, @org.jetbrains.annotations.Nullable()
-    android.util.AttributeSet attrs) {
-        super(null);
-    }
-    
-    @kotlin.jvm.JvmOverloads()
-    public ShimmerFrameLayout(@org.jetbrains.annotations.NotNull()
     android.content.Context context, @org.jetbrains.annotations.Nullable()
     android.util.AttributeSet attrs, int defStyleAttr) {
         super(null);
@@ -59,5 +46,18 @@ public final class ShimmerFrameLayout extends android.widget.FrameLayout {
     
     private final android.animation.ValueAnimator createAnimator() {
         return null;
+    }
+    
+    @kotlin.jvm.JvmOverloads()
+    public ShimmerFrameLayout(@org.jetbrains.annotations.NotNull()
+    android.content.Context context) {
+        super(null);
+    }
+    
+    @kotlin.jvm.JvmOverloads()
+    public ShimmerFrameLayout(@org.jetbrains.annotations.NotNull()
+    android.content.Context context, @org.jetbrains.annotations.Nullable()
+    android.util.AttributeSet attrs) {
+        super(null);
     }
 }

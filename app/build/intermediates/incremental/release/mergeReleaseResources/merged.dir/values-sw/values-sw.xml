@@ -33,7 +33,6 @@
     <string msgid="1656852541809559762" name="abc_toolbar_collapse_description">"Kunja"</string>
     <string msgid="8397015543330865059" name="android.credentials.TYPE_PASSWORD_CREDENTIAL">"Nenosiri"</string>
     <string msgid="3929015085059320822" name="androidx.credentials.TYPE_PUBLIC_KEY_CREDENTIAL">"Ufunguo wa siri"</string>
-    <string msgid="9020470552698189270" name="autofill">"Jaza kiotomatiki"</string>
     <string name="bottomsheet_action_collapse">Kunja</string>
     <string name="bottomsheet_action_collapse_description">Kunja safu ya chini</string>
     <string name="bottomsheet_action_expand">Panua</string>
@@ -230,7 +229,6 @@
     <string name="searchview_navigation_content_description">Rudi nyuma</string>
     <string msgid="6043586758067023" name="selected">"Umechagua"</string>
     <string name="side_sheet_accessibility_pane_title">Laha ya Pembeni</string>
-    <string msgid="2792228137354697160" name="snackbar_pane_title">"Arifa"</string>
     <string msgid="4139871816613051306" name="state_empty">"Tupu"</string>
     <string msgid="5834637030682409883" name="state_off">"Imezimwa"</string>
     <string msgid="1490883874751719580" name="state_on">"Imewashwa"</string>

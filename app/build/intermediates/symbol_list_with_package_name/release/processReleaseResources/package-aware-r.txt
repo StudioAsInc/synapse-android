@@ -6205,7 +6205,6 @@ id view_overlay
 id view_transition
 id view_tree_disjoint_parent
 id view_tree_lifecycle_owner
-id view_tree_navigation_event_dispatcher_owner
 id view_tree_on_back_pressed_dispatcher_owner
 id view_tree_saved_state_registry_owner
 id view_tree_view_model_store_owner
@@ -6625,7 +6624,6 @@ string androidx_credentials_TYPE_PUBLIC_KEY_CREDENTIAL
 string androidx_startup
 string app_name
 string appbar_scrolling_view_behavior
-string autofill
 string banned_access_denied
 string banned_access_denied_subtext
 string banned_create_request
@@ -7102,7 +7100,6 @@ string sign_with_email
 string sign_with_google
 string skip_button
 string skyline_create_account
-string snackbar_pane_title
 string something_went_wrong
 string state_empty
 string state_off
@@ -8693,7 +8690,6 @@ styleable FloatingToolbar backgroundTint marginBottomSystemWindowInsets marginLe
 styleable FlowLayout horizontalItemSpacing lineSpacing
 styleable FontFamily fontProviderAuthority fontProviderCerts fontProviderFallbackQuery fontProviderFetchStrategy fontProviderFetchTimeout fontProviderPackage fontProviderQuery fontProviderSystemFontFamily
 styleable FontFamilyFont android_font android_fontWeight android_fontStyle android_ttcIndex android_fontVariationSettings font fontStyle fontVariationSettings fontWeight ttcIndex
-styleable FontFamilyProviderFallback fontProviderQuery fontProviderSystemFontFamily fontVariationSettings
 styleable ForegroundLinearLayout android_foreground android_foregroundGravity foregroundInsidePadding
 styleable Fragment android_name android_id android_tag
 styleable FragmentContainerView android_name android_tag

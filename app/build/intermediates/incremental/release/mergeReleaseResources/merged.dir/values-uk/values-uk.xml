@@ -35,7 +35,6 @@
     <string msgid="1656852541809559762" name="abc_toolbar_collapse_description">"Згорнути"</string>
     <string msgid="8397015543330865059" name="android.credentials.TYPE_PASSWORD_CREDENTIAL">"Пароль"</string>
     <string msgid="3929015085059320822" name="androidx.credentials.TYPE_PUBLIC_KEY_CREDENTIAL">"Ключ доступу"</string>
-    <string msgid="9020470552698189270" name="autofill">"Автозаповнення"</string>
     <string name="bottomsheet_action_collapse">Згорнути</string>
     <string name="bottomsheet_action_collapse_description">Згорнути нижній екран</string>
     <string name="bottomsheet_action_expand">Розгорнути</string>
@@ -86,7 +85,7 @@
     <string msgid="2427401033573778270" name="expand_button_title">"Додатково"</string>
     <string name="exposed_dropdown_menu_content_description">Показати спадне меню</string>
     <string msgid="4566929209979330987" name="fallback_menu_item_copy_link">"Копіювати посилання"</string>
-    <string msgid="3413186855122069269" name="fallback_menu_item_open_in_browser">"Відкрити у вебпереглядачі"</string>
+    <string msgid="3413186855122069269" name="fallback_menu_item_open_in_browser">"Відкрити у веб-переглядачі"</string>
     <string msgid="7145444925855055364" name="fallback_menu_item_share_link">"Надіслати посилання"</string>
     <string name="icon_content_description">Значок вікна</string>
     <string msgid="6827826412747255547" name="in_progress">"Виконується"</string>
@@ -232,7 +231,6 @@
     <string name="searchview_navigation_content_description">Назад</string>
     <string msgid="6043586758067023" name="selected">"Вибрано"</string>
     <string name="side_sheet_accessibility_pane_title">Бічна панель</string>
-    <string msgid="2792228137354697160" name="snackbar_pane_title">"Сповіщення"</string>
     <string msgid="4139871816613051306" name="state_empty">"Пусто"</string>
     <string msgid="5834637030682409883" name="state_off">"Вимкнено"</string>
     <string msgid="1490883874751719580" name="state_on">"Увімкнено"</string>

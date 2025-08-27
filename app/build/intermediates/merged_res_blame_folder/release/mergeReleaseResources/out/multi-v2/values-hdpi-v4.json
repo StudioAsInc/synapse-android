@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-hdpi-v4/values-hdpi-v4.xml",
+            "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-114:/values-hdpi-v4/values-hdpi-v4.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/87dbcf576b8396ce49046b9b436e1735/transformed/appcompat-1.7.1/res/values-hdpi-v4/values-hdpi-v4.xml",
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/4a6940534268c0402786263a22d851f4/transformed/appcompat-1.7.0/res/values-hdpi-v4/values-hdpi-v4.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

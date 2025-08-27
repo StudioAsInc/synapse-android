@@ -33,7 +33,6 @@
     <string msgid="1656852541809559762" name="abc_toolbar_collapse_description">"Thu gọn"</string>
     <string msgid="8397015543330865059" name="android.credentials.TYPE_PASSWORD_CREDENTIAL">"Mật khẩu"</string>
     <string msgid="3929015085059320822" name="androidx.credentials.TYPE_PUBLIC_KEY_CREDENTIAL">"Khoá truy cập"</string>
-    <string msgid="9020470552698189270" name="autofill">"Tự động điền"</string>
     <string name="bottomsheet_action_collapse">Thu gọn</string>
     <string name="bottomsheet_action_collapse_description">Thu gọn bảng dưới cùng</string>
     <string name="bottomsheet_action_expand">Mở rộng</string>
@@ -239,7 +238,6 @@
     <string name="searchview_navigation_content_description">Quay lại</string>
     <string msgid="6043586758067023" name="selected">"Đã chọn"</string>
     <string name="side_sheet_accessibility_pane_title">Trang bên</string>
-    <string msgid="2792228137354697160" name="snackbar_pane_title">"Cảnh báo"</string>
     <string msgid="4139871816613051306" name="state_empty">"Trống"</string>
     <string msgid="5834637030682409883" name="state_off">"Đang tắt"</string>
     <string msgid="1490883874751719580" name="state_on">"Đang bật"</string>

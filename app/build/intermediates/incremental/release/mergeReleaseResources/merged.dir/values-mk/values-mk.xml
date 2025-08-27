@@ -33,7 +33,6 @@
     <string msgid="1656852541809559762" name="abc_toolbar_collapse_description">"Собери"</string>
     <string msgid="8397015543330865059" name="android.credentials.TYPE_PASSWORD_CREDENTIAL">"Лозинка"</string>
     <string msgid="3929015085059320822" name="androidx.credentials.TYPE_PUBLIC_KEY_CREDENTIAL">"Криптографски клуч"</string>
-    <string msgid="9020470552698189270" name="autofill">"Автоматско пополнување"</string>
     <string name="bottomsheet_action_collapse">Соберете</string>
     <string name="bottomsheet_action_collapse_description">Соберете го долниот лист</string>
     <string name="bottomsheet_action_expand">Проширете</string>
@@ -230,7 +229,6 @@
     <string name="searchview_navigation_content_description">Враќање назад</string>
     <string msgid="6043586758067023" name="selected">"Избрано"</string>
     <string name="side_sheet_accessibility_pane_title">Страничен лист</string>
-    <string msgid="2792228137354697160" name="snackbar_pane_title">"Предупредување"</string>
     <string msgid="4139871816613051306" name="state_empty">"Празно"</string>
     <string msgid="5834637030682409883" name="state_off">"Исклучено"</string>
     <string msgid="1490883874751719580" name="state_on">"Вклучено"</string>
