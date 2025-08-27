@@ -4,25 +4,28 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.google.genai.GenerativeModel;
+import com.google.genai.GenerativeModelFutures;
+import com.google.genai.type.GenerateContentResponse;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.synapse.social.studioasinc.R;
+
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import com.synapse.social.studioasinc.R;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-public class Gemini {
+public class GeminiSDK {
     
-    private static final String TAG = "GeminiAPI";
+    private static final String TAG = "GeminiSDK";
     
     // Default configuration
     private List<String> apiKeys;
@@ -31,7 +34,7 @@ public class Gemini {
     private String tone = "normal";
     private String size = "normal";
     private int maxTokens = 2500;
-    private double temperature = 1.0;
+    private float temperature = 1.0f;
     private boolean showThinking = false;
     private String thinkingText = "Thinking...";
     private String systemInstruction = "Your name is Synapse AI, you are an AI made for Synapse (social media) assistance";
@@ -39,9 +42,7 @@ public class Gemini {
     private Context context;
     private TextView responseTextView;
     private Random random;
-    
-    // API endpoints
-    private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
+    private Executor executor;
     
     public interface GeminiCallback {
         void onSuccess(String response);
@@ -57,7 +58,7 @@ public class Gemini {
         private String tone;
         private String size;
         private int maxTokens;
-        private double temperature;
+        private float temperature;
         private boolean showThinking;
         private String thinkingText;
         private String systemInstruction;
@@ -74,7 +75,7 @@ public class Gemini {
             this.tone = "normal";
             this.size = "normal";
             this.maxTokens = 2500;
-            this.temperature = 1.0;
+            this.temperature = 1.0f;
             this.showThinking = false;
             this.thinkingText = "Thinking...";
             this.systemInstruction = "Your name is Synapse AI, you are an AI made for Synapse (social media) assistance";
@@ -105,7 +106,7 @@ public class Gemini {
             return this;
         }
         
-        public Builder temperature(double temperature) {
+        public Builder temperature(float temperature) {
             this.temperature = temperature;
             return this;
         }
@@ -130,8 +131,8 @@ public class Gemini {
             return this;
         }
         
-        public Gemini build() {
-            return new Gemini(this);
+        public GeminiSDK build() {
+            return new GeminiSDK(this);
         }
         
         private List<String> loadApiKeysFromRaw(Context context) {
@@ -156,7 +157,7 @@ public class Gemini {
         }
     }
     
-    private Gemini(Builder builder) {
+    private GeminiSDK(Builder builder) {
         this.apiKeys = builder.apiKeys;
         this.model = builder.model;
         this.responseType = builder.responseType;
@@ -170,6 +171,7 @@ public class Gemini {
         this.context = builder.context;
         this.responseTextView = builder.responseTextView;
         this.random = new Random();
+        this.executor = Executors.newSingleThreadExecutor();
     }
     
     public void sendPrompt(String prompt) {
@@ -195,108 +197,61 @@ public class Gemini {
             }
         }
         
-        new Thread(() -> {
-            try {
-                // Randomly select an API key
-                String selectedApiKey = apiKeys.get(random.nextInt(apiKeys.size()));
-                String response = sendGeminiRequest(prompt, selectedApiKey);
-                
-                if (responseTextView != null) {
-                    responseTextView.post(() -> responseTextView.setText(response));
-                }
-                
-                if (callback != null) {
-                    callback.onSuccess(response);
-                }
-                
-            } catch (Exception e) {
-                String error = "Error: " + e.getMessage();
-                Log.e(TAG, error, e);
-                handleError(error, callback);
-            }
-        }).start();
-    }
-    
-    private String sendGeminiRequest(String prompt, String apiKey) throws Exception {
-        String urlString = BASE_URL + model + ":generateContent?key=" + apiKey;
-        HttpURLConnection conn = null;
+        // Randomly select an API key
+        String selectedApiKey = apiKeys.get(random.nextInt(apiKeys.size()));
         
         try {
-            URL url = new URL(urlString);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setConnectTimeout(15000);
-            conn.setReadTimeout(30000);
-            conn.setDoOutput(true);
-            
-            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-            
-            JSONObject payload = buildPayload(prompt);
-            String body = payload.toString();
-            
-            try (OutputStream os = conn.getOutputStream()) {
-                byte[] input = body.getBytes(StandardCharsets.UTF_8);
-                os.write(input);
-                os.flush();
-            }
-            
-            int code = conn.getResponseCode();
-            InputStream is = (code >= 400) ? conn.getErrorStream() : conn.getInputStream();
-            StringBuilder sb = new StringBuilder();
-            
-            if (is != null) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-                String line;
-                while ((line = br.readLine()) != null) {
-                    sb.append(line).append('\n');
-                }
-                br.close();
-            }
-            
-            String rawResponse = sb.toString().trim();
-            Log.d(TAG, "HTTP code=" + code + " rawResponse=" + rawResponse);
-            
-            if (code >= 200 && code < 300) {
-                return extractTextFromGeminiResponse(rawResponse);
-            } else {
-                throw new Exception("HTTP " + code + " error: " + rawResponse);
-            }
-            
-        } finally {
-            if (conn != null) conn.disconnect();
-        }
-    }
-    
-    private JSONObject buildPayload(String prompt) {
-        JSONObject payload = new JSONObject();
-        try {
-            // Build complete system instruction with all customizations
+            // Build full system instruction
             String fullSystemInstruction = buildFullSystemInstruction();
-            if (fullSystemInstruction != null && !fullSystemInstruction.isEmpty()) {
-                JSONObject systemInstructionObj = new JSONObject();
-                JSONArray sysParts = new JSONArray();
-                sysParts.put(new JSONObject().put("text", fullSystemInstruction));
-                systemInstructionObj.put("parts", sysParts);
-                payload.put("system_instruction", systemInstructionObj);
+            
+            // Create the generative model
+            GenerativeModel gm = new GenerativeModel(
+                    model,
+                    selectedApiKey
+            );
+            
+            GenerativeModelFutures modelFutures = GenerativeModelFutures.from(gm);
+            
+            // Combine system instruction with prompt if available
+            String finalPrompt = prompt;
+            if (fullSystemInstruction != null && !fullSystemInstruction.trim().isEmpty()) {
+                finalPrompt = fullSystemInstruction + "\n\n" + prompt;
             }
             
-            JSONArray contents = new JSONArray();
-            JSONObject contentItem = new JSONObject();
-            JSONArray parts = new JSONArray();
-            parts.put(new JSONObject().put("text", prompt));
-            contentItem.put("parts", parts);
-            contents.put(contentItem);
-            payload.put("contents", contents);
+            // Generate content with simple string prompt
+            ListenableFuture<GenerateContentResponse> response = modelFutures.generateContent(finalPrompt);
             
-            JSONObject generationConfig = new JSONObject();
-            generationConfig.put("temperature", temperature);
-            generationConfig.put("maxOutputTokens", maxTokens);
-            payload.put("generationConfig", generationConfig);
+            Futures.addCallback(response, new FutureCallback<GenerateContentResponse>() {
+                @Override
+                public void onSuccess(GenerateContentResponse result) {
+                    String responseText = result.getText();
+                    if (responseText == null || responseText.trim().isEmpty()) {
+                        responseText = "No response generated";
+                    }
+                    
+                    String finalResponseText = responseText;
+                    if (responseTextView != null) {
+                        responseTextView.post(() -> responseTextView.setText(finalResponseText));
+                    }
+                    
+                    if (callback != null) {
+                        callback.onSuccess(finalResponseText);
+                    }
+                }
+                
+                @Override
+                public void onFailure(Throwable t) {
+                    String error = "Error: " + t.getMessage();
+                    Log.e(TAG, error, t);
+                    handleError(error, callback);
+                }
+            }, executor);
             
-        } catch (JSONException e) {
-            Log.e(TAG, "buildPayload JSONException: " + e.getMessage());
+        } catch (Exception e) {
+            String error = "Error initializing model: " + e.getMessage();
+            Log.e(TAG, error, e);
+            handleError(error, callback);
         }
-        return payload;
     }
     
     private String buildFullSystemInstruction() {
@@ -317,35 +272,6 @@ public class Gemini {
         return instruction.toString();
     }
     
-    private String extractTextFromGeminiResponse(String raw) {
-        if (raw == null || raw.isEmpty()) return "Empty response";
-        try {
-            JSONObject root = new JSONObject(raw);
-            
-            if (root.has("candidates")) {
-                JSONArray candidates = root.optJSONArray("candidates");
-                if (candidates != null && candidates.length() > 0) {
-                    JSONObject c0 = candidates.getJSONObject(0);
-                    if (c0.has("content")) {
-                        JSONObject content = c0.getJSONObject("content");
-                        if (content.has("parts")) {
-                            JSONArray parts = content.getJSONArray("parts");
-                            if (parts.length() > 0) {
-                                return parts.getJSONObject(0).optString("text", "No text found");
-                            }
-                        }
-                    }
-                }
-            }
-            
-            return raw.length() > 1000 ? raw.substring(0, 1000) + "..." : raw;
-            
-        } catch (JSONException e) {
-            Log.w(TAG, "extractTextFromGeminiResponse JSON parse error: " + e.getMessage());
-            return raw;
-        }
-    }
-    
     private void handleError(String error, GeminiCallback callback) {
         if (callback != null) {
             callback.onError(error);
@@ -360,7 +286,7 @@ public class Gemini {
     public void setTone(String tone) { this.tone = tone; }
     public void setSize(String size) { this.size = size; }
     public void setMaxTokens(int maxTokens) { this.maxTokens = maxTokens; }
-    public void setTemperature(double temperature) { this.temperature = temperature; }
+    public void setTemperature(float temperature) { this.temperature = temperature; }
     public void setShowThinking(boolean showThinking) { this.showThinking = showThinking; }
     public void setThinkingText(String thinkingText) { this.thinkingText = thinkingText; }
     public void setSystemInstruction(String systemInstruction) { this.systemInstruction = systemInstruction; }
@@ -371,7 +297,7 @@ public class Gemini {
     public String getTone() { return tone; }
     public String getSize() { return size; }
     public int getMaxTokens() { return maxTokens; }
-    public double getTemperature() { return temperature; }
+    public float getTemperature() { return temperature; }
     public boolean isShowThinking() { return showThinking; }
     public String getThinkingText() { return thinkingText; }
     public String getSystemInstruction() { return systemInstruction; }

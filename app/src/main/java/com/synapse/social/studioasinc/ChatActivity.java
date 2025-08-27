@@ -88,7 +88,7 @@ import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.service.studioasinc.AI.Gemini;
+import com.service.studioasinc.AI.GeminiSDK;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
@@ -228,7 +228,7 @@ public class ChatActivity extends AppCompatActivity {
 	private SharedPreferences theme;
 	private Intent i = new Intent();
 	private SharedPreferences appSettings;
-	private Gemini gemini;
+	private GeminiSDK gemini;
 
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -529,13 +529,13 @@ public class ChatActivity extends AppCompatActivity {
 		// Set up user reference
 		userRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(otherUserUid);
 		// Initialize with custom settings
-		gemini = new Gemini.Builder(this)
+		gemini = new GeminiSDK.Builder(this)
 		.model("gemini-1.5-flash")
 		.responseType("text")
 		.tone("friendly")
 		.size("medium")
 		.maxTokens(2000)
-		.temperature(0.8)
+		.temperature(0.8f)
 		.showThinking(true)
 		.thinkingText("Analyzing your request...")
 		.systemInstruction("Your name is ChatBot, help users with their questions")
@@ -2599,7 +2599,7 @@ public class ChatActivity extends AppCompatActivity {
 		"Preserve original formatting. Censor profanity by replacing letters with asterisks (e.g., s***t). " +
 		"Keep the language and tone of the input unless asked to change it."
 		);
-		gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+		gemini.sendPrompt(prompt, new GeminiSDK.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
 				runOnUiThread(() -> message_et.setText(response));
@@ -2620,14 +2620,14 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void callGeminiForSummary(String prompt, final BaseMessageViewHolder viewHolder) {
-		Gemini summaryGemini = new Gemini.Builder(this)
+		GeminiSDK summaryGemini = new GeminiSDK.Builder(this)
 				.model(GEMINI_MODEL)
 				.tone(GEMINI_TONE)
 				.showThinking(true)
 				.systemInstruction("You are a text summarizer. Provide a concise summary of the given text.")
 				.build();
 
-		summaryGemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+		summaryGemini.sendPrompt(prompt, new GeminiSDK.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
 				runOnUiThread(() -> {
