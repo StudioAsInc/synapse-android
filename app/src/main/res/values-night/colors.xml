@@ -36,4 +36,18 @@
     <color name="md_theme_surfaceContainer">#FF201F23</color>
     <color name="md_theme_surfaceContainerHigh">#FF2B292D</color>
     <color name="md_theme_surfaceContainerHighest">#FF363438</color>
+    
+    <!-- Material 3 Fixed Colors (Dark Theme) -->
+    <color name="md_theme_primaryFixed">#FFEADDFF</color>
+    <color name="md_theme_onPrimaryFixed">#FF21005D</color>
+    <color name="md_theme_primaryFixedDim">#FFD0BCFF</color>
+    <color name="md_theme_onPrimaryFixedVariant">#FF4F378B</color>
+    <color name="md_theme_secondaryFixed">#FFE8DEF8</color>
+    <color name="md_theme_onSecondaryFixed">#FF1D192B</color>
+    <color name="md_theme_secondaryFixedDim">#FFCCC2DC</color>
+    <color name="md_theme_onSecondaryFixedVariant">#FF494458</color>
+    <color name="md_theme_tertiaryFixed">#FFFFD8E4</color>
+    <color name="md_theme_onTertiaryFixed">#FF31111D</color>
+    <color name="md_theme_tertiaryFixedDim">#FFEFB8C8</color>
+    <color name="md_theme_onTertiaryFixedVariant">#FF633B48</color>
 </resources>
