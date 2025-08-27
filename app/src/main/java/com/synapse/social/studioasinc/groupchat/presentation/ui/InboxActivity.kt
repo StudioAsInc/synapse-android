@@ -23,11 +23,11 @@ import com.synapse.social.studioasinc.groupchat.presentation.viewmodel.InboxView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
+//@AndroidEntryPoint
 class InboxActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityInboxGroupChatBinding
-    private val viewModel: InboxViewModel by viewModels()
+    //private val viewModel: InboxViewModel by viewModels()
     private lateinit var groupsAdapter: GroupsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
