@@ -311,7 +311,7 @@ public class HomeActivity extends AppCompatActivity {
 		nav_inbox.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), InboxActivity.class);
+				intent.setClass(getApplicationContext(), com.synapse.social.studioasinc.groupchat.presentation.ui.InboxActivity.class);
 				startActivity(intent);
 				finish();
 			}
