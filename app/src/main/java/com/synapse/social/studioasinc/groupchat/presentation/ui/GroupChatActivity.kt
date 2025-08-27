@@ -25,11 +25,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.File
 
-//@AndroidEntryPoint
+@AndroidEntryPoint
 class GroupChatActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityGroupChatBinding
-    //private val viewModel: GroupChatViewModel by viewModels()
+    private val viewModel: GroupChatViewModel by viewModels()
     private lateinit var messagesAdapter: GroupMessagesAdapter
     private var selectedAttachments = mutableListOf<Uri>()
 

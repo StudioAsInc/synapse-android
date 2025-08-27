@@ -28,11 +28,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.File
 
-//@AndroidEntryPoint
+@AndroidEntryPoint
 class CreateGroupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCreateGroupBinding
-    //private val viewModel: CreateGroupViewModel by viewModels()
+    private val viewModel: CreateGroupViewModel by viewModels()
     private lateinit var userSearchAdapter: UserSearchAdapter
     private var selectedImageUri: Uri? = null
 

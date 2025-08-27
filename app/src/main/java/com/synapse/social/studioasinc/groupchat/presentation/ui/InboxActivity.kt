@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -23,11 +24,11 @@ import com.synapse.social.studioasinc.groupchat.presentation.viewmodel.InboxView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-//@AndroidEntryPoint
+@AndroidEntryPoint
 class InboxActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityInboxGroupChatBinding
-    //private val viewModel: InboxViewModel by viewModels()
+    private val viewModel: InboxViewModel by viewModels()
     private lateinit var groupsAdapter: GroupsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
