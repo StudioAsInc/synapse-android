@@ -263,7 +263,10 @@ public class CreateImagePostActivity extends AppCompatActivity {
 		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, desiredHeight);
 		
 		cropImageView.setLayoutParams(params);
-		// Commented out to prevent crash - cropImageView.setLayoutParams(params);
+
+		if (cropImageView != null) {
+			cropImageView.setLayoutParams(params);
+		}
 		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
 		_viewGraphics(back, 0xFFFFFFFF, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
 		imagesView.setAdapter(new ImagesViewAdapter(imagesListMap));
@@ -279,12 +282,16 @@ public class CreateImagePostActivity extends AppCompatActivity {
 			_getImageFiles();
 		}
 		cropImageView.setAspectRatio(4, 3);
-		// Commented out to prevent crash - cropImageView.setAspectRatio(4, 3);
-		// Commented out to prevent crash - cropImageView.setFixedAspectRatio(false);
+
+		if (cropImageView != null) {
+			cropImageView.setAspectR		// FIXED: Prevent null pointer crash
+		if (cropImageView != null) {
+			cropImageView.setAspectRatio(4, 3);
+			cropImageView.setFixedAspectRatio(false);
+		}
+	}
 	
-	@Override
-	protected void onActivityResult(int _requestCode, int _resultCode, Intent _data) {
-		super.onActivityResult(_requestCode, _resultCode, _data);
+	@OverridevityResult(_requestCode, _resultCode, _data);
 		
 		switch (_requestCode) {
 			case REQ_CD_IMAGE_PICKER:
@@ -507,4 +514,4 @@ public class CreateImagePostActivity extends AppCompatActivity {
 			}
 		}
 	}
-}
+}
