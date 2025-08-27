@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="md_theme_background">#FF10131C</color>
+    <color name="md_theme_background_highContrast">#FF000000</color>
+    <color name="md_theme_background_mediumContrast">#FF141318</color>
+    <color name="md_theme_error">#FFFFB4AB</color>
+    <color name="md_theme_errorContainer">#FF93000A</color>
+    <color name="md_theme_errorContainer_highContrast">#FFFFBAB1</color>
+    <color name="md_theme_errorContainer_mediumContrast">#FFFF5449</color>
+    <color name="md_theme_error_highContrast">#FFFFF9F9</color>
+    <color name="md_theme_error_mediumContrast">#FFFFBAB5</color>
+    <color name="md_theme_inverseOnSurface">#FF313033</color>
+    <color name="md_theme_inverseOnSurface_highContrast">#FF000000</color>
+    <color name="md_theme_inverseOnSurface_mediumContrast">#FF141318</color>
+    <color name="md_theme_inversePrimary">#FF6750A4</color>
+    <color name="md_theme_inversePrimary_highContrast">#FF4F378B</color>
+    <color name="md_theme_inversePrimary_mediumContrast">#FF524595</color>
+    <color name="md_theme_inverseSurface">#FFE6E1E5</color>
+    <color name="md_theme_inverseSurface_highContrast">#FFE6E1E5</color>
+    <color name="md_theme_inverseSurface_mediumContrast">#FFE6E1E5</color>
+    <color name="md_theme_onBackground">#FFE6E1E5</color>
+    <color name="md_theme_onBackground_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_onBackground_mediumContrast">#FFE6E1E5</color>
+    <color name="md_theme_onError">#FF690005</color>
+    <color name="md_theme_onErrorContainer">#FFFFDAD6</color>
+    <color name="md_theme_onErrorContainer_highContrast">#FF000000</color>
+    <color name="md_theme_onErrorContainer_mediumContrast">#FF000000</color>
+    <color name="md_theme_onError_highContrast">#FF000000</color>
+    <color name="md_theme_onError_mediumContrast">#FF000000</color>
+    <color name="md_theme_onPrimary">#FF381E72</color>
+    <color name="md_theme_onPrimaryContainer">#FFEADDFF</color>
+    <color name="md_theme_onPrimaryContainer_highContrast">#FF000000</color>
+    <color name="md_theme_onPrimaryContainer_mediumContrast">#FF000000</color>
+    <color name="md_theme_onPrimaryFixed">#FF21005D</color>
+    <color name="md_theme_onPrimaryFixedVariant">#FF4F378B</color>
+    <color name="md_theme_onPrimaryFixedVariant_highContrast">#FF000000</color>
+    <color name="md_theme_onPrimaryFixedVariant_mediumContrast">#FF000000</color>
+    <color name="md_theme_onPrimaryFixed_highContrast">#FF000000</color>
+    <color name="md_theme_onPrimaryFixed_mediumContrast">#FF000000</color>
+    <color name="md_theme_onPrimary_highContrast">#FF000000</color>
+    <color name="md_theme_onPrimary_mediumContrast">#FF000000</color>
+    <color name="md_theme_onSecondary">#FF332D41</color>
+    <color name="md_theme_onSecondaryContainer">#FFE8DEF8</color>
+    <color name="md_theme_onSecondaryContainer_highContrast">#FF000000</color>
+    <color name="md_theme_onSecondaryContainer_mediumContrast">#FF000000</color>
+    <color name="md_theme_onSecondaryFixed">#FF1D192B</color>
+    <color name="md_theme_onSecondaryFixedVariant">#FF494458</color>
+    <color name="md_theme_onSecondaryFixedVariant_highContrast">#FF000000</color>
+    <color name="md_theme_onSecondaryFixedVariant_mediumContrast">#FF000000</color>
+    <color name="md_theme_onSecondaryFixed_highContrast">#FF000000</color>
+    <color name="md_theme_onSecondaryFixed_mediumContrast">#FF000000</color>
+    <color name="md_theme_onSecondary_highContrast">#FF000000</color>
+    <color name="md_theme_onSecondary_mediumContrast">#FF000000</color>
+    <color name="md_theme_onSurface">#FFE6E1E5</color>
+    <color name="md_theme_onSurfaceVariant">#FFCAC4D0</color>
+    <color name="md_theme_onSurfaceVariant_highContrast">#FFCAC4D0</color>
+    <color name="md_theme_onSurfaceVariant_mediumContrast">#FFCEC8D4</color>
+    <color name="md_theme_onSurface_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_onSurface_mediumContrast">#FFE6E1E5</color>
+    <color name="md_theme_onTertiary">#FF492532</color>
+    <color name="md_theme_onTertiaryContainer">#FFFFD8E4</color>
+    <color name="md_theme_onTertiaryContainer_highContrast">#FF000000</color>
+    <color name="md_theme_onTertiaryContainer_mediumContrast">#FF000000</color>
+    <color name="md_theme_onTertiaryFixed">#FF31111D</color>
+    <color name="md_theme_onTertiaryFixedVariant">#FF633B48</color>
+    <color name="md_theme_onTertiaryFixedVariant_highContrast">#FF000000</color>
+    <color name="md_theme_onTertiaryFixedVariant_mediumContrast">#FF000000</color>
+    <color name="md_theme_onTertiaryFixed_highContrast">#FF000000</color>
+    <color name="md_theme_onTertiaryFixed_mediumContrast">#FF000000</color>
+    <color name="md_theme_onTertiary_highContrast">#FF000000</color>
+    <color name="md_theme_onTertiary_mediumContrast">#FF000000</color>
+    <color name="md_theme_outline">#FF938F99</color>
+    <color name="md_theme_outlineVariant">#FF49454F</color>
+    <color name="md_theme_outlineVariant_highContrast">#FFCAC4D0</color>
+    <color name="md_theme_outlineVariant_mediumContrast">#FF86808C</color>
+    <color name="md_theme_outline_highContrast">#FF9A8CA0</color>
+    <color name="md_theme_outline_mediumContrast">#FFA69FAC</color>
+    <color name="md_theme_primary">#FFD0BCFF</color>
+    <color name="md_theme_primaryContainer">#FF4F378B</color>
+    <color name="md_theme_primaryContainer_highContrast">#FFD0BCFF</color>
+    <color name="md_theme_primaryContainer_mediumContrast">#FF9A80E5</color>
+    <color name="md_theme_primaryFixed">#FFEADDFF</color>
+    <color name="md_theme_primaryFixedDim">#FFD0BCFF</color>
+    <color name="md_theme_primaryFixedDim_highContrast">#FFD0BCFF</color>
+    <color name="md_theme_primaryFixedDim_mediumContrast">#FFD4BFFF</color>
+    <color name="md_theme_primaryFixed_highContrast">#FFF1E7FF</color>
+    <color name="md_theme_primaryFixed_mediumContrast">#FF9A80E5</color>
+    <color name="md_theme_primary_highContrast">#FFF1E7FF</color>
+    <color name="md_theme_primary_mediumContrast">#FFD4BFFF</color>
+    <color name="md_theme_scrim">#FF000000</color>
+    <color name="md_theme_secondary">#FFCCC2DC</color>
+    <color name="md_theme_secondaryContainer">#FF494458</color>
+    <color name="md_theme_secondaryContainer_highContrast">#FFCCC2DC</color>
+    <color name="md_theme_secondaryContainer_mediumContrast">#FF968CA8</color>
+    <color name="md_theme_secondaryFixed">#FFE8DEF8</color>
+    <color name="md_theme_secondaryFixedDim">#FFCCC2DC</color>
+    <color name="md_theme_secondaryFixedDim_highContrast">#FFCCC2DC</color>
+    <color name="md_theme_secondaryFixedDim_mediumContrast">#FFD0C6E0</color>
+    <color name="md_theme_secondaryFixed_highContrast">#FFF1E7FF</color>
+    <color name="md_theme_secondaryFixed_mediumContrast">#FF968CA8</color>
+    <color name="md_theme_secondary_highContrast">#FFF1E7FF</color>
+    <color name="md_theme_secondary_mediumContrast">#FFD0C6E0</color>
+    <color name="md_theme_surface">#FF10131C</color>
+    <color name="md_theme_surfaceBright">#FF383B42</color>
+    <color name="md_theme_surfaceBright_highContrast">#FF49454F</color>
+    <color name="md_theme_surfaceBright_mediumContrast">#FF383B42</color>
+    <color name="md_theme_surfaceContainer">#FF201F23</color>
+    <color name="md_theme_surfaceContainerHigh">#FF2B292D</color>
+    <color name="md_theme_surfaceContainerHigh_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceContainerHigh_mediumContrast">#FF2B292D</color>
+    <color name="md_theme_surfaceContainerHighest">#FF363438</color>
+    <color name="md_theme_surfaceContainerHighest_highContrast">#FF49454F</color>
+    <color name="md_theme_surfaceContainerHighest_mediumContrast">#FF363438</color>
+    <color name="md_theme_surfaceContainerLow">#FF1C1B1F</color>
+    <color name="md_theme_surfaceContainerLow_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceContainerLow_mediumContrast">#FF1C1B1F</color>
+    <color name="md_theme_surfaceContainerLowest">#FF0B0F17</color>
+    <color name="md_theme_surfaceContainerLowest_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceContainerLowest_mediumContrast">#FF0B0F17</color>
+    <color name="md_theme_surfaceContainer_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceContainer_mediumContrast">#FF201F23</color>
+    <color name="md_theme_surfaceDim">#FF10131C</color>
+    <color name="md_theme_surfaceDim_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceDim_mediumContrast">#FF10131C</color>
+    <color name="md_theme_surfaceVariant">#FF49454F</color>
+    <color name="md_theme_surfaceVariant_highContrast">#FF49454F</color>
+    <color name="md_theme_surfaceVariant_mediumContrast">#FF49454F</color>
+    <color name="md_theme_surface_highContrast">#FF000000</color>
+    <color name="md_theme_surface_mediumContrast">#FF141318</color>
+    <color name="md_theme_tertiary">#FFEFB8C8</color>
+    <color name="md_theme_tertiaryContainer">#FF633B48</color>
+    <color name="md_theme_tertiaryContainer_highContrast">#FFEFB8C8</color>
+    <color name="md_theme_tertiaryContainer_mediumContrast">#FFB98294</color>
+    <color name="md_theme_tertiaryFixed">#FFFFD8E4</color>
+    <color name="md_theme_tertiaryFixedDim">#FFEFB8C8</color>
+    <color name="md_theme_tertiaryFixedDim_highContrast">#FFEFB8C8</color>
+    <color name="md_theme_tertiaryFixedDim_mediumContrast">#FFF3BCCC</color>
+    <color name="md_theme_tertiaryFixed_highContrast">#FFFFF0F7</color>
+    <color name="md_theme_tertiaryFixed_mediumContrast">#FFB98294</color>
+    <color name="md_theme_tertiary_highContrast">#FFFFF0F7</color>
+    <color name="md_theme_tertiary_mediumContrast">#FFF3BCCC</color>
+    <style name="Theme.AppCompat.DayNight" parent="Theme.AppCompat"/>
+    <style name="Theme.AppCompat.DayNight.DarkActionBar" parent="Theme.AppCompat"/>
+    <style name="Theme.AppCompat.DayNight.Dialog" parent="Theme.AppCompat.Dialog"/>
+    <style name="Theme.AppCompat.DayNight.Dialog.Alert" parent="Theme.AppCompat.Dialog.Alert"/>
+    <style name="Theme.AppCompat.DayNight.Dialog.MinWidth" parent="Theme.AppCompat.Dialog.MinWidth"/>
+    <style name="Theme.AppCompat.DayNight.DialogWhenLarge" parent="Theme.AppCompat.DialogWhenLarge"/>
+    <style name="Theme.AppCompat.DayNight.NoActionBar" parent="Theme.AppCompat.NoActionBar"/>
+    <style name="Theme.Material3.DayNight" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/md_theme_primary</item>
+        <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/md_theme_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/md_theme_secondary</item>
+        <item name="colorOnSecondary">@color/md_theme_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/md_theme_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/md_theme_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/md_theme_tertiary</item>
+        <item name="colorOnTertiary">@color/md_theme_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/md_theme_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/md_theme_onTertiaryContainer</item>
+        <item name="colorError">@color/md_theme_error</item>
+        <item name="colorOnError">@color/md_theme_onError</item>
+        <item name="colorErrorContainer">@color/md_theme_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/md_theme_onErrorContainer</item>
+        <item name="android:colorBackground">@color/md_theme_background</item>
+        <item name="colorOnBackground">@color/md_theme_onBackground</item>
+        <item name="colorSurface">@color/md_theme_surface</item>
+        <item name="colorOnSurface">@color/md_theme_onSurface</item>
+        <item name="colorSurfaceVariant">@color/md_theme_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/md_theme_onSurfaceVariant</item>
+        <item name="colorOutline">@color/md_theme_outline</item>
+        <item name="colorOutlineVariant">@color/md_theme_outlineVariant</item>
+        <item name="colorSurfaceInverse">@color/md_theme_inverseSurface</item>
+        <item name="colorOnSurfaceInverse">@color/md_theme_inverseOnSurface</item>
+        <item name="colorPrimaryInverse">@color/md_theme_inversePrimary</item>
+        
+        
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+    <style name="Theme.Material3.DayNight.BottomSheetDialog" parent="Theme.Material3.Dark.BottomSheetDialog"/>
+    <style name="Theme.Material3.DayNight.Dialog" parent="Theme.Material3.Dark.Dialog"/>
+    <style name="Theme.Material3.DayNight.Dialog.Alert" parent="Theme.Material3.Dark.Dialog.Alert"/>
+    <style name="Theme.Material3.DayNight.Dialog.MinWidth" parent="Theme.Material3.Dark.Dialog.MinWidth"/>
+    <style name="Theme.Material3.DayNight.DialogWhenLarge" parent="Theme.Material3.Dark.DialogWhenLarge"/>
+    <style name="Theme.Material3.DayNight.NoActionBar" parent="Theme.Material3.Dark.NoActionBar"/>
+    <style name="Theme.Material3.DayNight.SideSheetDialog" parent="Theme.Material3.Dark.SideSheetDialog"/>
+    <style name="Theme.Material3.DynamicColors.DayNight" parent="Theme.Material3.DynamicColors.Dark"/>
+    <style name="Theme.Material3.DynamicColors.DayNight.NoActionBar" parent="Theme.Material3.DynamicColors.Dark.NoActionBar"/>
+    <style name="Theme.Material3Expressive.DayNight" parent="Theme.Material3Expressive.Dark"/>
+    <style name="Theme.Material3Expressive.DayNight.DialogWhenLarge" parent="Theme.Material3Expressive.Dark.DialogWhenLarge"/>
+    <style name="Theme.Material3Expressive.DayNight.NoActionBar" parent="Theme.Material3Expressive.Dark.NoActionBar"/>
+    <style name="Theme.Material3Expressive.DynamicColors.DayNight" parent="Theme.Material3Expressive.DynamicColors.Dark"/>
+    <style name="Theme.Material3Expressive.DynamicColors.DayNight.NoActionBar" parent="Theme.Material3Expressive.DynamicColors.Dark.NoActionBar"/>
+    <style name="Theme.MaterialComponents.DayNight" parent="Theme.MaterialComponents"/>
+    <style name="Theme.MaterialComponents.DayNight.BottomSheetDialog" parent="Theme.MaterialComponents.BottomSheetDialog"/>
+    <style name="Theme.MaterialComponents.DayNight.Bridge" parent="Theme.MaterialComponents.Bridge"/>
+    <style name="Theme.MaterialComponents.DayNight.DarkActionBar" parent="Theme.MaterialComponents"/>
+    <style name="Theme.MaterialComponents.DayNight.DarkActionBar.Bridge" parent="Theme.MaterialComponents.Bridge"/>
+    <style name="Theme.MaterialComponents.DayNight.Dialog" parent="Theme.MaterialComponents.Dialog"/>
+    <style name="Theme.MaterialComponents.DayNight.Dialog.Alert" parent="Theme.MaterialComponents.Dialog.Alert"/>
+    <style name="Theme.MaterialComponents.DayNight.Dialog.Alert.Bridge" parent="Theme.MaterialComponents.Dialog.Alert.Bridge"/>
+    <style name="Theme.MaterialComponents.DayNight.Dialog.Bridge" parent="Theme.MaterialComponents.Dialog.Bridge"/>
+    <style name="Theme.MaterialComponents.DayNight.Dialog.FixedSize" parent="Theme.MaterialComponents.Dialog.FixedSize"/>
+    <style name="Theme.MaterialComponents.DayNight.Dialog.FixedSize.Bridge" parent="Theme.MaterialComponents.Dialog.FixedSize.Bridge"/>
+    <style name="Theme.MaterialComponents.DayNight.Dialog.MinWidth" parent="Theme.MaterialComponents.Dialog.MinWidth"/>
+    <style name="Theme.MaterialComponents.DayNight.Dialog.MinWidth.Bridge" parent="Theme.MaterialComponents.Dialog.MinWidth.Bridge"/>
+    <style name="Theme.MaterialComponents.DayNight.DialogWhenLarge" parent="Theme.MaterialComponents.DialogWhenLarge"/>
+    <style name="Theme.MaterialComponents.DayNight.NoActionBar" parent="Theme.MaterialComponents.NoActionBar"/>
+    <style name="Theme.MaterialComponents.DayNight.NoActionBar.Bridge" parent="Theme.MaterialComponents.NoActionBar.Bridge"/>
+    <style name="ThemeOverlay.AppCompat.DayNight" parent="ThemeOverlay.AppCompat.Dark"/>
+    <style name="ThemeOverlay.Material3.DynamicColors.DayNight" parent="ThemeOverlay.Material3.DynamicColors.Dark"/>
+    <style name="ThemeOverlay.Material3Expressive.DynamicColors.DayNight" parent="ThemeOverlay.Material3Expressive.DynamicColors.Dark"/>
+    <style name="Widget.MaterialComponents.ActionBar.PrimarySurface" parent="Widget.MaterialComponents.ActionBar.Surface"/>
+    <style name="Widget.MaterialComponents.AppBarLayout.PrimarySurface" parent="Widget.MaterialComponents.AppBarLayout.Surface"/>
+    <style name="Widget.MaterialComponents.BottomAppBar.PrimarySurface" parent="Widget.MaterialComponents.BottomAppBar"/>
+    <style name="Widget.MaterialComponents.BottomNavigationView.PrimarySurface" parent="Widget.MaterialComponents.BottomNavigationView"/>
+    <style name="Widget.MaterialComponents.NavigationRailView.PrimarySurface" parent="Widget.MaterialComponents.NavigationRailView"/>
+    <style name="Widget.MaterialComponents.TabLayout.PrimarySurface" parent="Widget.MaterialComponents.TabLayout"/>
+    <style name="Widget.MaterialComponents.Toolbar.PrimarySurface" parent="Widget.MaterialComponents.Toolbar.Surface"/>
+</resources>

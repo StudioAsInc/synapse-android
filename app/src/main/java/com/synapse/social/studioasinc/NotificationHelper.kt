@@ -133,6 +133,8 @@ object NotificationHelper {
                         if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && !NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                             Log.i(TAG, "Falling back to client-side notification due to server error")
                             sendClientSideNotification(recipientId, message, null, null)
+                        } else {
+                            // No fallback configured
                         }
                     }
                 }
@@ -211,6 +213,8 @@ object NotificationHelper {
                         if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                             Log.i(TAG, "Falling back to server-side notification due to client-side error")
                             sendServerSideNotification(recipientPlayerId, message)
+                        } else {
+                            // No fallback configured
                         }
                     }
                 }

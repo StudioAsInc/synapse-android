@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="16dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="48dp"
+    android:paddingBottom="4dp">
+
+    <!-- Sender Avatar -->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/ivSenderAvatar"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="8dp"
+        android:background="?attr/colorSurfaceVariant"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_person_placeholder"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/messageBubble"
+        app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Full" />
+
+    <!-- Message Bubble -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/messageBubble"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ivSenderAvatar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="280dp"
+        app:layout_constraintHorizontal_bias="0.0">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Sender Name -->
+            <TextView
+                android:id="@+id/tvSenderName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textColor="?attr/colorPrimary"
+                android:textStyle="bold"
+                tools:text="John Doe" />
+
+            <!-- Reply Preview -->
+            <LinearLayout
+                android:id="@+id/replyPreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/reply_preview_background_incoming"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvReplyTo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textStyle="bold"
+                    tools:text="Replying to Alice" />
+
+                <TextView
+                    android:id="@+id/tvReplyPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="Original message preview..." />
+
+            </LinearLayout>
+
+            <!-- Attachment Container -->
+            <LinearLayout
+                android:id="@+id/attachmentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/ivAttachment"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
+                <!-- Add more attachment views as needed -->
+
+            </LinearLayout>
+
+            <!-- Message Text -->
+            <TextView
+                android:id="@+id/tvMessageText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textIsSelectable="true"
+                tools:text="This is a sample incoming message that can be quite long and will wrap to multiple lines if needed." />
+
+            <!-- Message Info Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start|center_vertical"
+                android:orientation="horizontal">
+
+                <!-- Timestamp -->
+                <TextView
+                    android:id="@+id/tvTimestamp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="12:34 PM" />
+
+                <!-- Edited Indicator -->
+                <TextView
+                    android:id="@+id/tvEdited"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="edited"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textStyle="italic"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Reactions -->
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chipGroupReactions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:visibility="gone"
+        app:chipSpacingHorizontal="4dp"
+        app:chipSpacingVertical="2dp"
+        app:layout_constraintEnd_toEndOf="@id/messageBubble"
+        app:layout_constraintStart_toStartOf="@id/messageBubble"
+        app:layout_constraintTop_toBottomOf="@id/messageBubble" />
+
+    <!-- Message Actions (hidden by default, shown on long press) -->
+    <LinearLayout
+        android:id="@+id/messageActions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="@id/messageBubble"
+        app:layout_constraintTop_toBottomOf="@id/chipGroupReactions">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnReact"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            app:icon="@drawable/ic_add_reaction" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnReply"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_reply" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
