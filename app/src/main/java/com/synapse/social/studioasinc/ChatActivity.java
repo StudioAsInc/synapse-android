@@ -1286,7 +1286,7 @@ public class ChatActivity extends AppCompatActivity {
 		// This would automatically retry failed messages when connection is restored
 	}
 	
-	// 🚀 ADVANCED FEATURE: Message Reactions System
+	// ADVANCED FEATURE: Message Reactions System
 	public void addMessageReaction(String messageKey, String reaction) {
 		try {
 			String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -1315,7 +1315,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 	
-	// 🚀 ADVANCED FEATURE: Smart Auto-Reply Suggestions
+	// ADVANCED FEATURE: Smart Auto-Reply Suggestions
 	public void generateSmartReplies(String lastMessage) {
 		// AI-powered quick reply suggestions based on message content
 		ArrayList<String> suggestions = new ArrayList<>();
@@ -1327,22 +1327,22 @@ public class ChatActivity extends AppCompatActivity {
 			if (lowerMessage.contains("how are you") || lowerMessage.contains("how's it going")) {
 				suggestions.add("I'm good, thanks!");
 				suggestions.add("Great! How about you?");
-				suggestions.add("Doing well 😊");
+				suggestions.add("Doing well!");
 			} else if (lowerMessage.contains("thank")) {
 				suggestions.add("You're welcome!");
-				suggestions.add("No problem 😊");
+				suggestions.add("No problem!");
 				suggestions.add("Anytime!");
 			} else if (lowerMessage.contains("?")) {
 				suggestions.add("Yes");
 				suggestions.add("No");
 				suggestions.add("Maybe");
 			} else if (lowerMessage.contains("photo") || lowerMessage.contains("picture")) {
-				suggestions.add("📷 Send photo");
+				suggestions.add("Send photo");
 				suggestions.add("Sure, here it is");
 				suggestions.add("I'll take one");
 			} else {
 				// Default suggestions
-				suggestions.add("👍");
+				suggestions.add("OK");
 				suggestions.add("Thanks!");
 				suggestions.add("Okay");
 			}
@@ -1352,7 +1352,7 @@ public class ChatActivity extends AppCompatActivity {
 		Log.d("ChatActivity", "Smart reply suggestions: " + suggestions.toString());
 	}
 	
-	// 🚀 ADVANCED FEATURE: Message Translation
+	// ADVANCED FEATURE: Message Translation
 	public void translateMessage(String messageKey, String targetLanguage) {
 		// Integration with translation service (Google Translate API, etc.)
 		try {
@@ -1372,7 +1372,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 	
-	// 🚀 ADVANCED FEATURE: Voice Message Support
+	// ADVANCED FEATURE: Voice Message Support
 	public void startVoiceRecording() {
 		try {
 			// TODO: Implement voice recording with waveform visualization
@@ -1394,7 +1394,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 	
-	// 🚀 ADVANCED FEATURE: Message Scheduling
+	// ADVANCED FEATURE: Message Scheduling
 	public void scheduleMessage(String messageText, long scheduleTime) {
 		try {
 			HashMap<String, Object> scheduledMessage = new HashMap<>();
@@ -1415,7 +1415,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 	
-	// 🚀 ADVANCED FEATURE: Read Receipts with Timestamps
+	// ADVANCED FEATURE: Read Receipts with Timestamps
 	public void updateReadReceipt(String messageKey) {
 		try {
 			String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -1436,7 +1436,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 	
-	// 🚀 ADVANCED FEATURE: Smart Message Categorization
+	// ADVANCED FEATURE: Smart Message Categorization
 	public void categorizeMessage(HashMap<String, Object> message) {
 		try {
 			if (message == null || !message.containsKey(MESSAGE_TEXT_KEY)) return;
@@ -2021,8 +2021,13 @@ public class ChatActivity extends AppCompatActivity {
 					}
 				}
 
-				@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-				@Override public void onCancelled(@NonNull DatabaseError error) {
+				@Override
+				public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+					// Not implemented - message reordering not needed for this chat
+				}
+				
+				@Override
+				public void onCancelled(@NonNull DatabaseError error) {
 					Log.e("ChatActivity", "Chat listener cancelled: " + error.getMessage());
 				}
 			};
