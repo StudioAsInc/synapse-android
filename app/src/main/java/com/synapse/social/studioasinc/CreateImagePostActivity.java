@@ -74,7 +74,8 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import com.google.android.material.card.*;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import androidx.core.content.ContextCompat;
+import androidx.core.content.ContextCompat;
+
 
 public class CreateImagePostActivity extends AppCompatActivity {
 	
@@ -262,8 +263,9 @@ public class CreateImagePostActivity extends AppCompatActivity {
 		int desiredHeight = screenHeight * 1 / 2 - 24;
 		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, desiredHeight);
 		
-		cropImageView.setLayoutParams(params);
-		urlImagePreview.setLayoutParams(params);
+		if (cropImageView != null) {
+			cropImageView.setLayoutParams(params);
+		}
 		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
 		_viewGraphics(back, 0xFFFFFFFF, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
 		imagesView.setAdapter(new ImagesViewAdapter(imagesListMap));
@@ -278,8 +280,10 @@ public class CreateImagePostActivity extends AppCompatActivity {
 		} else {
 			_getImageFiles();
 		}
-		cropImageView.setAspectRatio(4, 3);
-		cropImageView.setFixedAspectRatio(false);
+		if (cropImageView != null) {
+			cropImageView.setAspectRatio(4, 3);
+			cropImageView.setFixedAspectRatio(false);
+		}
 	}
 	
 	@Override
@@ -320,7 +324,8 @@ public class CreateImagePostActivity extends AppCompatActivity {
 	public void onBackPressed() {
 		finish();
 	}
-	
+	
+
 	public void _ImageColor(final ImageView _image, final int _color) {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
 	}
@@ -415,7 +420,8 @@ public class CreateImagePostActivity extends AppCompatActivity {
 		MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(CreateImagePostActivity.this);
 		Dialogs.setTitle("Add through url");
 		View EdittextDesign = LayoutInflater.from(CreateImagePostActivity.this).inflate(R.layout.single_et, null);
-		Dialogs.setView(EdittextDesign);
+		Dialogs.setView(EdittextDesign);
+
 		final EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
 		final TextInputLayout textinputlayout1 = EdittextDesign.findViewById(R.id.textinputlayout1);
 		edittext1.setFocusableInTouchMode(true);
@@ -507,4 +513,4 @@ public class CreateImagePostActivity extends AppCompatActivity {
 			}
 		}
 	}
-}
+}
