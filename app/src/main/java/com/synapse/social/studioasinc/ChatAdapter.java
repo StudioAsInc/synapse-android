@@ -245,8 +245,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 holder.mProfileCard.setVisibility(isFirstOfGroup ? View.VISIBLE : View.GONE);
                 if (isFirstOfGroup) {
                     if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
-                        // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
-                        if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                        // CRITICAL FIX: Use activity context for Glide to prevent memory leaks with API compatibility
+                        if (chatActivity != null && !chatActivity.isFinishing() && !isActivityDestroyed(chatActivity)) {
                             try {
                                 Glide.with(chatActivity).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
                             } catch (Exception e) {
@@ -327,7 +327,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                                 
                                                 if (!publicId.isEmpty()) {
                                                     // CRITICAL FIX: Load image from Cloudinary with proper context and lifecycle checks
-                                                    if (_context != null && chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                                                    if (_context != null && chatActivity != null && !isActivityDestroyed(chatActivity) && !chatActivity.isFinishing()) {
                                                         String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
                                                         try {
                                                             Glide.with(chatActivity) // Use activity context instead of general context
@@ -450,7 +450,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         };
                     
                     // CRITICAL FIX: Check activity state before adding listener
-                    if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                    if (chatActivity != null && !isActivityDestroyed(chatActivity) && !chatActivity.isFinishing()) {
                         replyRef.addListenerForSingleValueEvent(replyListener);
                     }
                 } else {
@@ -503,7 +503,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         // CRITICAL FIX: Check activity state before Firebase operations
         if (!isMyMessage && data.containsKey("message_state") && "sended".equals(String.valueOf(data.get("message_state")))) {
-            if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+            if (chatActivity != null && !isActivityDestroyed(chatActivity) && !chatActivity.isFinishing()) {
                 try {
                     String otherUserUid = chatActivity.getIntent().getStringExtra("uid");
                     String messageKey = String.valueOf(data.get("key"));
@@ -729,7 +729,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             imageView.setAdjustViewBounds(true);
             imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
-            if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+            if (chatActivity != null && !isActivityDestroyed(chatActivity) && !chatActivity.isFinishing()) {
                 try {
                     Glide.with(chatActivity).load(url).into(imageView);
                 } catch (Exception e) {
@@ -761,7 +761,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             imageView.setLayoutParams(new ViewGroup.LayoutParams(width, height));
             // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
-            if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+            if (chatActivity != null && !isActivityDestroyed(chatActivity) && !chatActivity.isFinishing()) {
                 try {
                     Glide.with(chatActivity).load(url).override(width, height).into(imageView);
                 } catch (Exception e) {
@@ -793,7 +793,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             String videoUrl = String.valueOf(attachments.get(0).get("url"));
             if(holder.videoThumbnail != null) {
                 // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
-                if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                if (chatActivity != null && !isActivityDestroyed(chatActivity) && !chatActivity.isFinishing()) {
                     try {
                         Glide.with(chatActivity).load(videoUrl).into(holder.videoThumbnail);
                     } catch (Exception e) {
@@ -824,7 +824,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder.mProfileImage != null) {
             if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
                 // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
-                if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                if (chatActivity != null && !isActivityDestroyed(chatActivity) && !chatActivity.isFinishing()) {
                     try {
                         Glide.with(chatActivity).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
                     } catch (Exception e) {
@@ -866,7 +866,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText(linkData.description);
                         if (holder.linkPreviewDomain != null) holder.linkPreviewDomain.setText(linkData.domain);
                         if (linkData.imageUrl != null && !linkData.imageUrl.isEmpty() && holder.linkPreviewImage != null) {
-                            if (chatActivity != null && !chatActivity.isDestroyed()) {
+                            if (chatActivity != null && !isActivityDestroyed(chatActivity)) {
                                 Glide.with(chatActivity).load(linkData.imageUrl).into(holder.linkPreviewImage);
                                 holder.linkPreviewImage.setVisibility(View.VISIBLE);
                             }
@@ -902,19 +902,45 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return dp; // Fallback to dp value
     }
     
+    // CRITICAL FIX: API-compatible method to check if activity is destroyed
+    private boolean isActivityDestroyed(ChatActivity activity) {
+        if (activity == null) return true;
+        
+        if (android.os.Build.VERSION.SDK_INT >= 17) {
+            return activity.isDestroyed();
+        } else {
+            // For API < 17, use alternative checks
+            return activity.isFinishing() || (activity.getWindow() == null) || 
+                   (activity.getWindow().getDecorView().getWindowToken() == null);
+        }
+    }
+    
     // CRITICAL FIX: Add method to clean up adapter resources when activity is destroyed
     public void onActivityDestroyed() {
         Log.d(TAG, "ChatAdapter: Cleaning up resources due to activity destruction");
         try {
+            // CRITICAL FIX: First notify adapter that data will be cleared to prevent concurrent modification
+            if (_data != null && !_data.isEmpty()) {
+                int itemCount = _data.size();
+                _data.clear();
+                // Notify about range removal only if we're still attached
+                try {
+                    notifyItemRangeRemoved(0, itemCount);
+                } catch (Exception e) {
+                    Log.w(TAG, "Could not notify item range removed, adapter may be detached: " + e.getMessage());
+                    // Fall back to notifyDataSetChanged if still possible
+                    try {
+                        notifyDataSetChanged();
+                    } catch (Exception e2) {
+                        Log.w(TAG, "Could not notify data set changed either: " + e2.getMessage());
+                    }
+                }
+            }
+            
             // Clear context references to prevent memory leaks
             _context = null;
             chatActivity = null;
             // textStylingUtil = null;
-            
-            // Clear data list
-            if (_data != null) {
-                _data.clear();
-            }
             
             // Clear cached user information
             secondUserAvatarUrl = null;

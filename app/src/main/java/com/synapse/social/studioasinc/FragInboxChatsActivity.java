@@ -57,6 +57,7 @@ import java.text.*;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.*;
 import org.json.*;
 import androidx.core.widget.NestedScrollView;
@@ -115,6 +116,8 @@ public class FragInboxChatsActivity extends Fragment {
 	private ExecutorService mExecutorService;
 	private Handler mMainHandler;
 	private ValueEventListener inboxValueEventListener;
+	// CRITICAL FIX: Track ValueEventListeners to prevent leaks
+	private final HashMap<String, ValueEventListener> unreadCountListeners = new HashMap<>();
 
 	@NonNull
 	@Override
@@ -412,6 +415,23 @@ public class FragInboxChatsActivity extends Fragment {
 			}
 		}
 		
+		// CRITICAL FIX: Clean up all unread count listeners
+		for (Map.Entry<String, ValueEventListener> entry : unreadCountListeners.entrySet()) {
+			try {
+				String otherUid = entry.getKey();
+				ValueEventListener listener = entry.getValue();
+				Query query = FirebaseDatabase.getInstance().getReference("skyline/chats")
+					.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+					.child(otherUid)
+					.orderByChild("message_state").equalTo("sended");
+				query.removeEventListener(listener);
+				Log.d("FragInboxChatsActivity", "Removed unread count listener for uid: " + otherUid);
+			} catch (Exception e) {
+				Log.e("FragInboxChatsActivity", "Error removing unread count listener: " + e.getMessage());
+			}
+		}
+		unreadCountListeners.clear();
+		
 		if (_main_child_listener != null) {
 			try {
 				main.removeEventListener(_main_child_listener);
@@ -525,13 +545,27 @@ public class FragInboxChatsActivity extends Fragment {
 					unread_messages_count_badge.setVisibility(View.GONE);
 				} else {
 					message_state.setVisibility(View.GONE);
-					// CRITICAL FIX: Use fragment's managed ExecutorService instead of creating new ones
+					// CRITICAL FIX: Use fragment's managed ExecutorService and track listeners
 					if (FragInboxChatsActivity.this.mExecutorService != null && !FragInboxChatsActivity.this.mExecutorService.isShutdown()) {
+						String otherUid = _data.get((int)_position).get("uid").toString();
+						
+						// CRITICAL FIX: Remove any existing listener for this user before adding new one
+						ValueEventListener existingListener = unreadCountListeners.get(otherUid);
+						if (existingListener != null) {
+							Query existingQuery = FirebaseDatabase.getInstance().getReference("skyline/chats")
+								.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+								.child(otherUid)
+								.orderByChild("message_state").equalTo("sended");
+							existingQuery.removeEventListener(existingListener);
+							unreadCountListeners.remove(otherUid);
+						}
+						
 						FragInboxChatsActivity.this.mExecutorService.execute(new Runnable() {
 							@Override
 							public void run() {
-								Query getUnreadMessagesCount = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("uid").toString()).orderByChild("message_state").equalTo("sended");
-								getUnreadMessagesCount.addValueEventListener(new ValueEventListener() {
+								Query getUnreadMessagesCount = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(otherUid).orderByChild("message_state").equalTo("sended");
+								
+								ValueEventListener unreadListener = new ValueEventListener() {
 									@Override
 									public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 										// CRITICAL FIX: Use fragment's managed Handler and check if fragment is still attached
@@ -567,7 +601,11 @@ public class FragInboxChatsActivity extends Fragment {
 									public void onCancelled(@NonNull DatabaseError databaseError) {
 										
 									}
-								});
+								};
+								
+								// CRITICAL FIX: Store listener reference and add to Firebase
+								unreadCountListeners.put(otherUid, unreadListener);
+								getUnreadMessagesCount.addValueEventListener(unreadListener);
 							}
 						});
 					}

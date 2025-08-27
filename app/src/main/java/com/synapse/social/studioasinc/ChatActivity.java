@@ -721,6 +721,30 @@ public class ChatActivity extends AppCompatActivity {
 		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
 	}
 
+	// CRITICAL FIX: API-compatible method to check if activity is destroyed
+	private boolean isActivityDestroyed() {
+		try {
+			if (android.os.Build.VERSION.SDK_INT >= 17) {
+				return isDestroyed();
+			} else {
+				// For API < 17, use alternative checks with additional safety
+				if (isFinishing()) return true;
+				
+				Window window = getWindow();
+				if (window == null) return true;
+				
+				View decorView = window.getDecorView();
+				if (decorView == null) return true;
+				
+				return decorView.getWindowToken() == null;
+			}
+		} catch (Exception e) {
+			// If any exception occurs, assume activity is destroyed
+			Log.w("ChatActivity", "Exception checking activity state, assuming destroyed: " + e.getMessage());
+			return true;
+		}
+	}
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -803,10 +827,11 @@ public class ChatActivity extends AppCompatActivity {
 			attactmentmap = null;
 		}
 		
-		// CRITICAL FIX: Clean up progress dialog properly
+		// CRITICAL FIX: Clean up progress dialog properly with null checks
 		if (SynapseLoadingDialog != null) {
 			try {
-				if (SynapseLoadingDialog.isShowing()) {
+				// CRITICAL FIX: Additional null check and window state validation
+				if (SynapseLoadingDialog.isShowing() && SynapseLoadingDialog.getWindow() != null) {
 					SynapseLoadingDialog.dismiss();
 				}
 			} catch (Exception e) {
@@ -816,31 +841,49 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}
 		
-		// CRITICAL FIX: Clean up adapters and remove references
+		// CRITICAL FIX: Clean up adapters and remove references properly
 		if (chatAdapter != null) {
-			// Notify adapter that activity is being destroyed
-			if (chatAdapter instanceof ChatAdapter) {
-				((ChatAdapter) chatAdapter).onActivityDestroyed();
+			try {
+				// CRITICAL FIX: First detach adapter from RecyclerView to prevent concurrent access
+				if (ChatMessagesListRecycler != null && ChatMessagesListRecycler.getAdapter() == chatAdapter) {
+					ChatMessagesListRecycler.setAdapter(null);
+				}
+				
+				// Then notify adapter that activity is being destroyed
+				if (chatAdapter instanceof ChatAdapter) {
+					((ChatAdapter) chatAdapter).onActivityDestroyed();
+				}
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error cleaning up chat adapter: " + e.getMessage());
+			} finally {
+				chatAdapter = null;
 			}
-			chatAdapter = null;
 		}
 		
-		// CRITICAL FIX: Clean up RecyclerViews properly
+		// CRITICAL FIX: Clean up RecyclerViews properly with comprehensive null checks
 		if (ChatMessagesListRecycler != null) {
 			try {
-				ChatMessagesListRecycler.setAdapter(null);
-				ChatMessagesListRecycler.clearOnScrollListeners();
-				ChatMessagesListRecycler = null;
+				// CRITICAL FIX: Check if RecyclerView is still attached to window
+				if (ChatMessagesListRecycler.getParent() != null) {
+					ChatMessagesListRecycler.setAdapter(null);
+					ChatMessagesListRecycler.clearOnScrollListeners();
+				}
 			} catch (Exception e) {
 				Log.e("ChatActivity", "Error cleaning up main RecyclerView: " + e.getMessage());
+			} finally {
+				ChatMessagesListRecycler = null;
 			}
 		}
 		if (rv_attacmentList != null) {
 			try {
-				rv_attacmentList.setAdapter(null);
-				rv_attacmentList = null;
+				// CRITICAL FIX: Check if RecyclerView is still attached to window
+				if (rv_attacmentList.getParent() != null) {
+					rv_attacmentList.setAdapter(null);
+				}
 			} catch (Exception e) {
 				Log.e("ChatActivity", "Error cleaning up attachment RecyclerView: " + e.getMessage());
+			} finally {
+				rv_attacmentList = null;
 			}
 		}
 		
@@ -1251,11 +1294,11 @@ public class ChatActivity extends AppCompatActivity {
 		_chat_child_listener = new ChildEventListener() {
 				@Override
 				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
-					// CRITICAL FIX: Check activity state before processing Firebase events
-					if (isFinishing() || isDestroyed() || ChatMessagesList == null || chatAdapter == null) {
-						Log.w("ChatActivity", "Skipping onChildAdded - activity is finishing or destroyed");
-						return;
-					}
+									// CRITICAL FIX: Check activity state before processing Firebase events
+				if (isFinishing() || isActivityDestroyed() || ChatMessagesList == null || chatAdapter == null) {
+					Log.w("ChatActivity", "Skipping onChildAdded - activity is finishing or destroyed");
+					return;
+				}
 					
 					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
 					Log.d("ChatActivity", "Snapshot key: " + dataSnapshot.getKey() + ", Previous child: " + previousChildName);
@@ -1345,7 +1388,7 @@ public class ChatActivity extends AppCompatActivity {
 				@Override
 				public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 					// CRITICAL FIX: Check activity state before processing Firebase events
-					if (isFinishing() || isDestroyed() || ChatMessagesList == null || chatAdapter == null) {
+					if (isFinishing() || isActivityDestroyed() || ChatMessagesList == null || chatAdapter == null) {
 						Log.w("ChatActivity", "Skipping onChildChanged - activity is finishing or destroyed");
 						return;
 					}
@@ -1380,7 +1423,7 @@ public class ChatActivity extends AppCompatActivity {
 				@Override
 				public void onChildRemoved(@NonNull DataSnapshot snapshot) {
 					// CRITICAL FIX: Check activity state before processing Firebase events
-					if (isFinishing() || isDestroyed() || ChatMessagesList == null || chatAdapter == null) {
+					if (isFinishing() || isActivityDestroyed() || ChatMessagesList == null || chatAdapter == null) {
 						Log.w("ChatActivity", "Skipping onChildRemoved - activity is finishing or destroyed");
 						return;
 					}
@@ -2631,7 +2674,7 @@ public class ChatActivity extends AppCompatActivity {
 			// Add highlight animation after scroll completes
 			new Handler().postDelayed(() -> {
 				// CRITICAL FIX: Check if activity is still valid before highlighting
-				if (!isFinishing() && !isDestroyed() && ChatMessagesListRecycler != null) {
+				if (!isFinishing() && !isActivityDestroyed() && ChatMessagesListRecycler != null) {
 					RecyclerView.ViewHolder viewHolder = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
 					if (viewHolder != null) {
 						_highlightMessage(viewHolder.itemView);
@@ -2656,7 +2699,7 @@ public class ChatActivity extends AppCompatActivity {
 	// CRITICAL FIX: Add highlight animation for replied messages with NPE protection
 	private void _highlightMessage(View messageView) {
 		// CRITICAL FIX: Check if activity is finishing to prevent crashes
-		if (isFinishing() || isDestroyed()) {
+		if (isFinishing() || isActivityDestroyed()) {
 			return;
 		}
 		
@@ -2668,7 +2711,7 @@ public class ChatActivity extends AppCompatActivity {
 		highlightAnimator.setDuration(800);
 		highlightAnimator.addUpdateListener(animation -> {
 			// CRITICAL FIX: Check if activity is still valid during animation
-			if (isFinishing() || isDestroyed() || messageView == null) {
+			if (isFinishing() || isActivityDestroyed() || messageView == null) {
 				animation.cancel();
 				return;
 			}
@@ -2691,7 +2734,7 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onAnimationEnd(Animator animation) {
 				// CRITICAL FIX: Safely restore original background
-				if (!isFinishing() && !isDestroyed() && messageView != null) {
+				if (!isFinishing() && !isActivityDestroyed() && messageView != null) {
 					messageView.setBackgroundDrawable(originalBackground);
 				}
 			}
@@ -2840,8 +2883,8 @@ public class ChatActivity extends AppCompatActivity {
 				SecondUserAvatar = "null";
 			} else {
 				try {
-					// CRITICAL FIX: Use activity context instead of application context for Glide
-					if (!isFinishing() && !isDestroyed()) {
+					// CRITICAL FIX: Use activity context with proper API compatibility checks
+					if (!isFinishing() && !isActivityDestroyed()) {
 						Glide.with(this).load(Uri.parse(avatarUrl)).into(topProfileLayoutProfileImage);
 						SecondUserAvatar = avatarUrl;
 					} else {
