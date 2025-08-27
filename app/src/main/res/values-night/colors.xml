@@ -102,4 +102,33 @@
     <color name="md_theme_surfaceContainer_highContrast">#FF000000</color>
     <color name="md_theme_surfaceContainerHigh_highContrast">#FF000000</color>
     <color name="md_theme_surfaceContainerHighest_highContrast">#FF49454F</color>
+    
+    <!-- Material 3 Medium Contrast Colors (Dark Theme) -->
+    <color name="md_theme_primary_mediumContrast">#FFD4BFFF</color>
+    <color name="md_theme_onPrimary_mediumContrast">#FF000000</color>
+    <color name="md_theme_primaryContainer_mediumContrast">#FF9A80E5</color>
+    <color name="md_theme_onPrimaryContainer_mediumContrast">#FF000000</color>
+    <color name="md_theme_secondary_mediumContrast">#FFD0C6E0</color>
+    <color name="md_theme_onSecondary_mediumContrast">#FF000000</color>
+    <color name="md_theme_secondaryContainer_mediumContrast">#FF968CA8</color>
+    <color name="md_theme_onSecondaryContainer_mediumContrast">#FF000000</color>
+    <color name="md_theme_tertiary_mediumContrast">#FFF3BCCC</color>
+    <color name="md_theme_onTertiary_mediumContrast">#FF000000</color>
+    <color name="md_theme_tertiaryContainer_mediumContrast">#FFB98294</color>
+    <color name="md_theme_onTertiaryContainer_mediumContrast">#FF000000</color>
+    <color name="md_theme_error_mediumContrast">#FFFFBAB5</color>
+    <color name="md_theme_onError_mediumContrast">#FF000000</color>
+    <color name="md_theme_errorContainer_mediumContrast">#FFFF5449</color>
+    <color name="md_theme_onErrorContainer_mediumContrast">#FF000000</color>
+    <color name="md_theme_background_mediumContrast">#FF141318</color>
+    <color name="md_theme_onBackground_mediumContrast">#FFE6E1E5</color>
+    <color name="md_theme_surface_mediumContrast">#FF141318</color>
+    <color name="md_theme_onSurface_mediumContrast">#FFE6E1E5</color>
+    <color name="md_theme_surfaceVariant_mediumContrast">#FF49454F</color>
+    <color name="md_theme_onSurfaceVariant_mediumContrast">#FFCEC8D4</color>
+    <color name="md_theme_outline_mediumContrast">#FFA69FAC</color>
+    <color name="md_theme_outlineVariant_mediumContrast">#FF86808C</color>
+    <color name="md_theme_inverseOnSurface_mediumContrast">#FF141318</color>
+    <color name="md_theme_inverseSurface_mediumContrast">#FFE6E1E5</color>
+    <color name="md_theme_inversePrimary_mediumContrast">#FF524595</color>
 </resources>
