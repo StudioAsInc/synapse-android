@@ -151,4 +151,27 @@
     <color name="md_theme_inverseOnSurface_mediumContrast">#FFF4EFF4</color>
     <color name="md_theme_inverseSurface_mediumContrast">#FF313033</color>
     <color name="md_theme_inversePrimary_mediumContrast">#FFD0BCFF</color>
+    
+    <!-- Material 3 Fixed Medium Contrast Colors (Light Theme) -->
+    <color name="md_theme_primaryFixed_mediumContrast">#FF6750A4</color>
+    <color name="md_theme_onPrimaryFixed_mediumContrast">#FFFFFFFF</color>
+    <color name="md_theme_primaryFixedDim_mediumContrast">#FF4F378B</color>
+    <color name="md_theme_onPrimaryFixedVariant_mediumContrast">#FFFFFFFF</color>
+    <color name="md_theme_secondaryFixed_mediumContrast">#FF625B71</color>
+    <color name="md_theme_onSecondaryFixed_mediumContrast">#FFFFFFFF</color>
+    <color name="md_theme_secondaryFixedDim_mediumContrast">#FF494458</color>
+    <color name="md_theme_onSecondaryFixedVariant_mediumContrast">#FFFFFFFF</color>
+    <color name="md_theme_tertiaryFixed_mediumContrast">#FF7D5260</color>
+    <color name="md_theme_onTertiaryFixed_mediumContrast">#FFFFFFFF</color>
+    <color name="md_theme_tertiaryFixedDim_mediumContrast">#FF633B48</color>
+    <color name="md_theme_onTertiaryFixedVariant_mediumContrast">#FFFFFFFF</color>
+    
+    <!-- Material 3 Surface Medium Contrast Colors (Light Theme) -->
+    <color name="md_theme_surfaceDim_mediumContrast">#FFDDD8DD</color>
+    <color name="md_theme_surfaceBright_mediumContrast">#FFFBF8FD</color>
+    <color name="md_theme_surfaceContainerLowest_mediumContrast">#FFFFFFFF</color>
+    <color name="md_theme_surfaceContainerLow_mediumContrast">#FFF7F2F7</color>
+    <color name="md_theme_surfaceContainer_mediumContrast">#FFF1ECF1</color>
+    <color name="md_theme_surfaceContainerHigh_mediumContrast">#FFECE6EB</color>
+    <color name="md_theme_surfaceContainerHighest_mediumContrast">#FFE6E1E5</color>
 </resources>
