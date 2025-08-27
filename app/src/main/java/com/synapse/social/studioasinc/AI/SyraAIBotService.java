@@ -16,6 +16,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.AI.Gemini;
+import com.synapse.social.studioasinc.AI.SyraAIConfig;
+import com.synapse.social.studioasinc.AI.SyraAccountSetup;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -239,7 +241,7 @@ public class SyraAIBotService extends Service {
                     "Respond naturally as if you're joining the conversation. Keep it conversational and engaging.",
                     userName, messageText);
                 
-                geminiAI.generateResponse(prompt, new Gemini.GeminiCallback() {
+                geminiAI.sendPrompt(prompt, new Gemini.GeminiCallback() {
                     @Override
                     public void onSuccess(String response) {
                         sendChatMessage(chatId, response);
@@ -326,7 +328,7 @@ public class SyraAIBotService extends Service {
                     "Respond with a thoughtful comment that adds value to the discussion.",
                     userName, postText);
                 
-                geminiAI.generateResponse(prompt, new Gemini.GeminiCallback() {
+                geminiAI.sendPrompt(prompt, new Gemini.GeminiCallback() {
                     @Override
                     public void onSuccess(String response) {
                         commentOnPost(postId, response);
@@ -417,7 +419,7 @@ public class SyraAIBotService extends Service {
                 "Make it thoughtful, relatable, and encouraging engagement from others. " +
                 "Keep it under 280 characters and include relevant emojis.", topic);
             
-            geminiAI.generateResponse(prompt, new Gemini.GeminiCallback() {
+            geminiAI.sendPrompt(prompt, new Gemini.GeminiCallback() {
                 @Override
                 public void onSuccess(String response) {
                     publishPost(response);
@@ -526,7 +528,7 @@ public class SyraAIBotService extends Service {
                 "Be supportive, add value, and encourage further discussion. Keep it friendly and natural.",
                 postText);
             
-            geminiAI.generateResponse(prompt, new Gemini.GeminiCallback() {
+            geminiAI.sendPrompt(prompt, new Gemini.GeminiCallback() {
                 @Override
                 public void onSuccess(String response) {
                     commentOnPost(postId, response);
