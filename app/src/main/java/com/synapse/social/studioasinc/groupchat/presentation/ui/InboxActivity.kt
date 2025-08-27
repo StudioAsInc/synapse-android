@@ -3,7 +3,7 @@ package com.synapse.social.studioasinc.groupchat.presentation.ui
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -24,7 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class InboxActivity : AppCompatActivity() {
+class InboxActivity : ComponentActivity() {
 
     private lateinit var binding: ActivityInboxGroupChatBinding
     private val viewModel: InboxViewModel by viewModels()

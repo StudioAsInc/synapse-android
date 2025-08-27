@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.addTextChangedListener
@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 @AndroidEntryPoint
-class GroupChatActivity : AppCompatActivity() {
+class GroupChatActivity : ComponentActivity() {
 
     private lateinit var binding: ActivityGroupChatBinding
     private val viewModel: GroupChatViewModel by viewModels()
