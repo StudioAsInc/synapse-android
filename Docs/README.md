@@ -6,9 +6,9 @@
   **✨ Express yourself in a better way ✨**  
   *A next-gen, open-source social platform*
 
-  [![License](https://img.shields.io/badge/license-Custom-blue.svg)](Docs/LICENSE.md)
+  [![License](https://img.shields.io/badge/license-Custom-blue.svg)](LICENSE.md)
   [![Release](https://img.shields.io/github/v/release/StudioAsInc/synapse-android?include_prereleases)](https://github.com/StudioAsInc/synapse-android/releases)
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](Docs/CONTRIBUTE.md)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTE.md)
   [![Build Status](https://img.shields.io/github/actions/workflow/status/StudioAsInc/synapse-android/android.yml?label=build)](https://github.com/StudioAsInc/synapse-android/actions)
   [![Stars](https://img.shields.io/github/stars/StudioAsInc/synapse-android?style=social)](https://github.com/StudioAsInc/synapse-android/stargazers)
 
@@ -28,19 +28,8 @@
 
 ---
 
-## 📚 Documentation
-
-All project documentation is organized in the `Docs/` folder:
-
-- **[Source Map](Docs/Source%20Map.md)** - Complete project structure and architecture overview
-- **[Contributing Guidelines](Docs/CONTRIBUTE.md)** - How to contribute to the project
-- **[License](Docs/LICENSE.md)** - Project license and terms
-- **[Agent Instructions](Docs/agent.md)** - Guidelines for AI agents working on this project
-
----
-
 ## 📜 License  
-Synapse uses a [custom open-source license](Docs/LICENSE.md) designed to:  
+Synapse uses a [custom open-source license](LICENSE.md) designed to:  
 - Protect project integrity  
 - Encourage community contributions  
 - Ensure long-term sustainability  
@@ -82,7 +71,7 @@ Special thanks to:
 <div align="center">
   
   **A Project by [StudioAs Inc.](https://studioas.dev)**  
-  *"Empowering connections through transparency"*
+  *"Empowering connections through transparency"*  
 
   [⭐ Star on GitHub](https://github.com/StudioAsInc/synapse-android) • [Join Our Community](https://web-synapse.pages.dev) • [Contact](mailto:mashikahamed0@gmail.com)  
 
