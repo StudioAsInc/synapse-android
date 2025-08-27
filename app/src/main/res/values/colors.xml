@@ -70,4 +70,32 @@
     <color name="md_theme_onTertiaryFixed">#FF31111D</color>
     <color name="md_theme_tertiaryFixedDim">#FFEFB8C8</color>
     <color name="md_theme_onTertiaryFixedVariant">#FF633B48</color>
+    
+    <!-- Material 3 High Contrast Colors (Light Theme) -->
+    <color name="md_theme_primary_highContrast">#FF21005D</color>
+    <color name="md_theme_onPrimary_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_primaryContainer_highContrast">#FF4F378B</color>
+    <color name="md_theme_onPrimaryContainer_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_secondary_highContrast">#FF1D192B</color>
+    <color name="md_theme_onSecondary_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_secondaryContainer_highContrast">#FF494458</color>
+    <color name="md_theme_onSecondaryContainer_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_tertiary_highContrast">#FF31111D</color>
+    <color name="md_theme_onTertiary_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_tertiaryContainer_highContrast">#FF633B48</color>
+    <color name="md_theme_onTertiaryContainer_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_error_highContrast">#FF4E0002</color>
+    <color name="md_theme_onError_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_errorContainer_highContrast">#FF8C0009</color>
+    <color name="md_theme_onErrorContainer_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_background_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_onBackground_highContrast">#FF000000</color>
+    <color name="md_theme_surface_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_onSurface_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceVariant_highContrast">#FFE6E1E5</color>
+    <color name="md_theme_onSurfaceVariant_highContrast">#FF48454E</color>
+    <color name="md_theme_outline_highContrast">#FF79747E</color>
+    <color name="md_theme_inverseOnSurface_highContrast">#FFFFFFFF</color>
+    <color name="md_theme_inverseSurface_highContrast">#FF322F33</color>
+    <color name="md_theme_inversePrimary_highContrast">#FFD0BCFF</color>
 </resources>
