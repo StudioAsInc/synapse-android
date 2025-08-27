@@ -78,4 +78,28 @@
     <color name="md_theme_inverseOnSurface_highContrast">#FF000000</color>
     <color name="md_theme_inverseSurface_highContrast">#FFE6E1E5</color>
     <color name="md_theme_inversePrimary_highContrast">#FF4F378B</color>
+    <color name="md_theme_outlineVariant_highContrast">#FFCAC4D0</color>
+    
+    <!-- Material 3 Fixed High Contrast Colors (Dark Theme) -->
+    <color name="md_theme_primaryFixed_highContrast">#FFF1E7FF</color>
+    <color name="md_theme_onPrimaryFixed_highContrast">#FF000000</color>
+    <color name="md_theme_primaryFixedDim_highContrast">#FFD0BCFF</color>
+    <color name="md_theme_onPrimaryFixedVariant_highContrast">#FF000000</color>
+    <color name="md_theme_secondaryFixed_highContrast">#FFF1E7FF</color>
+    <color name="md_theme_onSecondaryFixed_highContrast">#FF000000</color>
+    <color name="md_theme_secondaryFixedDim_highContrast">#FFCCC2DC</color>
+    <color name="md_theme_onSecondaryFixedVariant_highContrast">#FF000000</color>
+    <color name="md_theme_tertiaryFixed_highContrast">#FFFFF0F7</color>
+    <color name="md_theme_onTertiaryFixed_highContrast">#FF000000</color>
+    <color name="md_theme_tertiaryFixedDim_highContrast">#FFEFB8C8</color>
+    <color name="md_theme_onTertiaryFixedVariant_highContrast">#FF000000</color>
+    
+    <!-- Material 3 Surface High Contrast Colors (Dark Theme) -->
+    <color name="md_theme_surfaceDim_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceBright_highContrast">#FF49454F</color>
+    <color name="md_theme_surfaceContainerLowest_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceContainerLow_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceContainer_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceContainerHigh_highContrast">#FF000000</color>
+    <color name="md_theme_surfaceContainerHighest_highContrast">#FF49454F</color>
 </resources>
