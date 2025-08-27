@@ -109,6 +109,9 @@ configurations.all {
         force 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
         force 'androidx.lifecycle:lifecycle-runtime-compose:2.7.0'
         force 'androidx.lifecycle:lifecycle-runtime-compose-android:2.7.0'
+        force 'com.fasterxml.jackson.core:jackson-core:2.15.4'
+        force 'com.fasterxml.jackson.core:jackson-databind:2.15.4'
+        force 'com.fasterxml.jackson.core:jackson-annotations:2.15.4'
     }
 }
 
