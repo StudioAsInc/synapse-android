@@ -4,7 +4,17 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-sw600dp-v13/values-sw600dp-v13.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/2ed22055511181ef8a169d6b58e9229a/transformed/material-1.14.0-alpha04/res/values-sw600dp-v13/values-sw600dp-v13.xml",
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/87dbcf576b8396ce49046b9b436e1735/transformed/appcompat-1.7.1/res/values-sw600dp-v13/values-sw600dp-v13.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,124,193,263,337,413,472,543",
+                        "endColumns": "68,68,69,73,75,58,70,67",
+                        "endOffsets": "119,188,258,332,408,467,538,606"
+                    }
+                },
+                {
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/6c3ddcec755796cd3a501f56d9e56a0f/transformed/material-1.14.0-alpha04/res/values-sw600dp-v13/values-sw600dp-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,10,11,12,13,14",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4",
@@ -20,16 +30,6 @@
                         "endLines": "10,11,12,13,14,15,17,18,19,20,21,25",
                         "endColumns": "59,69,70,71,57,57,10,63,55,58,62,10",
                         "endOffsets": "666,736,807,879,937,995,1104,1168,1224,1283,1346,1518"
-                    }
-                },
-                {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/7c8b89fb70da4a9c80c0af61e3961240/transformed/appcompat-1.7.1/res/values-sw600dp-v13/values-sw600dp-v13.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,124,193,263,337,413,472,543",
-                        "endColumns": "68,68,69,73,75,58,70,67",
-                        "endOffsets": "119,188,258,332,408,467,538,606"
                     }
                 }
             ]

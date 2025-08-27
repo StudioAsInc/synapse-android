@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-sw360dp-v13/values-sw360dp-v13.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/ae9ece9801ac5d6faad38926a760fa90/transformed/preference-1.2.1/res/values-sw360dp-v13/values-sw360dp-v13.xml",
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/e7b6feedc7cc464ef7c6bdcb14d51e4f/transformed/preference-1.2.1/res/values-sw360dp-v13/values-sw360dp-v13.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-xlarge-v4/values-xlarge-v4.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/7c8b89fb70da4a9c80c0af61e3961240/transformed/appcompat-1.7.1/res/values-xlarge-v4/values-xlarge-v4.xml",
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/87dbcf576b8396ce49046b9b436e1735/transformed/appcompat-1.7.1/res/values-xlarge-v4/values-xlarge-v4.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7",
                         "startColumns": "4,4,4,4,4,4",

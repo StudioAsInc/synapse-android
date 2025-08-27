@@ -20,6 +20,10 @@ public abstract class Hilt_GroupChatFirebaseMessagingService extends FirebaseMes
 
   private boolean injected = false;
 
+  Hilt_GroupChatFirebaseMessagingService() {
+    super();
+  }
+
   @CallSuper
   @Override
   public void onCreate() {
