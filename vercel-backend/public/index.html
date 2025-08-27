@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synapse AI Bot - API Tester</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #5856eb;
+        }
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+        .response {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .header {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .bot-uid {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 Synapse AI Bot API Tester</h1>
+        <p>Test your Vercel backend APIs directly in the browser</p>
+    </div>
+
+    <div class="bot-uid">
+        <strong>Bot UID:</strong> DxSt08c8VfVjSQWCj3UGgMSeBVb2<br>
+        <strong>API Base:</strong> <span id="api-base"></span>
+    </div>
+
+    <!-- Test Mention Response -->
+    <div class="container">
+        <h2>💬 Test Mention Response</h2>
+        <p>Simulate @syra mention in chat</p>
+        
+        <input type="text" id="mention-message" placeholder="Hey @syra, how are you?" value="Hey @syra, how are you?">
+        <input type="text" id="mention-user" placeholder="User Name" value="Test User">
+        <input type="text" id="mention-userid" placeholder="User ID" value="test123">
+        
+        <button class="btn" onclick="testMentionResponse()">🚀 Test Mention Response</button>
+        <div id="mention-response" class="response" style="display:none;"></div>
+    </div>
+
+    <!-- Test Auto Post -->
+    <div class="container">
+        <h2>📝 Test Auto Post Generation</h2>
+        <p>Generate automatic posts</p>
+        
+        <select id="post-type">
+            <option value="general">General</option>
+            <option value="morning">Morning</option>
+            <option value="evening">Evening</option>
+        </select>
+        
+        <button class="btn" onclick="testAutoPost()">🚀 Generate Auto Post</button>
+        <div id="autopost-response" class="response" style="display:none;"></div>
+    </div>
+
+    <!-- Test Comment Generation -->
+    <div class="container">
+        <h2>💭 Test Comment Generation</h2>
+        <p>Generate comments for posts</p>
+        
+        <textarea id="comment-post" rows="3" placeholder="Enter post content...">Just had an amazing day learning about AI! What do you all think about the future of artificial intelligence?</textarea>
+        <input type="text" id="comment-author" placeholder="Post Author" value="Alice">
+        
+        <select id="comment-type">
+            <option value="random">Random Comment</option>
+            <option value="mention">Mention Response</option>
+        </select>
+        
+        <button class="btn" onclick="testCommentGeneration()">🚀 Generate Comment</button>
+        <div id="comment-response" class="response" style="display:none;"></div>
+    </div>
+
+    <!-- Test Health Check -->
+    <div class="container">
+        <h2>🔍 Test API Health</h2>
+        <p>Check if your Vercel backend is running</p>
+        
+        <button class="btn" onclick="testHealth()">🚀 Check Health</button>
+        <div id="health-response" class="response" style="display:none;"></div>
+    </div>
+
+    <!-- Firebase Webhook Test -->
+    <div class="container">
+        <h2>🔗 Test Firebase Webhook</h2>
+        <p>Test webhook integration</p>
+        
+        <input type="text" id="webhook-secret" placeholder="Webhook Secret" value="your-webhook-secret">
+        
+        <select id="webhook-event">
+            <option value="message_mention">Message Mention</option>
+            <option value="post_mention">Post Mention</option>
+            <option value="auto_post_trigger">Auto Post Trigger</option>
+        </select>
+        
+        <button class="btn" onclick="testWebhook()">🚀 Test Webhook</button>
+        <div id="webhook-response" class="response" style="display:none;"></div>
+    </div>
+
+    <script>
+        // Set API base URL
+        const API_BASE = window.location.origin + '/api';
+        document.getElementById('api-base').textContent = API_BASE;
+
+        const BOT_UID = 'DxSt08c8VfVjSQWCj3UGgMSeBVb2';
+
+        async function makeRequest(endpoint, data) {
+            try {
+                const response = await fetch(API_BASE + endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                return {
+                    success: response.ok,
+                    data: result,
+                    status: response.status
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        function showResponse(elementId, response) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            
+            if (response.success) {
+                element.className = 'response success';
+                element.textContent = JSON.stringify(response.data, null, 2);
+            } else {
+                element.className = 'response error';
+                element.textContent = `Error: ${response.error || response.data?.error || 'Unknown error'}`;
+            }
+        }
+
+        async function testMentionResponse() {
+            const data = {
+                message: document.getElementById('mention-message').value,
+                userId: document.getElementById('mention-userid').value,
+                userName: document.getElementById('mention-user').value,
+                context: 'chat',
+                botUserId: BOT_UID
+            };
+
+            const response = await makeRequest('/ai/mention-response', data);
+            showResponse('mention-response', response);
+        }
+
+        async function testAutoPost() {
+            const data = {
+                botUserId: BOT_UID,
+                postType: document.getElementById('post-type').value
+            };
+
+            const response = await makeRequest('/ai/auto-post', data);
+            showResponse('autopost-response', response);
+        }
+
+        async function testCommentGeneration() {
+            const data = {
+                postContent: document.getElementById('comment-post').value,
+                authorName: document.getElementById('comment-author').value,
+                commentType: document.getElementById('comment-type').value,
+                botUserId: BOT_UID
+            };
+
+            const response = await makeRequest('/ai/comment-generation', data);
+            showResponse('comment-response', response);
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch(API_BASE + '/health');
+                const data = await response.json();
+                showResponse('health-response', {
+                    success: response.ok,
+                    data: data
+                });
+            } catch (error) {
+                showResponse('health-response', {
+                    success: false,
+                    error: error.message
+                });
+            }
+        }
+
+        async function testWebhook() {
+            const eventType = document.getElementById('webhook-event').value;
+            let data = {};
+
+            switch(eventType) {
+                case 'message_mention':
+                    data = {
+                        chatId: 'test-chat-123',
+                        messageText: 'Hey @syra, test webhook!',
+                        senderId: 'test-user-123',
+                        senderName: 'Test User'
+                    };
+                    break;
+                case 'post_mention':
+                    data = {
+                        postId: 'test-post-123',
+                        postText: 'What do you think @syra?',
+                        authorId: 'test-author-123',
+                        authorName: 'Test Author'
+                    };
+                    break;
+                case 'auto_post_trigger':
+                    data = {
+                        timeOfDay: 'morning'
+                    };
+                    break;
+            }
+
+            const webhookData = {
+                eventType: eventType,
+                data: data,
+                auth: {
+                    token: document.getElementById('webhook-secret').value
+                }
+            };
+
+            const response = await makeRequest('/webhooks/firebase-trigger', webhookData);
+            showResponse('webhook-response', response);
+        }
+
+        // Auto-fill current time-based post type
+        const hour = new Date().getHours();
+        if (hour >= 6 && hour < 12) {
+            document.getElementById('post-type').value = 'morning';
+        } else if (hour >= 18 && hour < 22) {
+            document.getElementById('post-type').value = 'evening';
+        }
+    </script>
+</body>
+</html>
