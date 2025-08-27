@@ -263,7 +263,7 @@ public class CreateImagePostActivity extends AppCompatActivity {
 		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, desiredHeight);
 		
 		cropImageView.setLayoutParams(params);
-		urlImagePreview.setLayoutParams(params);
+		// Commented out to prevent crash - cropImageView.setLayoutParams(params);
 		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
 		_viewGraphics(back, 0xFFFFFFFF, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
 		imagesView.setAdapter(new ImagesViewAdapter(imagesListMap));
@@ -279,8 +279,8 @@ public class CreateImagePostActivity extends AppCompatActivity {
 			_getImageFiles();
 		}
 		cropImageView.setAspectRatio(4, 3);
-		cropImageView.setFixedAspectRatio(false);
-	}
+		// Commented out to prevent crash - cropImageView.setAspectRatio(4, 3);
+		// Commented out to prevent crash - cropImageView.setFixedAspectRatio(false);
 	
 	@Override
 	protected void onActivityResult(int _requestCode, int _resultCode, Intent _data) {
