@@ -7,7 +7,7 @@ This guide shows how to deploy the Synapse AI Bot backend to Vercel, providing s
 ## 📁 **Project Structure**
 
 ```
-vercel-backend/
+app/backend/vercel-backend/
 ├── api/
 │   ├── ai/
 │   │   ├── mention-response.js      # Handle @syra mentions
@@ -28,7 +28,7 @@ npm install -g vercel
 
 ### 2. **Deploy to Vercel**
 ```bash
-cd vercel-backend
+cd app/backend/vercel-backend
 vercel
 ```
 
@@ -236,7 +236,7 @@ vercel env add NODE_ENV staging
 
 ### **Local Development**
 ```bash
-cd vercel-backend
+cd app/backend/vercel-backend
 vercel dev
 ```
 

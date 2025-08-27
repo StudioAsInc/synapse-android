@@ -36,12 +36,19 @@ This document describes the implementation of the Syra AI Bot for the Synapse so
 ### 📁 File Structure
 
 ```
-app/src/main/java/com/synapse/social/studioasinc/AI/
-├── SyraAIBotService.java      # Main service handling all bot functionality
-├── SyraAIBotManager.java      # Manager class for easy integration
-├── SyraAccountSetup.java      # Handles bot account creation and setup
-├── SyraAIConfig.java          # Configuration constants and utilities
-└── Gemini.java                # AI API wrapper (updated package)
+app/
+├── src/main/java/com/synapse/social/studioasinc/AI/
+│   ├── SyraAIBotService.java      # Main service handling all bot functionality
+│   ├── SyraAIBotManager.java      # Manager class for easy integration
+│   ├── SyraAccountSetup.java      # Handles bot account creation and setup
+│   ├── SyraAIConfig.java          # Configuration constants and utilities
+│   ├── VercelAIService.java       # Vercel backend API integration
+│   └── Gemini.java                # Local AI API wrapper (legacy)
+└── backend/vercel-backend/        # Vercel serverless backend
+    ├── api/ai/                    # AI processing endpoints
+    ├── api/webhooks/              # Firebase webhooks
+    ├── public/                    # API testing interface
+    └── package.json               # Backend dependencies
 ```
 
 ### 🔧 Components
