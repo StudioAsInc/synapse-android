@@ -539,17 +539,14 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						if (commentData.get("comment") != null) {
 								// Set comment text
 												if (commentData.get("comment") != null) {
-								comment_text.setText(commentData.get("comment").toString());
+								com.synapse.social.studioasinc.styling.MarkdownRenderer.get(comment_text.getContext()).render(comment_text, commentData.get("comment").toString());
 						} else {
 								comment_text.setText("");
 						}ntsRepliesListMap));
 						other_replies_list.setLayoutManager(new LinearLayoutManager(getActivity()));
 						
 						{
-								ExecutorService mExecutorService = Executors.newSingleThreadExecutor();	
-								mExecutorService.execute(new Runnable() {
-										@Override
-										public void run() {
+								ExecutorService mExecutorService = Executors.newSingleThreadExecutor();						public void run() {
 												Query commentsRepliesQuery = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-replies").child(postKey).child(key).orderByChild("like");
 												commentsRepliesQuery.addListenerForSingleValueEvent(new ValueEventListener() {
 														@Override
@@ -1089,17 +1086,19 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						}
 						
 						if (replyData.get("comment") != null) {
-								comment_text.setText(replyData.get("comment").toString()						if (replyData.get("comment") != null) {
-								comment_text.setText(replyData.get("comment").toString());
+								com.synapse.social.studioasinc.styling.MarkdownRenderer						if (replyData.get("comment") != null) {
+								com.synapse.social.studioasinc.styling.MarkdownRenderer.get(comment_text.getContext()).render(comment_text, replyData.get("comment").toString());
 						} else {
 								comment_text.setText("");
-						}InfoCacheMap.containsKey("uid-".concat(uid))) {
-												profileImage.setImageResource(R.drawable.avatar);
-										} else {
-												Glide.with(getContext()).load(Uri.parse(String.valueOf(UserInfoCacheMap.get("avatar-".concat(uid))))).into(profileImage);
-										}
-								}
-								if (String.valueOf(UserInfoCacheMap.get("nickname-".concat(uid))).equals("null")) {
+						}
+						
+						if (postPublisherAvatar.equals("null")) {
+								likedByPublisherLayoutAvatar.setImageResource(R.drawable.avatar);
+						} else {
+								Glide.with(getContext()).load(Uri.parse(postPublisherAvatar)).into(likedByPublisherLayoutAvatar);
+						}
+						
+						if (UserInfoCacheMap.containsKey("uid-".concat(uid))) {et("nickname-".concat(uid))).equals("null")) {
 										username.setText("@" + String.valueOf(UserInfoCacheMap.get("username-".concat(uid))));
 								} else {
 										username.setText(String.valueOf(UserInfoCacheMap.get("nickname-".concat(uid))));
