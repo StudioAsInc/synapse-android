@@ -11,6 +11,8 @@
 	<uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 	<uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 	<uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
+	<uses-permission android:name="android.permission.CAMERA" />
+	<uses-permission android:name="android.permission.RECORD_AUDIO" />
 	<application
 		android:allowBackup="true"
 		android:icon="@mipmap/ic_launcher"
@@ -209,6 +211,31 @@
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
 			android:windowSoftInputMode="stateHidden" />
+		
+		<!-- Group Chat Activities -->
+		<activity
+			android:name=".groupchat.presentation.ui.InboxActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:windowSoftInputMode="adjustResize"
+			android:theme="@style/Theme.Material3.DayNight" />
+		
+		<activity
+			android:name=".groupchat.presentation.ui.CreateGroupActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:windowSoftInputMode="adjustResize"
+			android:theme="@style/Theme.Material3.DayNight" />
+		
+		<activity
+			android:name=".groupchat.presentation.ui.GroupChatActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:windowSoftInputMode="adjustResize"
+			android:theme="@style/Theme.Material3.DayNight" />
 		<provider
 			android:name="androidx.startup.InitializationProvider"
 			android:authorities="com.synapse.social.studioasinc.androidx-startup"
@@ -242,6 +269,15 @@
 			<meta-data
 				android:name="com.google.firebase.components:com.google.firebase.storage.StorageRegistrar"
 				android:value="com.google.firebase.components.ComponentRegistrar" />
+		</service>
+		
+		<!-- Group Chat FCM Service -->
+		<service
+			android:name=".groupchat.service.GroupChatFirebaseMessagingService"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="com.google.firebase.MESSAGING_EVENT" />
+			</intent-filter>
 		</service>
 		<uses-library
 			android:name="org.apache.http.legacy"
