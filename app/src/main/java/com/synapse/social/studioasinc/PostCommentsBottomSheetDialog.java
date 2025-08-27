@@ -73,7 +73,7 @@ import java.util.Calendar;
 import java.util.regex.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-// import com.synapse.social.studioasinc.styling.TextStylingUtil;
+
 
 public class PostCommentsBottomSheetDialog extends DialogFragment {
 		private View rootView;
@@ -538,12 +538,11 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 
 						if (commentData.get("comment") != null) {
 								// Set comment text
+												if (commentData.get("comment") != null) {
 								comment_text.setText(commentData.get("comment").toString());
 						} else {
 								comment_text.setText("");
-						}
-						
-						other_replies_list.setAdapter(new CommentsRepliesAdapter(commentsRepliesListMap));
+						}ntsRepliesListMap));
 						other_replies_list.setLayoutManager(new LinearLayoutManager(getActivity()));
 						
 						{
@@ -1090,13 +1089,11 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						}
 						
 						if (replyData.get("comment") != null) {
-								String commentTextContent = replyData.get("comment").toS						if (replyData.get("comment") != null) {
-								String commentTextContent = replyData.get("comment").toString();
-								TextStylingUtil textStylingUtil = new TextStylingUtil(getContext());
-								textStylingUtil.applyStyling(commentTextContent, comment_text);
+								comment_text.setText(replyData.get("comment").toString()						if (replyData.get("comment") != null) {
+								comment_text.setText(replyData.get("comment").toString());
 						} else {
 								comment_text.setText("");
-						}InfoCacheMap.containsKey("uid-".concat(uid))) {quals("null")) {
+						}InfoCacheMap.containsKey("uid-".concat(uid))) {
 												profileImage.setImageResource(R.drawable.avatar);
 										} else {
 												Glide.with(getContext()).load(Uri.parse(String.valueOf(UserInfoCacheMap.get("avatar-".concat(uid))))).into(profileImage);
