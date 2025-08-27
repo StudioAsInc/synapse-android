@@ -71,9 +71,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Calendar;
 import java.util.regex.*;
-impimport java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import com.synapse.social.studioasinc.styling.TextStylingUtil;
+// import com.synapse.social.studioasinc.styling.TextStylingUtil;
 
 public class PostCommentsBottomSheetDialog extends DialogFragment {
 		private View rootView;
@@ -537,17 +537,17 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						_ImageColor(top_popular_3_fire_ic, 0xFFFF9800);
 
 						if (commentData.get("comment") != null) {
-								comment_text.setText(commen						if (commentData.get("comment") != null) {
-								String commentTextContent = commentData.get("comment").toString();
-								TextStylingUtil textStylingUtil = new TextStylingUtil(getContext());
-								textStylingUtil.applyStyling(commentTextContent, comment_text);
+								// Set comment text
+								comment_text.setText(commentData.get("comment").toString());
 						} else {
-								comment_text.setText("");LayoutManager(getActivity()));
+								comment_text.setText("");
+						}
+						
+						other_replies_list.setAdapter(new CommentsRepliesAdapter(commentsRepliesListMap));
+						other_replies_list.setLayoutManager(new LinearLayoutManager(getActivity()));
 						
 						{
-								ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-								Handler mMainHandler = new Handler(Looper.getMainLooper());
-								
+								ExecutorService mExecutorService = Executors.newSingleThreadExecutor();	
 								mExecutorService.execute(new Runnable() {
 										@Override
 										public void run() {
@@ -1089,19 +1089,14 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								comment_text.setText("");
 						}
 						
-						if (postPublisherAvatar.equals("null")) {
-								likedByPublisherLayoutAvatar.setImageResource(R.drawabl						if (replyData.get("comment") != null) {
+						if (replyData.get("comment") != null) {
+								String commentTextContent = replyData.get("comment").toS						if (replyData.get("comment") != null) {
 								String commentTextContent = replyData.get("comment").toString();
 								TextStylingUtil textStylingUtil = new TextStylingUtil(getContext());
 								textStylingUtil.applyStyling(commentTextContent, comment_text);
 						} else {
 								comment_text.setText("");
-						}foCacheMap.containsKey("uid-".concat(uid))) {
-								body.setVisibility(View.VISIBLE);
-								if (String.valueOf(UserInfoCacheMap.get("banned-".concat(uid))).equals("true")) {
-										profileImage.setImageResource(R.drawable.avatar);
-								} else {
-										if (String.valueOf(UserInfoCacheMap.get("avatar-".concat(uid))).equals("null")) {
+						}InfoCacheMap.containsKey("uid-".concat(uid))) {quals("null")) {
 												profileImage.setImageResource(R.drawable.avatar);
 										} else {
 												Glide.with(getContext()).load(Uri.parse(String.valueOf(UserInfoCacheMap.get("avatar-".concat(uid))))).into(profileImage);
