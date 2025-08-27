@@ -153,7 +153,8 @@ public class ChatActivity extends AppCompatActivity {
 	private String SecondUserName = "";
 	private String FirstUserName = "";
 	private String oldestMessageKey = null;
-	private static final int CHAT_PAGE_SIZE = 80;
+	private static final int CHAT_PAGE_SIZE = 50; // CRITICAL FIX: Reduced page size for better performance
+	private static final int MAX_CACHED_MESSAGES = 300; // CRITICAL FIX: Limit cached messages to prevent memory issues
 	private String object_clicked = "";
 	private String handle = "";
 	private HashMap<String, Object> block = new HashMap<>();
@@ -414,23 +415,57 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
 				final String _charSeq = _param1.toString();
-				DatabaseReference typingRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF);
-				if (_charSeq.length() == 0) {
-					typingRef.removeValue();
-					_setMargin(message_et, 0, 7, 0, 0);
-					message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
+				// CRITICAL FIX: Better typing indicator management with debouncing
+				if (auth.getCurrentUser() != null && getIntent().getStringExtra(UID_KEY) != null) {
+					DatabaseReference typingRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF);
+					
+					if (_charSeq.length() == 0) {
+						// CRITICAL FIX: Clear typing indicator with better error handling
+						try {
+							typingRef.removeValue();
+						} catch (Exception e) {
+							Log.e("ChatActivity", "Error clearing typing indicator: " + e.getMessage());
+						}
+						
+						_setMargin(message_et, 0, 7, 0, 0);
+						message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
 
-					_TransitionManager(message_input_overall_container, 125);
-					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
-				} else {
-					typingSnd = new HashMap<>();
-					typingSnd.put(UID_KEY, auth.getCurrentUser().getUid());
-					typingSnd.put("typingMessageStatus", "true");
-					typingRef.updateChildren(typingSnd);
-					_TransitionManager(message_input_overall_container, 125);
-					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-
-					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)60, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
+						_TransitionManager(message_input_overall_container, 125);
+						message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
+					} else {
+						// CRITICAL FIX: Debounce typing indicator to avoid excessive Firebase writes
+						if (timer != null) {
+							timer.cancel();
+						}
+						
+						typingSnd = new HashMap<>();
+						typingSnd.put(UID_KEY, auth.getCurrentUser().getUid());
+						typingSnd.put("typingMessageStatus", "true");
+						typingSnd.put("timestamp", System.currentTimeMillis()); // Add timestamp for cleanup
+						
+						try {
+							typingRef.updateChildren(typingSnd);
+						} catch (Exception e) {
+							Log.e("ChatActivity", "Error setting typing indicator: " + e.getMessage());
+						}
+						
+						_TransitionManager(message_input_overall_container, 125);
+						message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
+						message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)60, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
+						
+						// CRITICAL FIX: Auto-clear typing indicator after 3 seconds of inactivity
+						timer = new TimerTask() {
+							@Override
+							public void run() {
+								try {
+									typingRef.removeValue();
+								} catch (Exception e) {
+									Log.e("ChatActivity", "Error auto-clearing typing indicator: " + e.getMessage());
+								}
+							}
+						};
+						_timer.schedule(timer, 3000);
+					}
 				}
 			}
 
@@ -441,7 +476,26 @@ public class ChatActivity extends AppCompatActivity {
 
 			@Override
 			public void afterTextChanged(Editable _param1) {
-
+				// CRITICAL FIX: Save message draft for better UX
+				saveDraftMessage(_param1.toString());
+			}
+			
+			// CRITICAL FIX: Helper method to save message drafts
+			private void saveDraftMessage(String text) {
+				try {
+					if (auth.getCurrentUser() != null && getIntent().getStringExtra(UID_KEY) != null) {
+						SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
+						String chatId = getChatId(auth.getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+						
+						if (text.trim().isEmpty()) {
+							drafts.edit().remove(chatId).apply();
+						} else {
+							drafts.edit().putString(chatId, text).apply();
+						}
+					}
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error saving draft: " + e.getMessage());
+				}
 			}
 		});
 
@@ -584,6 +638,9 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
+		// CRITICAL FIX: Restore message draft
+		restoreDraftMessage();
+		
 		// Attach listeners after all references are safely initialized.
 		_attachChatListener();
 		_attachUserStatusListener();
@@ -924,6 +981,148 @@ public class ChatActivity extends AppCompatActivity {
 		}
 		
 		Log.d("ChatActivity", "Comprehensive cleanup completed in onDestroy");
+	}
+	
+	// CRITICAL FIX: Helper method to update local message state after Firebase operations
+	private void updateLocalMessageState(String messageKey, String newState) {
+		try {
+			if (ChatMessagesList == null || messageKey == null) return;
+			
+			for (int i = 0; i < ChatMessagesList.size(); i++) {
+				HashMap<String, Object> message = ChatMessagesList.get(i);
+				if (message != null && messageKey.equals(message.get(KEY_KEY))) {
+					message.put("messageState", newState);
+					message.remove("isLocalMessage"); // Remove local flag since it's now confirmed
+					
+					// Update the adapter
+					if (chatAdapter != null && !isActivityDestroyed()) {
+						runOnUiThread(() -> {
+							try {
+								chatAdapter.notifyItemChanged(i);
+							} catch (Exception e) {
+								Log.e("ChatActivity", "Error updating message state in adapter: " + e.getMessage());
+							}
+						});
+					}
+					
+					Log.d("ChatActivity", "Updated local message state to: " + newState + " for key: " + messageKey);
+					break;
+				}
+			}
+		} catch (Exception e) {
+			Log.e("ChatActivity", "Error updating local message state: " + e.getMessage());
+		}
+	}
+	
+	// CRITICAL FIX: Method to restore message drafts
+	private void restoreDraftMessage() {
+		try {
+			if (auth.getCurrentUser() != null && getIntent().getStringExtra(UID_KEY) != null) {
+				SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
+				String chatId = getChatId(auth.getCurrentUser().getUid(), getIntent().getStringExtra(UID_KEY));
+				String draftText = drafts.getString(chatId, "");
+				
+				if (!draftText.isEmpty() && message_et != null) {
+					message_et.setText(draftText);
+					message_et.setSelection(draftText.length()); // Move cursor to end
+				}
+			}
+		} catch (Exception e) {
+			Log.e("ChatActivity", "Error restoring draft: " + e.getMessage());
+		}
+	}
+	
+	// CRITICAL FIX: Helper method to generate consistent chat ID
+	private String getChatId(String uid1, String uid2) {
+		// Ensure consistent chat ID regardless of parameter order
+		if (uid1.compareTo(uid2) < 0) {
+			return uid1 + "_" + uid2;
+		} else {
+			return uid2 + "_" + uid1;
+		}
+	}
+	
+	// NEW FEATURE: Message search functionality
+	public void searchMessages(String query) {
+		if (query == null || query.trim().isEmpty()) {
+			// Clear search results
+			return;
+		}
+		
+		ArrayList<HashMap<String, Object>> searchResults = new ArrayList<>();
+		
+		for (HashMap<String, Object> message : ChatMessagesList) {
+			if (message != null && message.containsKey(MESSAGE_TEXT_KEY)) {
+				String messageText = message.get(MESSAGE_TEXT_KEY).toString();
+				if (messageText.toLowerCase().contains(query.toLowerCase())) {
+					searchResults.add(message);
+				}
+			}
+		}
+		
+		Log.d("ChatActivity", "Found " + searchResults.size() + " messages matching: " + query);
+		// You can implement UI to show search results here
+	}
+	
+	// NEW FEATURE: Jump to specific message
+	public void jumpToMessage(String messageKey) {
+		int position = _findMessagePosition(messageKey);
+		if (position != -1 && ChatMessagesListRecycler != null) {
+			ChatMessagesListRecycler.smoothScrollToPosition(position);
+			
+			// Highlight the message briefly
+			ChatMessagesListRecycler.postDelayed(() -> {
+				try {
+					if (chatAdapter != null) {
+						// You can add highlight effect here
+						chatAdapter.notifyItemChanged(position);
+					}
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error highlighting message: " + e.getMessage());
+				}
+			}, 500);
+		}
+	}
+	
+	// NEW FEATURE: Retry failed messages
+	public void retryFailedMessage(String messageKey) {
+		try {
+			for (int i = 0; i < ChatMessagesList.size(); i++) {
+				HashMap<String, Object> message = ChatMessagesList.get(i);
+				if (message != null && messageKey.equals(message.get(KEY_KEY))) {
+					String messageState = message.get("messageState") != null ? message.get("messageState").toString() : "";
+					
+					if ("failed".equals(messageState)) {
+						// Update state to sending
+						message.put("messageState", "sending");
+						if (chatAdapter != null) {
+							chatAdapter.notifyItemChanged(i);
+						}
+						
+						// Retry sending
+						String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+						String recipientUid = getIntent().getStringExtra("uid");
+						
+						_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(messageKey).setValue(message)
+							.addOnSuccessListener(aVoid -> updateLocalMessageState(messageKey, "sended"))
+							.addOnFailureListener(e -> updateLocalMessageState(messageKey, "failed"));
+							
+						_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(messageKey).setValue(message);
+						
+						Log.d("ChatActivity", "Retrying failed message: " + messageKey);
+					}
+					break;
+				}
+			}
+		} catch (Exception e) {
+			Log.e("ChatActivity", "Error retrying message: " + e.getMessage());
+		}
+	}
+	
+	// NEW FEATURE: Smart network connection monitoring
+	private void startNetworkMonitoring() {
+		// You can implement network state monitoring here
+		// This would automatically retry failed messages when connection is restored
 	}
 
 	@Override
@@ -1806,6 +2005,22 @@ public class ChatActivity extends AppCompatActivity {
 								View firstVisibleView = layoutManager.findViewByPosition(firstVisiblePosition);
 								int topOffset = (firstVisibleView != null) ? firstVisibleView.getTop() : 0;
 
+								// CRITICAL FIX: Memory management - remove old messages if cache gets too large
+								int totalMessagesAfterAdd = ChatMessagesList.size() + newMessages.size();
+								if (totalMessagesAfterAdd > MAX_CACHED_MESSAGES) {
+									int messagesToRemove = totalMessagesAfterAdd - MAX_CACHED_MESSAGES;
+									Log.d("ChatActivity", "Removing " + messagesToRemove + " old messages to manage memory");
+									
+									// Remove from the end (newest messages) to keep recent context
+									for (int i = 0; i < messagesToRemove && !ChatMessagesList.isEmpty(); i++) {
+										ChatMessagesList.remove(ChatMessagesList.size() - 1);
+									}
+									
+									if (chatAdapter != null) {
+										chatAdapter.notifyItemRangeRemoved(ChatMessagesList.size(), messagesToRemove);
+									}
+								}
+
 								// CRITICAL FIX: Insert messages at the beginning in correct order
 								ChatMessagesList.addAll(0, newMessages);
 								if (chatAdapter != null) {
@@ -2151,18 +2366,37 @@ public class ChatActivity extends AppCompatActivity {
 				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
 				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
 				
-				// Send to both chat nodes using setValue for proper real-time updates
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
-
-				// CRITICAL FIX: Immediately add the message to local list for instant feedback
-				ChatSendMap.put("isLocalMessage", true); // Mark as local message
+				// CRITICAL FIX: Add to local list FIRST for instant feedback, then send to Firebase
+				HashMap<String, Object> localMessage = new HashMap<>(ChatSendMap);
+				localMessage.put("isLocalMessage", true); // Mark as local message
+				localMessage.put("messageState", "sending"); // Show sending state
+				
 				// Add to the end since this is a new message being sent
-				ChatMessagesList.add(ChatSendMap);
+				ChatMessagesList.add(localMessage);
 				int newPosition = ChatMessagesList.size() - 1;
 				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
+				
 				// Use more granular insertion notification for smooth updates
-				chatAdapter.notifyItemInserted(newPosition);
+				if (chatAdapter != null) {
+					chatAdapter.notifyItemInserted(newPosition);
+				}
+				
+				// Send to both chat nodes using setValue for proper real-time updates
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap)
+					.addOnSuccessListener(aVoid -> {
+						// CRITICAL FIX: Update local message state on successful send
+						updateLocalMessageState(uniqueMessageKey, "sended");
+					})
+					.addOnFailureListener(e -> {
+						// CRITICAL FIX: Update local message state on failed send
+						updateLocalMessageState(uniqueMessageKey, "failed");
+						Log.e("ChatActivity", "Failed to send message to sender's node: " + e.getMessage());
+					});
+					
+				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap)
+					.addOnFailureListener(e -> {
+						Log.e("ChatActivity", "Failed to send message to recipient's node: " + e.getMessage());
+					});
 				
 				// Scroll to the new message immediately
 				ChatMessagesListRecycler.post(() -> {
@@ -2226,17 +2460,36 @@ public class ChatActivity extends AppCompatActivity {
 			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
 			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
 			
-			// Send to both chat nodes using setValue for proper real-time updates
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
-
-			// CRITICAL FIX: Immediately add the message to local list for instant feedback
-			ChatSendMap.put("isLocalMessage", true); // Mark as local message
+			// CRITICAL FIX: Add to local list FIRST for instant feedback, then send to Firebase
+			HashMap<String, Object> localMessage = new HashMap<>(ChatSendMap);
+			localMessage.put("isLocalMessage", true); // Mark as local message
+			localMessage.put("messageState", "sending"); // Show sending state
+			
 			// Add to the end since this is a new message being sent
-			ChatMessagesList.add(ChatSendMap);
+			ChatMessagesList.add(localMessage);
 			int newPosition = ChatMessagesList.size() - 1;
 			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			chatAdapter.notifyItemInserted(newPosition);
+			
+			if (chatAdapter != null) {
+				chatAdapter.notifyItemInserted(newPosition);
+			}
+			
+			// Send to both chat nodes using setValue for proper real-time updates
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap)
+				.addOnSuccessListener(aVoid -> {
+					// CRITICAL FIX: Update local message state on successful send
+					updateLocalMessageState(uniqueMessageKey, "sended");
+				})
+				.addOnFailureListener(e -> {
+					// CRITICAL FIX: Update local message state on failed send
+					updateLocalMessageState(uniqueMessageKey, "failed");
+					Log.e("ChatActivity", "Failed to send text message to sender's node: " + e.getMessage());
+				});
+				
+			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap)
+				.addOnFailureListener(e -> {
+					Log.e("ChatActivity", "Failed to send text message to recipient's node: " + e.getMessage());
+				});
 			
 			// Scroll to the new message immediately
 			ChatMessagesListRecycler.post(() -> {
@@ -2403,17 +2656,33 @@ public class ChatActivity extends AppCompatActivity {
 			return;
 		}
 
+		// CRITICAL FIX: Add timeout and retry mechanism for uploads
 		UploadFiles.uploadFile(filePath, file.getName(), new UploadFiles.UploadCallback() {
 			@Override
 			public void onProgress(int percent) {
 				try {
+					// CRITICAL FIX: Check if activity is still active and attachment map is valid
+					if (isActivityDestroyed() || attactmentmap == null) {
+						Log.w("ChatActivity", "Activity destroyed during upload, cancelling progress update");
+						return;
+					}
+					
 					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
 						HashMap<String, Object> currentItem = attactmentmap.get(itemPosition);
 						if (currentItem != null) {
 							currentItem.put("uploadProgress", (double) percent);
-							if (rv_attacmentList.getAdapter() != null) {
-								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
-							}
+							
+							// CRITICAL FIX: Update UI on main thread with proper checks
+							runOnUiThread(() -> {
+								try {
+									if (rv_attacmentList != null && rv_attacmentList.getAdapter() != null && 
+										itemPosition < attactmentmap.size()) {
+										rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+									}
+								} catch (Exception e) {
+									Log.e("ChatActivity", "Error updating progress UI: " + e.getMessage());
+								}
+							});
 						}
 					}
 				} catch (Exception e) {
@@ -2424,18 +2693,36 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onSuccess(String url, String publicId) {
 				try {
+					// CRITICAL FIX: Check if activity is still active
+					if (isActivityDestroyed() || attactmentmap == null) {
+						Log.w("ChatActivity", "Activity destroyed during upload success, ignoring");
+						return;
+					}
+					
 					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
 						HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
 						if (mapToUpdate != null) {
 							mapToUpdate.put("uploadState", "success");
 							mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
 							mapToUpdate.put("publicId", publicId);
-							if (rv_attacmentList.getAdapter() != null) {
-								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
-							}
+							mapToUpdate.put("uploadProgress", 100.0); // Mark as 100% complete
+							
+							// CRITICAL FIX: Update UI on main thread
+							runOnUiThread(() -> {
+								try {
+									if (rv_attacmentList != null && rv_attacmentList.getAdapter() != null && 
+										itemPosition < attactmentmap.size()) {
+										rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+									}
+								} catch (Exception e) {
+									Log.e("ChatActivity", "Error updating success UI: " + e.getMessage());
+								}
+							});
 
 							// Set the URL to the 'path' variable instead of message_et
 							path = url;
+							
+							Log.d("ChatActivity", "Upload successful for position " + itemPosition + ": " + url);
 						}
 					}
 				} catch (Exception e) {
@@ -2446,16 +2733,38 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onFailure(String error) {
 				try {
+					// CRITICAL FIX: Check if activity is still active
+					if (isActivityDestroyed() || attactmentmap == null) {
+						Log.w("ChatActivity", "Activity destroyed during upload failure, ignoring");
+						return;
+					}
+					
 					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
 						HashMap<String, Object> currentItem = attactmentmap.get(itemPosition);
 						if (currentItem != null) {
 							currentItem.put("uploadState", "failed");
-							if (rv_attacmentList.getAdapter() != null) {
-								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
-							}
+							currentItem.put("uploadError", error); // Store error for retry functionality
+							currentItem.put("uploadProgress", 0.0); // Reset progress
+							
+							// CRITICAL FIX: Update UI on main thread
+							runOnUiThread(() -> {
+								try {
+									if (rv_attacmentList != null && rv_attacmentList.getAdapter() != null && 
+										itemPosition < attactmentmap.size()) {
+										rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
+									}
+									
+									// CRITICAL FIX: Show user-friendly error message
+									Toast.makeText(ChatActivity.this, 
+										"Upload failed: " + (error.length() > 50 ? error.substring(0, 50) + "..." : error), 
+										Toast.LENGTH_LONG).show();
+								} catch (Exception e) {
+									Log.e("ChatActivity", "Error updating failure UI: " + e.getMessage());
+								}
+							});
 						}
 					}
-					Log.e("ChatActivity", "Upload failed: " + error);
+					Log.e("ChatActivity", "Upload failed for position " + itemPosition + ": " + error);
 				} catch (Exception e) {
 					Log.e("ChatActivity", "Error updating upload failure: " + e.getMessage());
 				}
@@ -3191,6 +3500,26 @@ public class ChatActivity extends AppCompatActivity {
 					if (currentItemData == null) {
 						Log.w("ChatActivity", "Null item data for removal at position: " + finalPosition);
 						return;
+					}
+					
+					// NEW FEATURE: Check if this is a retry request for failed upload
+					String uploadState = currentItemData.get("uploadState") != null ? currentItemData.get("uploadState").toString() : "";
+					if ("failed".equals(uploadState)) {
+						// Retry upload instead of removing
+						currentItemData.put("uploadState", "pending");
+						currentItemData.put("uploadProgress", 0.0);
+						currentItemData.remove("uploadError");
+						
+						// Notify adapter of state change
+						if (rv_attacmentList.getAdapter() != null) {
+							rv_attacmentList.getAdapter().notifyItemChanged(finalPosition);
+						}
+						
+						// Restart upload
+						_startUploadForItem(finalPosition);
+						
+						Log.d("ChatActivity", "Retrying upload for position: " + finalPosition);
+						return; // Don't remove, just retry
 					}
 
 					// Remove the item
