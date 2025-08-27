@@ -174,4 +174,12 @@
     <color name="md_theme_surfaceContainer_mediumContrast">#FFF1ECF1</color>
     <color name="md_theme_surfaceContainerHigh_mediumContrast">#FFECE6EB</color>
     <color name="md_theme_surfaceContainerHighest_mediumContrast">#FFE6E1E5</color>
+    
+    <!-- Legacy Colors for Existing Layouts -->
+    <color name="semi_trans">#80000000</color>
+    <color name="colorPrimary">#FF6750A4</color>
+    <color name="colorSurface">#FFFBF8FD</color>
+    <color name="bars_colors">#FF6750A4</color>
+    <color name="colorControlHighlight">#1F6750A4</color>
+    <color name="pureWhite">#FFFFFFFF</color>
 </resources>
