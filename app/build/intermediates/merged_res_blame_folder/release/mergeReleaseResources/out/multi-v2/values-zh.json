@@ -4,7 +4,7 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-zh/values-zh.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/6648b2dace8fdea76b345ddcb64741f3/transformed/jetified-ucrop-2.2.8/res/values-zh/values-zh.xml",
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/6056db681d4b09958e972f4ce5d78de1/transformed/jetified-ucrop-2.2.8/res/values-zh/values-zh.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7",
                         "startColumns": "4,4,4,4,4,4",
@@ -21,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/1e3d57178bcb8b3bad6825a5f4931531/transformed/jetified-android-image-cropper-2.8.0/res/values-zh/values-zh.xml",
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/beb31f2c0f8f055f6603fafeb43752e4/transformed/jetified-android-image-cropper-2.8.0/res/values-zh/values-zh.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10",
                         "startColumns": "4,4,4,4,4,4,4,4,4",
