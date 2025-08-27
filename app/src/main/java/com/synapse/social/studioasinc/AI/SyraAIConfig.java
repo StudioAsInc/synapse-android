@@ -7,7 +7,7 @@ package com.synapse.social.studioasinc.AI;
 public class SyraAIConfig {
     
     // Bot Identity
-    public static final String BOT_UID = "syra_ai_bot_uid";
+    public static final String BOT_UID = "DxSt08c8VfVjSQWCj3UGgMSeBVb2";
     public static final String BOT_USERNAME = "syra";
     public static final String BOT_DISPLAY_NAME = "Syra";
     public static final String BOT_VERSION = "1.0";
@@ -64,6 +64,14 @@ public class SyraAIConfig {
      */
     public static boolean isSyraBot(String userId) {
         return BOT_UID.equals(userId);
+    }
+    
+    /**
+     * Check if the current user is authorized to run the bot
+     * Only the official @syra account should run the bot service
+     */
+    public static boolean isAuthorizedToRunBot(String currentUserId) {
+        return BOT_UID.equals(currentUserId);
     }
     
     /**

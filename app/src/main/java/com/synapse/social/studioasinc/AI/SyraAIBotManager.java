@@ -3,6 +3,8 @@ package com.synapse.social.studioasinc.AI;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 /**
  * Manager class for Syra AI Bot functionality
@@ -27,15 +29,40 @@ public class SyraAIBotManager {
     }
     
     /**
-     * Start the Syra AI Bot service
+     * Start the Syra AI Bot service - only if authorized
+     * Only the official @syra account should run the bot
      */
     public void startBot() {
+        // Check if current user is authorized to run the bot
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Log.d(TAG, "No authenticated user - bot service not started");
+            return;
+        }
+        
+        String currentUserId = currentUser.getUid();
+        if (!SyraAIConfig.isAuthorizedToRunBot(currentUserId)) {
+            Log.d(TAG, "User " + currentUserId + " not authorized to run bot service");
+            return;
+        }
+        
         if (!isServiceRunning) {
             Intent serviceIntent = new Intent(context, SyraAIBotService.class);
             context.startService(serviceIntent);
             isServiceRunning = true;
-            Log.d(TAG, "Syra AI Bot service started");
+            Log.d(TAG, "Syra AI Bot service started for authorized user: " + currentUserId);
         }
+    }
+    
+    /**
+     * Check if the current user is authorized to run the bot
+     */
+    public boolean isCurrentUserAuthorized() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            return false;
+        }
+        return SyraAIConfig.isAuthorizedToRunBot(currentUser.getUid());
     }
     
     /**

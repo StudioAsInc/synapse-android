@@ -61,8 +61,10 @@ public class SyraAIBotService extends Service {
     private ExecutorService executorService;
     private Random random;
     
-    // Listeners
-    private List<ChildEventListener> activeListeners;
+    // Listeners - track listeners with their references for proper cleanup
+    private Map<DatabaseReference, ChildEventListener> activeChildListeners;
+    private Map<DatabaseReference, ValueEventListener> activeValueListeners;
+    private Map<String, DatabaseReference> chatMessageRefs; // Track individual chat message listeners
     
     // Bot personality and responses
     private List<String> casualGreetings = Arrays.asList(
@@ -97,7 +99,9 @@ public class SyraAIBotService extends Service {
         
         executorService = Executors.newCachedThreadPool();
         random = new Random();
-        activeListeners = new ArrayList<>();
+        activeChildListeners = new HashMap<>();
+        activeValueListeners = new HashMap<>();
+        chatMessageRefs = new HashMap<>();
         
         // Setup Syra account if needed
         SyraAccountSetup accountSetup = new SyraAccountSetup();
@@ -156,7 +160,7 @@ public class SyraAIBotService extends Service {
         };
         
         chatsRef.addChildEventListener(chatListener);
-        activeListeners.add(chatListener);
+        activeChildListeners.put(chatsRef, chatListener);
     }
     
     private void startPostMentionListener() {
@@ -184,7 +188,7 @@ public class SyraAIBotService extends Service {
         };
         
         postsRef.addChildEventListener(postListener);
-        activeListeners.add(postListener);
+        activeChildListeners.put(postsRef, postListener);
     }
     
     private void checkForMentionInChat(DataSnapshot chatSnapshot) {
@@ -194,7 +198,7 @@ public class SyraAIBotService extends Service {
                 
                 // Listen for new messages in this chat
                 DatabaseReference messagesRef = chatsRef.child(chatId).child("messages");
-                messagesRef.limitToLast(1).addChildEventListener(new ChildEventListener() {
+                ChildEventListener messageListener = new ChildEventListener() {
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot messageSnapshot, @Nullable String previousChildName) {
                         Map<String, Object> message = (Map<String, Object>) messageSnapshot.getValue();
@@ -220,7 +224,12 @@ public class SyraAIBotService extends Service {
                     public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {}
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {}
-                });
+                };
+                
+                messagesRef.limitToLast(1).addChildEventListener(messageListener);
+                // Track this listener for cleanup
+                chatMessageRefs.put(chatId, messagesRef);
+                activeChildListeners.put(messagesRef, messageListener);
                 
             } catch (Exception e) {
                 Log.e(TAG, "Error checking chat mention: " + e.getMessage());
@@ -381,26 +390,29 @@ public class SyraAIBotService extends Service {
     }
     
     private void startPeriodicPosting() {
-        postingTimer = new Timer();
+        postingTimer = new Timer("PostingTimer", true);
         
-        // Schedule posts 1-3 times per day with random intervals
+        // Create a single repeating task that reschedules itself cleanly
         TimerTask postingTask = new TimerTask() {
             @Override
             public void run() {
-                // Random interval between configured hours for next post
-                int minHours = SyraAIConfig.MIN_HOURS_BETWEEN_POSTS;
-                int maxHours = SyraAIConfig.MAX_HOURS_BETWEEN_POSTS;
-                long nextPostDelay = SyraAIConfig.hoursToMillis(minHours + random.nextInt(maxHours - minHours + 1));
-                
-                createAutomaticPost();
-                
-                // Schedule next post
-                postingTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        createAutomaticPost();
+                try {
+                    createAutomaticPost();
+                    
+                    // Schedule next post with random interval
+                    int minHours = SyraAIConfig.MIN_HOURS_BETWEEN_POSTS;
+                    int maxHours = SyraAIConfig.MAX_HOURS_BETWEEN_POSTS;
+                    long nextPostDelay = SyraAIConfig.hoursToMillis(minHours + random.nextInt(maxHours - minHours + 1));
+                    
+                    // Cancel this task and schedule a new one (prevents accumulation)
+                    this.cancel();
+                    if (postingTimer != null) {
+                        startPeriodicPostingNext(nextPostDelay);
                     }
-                }, nextPostDelay);
+                    
+                } catch (Exception e) {
+                    Log.e(TAG, "Error in posting task: " + e.getMessage());
+                }
             }
         };
         
@@ -409,6 +421,36 @@ public class SyraAIBotService extends Service {
         int maxHours = SyraAIConfig.INITIAL_POST_DELAY_MAX_HOURS;
         long initialDelay = SyraAIConfig.hoursToMillis(minHours + random.nextInt(maxHours - minHours + 1));
         postingTimer.schedule(postingTask, initialDelay);
+    }
+    
+    /**
+     * Schedule the next posting task without creating nested timers
+     */
+    private void startPeriodicPostingNext(long delay) {
+        if (postingTimer != null) {
+            TimerTask nextPostingTask = new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        createAutomaticPost();
+                        
+                        // Schedule next post
+                        int minHours = SyraAIConfig.MIN_HOURS_BETWEEN_POSTS;
+                        int maxHours = SyraAIConfig.MAX_HOURS_BETWEEN_POSTS;
+                        long nextPostDelay = SyraAIConfig.hoursToMillis(minHours + random.nextInt(maxHours - minHours + 1));
+                        
+                        this.cancel();
+                        if (postingTimer != null) {
+                            startPeriodicPostingNext(nextPostDelay);
+                        }
+                        
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error in next posting task: " + e.getMessage());
+                    }
+                }
+            };
+            postingTimer.schedule(nextPostingTask, delay);
+        }
     }
     
     private void createAutomaticPost() {
@@ -457,24 +499,29 @@ public class SyraAIBotService extends Service {
     }
     
     private void startRandomCommenting() {
-        commentingTimer = new Timer();
+        commentingTimer = new Timer("CommentingTimer", true);
         
-        // Check for commenting opportunities at configured intervals
+        // Create a single repeating task that reschedules itself cleanly
         TimerTask commentingTask = new TimerTask() {
             @Override
             public void run() {
-                considerRandomCommenting();
-                
-                // Schedule next check
-                int minHours = SyraAIConfig.MIN_HOURS_BETWEEN_COMMENT_CHECKS;
-                int maxHours = SyraAIConfig.MAX_HOURS_BETWEEN_COMMENT_CHECKS;
-                long nextCheck = SyraAIConfig.hoursToMillis(minHours + random.nextInt(maxHours - minHours + 1));
-                commentingTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        considerRandomCommenting();
+                try {
+                    considerRandomCommenting();
+                    
+                    // Schedule next check with random interval
+                    int minHours = SyraAIConfig.MIN_HOURS_BETWEEN_COMMENT_CHECKS;
+                    int maxHours = SyraAIConfig.MAX_HOURS_BETWEEN_COMMENT_CHECKS;
+                    long nextCheck = SyraAIConfig.hoursToMillis(minHours + random.nextInt(maxHours - minHours + 1));
+                    
+                    // Cancel this task and schedule a new one (prevents accumulation)
+                    this.cancel();
+                    if (commentingTimer != null) {
+                        startRandomCommentingNext(nextCheck);
                     }
-                }, nextCheck);
+                    
+                } catch (Exception e) {
+                    Log.e(TAG, "Error in commenting task: " + e.getMessage());
+                }
             }
         };
         
@@ -483,6 +530,36 @@ public class SyraAIBotService extends Service {
         int maxMinutes = SyraAIConfig.INITIAL_COMMENT_DELAY_MAX_MINUTES;
         long initialDelay = SyraAIConfig.minutesToMillis(minMinutes + random.nextInt(maxMinutes - minMinutes + 1));
         commentingTimer.schedule(commentingTask, initialDelay);
+    }
+    
+    /**
+     * Schedule the next commenting task without creating nested timers
+     */
+    private void startRandomCommentingNext(long delay) {
+        if (commentingTimer != null) {
+            TimerTask nextCommentingTask = new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        considerRandomCommenting();
+                        
+                        // Schedule next check
+                        int minHours = SyraAIConfig.MIN_HOURS_BETWEEN_COMMENT_CHECKS;
+                        int maxHours = SyraAIConfig.MAX_HOURS_BETWEEN_COMMENT_CHECKS;
+                        long nextCheck = SyraAIConfig.hoursToMillis(minHours + random.nextInt(maxHours - minHours + 1));
+                        
+                        this.cancel();
+                        if (commentingTimer != null) {
+                            startRandomCommentingNext(nextCheck);
+                        }
+                        
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error in next commenting task: " + e.getMessage());
+                    }
+                }
+            };
+            commentingTimer.schedule(nextCommentingTask, delay);
+        }
     }
     
     private void considerRandomCommenting() {
@@ -565,12 +642,16 @@ public class SyraAIBotService extends Service {
         // Set offline status
         SyraAccountSetup.updateOnlineStatus(false);
         
-        // Cancel timers
+        // Cancel timers and purge tasks
         if (postingTimer != null) {
             postingTimer.cancel();
+            postingTimer.purge(); // Remove cancelled tasks from timer queue
+            postingTimer = null;
         }
         if (commentingTimer != null) {
             commentingTimer.cancel();
+            commentingTimer.purge(); // Remove cancelled tasks from timer queue
+            commentingTimer = null;
         }
         
         // Shutdown executor
@@ -578,7 +659,40 @@ public class SyraAIBotService extends Service {
             executorService.shutdown();
         }
         
-        // Remove listeners
-        activeListeners.clear();
+        // Properly remove all Firebase listeners
+        removeAllListeners();
+    }
+    
+    /**
+     * Properly remove all Firebase listeners to prevent memory leaks
+     */
+    private void removeAllListeners() {
+        try {
+            // Remove all child listeners
+            for (Map.Entry<DatabaseReference, ChildEventListener> entry : activeChildListeners.entrySet()) {
+                DatabaseReference ref = entry.getKey();
+                ChildEventListener listener = entry.getValue();
+                ref.removeEventListener(listener);
+                Log.d(TAG, "Removed child listener from: " + ref.toString());
+            }
+            activeChildListeners.clear();
+            
+            // Remove all value listeners
+            for (Map.Entry<DatabaseReference, ValueEventListener> entry : activeValueListeners.entrySet()) {
+                DatabaseReference ref = entry.getKey();
+                ValueEventListener listener = entry.getValue();
+                ref.removeEventListener(listener);
+                Log.d(TAG, "Removed value listener from: " + ref.toString());
+            }
+            activeValueListeners.clear();
+            
+            // Clear chat message references
+            chatMessageRefs.clear();
+            
+            Log.d(TAG, "All Firebase listeners removed successfully");
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing Firebase listeners: " + e.getMessage());
+        }
     }
 }
