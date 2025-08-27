@@ -15,7 +15,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.synapse.social.studioasinc.AI.Gemini;
+import com.synapse.social.studioasinc.AI.VercelAIService;
 import com.synapse.social.studioasinc.AI.SyraAIConfig;
 import com.synapse.social.studioasinc.AI.SyraAccountSetup;
 
@@ -52,8 +52,8 @@ public class SyraAIBotService extends Service {
     private DatabaseReference commentsRef;
     private DatabaseReference usersRef;
     
-    // AI instance
-    private Gemini geminiAI;
+    // AI service
+    private VercelAIService vercelAI;
     
     // Timers and executors
     private Timer postingTimer;
@@ -110,13 +110,8 @@ public class SyraAIBotService extends Service {
         // Update online status
         SyraAccountSetup.updateOnlineStatus(true);
         
-        // Initialize Gemini AI
-        geminiAI = new Gemini.Builder(this)
-            .model(SyraAIConfig.AI_MODEL)
-            .systemInstruction(SyraAIConfig.SYSTEM_INSTRUCTION)
-            .temperature(SyraAIConfig.AI_TEMPERATURE)
-            .maxTokens(SyraAIConfig.AI_MAX_TOKENS)
-            .build();
+        // Initialize Vercel AI Service
+        vercelAI = new VercelAIService();
         
         startBotServices();
     }
@@ -250,25 +245,21 @@ public class SyraAIBotService extends Service {
                     "Respond naturally as if you're joining the conversation. Keep it conversational and engaging.",
                     userName, messageText);
                 
-                geminiAI.sendPrompt(prompt, new Gemini.GeminiCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        sendChatMessage(chatId, response);
-                    }
-                    
-                    @Override
-                    public void onError(String error) {
-                        Log.e(TAG, "AI response error: " + error);
-                        // Send a fallback response
-                        String fallback = casualGreetings.get(random.nextInt(casualGreetings.size()));
-                        sendChatMessage(chatId, fallback);
-                    }
-                    
-                    @Override
-                    public void onThinking() {
-                        // Optional: Show typing indicator
-                    }
-                });
+                vercelAI.generateMentionResponse(messageText, senderId, userName, "chat", 
+                    new VercelAIService.VercelCallback() {
+                        @Override
+                        public void onSuccess(String response) {
+                            sendChatMessage(chatId, response);
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Vercel AI response error: " + error);
+                            // Send a fallback response
+                            String fallback = casualGreetings.get(random.nextInt(casualGreetings.size()));
+                            sendChatMessage(chatId, fallback);
+                        }
+                    });
             }
             
             @Override
@@ -333,26 +324,20 @@ public class SyraAIBotService extends Service {
                 String userName = userInfo != null ? (String) userInfo.get("username") : "User";
                 
                 // Generate AI response for post comment
-                String prompt = String.format("You were mentioned by %s in their post: '%s'. " +
-                    "Respond with a thoughtful comment that adds value to the discussion.",
-                    userName, postText);
-                
-                geminiAI.sendPrompt(prompt, new Gemini.GeminiCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        commentOnPost(postId, response);
-                    }
-                    
-                    @Override
-                    public void onError(String error) {
-                        Log.e(TAG, "AI response error: " + error);
-                        // Send a fallback comment
-                        commentOnPost(postId, "Great post! Thanks for mentioning me 😊");
-                    }
-                    
-                    @Override
-                    public void onThinking() {}
-                });
+                vercelAI.generateComment(postText, userName, "mention", 
+                    new VercelAIService.VercelCallback() {
+                        @Override
+                        public void onSuccess(String response) {
+                            commentOnPost(postId, response);
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Vercel AI comment error: " + error);
+                            // Send a fallback comment
+                            commentOnPost(postId, "Great post! Thanks for mentioning me 😊");
+                        }
+                    });
             }
             
             @Override
@@ -455,13 +440,16 @@ public class SyraAIBotService extends Service {
     
     private void createAutomaticPost() {
         executorService.execute(() -> {
-            String topic = postTopics.get(random.nextInt(postTopics.size()));
+            // Determine post type based on time of day
+            String postType = "general";
+            int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+            if (hour >= 6 && hour < 12) {
+                postType = "morning";
+            } else if (hour >= 18 && hour < 22) {
+                postType = "evening";
+            }
             
-            String prompt = String.format("Based on this topic: '%s', create an engaging social media post. " +
-                "Make it thoughtful, relatable, and encouraging engagement from others. " +
-                "Keep it under 280 characters and include relevant emojis.", topic);
-            
-            geminiAI.sendPrompt(prompt, new Gemini.GeminiCallback() {
+            vercelAI.generateAutoPost(postType, new VercelAIService.VercelCallback() {
                 @Override
                 public void onSuccess(String response) {
                     publishPost(response);
@@ -469,13 +457,11 @@ public class SyraAIBotService extends Service {
                 
                 @Override
                 public void onError(String error) {
-                    Log.e(TAG, "Failed to generate post: " + error);
-                    // Use fallback topic
-                    publishPost(topic);
+                    Log.e(TAG, "Failed to generate auto post: " + error);
+                    // Use fallback post
+                    String fallback = postTopics.get(random.nextInt(postTopics.size()));
+                    publishPost(fallback);
                 }
-                
-                @Override
-                public void onThinking() {}
             });
         });
     }
@@ -601,24 +587,18 @@ public class SyraAIBotService extends Service {
             String postText = (String) post.get("text");
             String postId = postSnapshot.getKey();
             
-            String prompt = String.format("Write a thoughtful, engaging comment for this social media post: '%s'. " +
-                "Be supportive, add value, and encourage further discussion. Keep it friendly and natural.",
-                postText);
-            
-            geminiAI.sendPrompt(prompt, new Gemini.GeminiCallback() {
-                @Override
-                public void onSuccess(String response) {
-                    commentOnPost(postId, response);
-                }
-                
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "Failed to generate random comment: " + error);
-                }
-                
-                @Override
-                public void onThinking() {}
-            });
+            vercelAI.generateComment(postText, null, "random", 
+                new VercelAIService.VercelCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        commentOnPost(postId, response);
+                    }
+                    
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "Failed to generate random comment: " + error);
+                    }
+                });
         }
     }
     
@@ -657,6 +637,11 @@ public class SyraAIBotService extends Service {
         // Shutdown executor
         if (executorService != null) {
             executorService.shutdown();
+        }
+        
+        // Shutdown Vercel AI service
+        if (vercelAI != null) {
+            vercelAI.shutdown();
         }
         
         // Properly remove all Firebase listeners

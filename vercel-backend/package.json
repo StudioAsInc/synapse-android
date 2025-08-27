@@ -1,0 +1,22 @@
+{
+  "name": "synapse-ai-backend",
+  "version": "1.0.0",
+  "description": "Vercel backend for Synapse AI Bot",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "vercel build",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.17.1",
+    "firebase-admin": "^12.4.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
