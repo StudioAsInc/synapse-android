@@ -661,12 +661,21 @@ class c {
 	
 	
 	public void _getUserReference() {
-		DatabaseReference getUserReference = FirebaseDatabase.getInstance().getReference("skyline/users").child(getIntent().getStringExtra("uid"));
+		DatabaseRef	public void _getUserReference() {
+		String uid = getIntent().getStringExtra("uid");
+		if (uid == null || uid.isEmpty()) {
+			// Handle null or empty UID by showing error or finishing activity
+			ProfilePageSwipeLayout.setVisibility(View.GONE);
+			ProfilePageNoInternetBody.setVisibility(View.VISIBLE);
+			ProfilePageLoadingBody.setVisibility(View.GONE);
+			return;
+		}
+		
+		DatabaseReference getUserReference = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
 		getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {
-					ProfilePageSwipeLayout.setVisibility(View.VISIBLE);
+				if(dataSnapshot.exists()) {IBLE);
 					ProfilePageNoInternetBody.setVisibility(View.GONE);
 					ProfilePageLoadingBody.setVisibility(View.GONE);
 					user_uid_layout_text.setText(dataSnapshot.child("uid").getValue(String.class));
