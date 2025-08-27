@@ -31,6 +31,8 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.gridlayout.*;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.FirebaseApp;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
@@ -45,11 +47,14 @@ public class LabsActivity extends AppCompatActivity {
 	
 	private ScrollView vscroll2;
 	private LinearLayout linear2;
-	private LinearLayout linear4;
+	private MaterialToolbar toolbar;
+	private MaterialCardView cardGroupChat;
+	private MaterialCardView cardOldInbox;
+	private MaterialCardView cardSettings;
+	private MaterialCardView cardPlaceholder;
 	private TextView textview4;
 	private TextView textview5;
 	private TextView textview6;
-	private TextView textview2;
 	
 	private Intent intent = new Intent();
 	
@@ -63,15 +68,35 @@ public class LabsActivity extends AppCompatActivity {
 	}
 	
 	private void initialize(Bundle _savedInstanceState) {
+		// Setup toolbar
+		toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		if (getSupportActionBar() != null) {
+			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		}
+		
+		// Initialize views
 		vscroll2 = findViewById(R.id.vscroll2);
 		linear2 = findViewById(R.id.linear2);
-		linear4 = findViewById(R.id.linear4);
+		cardGroupChat = findViewById(R.id.cardGroupChat);
+		cardOldInbox = findViewById(R.id.cardOldInbox);
+		cardSettings = findViewById(R.id.cardSettings);
+		cardPlaceholder = findViewById(R.id.cardPlaceholder);
 		textview4 = findViewById(R.id.textview4);
 		textview5 = findViewById(R.id.textview5);
 		textview6 = findViewById(R.id.textview6);
-		textview2 = findViewById(R.id.textview2);
 		
-		textview4.setOnClickListener(new View.OnClickListener() {
+		// Setup click listeners
+		cardGroupChat.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				// Navigate to new Group Chat InboxActivity
+				intent.setClass(getApplicationContext(), com.synapse.social.studioasinc.groupchat.presentation.ui.InboxActivity.class);
+				startActivity(intent);
+			}
+		});
+		
+		cardOldInbox.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), MessagesActivity.class);
@@ -79,7 +104,7 @@ public class LabsActivity extends AppCompatActivity {
 			}
 		});
 		
-		textview5.setOnClickListener(new View.OnClickListener() {
+		cardSettings.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), SettingsActivity.class);
@@ -87,10 +112,19 @@ public class LabsActivity extends AppCompatActivity {
 			}
 		});
 		
-		textview6.setOnClickListener(new View.OnClickListener() {
+		cardPlaceholder.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				startActivity(intent);
+				// Show toast for coming soon feature
+				Toast.makeText(LabsActivity.this, "This feature is coming soon! 🚀", Toast.LENGTH_SHORT).show();
+			}
+		});
+		
+		// Handle toolbar navigation
+		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				onBackPressed();
 			}
 		});
 	}
