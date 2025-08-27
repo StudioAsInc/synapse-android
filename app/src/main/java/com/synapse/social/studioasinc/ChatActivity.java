@@ -725,8 +725,11 @@ public class ChatActivity extends AppCompatActivity {
 	public void onDestroy() {
 		super.onDestroy();
 		
+		// CRITICAL FIX: Comprehensive resource cleanup to prevent memory leaks
+		Log.d("ChatActivity", "Starting comprehensive cleanup in onDestroy");
+		
 		// Clean up typing indicator
-		if (auth.getCurrentUser() != null) {
+		if (auth != null && auth.getCurrentUser() != null) {
 			try {
 				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
 			} catch (Exception e) {
@@ -742,20 +745,47 @@ public class ChatActivity extends AppCompatActivity {
 		if (_blocklist_child_listener != null) {
 			try {
 				blocklist.removeEventListener(_blocklist_child_listener);
+				_blocklist_child_listener = null;
 			} catch (Exception e) {
 				Log.e("ChatActivity", "Error removing blocklist listener: " + e.getMessage());
 			}
 		}
 		
-		// Clean up timers
+		// CRITICAL FIX: Clean up ALL timers properly
 		if (_timer != null) {
-			_timer.cancel();
-			_timer = null;
+			try {
+				_timer.cancel();
+				_timer.purge();
+				_timer = null;
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error cleaning up main timer: " + e.getMessage());
+			}
 		}
 		
-		// Clean up media recorder
+		if (loadTimer != null) {
+			try {
+				loadTimer.cancel();
+				loadTimer = null;
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error cleaning up load timer: " + e.getMessage());
+			}
+		}
+		
+		if (timer != null) {
+			try {
+				timer.cancel();
+				timer = null;
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error cleaning up timer: " + e.getMessage());
+			}
+		}
+		
+		// CRITICAL FIX: Clean up media recorder properly
 		if (AudioMessageRecorder != null) {
 			try {
+				if (recordMs > 0) { // If recording is in progress
+					AudioMessageRecorder.stop();
+				}
 				AudioMessageRecorder.release();
 				AudioMessageRecorder = null;
 			} catch (Exception e) {
@@ -763,36 +793,94 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}
 		
-		// Clear lists to prevent memory leaks
+		// CRITICAL FIX: Clear lists and nullify references to prevent memory leaks
 		if (ChatMessagesList != null) {
 			ChatMessagesList.clear();
+			ChatMessagesList = null;
 		}
 		if (attactmentmap != null) {
 			attactmentmap.clear();
+			attactmentmap = null;
 		}
 		
-		// Clean up progress dialog
-		if (SynapseLoadingDialog != null && SynapseLoadingDialog.isShowing()) {
+		// CRITICAL FIX: Clean up progress dialog properly
+		if (SynapseLoadingDialog != null) {
 			try {
-				SynapseLoadingDialog.dismiss();
+				if (SynapseLoadingDialog.isShowing()) {
+					SynapseLoadingDialog.dismiss();
+				}
 			} catch (Exception e) {
 				Log.e("ChatActivity", "Error dismissing progress dialog: " + e.getMessage());
+			} finally {
+				SynapseLoadingDialog = null;
 			}
-			SynapseLoadingDialog = null;
 		}
 		
-		// Clean up adapters
+		// CRITICAL FIX: Clean up adapters and remove references
 		if (chatAdapter != null) {
+			// Notify adapter that activity is being destroyed
+			if (chatAdapter instanceof ChatAdapter) {
+				((ChatAdapter) chatAdapter).onActivityDestroyed();
+			}
 			chatAdapter = null;
 		}
 		
-		// Clean up RecyclerViews
+		// CRITICAL FIX: Clean up RecyclerViews properly
 		if (ChatMessagesListRecycler != null) {
-			ChatMessagesListRecycler.setAdapter(null);
+			try {
+				ChatMessagesListRecycler.setAdapter(null);
+				ChatMessagesListRecycler.clearOnScrollListeners();
+				ChatMessagesListRecycler = null;
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error cleaning up main RecyclerView: " + e.getMessage());
+			}
 		}
 		if (rv_attacmentList != null) {
-			rv_attacmentList.setAdapter(null);
+			try {
+				rv_attacmentList.setAdapter(null);
+				rv_attacmentList = null;
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error cleaning up attachment RecyclerView: " + e.getMessage());
+			}
 		}
+		
+		// CRITICAL FIX: Clean up Gemini instance
+		if (gemini != null) {
+			try {
+				// If Gemini has cleanup methods, call them here
+				gemini = null;
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error cleaning up Gemini: " + e.getMessage());
+			}
+		}
+		
+		// CRITICAL FIX: Clean up database references
+		chatMessagesRef = null;
+		userRef = null;
+		
+		// CRITICAL FIX: Clean up HashMaps
+		if (ChatSendMap != null) {
+			ChatSendMap.clear();
+			ChatSendMap = null;
+		}
+		if (ChatInboxSend != null) {
+			ChatInboxSend.clear();
+			ChatInboxSend = null;
+		}
+		if (ChatInboxSend2 != null) {
+			ChatInboxSend2.clear();
+			ChatInboxSend2 = null;
+		}
+		if (typingSnd != null) {
+			typingSnd.clear();
+			typingSnd = null;
+		}
+		if (block != null) {
+			block.clear();
+			block = null;
+		}
+		
+		Log.d("ChatActivity", "Comprehensive cleanup completed in onDestroy");
 	}
 
 	@Override
@@ -1163,12 +1251,19 @@ public class ChatActivity extends AppCompatActivity {
 		_chat_child_listener = new ChildEventListener() {
 				@Override
 				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
+					// CRITICAL FIX: Check activity state before processing Firebase events
+					if (isFinishing() || isDestroyed() || ChatMessagesList == null || chatAdapter == null) {
+						Log.w("ChatActivity", "Skipping onChildAdded - activity is finishing or destroyed");
+						return;
+					}
+					
 					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
 					Log.d("ChatActivity", "Snapshot key: " + dataSnapshot.getKey() + ", Previous child: " + previousChildName);
 					
-					if (dataSnapshot.exists()) {
-						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
+					try {
+						if (dataSnapshot.exists()) {
+							HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+							Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
 						
 						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
 							String messageKey = newMessage.get(KEY_KEY).toString();
@@ -1241,13 +1336,23 @@ public class ChatActivity extends AppCompatActivity {
 					} else {
 						Log.w("ChatActivity", "DataSnapshot does not exist");
 					}
+					} catch (Exception e) {
+						Log.e("ChatActivity", "Error processing onChildAdded: " + e.getMessage());
+					}
 					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded END ===");
 				}
 
 				@Override
 				public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-					if (snapshot.exists()) {
-						HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					// CRITICAL FIX: Check activity state before processing Firebase events
+					if (isFinishing() || isDestroyed() || ChatMessagesList == null || chatAdapter == null) {
+						Log.w("ChatActivity", "Skipping onChildChanged - activity is finishing or destroyed");
+						return;
+					}
+					
+					try {
+						if (snapshot.exists()) {
+							HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 						if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
 							String key = updatedMessage.get(KEY_KEY).toString();
 							
@@ -1267,12 +1372,21 @@ public class ChatActivity extends AppCompatActivity {
 								}
 							}
 						}
+					} catch (Exception e) {
+						Log.e("ChatActivity", "Error processing onChildChanged: " + e.getMessage());
 					}
 				}
 
 				@Override
 				public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-					if (snapshot.exists()) {
+					// CRITICAL FIX: Check activity state before processing Firebase events
+					if (isFinishing() || isDestroyed() || ChatMessagesList == null || chatAdapter == null) {
+						Log.w("ChatActivity", "Skipping onChildRemoved - activity is finishing or destroyed");
+						return;
+					}
+					
+					try {
+						if (snapshot.exists()) {
 						String removedKey = snapshot.getKey();
 						if (removedKey != null) {
 							// Find and remove the message by key (not by position)
@@ -1301,6 +1415,8 @@ public class ChatActivity extends AppCompatActivity {
 								}
 							}
 						}
+					} catch (Exception e) {
+						Log.e("ChatActivity", "Error processing onChildRemoved: " + e.getMessage());
 					}
 				}
 
@@ -1451,9 +1567,15 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _detachChatListener() {
-		if (_chat_child_listener != null) {
-			chatMessagesRef.removeEventListener(_chat_child_listener);
-			_chat_child_listener = null;
+		if (_chat_child_listener != null && chatMessagesRef != null) {
+			try {
+				chatMessagesRef.removeEventListener(_chat_child_listener);
+				Log.d("ChatActivity", "Chat listener detached successfully");
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error detaching chat listener: " + e.getMessage());
+			} finally {
+				_chat_child_listener = null;
+			}
 		}
 	}
 
@@ -1492,9 +1614,15 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _detachUserStatusListener() {
-		if (_userStatusListener != null) {
-			userRef.removeEventListener(_userStatusListener);
-			_userStatusListener = null;
+		if (_userStatusListener != null && userRef != null) {
+			try {
+				userRef.removeEventListener(_userStatusListener);
+				Log.d("ChatActivity", "User status listener detached successfully");
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Error detaching user status listener: " + e.getMessage());
+			} finally {
+				_userStatusListener = null;
+			}
 		}
 	}
 
@@ -2712,8 +2840,14 @@ public class ChatActivity extends AppCompatActivity {
 				SecondUserAvatar = "null";
 			} else {
 				try {
-					Glide.with(getApplicationContext()).load(Uri.parse(avatarUrl)).into(topProfileLayoutProfileImage);
-					SecondUserAvatar = avatarUrl;
+					// CRITICAL FIX: Use activity context instead of application context for Glide
+					if (!isFinishing() && !isDestroyed()) {
+						Glide.with(this).load(Uri.parse(avatarUrl)).into(topProfileLayoutProfileImage);
+						SecondUserAvatar = avatarUrl;
+					} else {
+						topProfileLayoutProfileImage.setImageResource(R.drawable.avatar);
+						SecondUserAvatar = "null";
+					}
 				} catch (Exception e) {
 					Log.e("ChatActivity", "Error loading avatar: " + e.getMessage());
 					topProfileLayoutProfileImage.setImageResource(R.drawable.avatar);

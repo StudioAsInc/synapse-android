@@ -122,13 +122,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        switch (holder.getItemViewType()) {
-            case VIEW_TYPE_TEXT: bindTextViewHolder((TextViewHolder) holder, position); break;
-            case VIEW_TYPE_MEDIA_GRID: bindMediaViewHolder((MediaViewHolder) holder, position); break;
-            case VIEW_TYPE_VIDEO: bindVideoViewHolder((VideoViewHolder) holder, position); break;
-            case VIEW_TYPE_TYPING: bindTypingViewHolder((TypingViewHolder) holder, position); break;
-            case VIEW_TYPE_LINK_PREVIEW: bindLinkPreviewViewHolder((LinkPreviewViewHolder) holder, position); break;
-            case VIEW_TYPE_LOADING_MORE: bindLoadingViewHolder((LoadingViewHolder) holder, position); break;
+        // CRITICAL FIX: Validate position bounds to prevent IndexOutOfBoundsException
+        if (position < 0 || position >= _data.size()) {
+            Log.e(TAG, "Invalid position in onBindViewHolder: " + position + ", data size: " + _data.size());
+            return;
+        }
+        
+        try {
+            switch (holder.getItemViewType()) {
+                case VIEW_TYPE_TEXT: bindTextViewHolder((TextViewHolder) holder, position); break;
+                case VIEW_TYPE_MEDIA_GRID: bindMediaViewHolder((MediaViewHolder) holder, position); break;
+                case VIEW_TYPE_VIDEO: bindVideoViewHolder((VideoViewHolder) holder, position); break;
+                case VIEW_TYPE_TYPING: bindTypingViewHolder((TypingViewHolder) holder, position); break;
+                case VIEW_TYPE_LINK_PREVIEW: bindLinkPreviewViewHolder((LinkPreviewViewHolder) holder, position); break;
+                case VIEW_TYPE_LOADING_MORE: bindLoadingViewHolder((LoadingViewHolder) holder, position); break;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error binding view holder at position " + position + ": " + e.getMessage());
         }
     }
 
@@ -136,7 +146,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public int getItemCount() { return _data.size(); }
 
     private void bindCommonMessageProperties(BaseMessageViewHolder holder, int position) {
+        // CRITICAL FIX: Additional validation in bindCommonMessageProperties
+        if (position < 0 || position >= _data.size()) {
+            Log.e(TAG, "Invalid position in bindCommonMessageProperties: " + position + ", data size: " + _data.size());
+            return;
+        }
+        
         HashMap<String, Object> data = _data.get(position);
+        if (data == null) {
+            Log.e(TAG, "Null data at position: " + position);
+            return;
+        }
         String myUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
         String msgUid = data != null && data.get("uid") != null ? String.valueOf(data.get("uid")) : "";
         boolean isMyMessage = msgUid.equals(myUid);
@@ -225,7 +245,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 holder.mProfileCard.setVisibility(isFirstOfGroup ? View.VISIBLE : View.GONE);
                 if (isFirstOfGroup) {
                     if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
-                         Glide.with(_context).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
+                        // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
+                        if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                            try {
+                                Glide.with(chatActivity).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error loading profile image: " + e.getMessage());
+                                holder.mProfileImage.setImageResource(R.drawable.avatar);
+                            }
+                        } else {
+                            holder.mProfileImage.setImageResource(R.drawable.avatar);
+                        }
                     } else if ("null_banned".equals(secondUserAvatarUrl)) {
                          holder.mProfileImage.setImageResource(R.drawable.banned_avatar);
                     } else {
@@ -252,12 +282,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     
                     Log.d(TAG, "Looking for replied message in chat: " + myUid + "/" + theirUid + " with ID: " + repliedId);
                     
-                    // Use the same Firebase path structure as the main chat
-                    FirebaseDatabase.getInstance().getReference("skyline/chats")
+                    // CRITICAL FIX: Use the same Firebase path structure as the main chat
+                    // Store reference to avoid memory leaks
+                    DatabaseReference replyRef = FirebaseDatabase.getInstance().getReference("skyline/chats")
                         .child(myUid)
                         .child(theirUid)
-                        .child(repliedId)
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                        .child(repliedId);
+                    
+                    ValueEventListener replyListener = new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot snapshot) {
                                 Log.d(TAG, "Firebase reply lookup result - Snapshot exists: " + (snapshot != null && snapshot.exists()) + ", Holder null: " + (holder.mRepliedMessageLayout == null));
@@ -294,20 +326,29 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                                 String publicId = firstAttachment.getOrDefault("publicId", "").toString();
                                                 
                                                 if (!publicId.isEmpty()) {
-                                                    // CRITICAL FIX: Load image from Cloudinary - use transform only to avoid double rounding
-                                                    // Also check context validity
-                                                    if (_context != null) {
+                                                    // CRITICAL FIX: Load image from Cloudinary with proper context and lifecycle checks
+                                                    if (_context != null && chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
                                                         String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
-                                                        Glide.with(_context)
-                                                            .load(imageUrl)
-                                                            .placeholder(R.drawable.ph_imgbluredsqure)
-                                                            .error(R.drawable.ph_imgbluredsqure)
-                                                            .transform(new RoundedCorners(dpToPx(20)))
-                                                            .into(holder.mRepliedMessageLayoutImage);
-                                                        
-                                                        Log.d(TAG, "Loaded reply image preview with client-side rounded corners: " + imageUrl);
+                                                        try {
+                                                            Glide.with(chatActivity) // Use activity context instead of general context
+                                                                .load(imageUrl)
+                                                                .placeholder(R.drawable.ph_imgbluredsqure)
+                                                                .error(R.drawable.ph_imgbluredsqure)
+                                                                .transform(new RoundedCorners(dpToPx(20)))
+                                                                .into(holder.mRepliedMessageLayoutImage);
+                                                            
+                                                            Log.d(TAG, "Loaded reply image preview with client-side rounded corners: " + imageUrl);
+                                                        } catch (Exception e) {
+                                                            Log.e(TAG, "Error loading reply image: " + e.getMessage());
+                                                            // Fallback to placeholder
+                                                            holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
+                                                        }
                                                     } else {
-                                                        Log.w(TAG, "Context is null, cannot load reply image");
+                                                        Log.w(TAG, "Context is null or activity is destroyed, cannot load reply image");
+                                                        // Set placeholder image
+                                                        if (holder.mRepliedMessageLayoutImage != null) {
+                                                            holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
+                                                        }
                                                     }
                                                 } else {
                                                     // Fallback to placeholder
@@ -406,7 +447,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             public void onCancelled(DatabaseError error) {
                                 Log.e(TAG, "Failed to load replied message: " + error.getMessage());
                             }
-                        });
+                        };
+                    
+                    // CRITICAL FIX: Check activity state before adding listener
+                    if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                        replyRef.addListenerForSingleValueEvent(replyListener);
+                    }
                 } else {
                     Log.d(TAG, "Reply message ID is null or empty for position: " + position);
                 }
@@ -455,13 +501,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder.mRepliedMessageLayoutUsername != null) holder.mRepliedMessageLayoutUsername.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize - 2);
         if (holder.mRepliedMessageLayoutMessage != null) holder.mRepliedMessageLayoutMessage.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
 
+        // CRITICAL FIX: Check activity state before Firebase operations
         if (!isMyMessage && data.containsKey("message_state") && "sended".equals(String.valueOf(data.get("message_state")))) {
-            String otherUserUid = chatActivity.getIntent().getStringExtra("uid");
-            
-            String messageKey = String.valueOf(data.get("key"));
-            FirebaseDatabase.getInstance().getReference("skyline/chats").child(otherUserUid).child(myUid).child(messageKey).child("message_state").setValue("seen");
-            FirebaseDatabase.getInstance().getReference("skyline/chats").child(myUid).child(otherUserUid).child(messageKey).child("message_state").setValue("seen");
-            FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
+            if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                try {
+                    String otherUserUid = chatActivity.getIntent().getStringExtra("uid");
+                    String messageKey = String.valueOf(data.get("key"));
+                    
+                    if (otherUserUid != null && messageKey != null && !messageKey.equals("null")) {
+                        FirebaseDatabase.getInstance().getReference("skyline/chats").child(otherUserUid).child(myUid).child(messageKey).child("message_state").setValue("seen");
+                        FirebaseDatabase.getInstance().getReference("skyline/chats").child(myUid).child(otherUserUid).child(messageKey).child("message_state").setValue("seen");
+                        FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error updating message state: " + e.getMessage());
+                }
+            }
         }
         
         // CRITICAL FIX: Set up long click listener on the entire message layout for better touch detection
@@ -673,7 +728,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (adjustBounds) {
             imageView.setAdjustViewBounds(true);
             imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            Glide.with(_context).load(url).into(imageView);
+            // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
+            if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                try {
+                    Glide.with(chatActivity).load(url).into(imageView);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error loading image with adjust bounds: " + e.getMessage());
+                    // Set a placeholder or handle error gracefully
+                    imageView.setImageResource(R.drawable.ph_imgbluredsqure);
+                }
+            } else {
+                imageView.setImageResource(R.drawable.ph_imgbluredsqure);
+            }
         } else {
             int height;
             Object widthObj = attachment.get("width");
@@ -694,7 +760,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
 
             imageView.setLayoutParams(new ViewGroup.LayoutParams(width, height));
-            Glide.with(_context).load(url).override(width, height).into(imageView);
+            // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
+            if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                try {
+                    Glide.with(chatActivity).load(url).override(width, height).into(imageView);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error loading image with fixed dimensions: " + e.getMessage());
+                    // Set a placeholder or handle error gracefully
+                    imageView.setImageResource(R.drawable.ph_imgbluredsqure);
+                }
+            } else {
+                imageView.setImageResource(R.drawable.ph_imgbluredsqure);
+            }
         }
 
         imageView.setOnClickListener(v -> {
@@ -714,7 +791,20 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
         if (attachments != null && !attachments.isEmpty()) {
             String videoUrl = String.valueOf(attachments.get(0).get("url"));
-            if(holder.videoThumbnail != null) Glide.with(_context).load(videoUrl).into(holder.videoThumbnail);
+            if(holder.videoThumbnail != null) {
+                // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
+                if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                    try {
+                        Glide.with(chatActivity).load(videoUrl).into(holder.videoThumbnail);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error loading video thumbnail: " + e.getMessage());
+                        // Set a placeholder or handle error gracefully
+                        holder.videoThumbnail.setImageResource(R.drawable.ph_imgbluredsqure);
+                    }
+                } else {
+                    holder.videoThumbnail.setImageResource(R.drawable.ph_imgbluredsqure);
+                }
+            }
             
             // --- CRITICAL FIX: Attach click listener to videoContainerCard ---
             if(holder.videoContainerCard != null) {
@@ -733,7 +823,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (holder.mProfileImage != null) {
             if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
-                Glide.with(_context).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
+                // CRITICAL FIX: Use activity context for Glide to prevent memory leaks
+                if (chatActivity != null && !chatActivity.isDestroyed() && !chatActivity.isFinishing()) {
+                    try {
+                        Glide.with(chatActivity).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error loading profile image in typing holder: " + e.getMessage());
+                        holder.mProfileImage.setImageResource(R.drawable.avatar);
+                    }
+                } else {
+                    holder.mProfileImage.setImageResource(R.drawable.avatar);
+                }
             } else if ("null_banned".equals(secondUserAvatarUrl)) {
                 holder.mProfileImage.setImageResource(R.drawable.banned_avatar);
             } else {
@@ -800,6 +900,32 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.e(TAG, "Error converting dp to px: " + e.getMessage());
         }
         return dp; // Fallback to dp value
+    }
+    
+    // CRITICAL FIX: Add method to clean up adapter resources when activity is destroyed
+    public void onActivityDestroyed() {
+        Log.d(TAG, "ChatAdapter: Cleaning up resources due to activity destruction");
+        try {
+            // Clear context references to prevent memory leaks
+            _context = null;
+            chatActivity = null;
+            // textStylingUtil = null;
+            
+            // Clear data list
+            if (_data != null) {
+                _data.clear();
+            }
+            
+            // Clear cached user information
+            secondUserAvatarUrl = null;
+            firstUserName = null;
+            secondUserName = null;
+            appSettings = null;
+            
+            Log.d(TAG, "ChatAdapter: Resource cleanup completed");
+        } catch (Exception e) {
+            Log.e(TAG, "Error during ChatAdapter cleanup: " + e.getMessage());
+        }
     }
     
     // CRITICAL FIX: Smart timestamp visibility logic

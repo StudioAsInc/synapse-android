@@ -111,12 +111,22 @@ public class FragInboxChatsActivity extends Fragment {
 	private ChildEventListener _main_child_listener;
 	private Intent intent = new Intent();
 
+	// CRITICAL FIX: Add ExecutorService for proper thread management
+	private ExecutorService mExecutorService;
+	private Handler mMainHandler;
+	private ValueEventListener inboxValueEventListener;
+
 	@NonNull
 	@Override
 	public View onCreateView(@NonNull LayoutInflater _inflater, @Nullable ViewGroup _container, @Nullable Bundle _savedInstanceState) {
 		View _view = _inflater.inflate(R.layout.frag_inbox_chats, _container, false);
 		initialize(_savedInstanceState, _view);
 		FirebaseApp.initializeApp(getContext());
+		
+		// CRITICAL FIX: Initialize ExecutorService and Handler properly
+		mExecutorService = Executors.newSingleThreadExecutor();
+		mMainHandler = new Handler(Looper.getMainLooper());
+		
 		initializeLogic();
 		return _view;
 	}
@@ -320,35 +330,55 @@ public class FragInboxChatsActivity extends Fragment {
 
 
 	public void _getInboxReference() {
+		// CRITICAL FIX: Store listener reference for proper cleanup
 		Query getInboxRef = FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-		getInboxRef.addValueEventListener(new ValueEventListener() {
+		inboxValueEventListener = new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				// CRITICAL FIX: Check if fragment is still attached before processing
+				if (!isAdded() || getContext() == null) {
+					return;
+				}
+				
 				if(dataSnapshot.exists()) {
-					inboxListRecyclerView.setVisibility(View.VISIBLE);
+					if (inboxListRecyclerView != null) {
+						inboxListRecyclerView.setVisibility(View.VISIBLE);
+					}
 					ChatInboxList.clear();
 					try {
 						GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 						for (DataSnapshot _data : dataSnapshot.getChildren()) {
 							HashMap<String, Object> _map = _data.getValue(_ind);
-							ChatInboxList.add(_map);
+							if (_map != null) { // CRITICAL FIX: Null check
+								ChatInboxList.add(_map);
+							}
 						}
 					} catch (Exception _e) {
+						Log.e("FragInboxChatsActivity", "Error processing inbox data: " + _e.getMessage());
 						_e.printStackTrace();
 					}
 
-					SketchwareUtil.sortListMap(ChatInboxList, "push_date", false, false);
-					inboxListRecyclerView.getAdapter().notifyDataSetChanged();
+					try {
+						SketchwareUtil.sortListMap(ChatInboxList, "push_date", false, false);
+						if (inboxListRecyclerView != null && inboxListRecyclerView.getAdapter() != null) {
+							inboxListRecyclerView.getAdapter().notifyDataSetChanged();
+						}
+					} catch (Exception e) {
+						Log.e("FragInboxChatsActivity", "Error updating adapter: " + e.getMessage());
+					}
 				} else {
-					inboxListRecyclerView.setVisibility(View.GONE);
+					if (inboxListRecyclerView != null) {
+						inboxListRecyclerView.setVisibility(View.GONE);
+					}
 				}
 			}
 
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-
+				Log.e("FragInboxChatsActivity", "Inbox listener cancelled: " + databaseError.getMessage());
 			}
-		});
+		};
+		getInboxRef.addValueEventListener(inboxValueEventListener);
 	}
 
 
@@ -364,6 +394,66 @@ public class FragInboxChatsActivity extends Fragment {
 
 	public void _ImageColor(final ImageView _image, final int _color) {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
+	}
+	
+	// CRITICAL FIX: Add proper lifecycle management
+	@Override
+	public void onDestroyView() {
+		super.onDestroyView();
+		
+		// CRITICAL FIX: Clean up Firebase listeners
+		if (inboxValueEventListener != null) {
+			try {
+				Query getInboxRef = FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+				getInboxRef.removeEventListener(inboxValueEventListener);
+				inboxValueEventListener = null;
+			} catch (Exception e) {
+				Log.e("FragInboxChatsActivity", "Error removing inbox listener: " + e.getMessage());
+			}
+		}
+		
+		if (_main_child_listener != null) {
+			try {
+				main.removeEventListener(_main_child_listener);
+				_main_child_listener = null;
+			} catch (Exception e) {
+				Log.e("FragInboxChatsActivity", "Error removing main listener: " + e.getMessage());
+			}
+		}
+		
+		// CRITICAL FIX: Clean up ExecutorService
+		if (mExecutorService != null && !mExecutorService.isShutdown()) {
+			try {
+				mExecutorService.shutdown();
+				if (!mExecutorService.awaitTermination(1, java.util.concurrent.TimeUnit.SECONDS)) {
+					mExecutorService.shutdownNow();
+				}
+			} catch (Exception e) {
+				Log.e("FragInboxChatsActivity", "Error shutting down executor: " + e.getMessage());
+				mExecutorService.shutdownNow();
+			}
+			mExecutorService = null;
+		}
+		
+		// CRITICAL FIX: Clean up Handler
+		if (mMainHandler != null) {
+			mMainHandler.removeCallbacksAndMessages(null);
+			mMainHandler = null;
+		}
+		
+		// CRITICAL FIX: Clear data structures
+		if (ChatInboxList != null) {
+			ChatInboxList.clear();
+		}
+		
+		if (UserInfoCacheMap != null) {
+			UserInfoCacheMap.clear();
+		}
+		
+		// CRITICAL FIX: Nullify view references
+		inboxListRecyclerView = null;
+		
+		Log.d("FragInboxChatsActivity", "Fragment cleanup completed");
 	}
 
 	public class InboxListRecyclerViewAdapter extends RecyclerView.Adapter<InboxListRecyclerViewAdapter.ViewHolder> {
@@ -435,37 +525,42 @@ public class FragInboxChatsActivity extends Fragment {
 					unread_messages_count_badge.setVisibility(View.GONE);
 				} else {
 					message_state.setVisibility(View.GONE);
-					{
-						ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-						Handler mMainHandler = new Handler(Looper.getMainLooper());
-						
-						mExecutorService.execute(new Runnable() {
+					// CRITICAL FIX: Use fragment's managed ExecutorService instead of creating new ones
+					if (FragInboxChatsActivity.this.mExecutorService != null && !FragInboxChatsActivity.this.mExecutorService.isShutdown()) {
+						FragInboxChatsActivity.this.mExecutorService.execute(new Runnable() {
 							@Override
 							public void run() {
 								Query getUnreadMessagesCount = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("uid").toString()).orderByChild("message_state").equalTo("sended");
 								getUnreadMessagesCount.addValueEventListener(new ValueEventListener() {
 									@Override
 									public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-										mMainHandler.post(new Runnable() {
-											@Override
-											public void run() {
-												long unReadMessageCount = dataSnapshot.getChildrenCount();
-												if(dataSnapshot.exists()) {
-													last_message.setTextColor(0xFF000000);
-													push.setTextColor(0xFF000000);
-													//	last_message.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 1);
-													//	push.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 1);
-													unread_messages_count_badge.setText(String.valueOf((long)(unReadMessageCount)));
-													unread_messages_count_badge.setVisibility(View.VISIBLE);
-												} else {
-													last_message.setTextColor(0xFF616161);
-													push.setTextColor(0xFF616161);
-													//	last_message.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 0);
-													//	push.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 0);
-													unread_messages_count_badge.setVisibility(View.GONE);
+										// CRITICAL FIX: Use fragment's managed Handler and check if fragment is still attached
+										if (FragInboxChatsActivity.this.mMainHandler != null && isAdded() && getContext() != null) {
+											FragInboxChatsActivity.this.mMainHandler.post(new Runnable() {
+												@Override
+												public void run() {
+													// CRITICAL FIX: Additional check before UI updates
+													if (!isAdded() || getContext() == null) {
+														return;
+													}
+													long unReadMessageCount = dataSnapshot.getChildrenCount();
+													if(dataSnapshot.exists()) {
+														last_message.setTextColor(0xFF000000);
+														push.setTextColor(0xFF000000);
+														//	last_message.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 1);
+														//	push.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 1);
+														unread_messages_count_badge.setText(String.valueOf((long)(unReadMessageCount)));
+														unread_messages_count_badge.setVisibility(View.VISIBLE);
+													} else {
+														last_message.setTextColor(0xFF616161);
+														push.setTextColor(0xFF616161);
+														//	last_message.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 0);
+														//	push.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 0);
+														unread_messages_count_badge.setVisibility(View.GONE);
+													}
 												}
-											}
-										});
+											});
+										}
 									}
 									
 									@Override
@@ -494,9 +589,19 @@ public class FragInboxChatsActivity extends Fragment {
 						if (avatarObj == null || avatarObj.toString().equals("null")) {
 							profileCardImage.setImageResource(R.drawable.avatar);
 						} else {
-							Glide.with(getContext().getApplicationContext())
-							.load(Uri.parse(avatarObj.toString()))
-							.into(profileCardImage);
+							// CRITICAL FIX: Use proper context for Glide and add lifecycle checks
+							if (isAdded() && getContext() != null) {
+								try {
+									Glide.with(FragInboxChatsActivity.this)
+									.load(Uri.parse(avatarObj.toString()))
+									.into(profileCardImage);
+								} catch (Exception e) {
+									Log.e("FragInboxChatsActivity", "Error loading avatar: " + e.getMessage());
+									profileCardImage.setImageResource(R.drawable.avatar);
+								}
+							} else {
+								profileCardImage.setImageResource(R.drawable.avatar);
+							}
 						}
 					}
 					
@@ -563,21 +668,25 @@ public class FragInboxChatsActivity extends Fragment {
 						verifiedBadge.setVisibility(View.GONE);
 					}
 				} else {
-					{
-						ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-						Handler mMainHandler = new Handler(Looper.getMainLooper());
-						
-						mExecutorService.execute(new Runnable() {
+					// CRITICAL FIX: Use fragment's managed ExecutorService instead of creating new ones
+					if (FragInboxChatsActivity.this.mExecutorService != null && !FragInboxChatsActivity.this.mExecutorService.isShutdown()) {
+						FragInboxChatsActivity.this.mExecutorService.execute(new Runnable() {
 							@Override
 							public void run() {
 								DatabaseReference getUserReference = FirebaseDatabase.getInstance().getReference("skyline/users").child(_data.get((int)_position).get("uid").toString());
 								getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
 									@Override
 									public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-										mMainHandler.post(new Runnable() {
-											@Override
-											public void run() {
-												if(dataSnapshot.exists()) {
+										// CRITICAL FIX: Use fragment's managed Handler and check fragment state
+										if (FragInboxChatsActivity.this.mMainHandler != null && isAdded() && getContext() != null) {
+											FragInboxChatsActivity.this.mMainHandler.post(new Runnable() {
+												@Override
+												public void run() {
+													// CRITICAL FIX: Additional check before UI updates
+													if (!isAdded() || getContext() == null) {
+														return;
+													}
+													if(dataSnapshot.exists()) {
 													UserInfoCacheMap.put("uid-".concat(_data.get((int)_position).get("uid").toString()), _data.get((int)_position).get("uid").toString());
 													UserInfoCacheMap.put("avatar-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("avatar").getValue(String.class));
 													UserInfoCacheMap.put("banned-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("banned").getValue(String.class));
@@ -595,7 +704,17 @@ public class FragInboxChatsActivity extends Fragment {
 														if (dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
 															profileCardImage.setImageResource(R.drawable.avatar);
 														} else {
-															Glide.with(getContext().getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profileCardImage);
+															// CRITICAL FIX: Use proper context for Glide and add lifecycle checks
+															if (isAdded() && getContext() != null) {
+																try {
+																	Glide.with(FragInboxChatsActivity.this).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profileCardImage);
+																} catch (Exception e) {
+																	Log.e("FragInboxChatsActivity", "Error loading avatar from Firebase: " + e.getMessage());
+																	profileCardImage.setImageResource(R.drawable.avatar);
+																}
+															} else {
+																profileCardImage.setImageResource(R.drawable.avatar);
+															}
 														}
 													}
 													if (dataSnapshot.child("nickname").getValue(String.class).equals("null")) {
