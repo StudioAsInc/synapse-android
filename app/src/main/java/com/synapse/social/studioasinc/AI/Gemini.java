@@ -1,4 +1,4 @@
-package com.service.studioasinc.AI;
+package com.synapse.social.studioasinc.AI;
 
 import android.content.Context;
 import android.util.Log;

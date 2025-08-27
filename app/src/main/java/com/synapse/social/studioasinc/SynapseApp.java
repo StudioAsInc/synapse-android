@@ -22,6 +22,7 @@ import com.onesignal.OneSignal;
 import com.onesignal.debug.LogLevel;
 import com.onesignal.user.subscriptions.IPushSubscriptionObserver;
 import com.onesignal.user.subscriptions.PushSubscriptionChangedState;
+import com.synapse.social.studioasinc.AI.SyraAIBotManager;
 
 import java.util.Calendar;
 
@@ -131,6 +132,9 @@ public class SynapseApp extends Application {
             notificationManager.createNotificationChannel(messagesChannel);
             notificationManager.createNotificationChannel(generalChannel);
         }
+        
+        // Initialize Syra AI Bot
+        initializeSyraBot();
     }
     
     public static void setUserStatus() {
@@ -240,6 +244,20 @@ public class SynapseApp extends Application {
                         }
                     }
                 });
+        }
+    }
+    
+    /**
+     * Initialize Syra AI Bot service
+     */
+    private void initializeSyraBot() {
+        try {
+            // Start Syra AI Bot service
+            SyraAIBotManager botManager = SyraAIBotManager.getInstance(this);
+            botManager.startBot();
+            Log.d("SynapseApp", "Syra AI Bot initialized successfully");
+        } catch (Exception e) {
+            Log.e("SynapseApp", "Failed to initialize Syra AI Bot: " + e.getMessage());
         }
     }
     

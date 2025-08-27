@@ -239,4 +239,5 @@
     <string name="ph_message">I\'m also good, man.</string>
     <string name="age_agreement">I confirm that I\'m at least 12 years of age.</string>
     <string name="ph_replied_message">I\'m good, you?</string>
+    <string name="syra_ai_bot_service_description">AI-powered bot service for automatic responses and interactions</string>
 </resources>

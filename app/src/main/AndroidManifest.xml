@@ -257,5 +257,13 @@
      android:name="android.support.FILE_PROVIDER_PATHS"
      android:resource="@xml/provider_paths"/>
 </provider>
+
+<!-- Syra AI Bot Service -->
+<service
+  android:name=".AI.SyraAIBotService"
+  android:enabled="true"
+  android:exported="false"
+  android:description="@string/syra_ai_bot_service_description" />
+
 	</application>
 </manifest>

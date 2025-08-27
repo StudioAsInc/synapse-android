@@ -88,7 +88,7 @@ import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.service.studioasinc.AI.Gemini;
+import com.synapse.social.studioasinc.AI.Gemini;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
