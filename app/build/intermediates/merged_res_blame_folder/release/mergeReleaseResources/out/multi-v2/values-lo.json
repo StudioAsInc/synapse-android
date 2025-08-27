@@ -4,6 +4,23 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-lo/values-lo.xml",
             "map": [
                 {
+                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/1ac946d8a59e70363d083a3e126ac7ba/transformed/core-1.15.0/res/values-lo/values-lo.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,254,353,451,552,650,761",
+                        "endColumns": "95,102,98,97,100,97,110,100",
+                        "endOffsets": "146,249,348,446,547,645,756,857"
+                    },
+                    "to": {
+                        "startLines": "45,46,47,48,49,50,51,234",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "3980,4076,4179,4278,4376,4477,4575,21730",
+                        "endColumns": "95,102,98,97,100,97,110,100",
+                        "endOffsets": "4071,4174,4273,4371,4472,4570,4681,21826"
+                    }
+                },
+                {
                     "source": "/home/ubuntu/.gradle/caches/8.9/transforms/e1231844f5c617685a09d96ec0f1368b/transformed/play-services-basement-18.5.0/res/values-lo/values.xml",
                     "from": {
                         "startLines": "4",
@@ -154,23 +171,6 @@
                         "startOffsets": "5003,5093,7592,7701,7799,8578,8667,20475,20561,20941,21021,21349,21499,21580,21655,22000,22078,22144",
                         "endColumns": "89,76,108,97,88,88,89,85,82,79,83,73,80,74,74,77,65,120",
                         "endOffsets": "5088,5165,7696,7794,7883,8662,8752,20556,20639,21016,21100,21418,21575,21650,21725,22073,22139,22260"
-                    }
-                },
-                {
-                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/5042a5aab31cc8277157969e9c0ebb36/transformed/core-1.12.0/res/values-lo/values-lo.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,151,254,353,451,552,650,761",
-                        "endColumns": "95,102,98,97,100,97,110,100",
-                        "endOffsets": "146,249,348,446,547,645,756,857"
-                    },
-                    "to": {
-                        "startLines": "45,46,47,48,49,50,51,234",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "3980,4076,4179,4278,4376,4477,4575,21730",
-                        "endColumns": "95,102,98,97,100,97,110,100",
-                        "endOffsets": "4071,4174,4273,4371,4472,4570,4681,21826"
                     }
                 },
                 {

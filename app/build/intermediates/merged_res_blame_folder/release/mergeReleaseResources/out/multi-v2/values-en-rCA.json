@@ -4,23 +4,6 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-en-rCA/values-en-rCA.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/5042a5aab31cc8277157969e9c0ebb36/transformed/core-1.12.0/res/values-en-rCA/values-en-rCA.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,151,253,352,451,555,657,773",
-                        "endColumns": "95,101,98,98,103,101,115,100",
-                        "endOffsets": "146,248,347,446,550,652,768,869"
-                    },
-                    "to": {
-                        "startLines": "31,32,33,34,35,36,37,119",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "2988,3084,3186,3285,3384,3488,3590,11908",
-                        "endColumns": "95,101,98,98,103,101,115,100",
-                        "endOffsets": "3079,3181,3280,3379,3483,3585,3701,12004"
-                    }
-                },
-                {
                     "source": "/home/ubuntu/.gradle/caches/8.9/transforms/507f521450c210d6e0b1a0631625460e/transformed/ui-release/res/values-en-rCA/values-en-rCA.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19",
@@ -120,6 +103,23 @@
                         "startOffsets": "3880,4325,11166,11240,12009,12612,12692",
                         "endColumns": "67,86,73,133,168,79,75",
                         "endOffsets": "3943,4407,11235,11369,12173,12687,12763"
+                    }
+                },
+                {
+                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/1ac946d8a59e70363d083a3e126ac7ba/transformed/core-1.15.0/res/values-en-rCA/values-en-rCA.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,352,451,555,657,773",
+                        "endColumns": "95,101,98,98,103,101,115,100",
+                        "endOffsets": "146,248,347,446,550,652,768,869"
+                    },
+                    "to": {
+                        "startLines": "31,32,33,34,35,36,37,119",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "2988,3084,3186,3285,3384,3488,3590,11908",
+                        "endColumns": "95,101,98,98,103,101,115,100",
+                        "endOffsets": "3079,3181,3280,3379,3483,3585,3701,12004"
                     }
                 },
                 {

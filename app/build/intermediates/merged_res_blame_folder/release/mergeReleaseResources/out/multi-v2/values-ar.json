@@ -4,23 +4,6 @@
             "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-ar/values-ar.xml",
             "map": [
                 {
-                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/5042a5aab31cc8277157969e9c0ebb36/transformed/core-1.12.0/res/values-ar/values-ar.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,148,250,345,448,551,653,767",
-                        "endColumns": "92,101,94,102,102,101,113,100",
-                        "endOffsets": "143,245,340,443,546,648,762,863"
-                    },
-                    "to": {
-                        "startLines": "49,50,51,52,53,54,55,248",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "4177,4270,4372,4467,4570,4673,4775,22738",
-                        "endColumns": "92,101,94,102,102,101,113,100",
-                        "endOffsets": "4265,4367,4462,4565,4668,4770,4884,22834"
-                    }
-                },
-                {
                     "source": "/home/ubuntu/.gradle/caches/8.9/transforms/507f521450c210d6e0b1a0631625460e/transformed/ui-release/res/values-ar/values-ar.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19",
@@ -69,6 +52,23 @@
                         "startOffsets": "5422,5526,5670,5792,5897,6035,6163,6274,6506,6643,6747,6897,7019,7158,7304,7368,7434",
                         "endColumns": "103,143,121,104,137,127,110,101,136,103,149,121,138,145,63,65,83",
                         "endOffsets": "5521,5665,5787,5892,6030,6158,6269,6371,6638,6742,6892,7014,7153,7299,7363,7429,7513"
+                    }
+                },
+                {
+                    "source": "/home/ubuntu/.gradle/caches/8.9/transforms/1ac946d8a59e70363d083a3e126ac7ba/transformed/core-1.15.0/res/values-ar/values-ar.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,148,250,345,448,551,653,767",
+                        "endColumns": "92,101,94,102,102,101,113,100",
+                        "endOffsets": "143,245,340,443,546,648,762,863"
+                    },
+                    "to": {
+                        "startLines": "49,50,51,52,53,54,55,248",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "4177,4270,4372,4467,4570,4673,4775,22738",
+                        "endColumns": "92,101,94,102,102,101,113,100",
+                        "endOffsets": "4265,4367,4462,4565,4668,4770,4884,22834"
                     }
                 },
                 {

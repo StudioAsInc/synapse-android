@@ -128,15 +128,15 @@
 55-->[com.google.android.gms:play-services-measurement-impl:22.5.0] /home/ubuntu/.gradle/caches/8.9/transforms/eb413973ef33e8276f0ce4d17e30d0f3/transformed/play-services-measurement-impl-22.5.0/AndroidManifest.xml:27:22-76
 56
 57    <permission
-57-->[androidx.core:core:1.12.0] /home/ubuntu/.gradle/caches/8.9/transforms/5042a5aab31cc8277157969e9c0ebb36/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+57-->[androidx.core:core:1.15.0] /home/ubuntu/.gradle/caches/8.9/transforms/1ac946d8a59e70363d083a3e126ac7ba/transformed/core-1.15.0/AndroidManifest.xml:22:5-24:47
 58        android:name="com.synapse.social.studioasinc.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-58-->[androidx.core:core:1.12.0] /home/ubuntu/.gradle/caches/8.9/transforms/5042a5aab31cc8277157969e9c0ebb36/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+58-->[androidx.core:core:1.15.0] /home/ubuntu/.gradle/caches/8.9/transforms/1ac946d8a59e70363d083a3e126ac7ba/transformed/core-1.15.0/AndroidManifest.xml:23:9-81
 59        android:protectionLevel="signature" />
-59-->[androidx.core:core:1.12.0] /home/ubuntu/.gradle/caches/8.9/transforms/5042a5aab31cc8277157969e9c0ebb36/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+59-->[androidx.core:core:1.15.0] /home/ubuntu/.gradle/caches/8.9/transforms/1ac946d8a59e70363d083a3e126ac7ba/transformed/core-1.15.0/AndroidManifest.xml:24:9-44
 60
 61    <uses-permission android:name="com.synapse.social.studioasinc.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-61-->[androidx.core:core:1.12.0] /home/ubuntu/.gradle/caches/8.9/transforms/5042a5aab31cc8277157969e9c0ebb36/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
-61-->[androidx.core:core:1.12.0] /home/ubuntu/.gradle/caches/8.9/transforms/5042a5aab31cc8277157969e9c0ebb36/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+61-->[androidx.core:core:1.15.0] /home/ubuntu/.gradle/caches/8.9/transforms/1ac946d8a59e70363d083a3e126ac7ba/transformed/core-1.15.0/AndroidManifest.xml:26:5-97
+61-->[androidx.core:core:1.15.0] /home/ubuntu/.gradle/caches/8.9/transforms/1ac946d8a59e70363d083a3e126ac7ba/transformed/core-1.15.0/AndroidManifest.xml:26:22-94
 62    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
 62-->[com.google.android.recaptcha:recaptcha:18.6.1] /home/ubuntu/.gradle/caches/8.9/transforms/98bc8c2773389ee2ba47f5a0034942be/transformed/recaptcha-18.6.1/AndroidManifest.xml:9:5-98
 62-->[com.google.android.recaptcha:recaptcha:18.6.1] /home/ubuntu/.gradle/caches/8.9/transforms/98bc8c2773389ee2ba47f5a0034942be/transformed/recaptcha-18.6.1/AndroidManifest.xml:9:22-95
@@ -154,7 +154,7 @@
 68        android:allowBackup="true"
 68-->/workspace/app/src/main/AndroidManifest.xml:17:3-29
 69        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-69-->[androidx.core:core:1.12.0] /home/ubuntu/.gradle/caches/8.9/transforms/5042a5aab31cc8277157969e9c0ebb36/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
+69-->[androidx.core:core:1.15.0] /home/ubuntu/.gradle/caches/8.9/transforms/1ac946d8a59e70363d083a3e126ac7ba/transformed/core-1.15.0/AndroidManifest.xml:28:18-86
 70        android:extractNativeLibs="false"
 71        android:icon="@mipmap/ic_launcher"
 71-->/workspace/app/src/main/AndroidManifest.xml:18:3-37

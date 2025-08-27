@@ -190,10 +190,10 @@ library {
   maven_library {
     groupId: "androidx.core"
     artifactId: "core"
-    version: "1.12.0"
+    version: "1.15.0"
   }
   digests {
-    sha256: "B\377\247\312G\327\272\217\341\330t\305~\371\307\021\033\304\032+\f\f!Q\2129\340}\"-\355\213"
+    sha256: "C+\205\241\227@v\341KH~\316J(\305\232\204\361\271\357\303\374\213\347,\327\360]2\005^Q"
   }
   repo_index {
   }
@@ -659,10 +659,10 @@ library {
   maven_library {
     groupId: "androidx.core"
     artifactId: "core-ktx"
-    version: "1.12.0"
+    version: "1.15.0"
   }
   digests {
-    sha256: "\225\263\355\257x\"{|\310\330\002\321\037\207\223\251\256\322\222\345+\217\277\214\b\326\023L\313\027\026\323"
+    sha256: "\307,\227\377J20\213\312\363\006\036\352]\3373E\\\344\023\316\344\252\035\\\202D\fWY\324\274"
   }
   repo_index {
   }
@@ -3715,6 +3715,7 @@ library_dependencies {
   library_dep_index: 18
   library_dep_index: 20
   library_dep_index: 21
+  library_dep_index: 46
   library_dep_index: 97
   library_dep_index: 3
   library_dep_index: 56

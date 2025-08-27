@@ -135,11 +135,7 @@ class InboxActivity : AppCompatActivity() {
             }
         }
 
-        lifecycleScope.launch {
-            viewModel.searchResults.collect { searchResults ->
-                // Handle search results if needed
-            }
-        }
+        // Search functionality can be added later if needed
     }
 
     private fun updateUI(state: com.synapse.social.studioasinc.groupchat.presentation.viewmodel.InboxUiState) {

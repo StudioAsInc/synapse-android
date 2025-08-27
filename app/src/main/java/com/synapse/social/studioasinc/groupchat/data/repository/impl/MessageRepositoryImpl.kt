@@ -30,7 +30,7 @@ class MessageRepositoryImpl @Inject constructor(
     private val groupsRef = firebaseDatabase.getReference(FirebaseConstants.GROUPS)
     private val storageRef = firebaseStorage.reference
     
-    private val messageListeners = mutableMapOf<String, ValueEventListener>()
+    private val messageListeners = mutableMapOf<String, ChildEventListener>()
 
     override fun getGroupMessagesPaged(groupId: String): Flow<PagingData<GroupMessage>> {
         return Pager(
@@ -495,7 +495,7 @@ class MessageRepositoryImpl @Inject constructor(
         return try {
             val snapshot = messagesRef.child(groupId)
                 .orderByChild("timestamp")
-                .endBefore(beforeTimestamp)
+                .endAt(beforeTimestamp.toDouble())
                 .limitToLast(limit)
                 .get()
                 .await()
