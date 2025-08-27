@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.synapse.social.studioasinc.app-mergeReleaseResources-115:/values-v18/values-v18.xml",
+            "map": [
+                {
+                    "source": "/home/ubuntu/.gradle/caches/8.13/transforms/0f42fd656d74dcfe881a44d7c4ec113b/transformed/appcompat-1.7.1/res/values-v18/values-v18.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "48",
+                        "endOffsets": "99"
+                    }
+                }
+            ]
+        }
+    ]
+}
