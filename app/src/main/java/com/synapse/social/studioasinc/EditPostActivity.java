@@ -87,7 +87,6 @@ public class EditPostActivity extends AppCompatActivity {
 	public final int REQ_CD_IMAGE_PICKER = 101;
 	
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
-	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
 	
 	private ProgressDialog SynapseLoadingDialog;
 	private String postKey = "";
