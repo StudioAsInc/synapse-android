@@ -840,7 +840,7 @@ public class ChatActivity extends AppCompatActivity {
 		java.util.HashSet<String> repliedIdsToFetch = new java.util.HashSet<>();
 		for (HashMap<String, Object> message : messages) {
 			if (message.containsKey("replied_message_id")) {
-				String repliedId = message.get("replied_message_id").toString();
+                String repliedId = String.valueOf(message.get("replied_message_id"));
 				if (repliedId != null && !repliedId.equals("null") && !repliedMessagesCache.containsKey(repliedId)) {
 					repliedIdsToFetch.add(repliedId);
 				}
