@@ -1,0 +1,105 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseArtProfile
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libdatastore_shared_counter.so. Run with --info option to learn more.
+
+> Task :app:extractReleaseNativeSymbolTables FROM-CACHE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:expandReleaseL8ArtProfileWildcards FROM-CACHE
+> Task :app:buildKotlinToolingMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:dataBindingMergeDependencyArtifactsRelease
+> Task :app:generateReleaseResValues FROM-CACHE
+> Task :app:generateReleaseResources FROM-CACHE
+> Task :app:injectCrashlyticsMappingFileIdRelease
+> Task :app:processReleaseGoogleServices
+> Task :app:packageReleaseResources
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :app:generateReleaseBuildConfig FROM-CACHE
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease FROM-CACHE
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:javaPreCompileRelease FROM-CACHE
+> Task :app:desugarReleaseFileDependencies FROM-CACHE
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :app:checkReleaseAarMetadata
+> Task :app:mergeExtDexRelease FROM-CACHE
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets FROM-CACHE
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseResources
+> Task :app:dataBindingGenBaseClassesRelease FROM-CACHE
+> Task :app:processReleaseResources
+> Task :app:optimizeReleaseResources
+> Task :app:kaptGenerateStubsReleaseKotlin
+
+> Task :app:kaptReleaseKotlin FAILED
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:814: error: ';' expected
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                                           ^
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:814: error: ';' expected
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                                                                                ^
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:817: error: illegal start of type
+                                });
+                                 ^
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:818: error: ')' or ',' expected
+                            }
+                             ^
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:819: error: illegal start of type
+                        });
+                         ^
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:820: error: ')' or ',' expected
+                    }
+                     ^
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:832: error: 'catch' without 'try'
+            } catch(Exception e) {
+              ^
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:522: error: 'try' without 'catch', 'finally' or resource declarations
+            try{
+            ^
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:838: error: ';' expected
+        public int getItemCount() {
+                               ^
+/workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:842: error: illegal start of expression
+        public class ViewHolder extends RecyclerView.ViewHolder {
+        ^
+
+[Incubating] Problems report is available at: file:///workspace/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:kaptReleaseKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask$KaptExecutionWorkAction
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 14s
+42 actionable tasks: 29 executed, 12 from cache, 1 up-to-date

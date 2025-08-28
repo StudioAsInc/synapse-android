@@ -494,332 +494,81 @@ public class FragInboxChatsActivity extends Fragment {
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder _holder, final int _position) {
-            View _view = _holder.itemView;
-
-            final androidx.cardview.widget.CardView cardview1 = _view.findViewById(R.id.cardview1);
-            final LinearLayout main = _view.findViewById(R.id.main);
-            final LinearLayout body = _view.findViewById(R.id.body);
-            final LinearLayout spcBottom = _view.findViewById(R.id.spcBottom);
-            final RelativeLayout profileCardRelative = _view.findViewById(R.id.profileCardRelative);
-            final LinearLayout lin = _view.findViewById(R.id.lin);
-            final androidx.cardview.widget.CardView profileCard = _view.findViewById(R.id.profileCard);
-            final LinearLayout ProfileRelativeUp = _view.findViewById(R.id.ProfileRelativeUp);
-            final ImageView profileCardImage = _view.findViewById(R.id.profileCardImage);
-            final LinearLayout userStatusCircleBG = _view.findViewById(R.id.userStatusCircleBG);
-            final LinearLayout userStatusCircleIN = _view.findViewById(R.id.userStatusCircleIN);
-            final LinearLayout usr = _view.findViewById(R.id.usr);
-            final LinearLayout btnss = _view.findViewById(R.id.btnss);
-            final LinearLayout spc = _view.findViewById(R.id.spc);
-            final TextView push = _view.findViewById(R.id.push);
-            final TextView username = _view.findViewById(R.id.username);
-            final ImageView genderBadge = _view.findViewById(R.id.genderBadge);
-            final ImageView verifiedBadge = _view.findViewById(R.id.verifiedBadge);
-            final TextView last_message = _view.findViewById(R.id.last_message);
-            final ImageView message_state = _view.findViewById(R.id.message_state);
-            final TextView unread_messages_count_badge = _view.findViewById(R.id.unread_messages_count_badge);
-
-            try{
-                RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                _view.setLayoutParams(_lp);
-                _viewGraphics(main, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, Color.TRANSPARENT);
-                userStatusCircleBG.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFFFFFFFF));
-                userStatusCircleIN.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFF388E3C));
-                unread_messages_count_badge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, getResources().getColor(R.color.colorPrimary)));
-                unread_messages_count_badge.setVisibility(View.GONE);
-                main.setVisibility(View.GONE);
-                if (_data.get((int)_position).get("last_message_text").toString().equals("null")) {
-                    last_message.setText(getResources().getString(R.string.m_no_chats));
-                } else {
-                    last_message.setText(_data.get((int)_position).get("last_message_text").toString());
-                }
-                if (_data.get((int)_position).get("last_message_uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-                    if (_data.get((int)_position).get("last_message_state").toString().equals("sended")) {
-                        message_state.setImageResource(R.drawable.icon_done_round);
-                    } else {
-                        message_state.setImageResource(R.drawable.icon_done_all_round);
-                    }
-                    last_message.setTextColor(0xFF616161);
-                    push.setTextColor(0xFF616161);
-                    message_state.setVisibility(View.VISIBLE);
-                    unread_messages_count_badge.setVisibility(View.GONE);
-                } else {
-                    message_state.setVisibility(View.GONE);
-                    // CRITICAL FIX: Use fragment's managed ExecutorService and track listeners
-                    if (FragInboxChatsActivity.this.mExecutorService != null && !FragInboxChatsActivity.this.mExecutorService.isShutdown()) {
-                        String otherUid = _data.get((int)_position).get("uid").toString();
-
-                        // CRITICAL FIX: Remove any existing listener for this user before adding new one
-                        ValueEventListener existingListener = unreadCountListeners.get(otherUid);
-                        if (existingListener != null) {
-                            Query existingQuery = FirebaseDatabase.getInstance().getReference("skyline/chats")
-                                .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                                .child(otherUid)
-                                .orderByChild("message_state").equalTo("sended");
-                            existingQuery.removeEventListener(existingListener);
-                            unreadCountListeners.remove(otherUid);
-                        }
-
-                        FragInboxChatsActivity.this.mExecutorService.execute(new Runnable() {
-                            @Override
-                            public void run() {
-                                Query getUnreadMessagesCount = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(otherUid).orderByChild("message_state").equalTo("sended");
-
-                                ValueEventListener unreadListener = new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        // CRITICAL FIX: Use fragment's managed Handler and check if fragment is still attached
-                                        if (FragInboxChatsActivity.this.mMainHandler != null && isAdded() && getContext() != null) {
-                                            FragInboxChatsActivity.this.mMainHandler.post(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    // CRITICAL FIX: Additional check before UI updates
-                                                    if (!isAdded() || getContext() == null) {
-                                                        return;
-                                                    }
-                                                    long unReadMessageCount = dataSnapshot.getChildrenCount();
-                                                    if(dataSnapshot.exists()) {
-                                                        last_message.setTextColor(0xFF000000);
-                                                        push.setTextColor(0xFF000000);
-                                                        //    last_message.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 1);
-                                                        //    push.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 1);
-                                                        unread_messages_count_badge.setText(String.valueOf((long)(unReadMessageCount)));
-                                                        unread_messages_count_badge.setVisibility(View.VISIBLE);
-                                                    } else {
-                                                        last_message.setTextColor(0xFF616161);
-                                                        push.setTextColor(0xFF616161);
-                                                        //    last_message.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 0);
-                                                        //    push.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 0);
-                                                        unread_messages_count_badge.setVisibility(View.GONE);
-                                                    }
-                                                }
-                                            });
-                                        }
+        public void onBindViewHolder(ViewHolder _holder, int _position) {
+            try {
+                View _view = _holder.itemView;
+                
+                LinearLayout main = _view.findViewById(R.id.main);
+                ImageView circleimageview1 = _view.findViewById(R.id.circleimageview);
+                TextView textview1 = _view.findViewById(R.id.textview1);
+                TextView textview2 = _view.findViewById(R.id.textview2);
+                TextView textview3 = _view.findViewById(R.id.textview3);
+                ImageView verifiedBadge = _view.findViewById(R.id.imageview2);
+                TextView unreadCountText = _view.findViewById(R.id.textview3);
+                
+                // Set user data
+                textview1.setText(_data.get((int)_position).get("display_name").toString());
+                textview2.setText(_data.get((int)_position).get("last_message").toString());
+                textview3.setText(_data.get((int)_position).get("timestamp").toString());
+                
+                // Load profile image
+                String useruid = _data.get((int)_position).get("uid").toString();
+                if (useruid != null && !useruid.isEmpty()) {
+                    DatabaseReference userRef = _firebase.getReference("users").child(useruid);
+                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                String profileImage = dataSnapshot.child("image").getValue(String.class);
+                                if (profileImage != null && !profileImage.isEmpty()) {
+                                    if (getContext() != null) {
+                                        Glide.with(getContext()).load(profileImage).into(circleimageview1);
                                     }
-
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                    }
-                                };
-
-                                // CRITICAL FIX: Store listener reference and add to Firebase
-                                unreadCountListeners.put(otherUid, unreadListener);
-                                getUnreadMessagesCount.addValueEventListener(unreadListener);
-                            }
-                        });
-                    }
-                }
-                _setTime(Double.parseDouble(_data.get((int)_position).get("push_date").toString()), push);
-                if (UserInfoCacheMap.containsKey("uid-".concat(_data.get((int)_position).get("uid").toString()))) {
-                    main.setVisibility(View.VISIBLE);
-
-                    // Get uid once to avoid repeated calls
-                    String uid = _data.get((int)_position).get("uid").toString();
-
-                    // Handle banned status with null check
-                    Object bannedObj = UserInfoCacheMap.get("banned-".concat(uid));
-                    if (bannedObj != null && bannedObj.toString().equals("true")) {
-                        profileCardImage.setImageResource(R.drawable.banned_avatar);
-                    } else {
-                        // Handle avatar with null check
-                        Object avatarObj = UserInfoCacheMap.get("avatar-".concat(uid));
-                        if (avatarObj == null || avatarObj.toString().equals("null")) {
-                            profileCardImage.setImageResource(R.drawable.avatar);
-                        } else {
-                            // CRITICAL FIX: Use proper context for Glide and add lifecycle checks
-                            if (isAdded() && getContext() != null) {
-                                try {
-                                    Glide.with(FragInboxChatsActivity.this)
-                                    .load(Uri.parse(avatarObj.toString()))
-                                    .into(profileCardImage);
-                                } catch (Exception e) {
-                                    Log.e("FragInboxChatsActivity", "Error loading avatar: " + e.getMessage());
-                                    profileCardImage.setImageResource(R.drawable.avatar);
                                 }
+                                
+                                // Handle verified badge
+                                Boolean isVerified = dataSnapshot.child("verified").getValue(Boolean.class);
+                                if (isVerified != null && isVerified) {
+                                    verifiedBadge.setVisibility(View.VISIBLE);
+                                } else {
+                                    verifiedBadge.setVisibility(View.GONE);
+                                }
+                            }
+                        }
+                        
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e("FragInboxChatsActivity", "Profile load cancelled: " + databaseError.getMessage());
+                        }
+                    });
+                    
+                    // Setup unread count listener
+                    String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), useruid);
+                    DatabaseReference unreadRef = _firebase.getReference("chats").child(chatId).child("unread_count").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+                    
+                    ValueEventListener unreadListener = new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            Long unreadCount = dataSnapshot.getValue(Long.class);
+                            if (unreadCount != null && unreadCount > 0) {
+                                unreadCountText.setVisibility(View.VISIBLE);
+                                unreadCountText.setText(String.valueOf(unreadCount));
                             } else {
-                                profileCardImage.setImageResource(R.drawable.avatar);
+                                unreadCountText.setVisibility(View.GONE);
                             }
                         }
-                    }
-
-                    // Handle nickname with null check
-                    Object nicknameObj = UserInfoCacheMap.get("nickname-".concat(uid));
-                    if (nicknameObj == null || nicknameObj.toString().equals("null")) {
-                        Object usernameObj = UserInfoCacheMap.get("username-".concat(uid));
-                        username.setText("@" + (usernameObj != null ? usernameObj.toString() : "unknown"));
-                    } else {
-                        username.setText(nicknameObj.toString());
-                    }
-
-                    // Handle status with null check
-                    Object statusObj = UserInfoCacheMap.get("status-".concat(uid));
-                    userStatusCircleBG.setVisibility(statusObj != null && statusObj.toString().equals("online")
-                    ? View.VISIBLE : View.GONE);
-
-                    // Handle gender with null check
-                    Object genderObj = UserInfoCacheMap.get("gender-".concat(uid));
-                    if (genderObj == null || genderObj.toString().equals("hidden")) {
-                        genderBadge.setVisibility(View.GONE);
-                    } else {
-                        genderBadge.setVisibility(View.VISIBLE);
-                        String gender = genderObj.toString();
-                        if (gender.equals("male")) {
-                            genderBadge.setImageResource(R.drawable.male_badge);
-                        } else if (gender.equals("female")) {
-                            genderBadge.setImageResource(R.drawable.female_badge);
+                        
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e("FragInboxChatsActivity", "Unread count listener cancelled: " + databaseError.getMessage());
                         }
-                    }
-
-                    // Handle account type and badges with null checks
-                    Object accountTypeObj = UserInfoCacheMap.get("account_type-".concat(uid));
-                    Object premiumObj = UserInfoCacheMap.get("account_premium-".concat(uid));
-                    Object verifyObj = UserInfoCacheMap.get("verify-".concat(uid));
-
-                    if (accountTypeObj != null) {
-                        String accountType = accountTypeObj.toString();
-                        if (accountType.equals("admin")) {
-                            verifiedBadge.setImageResource(R.drawable.admin_badge);
-                            verifiedBadge.setVisibility(View.VISIBLE);
-                        } else if (accountType.equals("moderator")) {
-                            verifiedBadge.setImageResource(R.drawable.moderator_badge);
-                            verifiedBadge.setVisibility(View.VISIBLE);
-                        } else if (accountType.equals("support")) {
-                            verifiedBadge.setImageResource(R.drawable.support_badge);
-                            verifiedBadge.setVisibility(View.VISIBLE);
-                        } else if (premiumObj != null && premiumObj.toString().equals("true")) {
-                            verifiedBadge.setImageResource(R.drawable.premium_badge);
-                            verifiedBadge.setVisibility(View.VISIBLE);
-                        } else if (verifyObj != null && verifyObj.toString().equals("true")) {
-                            verifiedBadge.setImageResource(R.drawable.verified_badge);
-                            verifiedBadge.setVisibility(View.VISIBLE);
-                        } else {
-                            verifiedBadge.setVisibility(View.GONE);
-                        }
-                    } else if (premiumObj != null && premiumObj.toString().equals("true")) {
-                        verifiedBadge.setImageResource(R.drawable.premium_badge);
-                        verifiedBadge.setVisibility(View.VISIBLE);
-                    } else if (verifyObj != null && verifyObj.toString().equals("true")) {
-                        verifiedBadge.setImageResource(R.drawable.verified_badge);
-                        verifiedBadge.setVisibility(View.VISIBLE);
-                    } else {
-                        verifiedBadge.setVisibility(View.GONE);
-                    }
-                } else {
-                    // CRITICAL FIX: Use fragment's managed ExecutorService instead of creating new ones
-                    if (FragInboxChatsActivity.this.mExecutorService != null && !FragInboxChatsActivity.this.mExecutorService.isShutdown()) {
-                        FragInboxChatsActivity.this.mExecutorService.execute(new Runnable() {
-                            @Override
-                            public void run() {
-                                DatabaseReference getUserReference = FirebaseDatabase.getInstance().getReference("skyline/users").child(_data.get((int)_position).get("uid").toString());
-                                getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        // CRITICAL FIX: Use fragment's managed Handler and check fragment state
-                                        if (FragInboxChatsActivity.this.mMainHandler != null && isAdded() && getContext() != null) {
-                                            FragInboxChatsActivity.this.mMainHandler.post(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    // CRITICAL FIX: Additional check before UI updates
-                                                    if (!isAdded() || getContext() == null) {
-                                                        return;
-                                                    }
-                                                    if(dataSnapshot.exists()) {
-                                                    UserInfoCacheMap.put("uid-".concat(_data.get((int)_position).get("uid").toString()), _data.get((int)_position).get("uid").toString());
-                                                    UserInfoCacheMap.put("avatar-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("avatar").getValue(String.class));
-                                                    UserInfoCacheMap.put("banned-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("banned").getValue(String.class));
-                                                    UserInfoCacheMap.put("username-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("username").getValue(String.class));
-                                                    UserInfoCacheMap.put("nickname-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("nickname").getValue(String.class));
-                                                    UserInfoCacheMap.put("status-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("status").getValue(String.class));
-                                                    UserInfoCacheMap.put("gender-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("gender").getValue(String.class));
-                                                    UserInfoCacheMap.put("account_type-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("account_type").getValue(String.class));
-                                                    UserInfoCacheMap.put("account_premium-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("account_premium").getValue(String.class));
-                                                    UserInfoCacheMap.put("verify-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("verify").getValue(String.class));
-                                                    main.setVisibility(View.VISIBLE);
-                                                    if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
-                                                        profileCardImage.setImageResource(R.drawable.banned_avatar);
-                                                    } else {
-                                                        if (dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-                                                            profileCardImage.setImageResource(R.drawable.avatar);
-                                                        } else {
-                                                            // CRITICAL FIX: Use proper context for Glide and add lifecycle checks
-                                                            if (isAdded() && getContext() != null) {
-                                                                try {
-                                                                    Glide.with(FragInboxChatsActivity.this).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profileCardImage);
-                                                                } catch (Exception e) {
-                                                                    Log.e("FragInboxChatsActivity", "Error loading avatar from Firebase: " + e.getMessage());
-                                                                    profileCardImage.setImageResource(R.drawable.avatar);
-                                                                }
-                                                            } else {
-                                                                profileCardImage.setImageResource(R.drawable.avatar);
-                                                            }
-                                                        }
-                                                    }
-                                                    if (dataSnapshot.child("nickname").getValue(String.class).equals("null")) {
-                                                        username.setText("@" + dataSnapshot.child("username").getValue(String.class));
-                                                    } else {
-                                                        username.setText(dataSnapshot.child("nickname").getValue(String.class));
-                                                    }
-                                                    if (dataSnapshot.child("status").getValue(String.class).equals("online")) {
-                                                        userStatusCircleBG.setVisibility(View.VISIBLE);
-                                                    } else {
-                                                        userStatusCircleBG.setVisibility(View.GONE);
-                                                    }
-                                                    if (dataSnapshot.child("gender").getValue(String.class).equals("hidden")) {
-                                                        genderBadge.setVisibility(View.GONE);
-                                                    } else {
-                                                        if (dataSnapshot.child("gender").getValue(String.class).equals("male")) {
-                                                            genderBadge.setImageResource(R.drawable.male_badge);
-                                                            genderBadge.setVisibility(View.VISIBLE);
-                                                        } else {
-                                                            if (dataSnapshot.child("gender").getValue(String.class).equals("female")) {
-                                                                genderBadge.setImageResource(R.drawable.female_badge);
-                                                                genderBadge.setVisibility(View.VISIBLE);
-                                                            }
-                                                        }
-                                                    }
-                                                    if (dataSnapshot.child("account_type").getValue(String.class).equals("admin")) {
-                                                        verifiedBadge.setImageResource(R.drawable.admin_badge);
-                                                        verifiedBadge.setVisibility(View.VISIBLE);
-                                                    } else {
-                                                        if (dataSnapshot.child("account_type").getValue(String.class).equals("moderator")) {
-                                                            verifiedBadge.setImageResource(R.drawable.moderator_badge);
-                                                            verifiedBadge.setVisibility(View.VISIBLE);
-                                                        } else {
-                                                            if (dataSnapshot.child("account_type").getValue(String.class).equals("support")) {
-                                                                verifiedBadge.setImageResource(R.drawable.support_badge);
-                                                                verifiedBadge.setVisibility(View.VISIBLE);
-                                                            } else {
-                                                                if (dataSnapshot.child("account_premium").getValue(String.class).equals("true")) {
-                                                                    verifiedBadge.setImageResource(R.drawable.premium_badge);
-                                                                    verifiedBadge.setVisibility(View.VISIBLE);
-                                                                } else {
-                                                                    if (dataSnapshot.child("verify").getValue(String.class).equals("true")) {
-                                                                        verifiedBadge.setImageResource(R.drawable.verified_badge);
-                                                                        verifiedBadge.setVisibility(View.VISIBLE);
-                                                                    } else {
-                                                                        verifiedBadge.setVisibility(View.GONE);
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                } else {
-                                                }
-                                            }
-                                        });
-                                    }
-
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                                        Log.e("FragInboxChatsActivity", "Unread count listener cancelled: " + databaseError.getMessage());
-                                    }
-                                });
-                            }
-                        });
-                    }
-
+                    };
+                    
+                    unreadRef.addValueEventListener(unreadListener);
+                    unreadCountListeners.put(useruid, unreadListener);
                 }
+                
+                // Set click listener
                 main.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View _view) {
@@ -829,6 +578,7 @@ public class FragInboxChatsActivity extends Fragment {
                         startActivity(intent);
                     }
                 });
+                
             } catch(Exception e) {
                 Log.e("FragInboxChatsActivity", "Error in onBindViewHolder: " + e.getMessage());
             }
@@ -844,5 +594,9 @@ public class FragInboxChatsActivity extends Fragment {
                 super(v);
             }
         }
+    }
+
+    private String getChatId(String uid1, String uid2) {
+        return uid1.compareTo(uid2) < 0 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
     }
 }
