@@ -37,6 +37,14 @@ import android.widget.RelativeLayout;
 import com.google.firebase.database.GenericTypeIndicator;
 import android.view.MotionEvent;
 import android.widget.Toast;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import android.content.Intent;
+import android.app.Activity;
+import android.view.Gravity;
+import com.synapse.social.studioasinc.config.CloudinaryConfig;
+import com.synapse.social.studioasinc.model.Attachment;
+import com.synapse.social.studioasinc.util.AttachmentUtils;
+import com.synapse.social.studioasinc.util.UIUtils;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -147,9 +155,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         if (holder.message_layout != null) {
             ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.message_layout.getLayoutParams();
-            int sideMarginPx = dpToPx(40);
-            int topBottomPaddingPx = dpToPx(2);
-            int innerPaddingPx = dpToPx(8);
+            int sideMarginPx = (int) _context.getResources().getDimension(R.dimen.chat_side_margin);
+            int topBottomPaddingPx = (int) _context.getResources().getDimension(R.dimen.chat_padding_vertical);
+            int innerPaddingPx = (int) _context.getResources().getDimension(R.dimen.chat_padding_inner);
 
             if (isMyMessage) {
                 params.setMargins(sideMarginPx, topBottomPaddingPx, innerPaddingPx, topBottomPaddingPx);
@@ -273,8 +281,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         holder.mRepliedMessageLayoutImage.setVisibility(View.VISIBLE);
                                         String publicId = (String) attachments.get(0).get("publicId");
                                         if (publicId != null && !publicId.isEmpty() && _context != null) {
-                                            String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
-                                            Glide.with(_context).load(imageUrl).placeholder(R.drawable.ph_imgbluredsqure).error(R.drawable.ph_imgbluredsqure).transform(new RoundedCorners(dpToPx(20))).into(holder.mRepliedMessageLayoutImage);
+                                            String imageUrl = CloudinaryConfig.buildReplyPreviewUrl(publicId);
+                                            int cornerRadius = (int) _context.getResources().getDimension(R.dimen.reply_preview_corner_radius);
+                                            Glide.with(_context).load(imageUrl).placeholder(R.drawable.ph_imgbluredsqure).error(R.drawable.ph_imgbluredsqure).transform(new RoundedCorners(cornerRadius)).into(holder.mRepliedMessageLayoutImage);
                                         } else {
                                             holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
                                         }
@@ -303,7 +312,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
                                 leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
                                 leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
-                                leftBarDrawable.setCornerRadius(dpToPx(100));
+                                int leftBarRadius = (int) _context.getResources().getDimension(R.dimen.left_bar_corner_radius);
+                                leftBarDrawable.setCornerRadius(leftBarRadius);
                                 holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
                             }
 
@@ -316,7 +326,20 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             if (holder.mRepliedMessageLayoutMessage != null) holder.mRepliedMessageLayoutMessage.setOnClickListener(clickListener);
                             if (holder.mRepliedMessageLayoutImage != null) holder.mRepliedMessageLayoutImage.setOnClickListener(clickListener);
                         } else {
-                            holder.mRepliedMessageLayout.setVisibility(View.GONE);
+                            // Show a lightweight loading state while the replied message loads
+                            holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
+
+                            if (holder.mRepliedMessageLayoutImage != null) {
+                                holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
+                            }
+                            if (holder.mRepliedMessageLayoutUsername != null) {
+                                holder.mRepliedMessageLayoutUsername.setText("Loading…");
+                                holder.mRepliedMessageLayoutUsername.setTextColor(isMyMessage ? Color.WHITE : Color.parseColor("#1A1A1A"));
+                            }
+                            if (holder.mRepliedMessageLayoutMessage != null) {
+                                holder.mRepliedMessageLayoutMessage.setText("");
+                                holder.mRepliedMessageLayoutMessage.setVisibility(View.GONE);
+                            }
                         }
                     } else {
                         holder.mRepliedMessageLayout.setVisibility(View.GONE);
@@ -416,34 +439,136 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
         String msgText = data.getOrDefault("message_text", "").toString();
-        holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
-        if (!msgText.isEmpty()) {
-            com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
+        
+        // Ensure message text is always visible and has content if available
+        if (holder.message_text != null) {
+            holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
+            if (!msgText.isEmpty()) {
+                com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
+            }
         }
 
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
         Log.d(TAG, "Attachments found: " + (attachments != null ? attachments.size() : 0));
         
-        GridLayout gridLayout = holder.mediaGridLayout;
-        if (gridLayout == null) {
-            Log.e(TAG, "mediaGridLayout is null in MediaViewHolder");
-            return;
-        }
-
-        gridLayout.removeAllViews();
-        gridLayout.setVisibility(View.VISIBLE);
-
+        // CRITICAL FIX: Always ensure at least one layout is visible
         if (attachments == null || attachments.isEmpty()) {
-            Log.w(TAG, "No attachments found, hiding grid layout");
-            gridLayout.setVisibility(View.GONE);
+            Log.w(TAG, "No attachments found, showing only message text");
+            if (holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.GONE);
+            if (holder.mediaCarouselContainer != null) holder.mediaCarouselContainer.setVisibility(View.GONE);
+            
+            // If no message text either, show a minimal placeholder to prevent thin line
+            if (msgText.isEmpty() && holder.message_text != null) {
+                holder.message_text.setVisibility(View.VISIBLE);
+                holder.message_text.setText("Media message");
+            }
             return;
         }
 
-        Log.d(TAG, "Processing " + attachments.size() + " attachments");
+        int count = attachments.size();
+        Log.d(TAG, "Processing " + count + " attachments");
+
+        // TEMPORARY FIX: Always use grid layout for now to ensure messages show properly
+        // TODO: Re-enable carousel after debugging
+        boolean useCarousel = false; // count >= 3;
+        
+        Log.d(TAG, "useCarousel: " + useCarousel + ", count: " + count);
+        
+        if (useCarousel && holder.mediaCarouselContainer != null && holder.mediaCarouselRecyclerView != null) {
+            // Hide grid layout and show carousel
+            Log.d(TAG, "Using carousel layout");
+            if (holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.GONE);
+            holder.mediaCarouselContainer.setVisibility(View.VISIBLE);
+            
+            try {
+                setupCarouselLayout(holder, attachments);
+            } catch (Exception e) {
+                Log.e(TAG, "Error setting up carousel, falling back to grid: " + e.getMessage());
+                // Fallback to grid layout if carousel fails
+                if (holder.mediaCarouselContainer != null) holder.mediaCarouselContainer.setVisibility(View.GONE);
+                if (holder.mediaGridLayout != null) {
+                    holder.mediaGridLayout.setVisibility(View.VISIBLE);
+                    setupGridLayout(holder, attachments);
+                }
+            }
+        } else {
+            // Use traditional grid layout
+            Log.d(TAG, "Using grid layout");
+            if (holder.mediaCarouselContainer != null) holder.mediaCarouselContainer.setVisibility(View.GONE);
+            if (holder.mediaGridLayout != null) {
+                holder.mediaGridLayout.setVisibility(View.VISIBLE);
+                try {
+                    setupGridLayout(holder, attachments);
+                    Log.d(TAG, "Grid layout setup completed successfully");
+                } catch (Exception e) {
+                    Log.e(TAG, "Error setting up grid layout: " + e.getMessage());
+                    // Fallback: show message text instead
+                    if (holder.message_text != null) {
+                        holder.message_text.setVisibility(View.VISIBLE);
+                        holder.message_text.setText("Media message (" + attachments.size() + " images)");
+                    }
+                }
+            } else {
+                Log.e(TAG, "mediaGridLayout is null!");
+                // Fallback: show message text instead
+                if (holder.message_text != null) {
+                    holder.message_text.setVisibility(View.VISIBLE);
+                    holder.message_text.setText("Media message (" + attachments.size() + " images)");
+                }
+            }
+        }
+    }
+    
+    private void setupCarouselLayout(MediaViewHolder holder, ArrayList<HashMap<String, Object>> attachments) {
+        Log.d(TAG, "Setting up carousel layout for " + attachments.size() + " images");
+        
+        // Setup horizontal RecyclerView
+        LinearLayoutManager layoutManager = new LinearLayoutManager(_context, LinearLayoutManager.HORIZONTAL, false);
+        holder.mediaCarouselRecyclerView.setLayoutManager(layoutManager);
+        
+        // Add item decoration for proper spacing
+        if (holder.mediaCarouselRecyclerView.getItemDecorationCount() == 0) {
+            holder.mediaCarouselRecyclerView.addItemDecoration(
+                CarouselItemDecoration.createWithStandardSpacing(holder.mediaCarouselRecyclerView));
+        }
+        
+        // Convert to typed attachments once and create adapter with click listener to open gallery
+        ArrayList<Attachment> typedAttachments = AttachmentUtils.fromHashMapList(attachments);
+        if (typedAttachments == null || typedAttachments.isEmpty()) {
+            return;
+        }
+        MessageImageCarouselAdapter adapter = new MessageImageCarouselAdapter(_context, typedAttachments, 
+            (position, attachmentList) -> openImageGalleryTyped(attachmentList, position));
+        holder.mediaCarouselRecyclerView.setAdapter(adapter);
+        
+        // Setup "View All" button - shows when there are more than 3 images
+        // This provides easy access to the full-screen gallery experience
+        if (holder.viewAllImagesButton != null) {
+            if (attachments.size() > 3) {
+                holder.viewAllImagesButton.setVisibility(View.VISIBLE);
+                holder.viewAllImagesButton.setText("View all " + attachments.size() + " images");
+                holder.viewAllImagesButton.setOnClickListener(v -> openImageGalleryTyped(typedAttachments, 0));
+            } else {
+                holder.viewAllImagesButton.setVisibility(View.GONE);
+            }
+        }
+        
+        // Set optimal card width for carousel
+        ViewGroup.LayoutParams cardParams = holder.mediaContainerCard.getLayoutParams();
+        cardParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        holder.mediaContainerCard.setLayoutParams(cardParams);
+    }
+    
+    private void setupGridLayout(MediaViewHolder holder, ArrayList<HashMap<String, Object>> attachments) {
+        Log.d(TAG, "Setting up grid layout for " + attachments.size() + " images");
+        
+        GridLayout gridLayout = holder.mediaGridLayout;
+        gridLayout.removeAllViews();
+        
         int count = attachments.size();
         int colCount = 2;
         int maxImages = 4;
-        int totalGridWidth = dpToPx(250);
+        int totalGridWidth = (int) _context.getResources().getDimension(R.dimen.chat_grid_width);
         int imageSize = totalGridWidth / 2;
 
         ViewGroup.LayoutParams cardParams = holder.mediaContainerCard.getLayoutParams();
@@ -451,11 +576,19 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         holder.mediaContainerCard.setLayoutParams(cardParams);
 
         gridLayout.setColumnCount(colCount);
+        
+        // Ensure grid layout has minimum dimensions to prevent thin line
+        ViewGroup.LayoutParams gridParams = gridLayout.getLayoutParams();
+        if (gridParams == null) {
+            gridParams = new ViewGroup.LayoutParams(totalGridWidth, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+        gridParams.width = totalGridWidth;
+        gridLayout.setLayoutParams(gridParams);
 
         if (count == 1) {
             gridLayout.setColumnCount(1);
             HashMap<String, Object> attachment = attachments.get(0);
-            ImageView iv = createImageView(attachment, totalGridWidth, true);
+            ImageView iv = createImageView(attachment, totalGridWidth, true, 0, attachments);
             gridLayout.addView(iv);
 
         } else if (count == 3) {
@@ -477,7 +610,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             if(portraitIndex != -1){
                 // Tall layout
-                ImageView iv1 = createImageView(attachments.get(portraitIndex), imageSize, false);
+                ImageView iv1 = createImageView(attachments.get(portraitIndex), imageSize, false, portraitIndex, attachments);
                 GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 2, 1f), GridLayout.spec(0, 1, 1f));
                 iv1.setLayoutParams(params1);
                 gridLayout.addView(iv1);
@@ -485,7 +618,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 int attachmentIndex = 0;
                 for(int i=0; i<2; i++){
                     if(attachmentIndex == portraitIndex) attachmentIndex++;
-                    ImageView iv = createImageView(attachments.get(attachmentIndex), imageSize, false);
+                    ImageView iv = createImageView(attachments.get(attachmentIndex), imageSize, false, attachmentIndex, attachments);
                     GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(i, 1, 1f), GridLayout.spec(1, 1, 1f));
                     iv.setLayoutParams(params);
                     gridLayout.addView(iv);
@@ -494,13 +627,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             } else {
                 // Wide layout
-                ImageView iv1 = createImageView(attachments.get(0), totalGridWidth, false);
+                ImageView iv1 = createImageView(attachments.get(0), totalGridWidth, false, 0, attachments);
                 GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
                 iv1.setLayoutParams(params1);
                 gridLayout.addView(iv1);
 
                 for (int i = 1; i < 3; i++) {
-                    ImageView iv = createImageView(attachments.get(i), imageSize, false);
+                    ImageView iv = createImageView(attachments.get(i), imageSize, false, i, attachments);
                     GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
                     iv.setLayoutParams(params);
                     gridLayout.addView(iv);
@@ -510,7 +643,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             int limit = Math.min(count, maxImages);
             for (int i = 0; i < limit; i++) {
                 View viewToAdd;
-                ImageView iv = createImageView(attachments.get(i), imageSize, false);
+                ImageView iv = createImageView(attachments.get(i), imageSize, false, i, attachments);
 
                 if (i == maxImages - 1 && count > maxImages) {
                     RelativeLayout overlayContainer = new RelativeLayout(_context);
@@ -528,11 +661,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     moreText.setGravity(Gravity.CENTER);
                     overlayContainer.addView(moreText, new ViewGroup.LayoutParams(imageSize, imageSize));
                     viewToAdd = overlayContainer;
-                    viewToAdd.setOnClickListener(v -> {
-                        if (chatActivity != null) {
-                             chatActivity._OpenWebView(attachments.get(3).get("url").toString());
-                        }
-                    });
+                    viewToAdd.setOnClickListener(v -> openImageGallery(attachments, 3));
                 } else {
                     viewToAdd = iv;
                 }
@@ -540,8 +669,27 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
     }
+    
+    private void openImageGallery(ArrayList<HashMap<String, Object>> attachments, int position) {
+        if (_context != null && chatActivity != null) {
+            ArrayList<Attachment> typed = AttachmentUtils.fromHashMapList(attachments);
+            openImageGalleryTyped(typed, position);
+        }
+    }
 
-    private ImageView createImageView(HashMap<String, Object> attachment, int width, boolean adjustBounds) {
+    private void openImageGalleryTyped(ArrayList<Attachment> attachments, int position) {
+        if (_context != null && chatActivity != null) {
+            Intent intent = new Intent(_context, ImageGalleryActivity.class);
+            intent.putParcelableArrayListExtra("attachments_parcelable", attachments);
+            intent.putExtra("position", position);
+            _context.startActivity(intent);
+            if (_context instanceof Activity) {
+                ((Activity) _context).overridePendingTransition(R.anim.slide_in_from_right, R.anim.slide_out_to_left);
+            }
+        }
+    }
+
+    private ImageView createImageView(HashMap<String, Object> attachment, int width, boolean adjustBounds, int position, ArrayList<HashMap<String, Object>> attachments) {
         String url = String.valueOf(attachment.get("url"));
         ImageView imageView = new ImageView(_context);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -573,11 +721,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Glide.with(_context).load(url).override(width, height).into(imageView);
         }
 
-        imageView.setOnClickListener(v -> {
-            if (chatActivity != null) {
-                chatActivity._OpenWebView(url);
-            }
-        });
+        // Enhanced click listener to open gallery
+        imageView.setOnClickListener(v -> openImageGallery(attachments, position));
         return imageView;
     }
 
@@ -666,17 +811,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // scroll listener in ChatActivity. No action needed here.
     }
 
-    private int dpToPx(int dp) {
-        // CRITICAL FIX: Safe dp to px conversion with null checks
-        try {
-            if (_context != null && _context.getResources() != null && _context.getResources().getDisplayMetrics() != null) {
-                return (int) (dp * _context.getResources().getDisplayMetrics().density);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error converting dp to px: " + e.getMessage());
-        }
-        return dp; // Fallback to dp value
-    }
     
     // CRITICAL FIX: Smart timestamp visibility logic
     private boolean _shouldShowTimestamp(int position, HashMap<String, Object> currentMessage) {

@@ -2,7 +2,6 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
-    id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
     //id 'com.google.firebase.firebase-perf'
 }
@@ -125,6 +124,10 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
+    
+    // Image zoom functionality
+    implementation 'com.github.chrisbanes:PhotoView:2.3.0'
 
     // AndroidX Architecture Components
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.9.2'
@@ -184,4 +187,10 @@ dependencies {
     implementation 'io.noties.markwon:html:4.6.2'
 
     // Testing
+}
+
+// Apply Google Services plugin only if credentials file exists
+def googleServicesFile = file('google-services.json')
+if (googleServicesFile.exists()) {
+    apply plugin: 'com.google.gms.google-services'
 }

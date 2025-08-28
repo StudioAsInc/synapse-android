@@ -21,6 +21,7 @@ import androidx.gridlayout.widget.GridLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.button.MaterialButton;
 
 import com.synapse.social.studioasinc.animations.ShimmerFrameLayout;
 
@@ -75,10 +76,26 @@ class TextViewHolder extends BaseMessageViewHolder { public TextViewHolder(View 
 class MediaViewHolder extends BaseMessageViewHolder {
     GridLayout mediaGridLayout;
     CardView mediaContainerCard;
+    LinearLayout mediaCarouselContainer;
+    RecyclerView mediaCarouselRecyclerView;
+    MaterialButton viewAllImagesButton;
+    
     public MediaViewHolder(View view) {
         super(view);
         mediaGridLayout = view.findViewById(R.id.mediaGridLayout);
         mediaContainerCard = view.findViewById(R.id.mediaContainerCard);
+        
+        // These might be null if layout doesn't contain them, handle gracefully
+        try {
+            mediaCarouselContainer = view.findViewById(R.id.mediaCarouselContainer);
+            mediaCarouselRecyclerView = view.findViewById(R.id.mediaCarouselRecyclerView);
+            viewAllImagesButton = view.findViewById(R.id.viewAllImagesButton);
+        } catch (Exception e) {
+            // Layout might not contain these newer elements
+            mediaCarouselContainer = null;
+            mediaCarouselRecyclerView = null;
+            viewAllImagesButton = null;
+        }
     }
 }
 
