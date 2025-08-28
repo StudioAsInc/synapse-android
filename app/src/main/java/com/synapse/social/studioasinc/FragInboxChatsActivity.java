@@ -366,6 +366,9 @@ public class FragInboxChatsActivity extends Fragment {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
 	}
 
+	private boolean isNullOrEmpty(String str) {
+		return str == null || str.trim().isEmpty() || "null".equalsIgnoreCase(str);
+	}
 	public class InboxListRecyclerViewAdapter extends RecyclerView.Adapter<InboxListRecyclerViewAdapter.ViewHolder> {
 
 		ArrayList<HashMap<String, Object>> _data;
@@ -491,10 +494,10 @@ public class FragInboxChatsActivity extends Fragment {
 					} else {
 						// Handle avatar with null check
 						Object avatarObj = UserInfoCacheMap.get("avatar-".concat(uid));
-						if (avatarObj == null || avatarObj.toString().equals("null")) {
+						if (isNullOrEmpty(avatarObj != null ? avatarObj.toString() : null)) {
 							profileCardImage.setImageResource(R.drawable.avatar);
 						} else {
-							Glide.with(getContext().getApplicationContext())
+							Glide.with(getContext())
 							.load(Uri.parse(avatarObj.toString()))
 							.into(profileCardImage);
 						}
@@ -502,7 +505,7 @@ public class FragInboxChatsActivity extends Fragment {
 					
 					// Handle nickname with null check
 					Object nicknameObj = UserInfoCacheMap.get("nickname-".concat(uid));
-					if (nicknameObj == null || nicknameObj.toString().equals("null")) {
+					if (isNullOrEmpty(nicknameObj != null ? nicknameObj.toString() : null)) {
 						Object usernameObj = UserInfoCacheMap.get("username-".concat(uid));
 						username.setText("@" + (usernameObj != null ? usernameObj.toString() : "unknown"));
 					} else {
@@ -516,7 +519,7 @@ public class FragInboxChatsActivity extends Fragment {
 					
 					// Handle gender with null check
 					Object genderObj = UserInfoCacheMap.get("gender-".concat(uid));
-					if (genderObj == null || genderObj.toString().equals("hidden")) {
+					if (isNullOrEmpty(genderObj != null ? genderObj.toString() : null) || "hidden".equals(genderObj != null ? genderObj.toString() : null)) {
 						genderBadge.setVisibility(View.GONE);
 					} else {
 						genderBadge.setVisibility(View.VISIBLE);
@@ -602,15 +605,15 @@ public class FragInboxChatsActivity extends Fragment {
 													if ("true".equals(banned)) {
 														profileCardImage.setImageResource(R.drawable.banned_avatar);
 													} else {
-														if (avatar == null || "null".equals(avatar)) {
+														if (isNullOrEmpty(avatar)) {
 															profileCardImage.setImageResource(R.drawable.avatar);
 														} else {
-                                                            Glide.with(profileCardImage).load(Uri.parse(avatar)).into(profileCardImage);
+															Glide.with(getContext()).load(Uri.parse(avatar)).into(profileCardImage);
 														}
 													}
 
-													if (nickname == null || "null".equals(nickname)) {
-														username.setText("@" + usernameValue);
+													if (isNullOrEmpty(nickname)) {
+														username.setText("@" + (usernameValue != null ? usernameValue : ""));
 													} else {
 														username.setText(nickname);
 													}
@@ -621,7 +624,7 @@ public class FragInboxChatsActivity extends Fragment {
 														userStatusCircleBG.setVisibility(View.GONE);
 													}
 
-													if (gender == null || "hidden".equals(gender)) {
+													if (isNullOrEmpty(gender) || "hidden".equals(gender)) {
 														genderBadge.setVisibility(View.GONE);
 													} else {
 														if ("male".equals(gender)) {
