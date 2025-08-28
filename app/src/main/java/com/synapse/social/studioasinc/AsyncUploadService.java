@@ -7,6 +7,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -157,8 +159,8 @@ public class AsyncUploadService {
                 .setContentTitle("Uploading: " + fileName)
                 .setContentText(status)
                 .setProgress(100, progress, false)
-                .setOngoing(true)
-                .setAutoCancel(false)
+                .setOngoing(false) // Make cancelable
+                .setAutoCancel(true) // Auto cancel when tapped
                 .setPriority(NotificationCompat.PRIORITY_LOW);
             
             NotificationManagerCompat.from(context).notify(notificationId, builder.build());
@@ -182,6 +184,15 @@ public class AsyncUploadService {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
             
             NotificationManagerCompat.from(context).notify(notificationId, builder.build());
+            
+            // Auto-dismiss success notification after 3 seconds
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    NotificationManagerCompat.from(context).cancel(notificationId);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error auto-dismissing success notification: " + e.getMessage());
+                }
+            }, 3000);
         } catch (Exception e) {
             Log.e(TAG, "Error showing success notification: " + e.getMessage());
         }
@@ -202,6 +213,15 @@ public class AsyncUploadService {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
             
             NotificationManagerCompat.from(context).notify(notificationId, builder.build());
+            
+            // Auto-dismiss failure notification after 5 seconds
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    NotificationManagerCompat.from(context).cancel(notificationId);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error auto-dismissing failure notification: " + e.getMessage());
+                }
+            }, 5000);
         } catch (Exception e) {
             Log.e(TAG, "Error showing failure notification: " + e.getMessage());
         }
