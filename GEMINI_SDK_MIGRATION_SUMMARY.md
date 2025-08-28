@@ -13,7 +13,7 @@ implementation 'com.google.genai:google-genai:1.12.0'
 
 **After:**
 ```gradle
-implementation 'com.google.ai.client.generativeai:generativeai:0.9.0'
+implementation 'com.google.ai.client.generativeai:generativeai:0.7.0'
 ```
 
 ### 2. Package Imports
@@ -75,3 +75,31 @@ The migration maintains all existing functionality while using the official SDK.
 
 ## API Key Configuration
 The implementation continues to use the existing API key loading mechanism from `R.raw.gemini_api` resource file.
+
+## Troubleshooting
+
+### If you see import errors for `com.google.genai.*` packages:
+
+This indicates the wrong SDK dependency. Ensure you have:
+
+```gradle
+implementation 'com.google.ai.client.generativeai:generativeai:0.7.0'
+```
+
+And NOT:
+```gradle
+implementation 'com.google.genai:google-genai:1.12.0'  // WRONG
+```
+
+### Correct imports should be:
+```java
+import com.google.ai.client.generativeai.GenerativeModel;
+import com.google.ai.client.generativeai.java.GenerativeModelFutures;
+import com.google.ai.client.generativeai.type.GenerateContentResponse;
+```
+
+### If compilation still fails:
+1. Clean and rebuild the project: `./gradlew clean build`
+2. Refresh dependencies: `./gradlew build --refresh-dependencies`
+3. Ensure no cached files from old SDK exist
+4. Verify the dependency version is compatible with your project's compile SDK version
