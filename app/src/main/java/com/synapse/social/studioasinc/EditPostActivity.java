@@ -633,9 +633,9 @@ public class EditPostActivity extends AppCompatActivity {
 		}
 		
 		// Apply post settings
-		PostUpdateMap.put("post_hide_views_count", String.valueOf(hideViewsCount));
-		PostUpdateMap.put("post_hide_like_count", String.valueOf(hideLikesCount));
-		PostUpdateMap.put("post_hide_comments_count", String.valueOf(hideCommentsCount));
+		PostUpdateMap.put("post_hide_views_count", hideViewsCount);
+		PostUpdateMap.put("post_hide_like_count", hideLikesCount);
+		PostUpdateMap.put("post_hide_comments_count", hideCommentsCount);
 		
 		if (hidePostFromEveryone) {
 			PostUpdateMap.put("post_visibility", "private");
@@ -643,8 +643,8 @@ public class EditPostActivity extends AppCompatActivity {
 			PostUpdateMap.put("post_visibility", "public");
 		}
 		
-		PostUpdateMap.put("post_disable_favorite", String.valueOf(disableSaveToFavorites));
-		PostUpdateMap.put("post_disable_comments", String.valueOf(disableComments));
+		PostUpdateMap.put("post_disable_favorite", disableSaveToFavorites);
+		PostUpdateMap.put("post_disable_comments", disableComments);
 		PostUpdateMap.put("last_edited", String.valueOf((long)(cc.getTimeInMillis())));
 		
 		FirebaseDatabase.getInstance().getReference("skyline/posts").child(postKey).updateChildren(PostUpdateMap, new DatabaseReference.CompletionListener() {
@@ -713,6 +713,7 @@ public class EditPostActivity extends AppCompatActivity {
 					disableCommentsSwitch.setChecked(true);
 					disableCommentsSwitch.setEnabled(false);
 				} else {
+					disableCommentsSwitch.setChecked(false);
 					disableCommentsSwitch.setEnabled(true);
 				}
 			}

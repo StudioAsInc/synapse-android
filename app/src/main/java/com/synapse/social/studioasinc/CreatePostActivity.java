@@ -97,8 +97,6 @@ public class CreatePostActivity extends AppCompatActivity {
 	private ProgressDialog SynapseLoadingDialog;
 	private String UniquePostKey = "";
 	private HashMap<String, Object> PostSendMap = new HashMap<>();
-	private HashMap<String, Object> m = new HashMap<>();
-	private String IMG_BB_API_KEY = "";
 	private String selectedImagePath = "";
 	private boolean hasImage = false;
 	
@@ -119,34 +117,10 @@ public class CreatePostActivity extends AppCompatActivity {
 	private ImageView postImageView;
 	private LinearLayout imagePlaceholder;
 	private LinearLayout settingsButton;
-	
-	private Vibrator vbr;
-	private FirebaseAuth auth;
-	private OnCompleteListener<AuthResult> _auth_create_user_listener;
-	private OnCompleteListener<AuthResult> _auth_sign_in_listener;
-	private OnCompleteListener<Void> _auth_reset_password_listener;
-	private OnCompleteListener<Void> auth_updateEmailListener;
-	private OnCompleteListener<Void> auth_updatePasswordListener;
-	private OnCompleteListener<Void> auth_emailVerificationSentListener;
-	private OnCompleteListener<Void> auth_deleteUserListener;
-	private OnCompleteListener<Void> auth_updateProfileListener;
-	private OnCompleteListener<AuthResult> auth_phoneAuthListener;
-	private OnCompleteListener<AuthResult> auth_googleSignInListener;
 	private DatabaseReference maindb = _firebase.getReference("skyline");
-	private ChildEventListener _maindb_child_listener;
-	private StorageReference post_image_storage_db = _firebase_storage.getReference("skyline");
-	private OnCompleteListener<Uri> _post_image_storage_db_upload_success_listener;
-	private OnSuccessListener<FileDownloadTask.TaskSnapshot> _post_image_storage_db_download_success_listener;
-	private OnSuccessListener _post_image_storage_db_delete_success_listener;
-	private OnProgressListener _post_image_storage_db_upload_progress_listener;
-	private OnProgressListener _post_image_storage_db_download_progress_listener;
-	private OnFailureListener _post_image_storage_db_failure_listener;
 	private Calendar cc = Calendar.getInstance();
 	private SharedPreferences appSavedData;
 	private DatabaseReference fdb = _firebase.getReference("notify");
-	private ChildEventListener _fdb_child_listener;
-	private AlertDialog.Builder d;
-	private ProgressDialog p;
 	
 	// Post settings variables
 	private boolean hideViewsCount = false;
@@ -196,10 +170,7 @@ public class CreatePostActivity extends AppCompatActivity {
 		postImageView = findViewById(R.id.postImageView);
 		imagePlaceholder = findViewById(R.id.imagePlaceholder);
 		settingsButton = findViewById(R.id.settingsButton);
-		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-		auth = FirebaseAuth.getInstance();
 		appSavedData = getSharedPreferences("data", Activity.MODE_PRIVATE);
-		d = new AlertDialog.Builder(this);
 		
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -246,221 +217,6 @@ public class CreatePostActivity extends AppCompatActivity {
 				
 			}
 		});
-		
-		_maindb_child_listener = new ChildEventListener() {
-			@Override
-			public void onChildAdded(DataSnapshot _param1, String _param2) {
-				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-				final String _childKey = _param1.getKey();
-				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
-			}
-			
-			@Override
-			public void onChildChanged(DataSnapshot _param1, String _param2) {
-				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-				final String _childKey = _param1.getKey();
-				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
-			}
-			
-			@Override
-			public void onChildMoved(DataSnapshot _param1, String _param2) {
-				
-			}
-			
-			@Override
-			public void onChildRemoved(DataSnapshot _param1) {
-				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-				final String _childKey = _param1.getKey();
-				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
-			}
-			
-			@Override
-			public void onCancelled(DatabaseError _param1) {
-				final int _errorCode = _param1.getCode();
-				final String _errorMessage = _param1.getMessage();
-				
-			}
-		};
-		maindb.addChildEventListener(_maindb_child_listener);
-		
-		_post_image_storage_db_upload_progress_listener = new OnProgressListener<UploadTask.TaskSnapshot>() {
-			@Override
-			public void onProgress(UploadTask.TaskSnapshot _param1) {
-				double _progressValue = (100.0 * _param1.getBytesTransferred()) / _param1.getTotalByteCount();
-				
-			}
-		};
-		
-		_post_image_storage_db_download_progress_listener = new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
-			@Override
-			public void onProgress(FileDownloadTask.TaskSnapshot _param1) {
-				double _progressValue = (100.0 * _param1.getBytesTransferred()) / _param1.getTotalByteCount();
-				
-			}
-		};
-		
-		_post_image_storage_db_upload_success_listener = new OnCompleteListener<Uri>() {
-			@Override
-			public void onComplete(Task<Uri> _param1) {
-				final String _downloadUrl = _param1.getResult().toString();
-				_savePostToDatabase(_downloadUrl);
-			}
-		};
-		
-		_post_image_storage_db_download_success_listener = new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-			@Override
-			public void onSuccess(FileDownloadTask.TaskSnapshot _param1) {
-				final long _totalByteCount = _param1.getTotalByteCount();
-				
-			}
-		};
-		
-		_post_image_storage_db_delete_success_listener = new OnSuccessListener() {
-			@Override
-			public void onSuccess(Object _param1) {
-				
-			}
-		};
-		
-		_post_image_storage_db_failure_listener = new OnFailureListener() {
-			@Override
-			public void onFailure(Exception _param1) {
-				final String _message = _param1.getMessage();
-				_LoadingDialog(false);
-				SketchwareUtil.showMessage(getApplicationContext(), _message);
-			}
-		};
-		
-		_fdb_child_listener = new ChildEventListener() {
-			@Override
-			public void onChildAdded(DataSnapshot _param1, String _param2) {
-				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-				final String _childKey = _param1.getKey();
-				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
-			}
-			
-			@Override
-			public void onChildChanged(DataSnapshot _param1, String _param2) {
-				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-				final String _childKey = _param1.getKey();
-				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
-			}
-			
-			@Override
-			public void onChildMoved(DataSnapshot _param1, String _param2) {
-				
-			}
-			
-			@Override
-			public void onChildRemoved(DataSnapshot _param1) {
-				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-				final String _childKey = _param1.getKey();
-				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
-			}
-			
-			@Override
-			public void onCancelled(DatabaseError _param1) {
-				final int _errorCode = _param1.getCode();
-				final String _errorMessage = _param1.getMessage();
-				
-			}
-		};
-		fdb.addChildEventListener(_fdb_child_listener);
-		
-		auth_updateEmailListener = new OnCompleteListener<Void>() {
-			@Override
-			public void onComplete(Task<Void> _param1) {
-				final boolean _success = _param1.isSuccessful();
-				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
-			}
-		};
-		
-		auth_updatePasswordListener = new OnCompleteListener<Void>() {
-			@Override
-			public void onComplete(Task<Void> _param1) {
-				final boolean _success = _param1.isSuccessful();
-				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
-			}
-		};
-		
-		auth_emailVerificationSentListener = new OnCompleteListener<Void>() {
-			@Override
-			public void onComplete(Task<Void> _param1) {
-				final boolean _success = _param1.isSuccessful();
-				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
-			}
-		};
-		
-		auth_deleteUserListener = new OnCompleteListener<Void>() {
-			@Override
-			public void onComplete(Task<Void> _param1) {
-				final boolean _success = _param1.isSuccessful();
-				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
-			}
-		};
-		
-		auth_phoneAuthListener = new OnCompleteListener<AuthResult>() {
-			@Override
-			public void onComplete(Task<AuthResult> task) {
-				final boolean _success = task.isSuccessful();
-				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
-			}
-		};
-		
-		auth_updateProfileListener = new OnCompleteListener<Void>() {
-			@Override
-			public void onComplete(Task<Void> _param1) {
-				final boolean _success = _param1.isSuccessful();
-				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
-			}
-		};
-		
-		auth_googleSignInListener = new OnCompleteListener<AuthResult>() {
-			@Override
-			public void onComplete(Task<AuthResult> task) {
-				final boolean _success = task.isSuccessful();
-				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
-			}
-		};
-		
-		_auth_create_user_listener = new OnCompleteListener<AuthResult>() {
-			@Override
-			public void onComplete(Task<AuthResult> _param1) {
-				final boolean _success = _param1.isSuccessful();
-				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
-			}
-		};
-		
-		_auth_sign_in_listener = new OnCompleteListener<AuthResult>() {
-			@Override
-			public void onComplete(Task<AuthResult> _param1) {
-				final boolean _success = _param1.isSuccessful();
-				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
-			}
-		};
-		
-		_auth_reset_password_listener = new OnCompleteListener<Void>() {
-			@Override
-			public void onComplete(Task<Void> _param1) {
-				final boolean _success = _param1.isSuccessful();
-				
-			}
-		};
 	}
 	
 	private void initializeLogic() {
@@ -485,25 +241,23 @@ public class CreatePostActivity extends AppCompatActivity {
 		
 		switch (_requestCode) {
 			case REQ_CD_IMAGE_PICKER:
-			if (_resultCode == Activity.RESULT_OK) {
-				ArrayList<String> _filePath = new ArrayList<>();
-				if (_data != null) {
-					if (_data.getClipData() != null) {
-						for (int _index = 0; _index < _data.getClipData().getItemCount(); _index++) {
-							ClipData.Item _item = _data.getClipData().getItemAt(_index);
-							_filePath.add(FileUtil.convertUriToFilePath(getApplicationContext(), _item.getUri()));
-						}
-					}
-					else {
-						_filePath.add(FileUtil.convertUriToFilePath(getApplicationContext(), _data.getData()));
-					}
-				}
-				selectedImagePath = _filePath.get((int)(0));
-				hasImage = true;
-				_loadSelectedImage();
-			}
-			else {
+			if (_resultCode == Activity.RESULT_OK && _data != null) {
+				String imagePath = null;
 				
+				if (_data.getClipData() != null) {
+					// Multiple images selected, use only the first one
+					ClipData.Item item = _data.getClipData().getItemAt(0);
+					imagePath = FileUtil.convertUriToFilePath(getApplicationContext(), item.getUri());
+				} else if (_data.getData() != null) {
+					// Single image selected
+					imagePath = FileUtil.convertUriToFilePath(getApplicationContext(), _data.getData());
+				}
+				
+				if (imagePath != null) {
+					selectedImagePath = imagePath;
+					hasImage = true;
+					_loadSelectedImage();
+				}
 			}
 			break;
 			default:
@@ -599,9 +353,9 @@ public class CreatePostActivity extends AppCompatActivity {
 		}
 		
 		// Apply post settings
-		PostSendMap.put("post_hide_views_count", String.valueOf(hideViewsCount));
-		PostSendMap.put("post_hide_like_count", String.valueOf(hideLikesCount));
-		PostSendMap.put("post_hide_comments_count", String.valueOf(hideCommentsCount));
+		PostSendMap.put("post_hide_views_count", hideViewsCount);
+		PostSendMap.put("post_hide_like_count", hideLikesCount);
+		PostSendMap.put("post_hide_comments_count", hideCommentsCount);
 		
 		if (hidePostFromEveryone) {
 			PostSendMap.put("post_visibility", "private");
@@ -609,8 +363,8 @@ public class CreatePostActivity extends AppCompatActivity {
 			PostSendMap.put("post_visibility", "public");
 		}
 		
-		PostSendMap.put("post_disable_favorite", String.valueOf(disableSaveToFavorites));
-		PostSendMap.put("post_disable_comments", String.valueOf(disableComments));
+		PostSendMap.put("post_disable_favorite", disableSaveToFavorites);
+		PostSendMap.put("post_disable_comments", disableComments);
 		PostSendMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
 		
 		FirebaseDatabase.getInstance().getReference("skyline/posts").child(UniquePostKey).updateChildren(PostSendMap, new DatabaseReference.CompletionListener() {
@@ -679,6 +433,7 @@ public class CreatePostActivity extends AppCompatActivity {
 					disableCommentsSwitch.setChecked(true);
 					disableCommentsSwitch.setEnabled(false);
 				} else {
+					disableCommentsSwitch.setChecked(false);
 					disableCommentsSwitch.setEnabled(true);
 				}
 			}
