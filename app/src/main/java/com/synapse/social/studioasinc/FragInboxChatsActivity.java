@@ -605,7 +605,7 @@ public class FragInboxChatsActivity extends Fragment {
 														if (avatar == null || "null".equals(avatar)) {
 															profileCardImage.setImageResource(R.drawable.avatar);
 														} else {
-															Glide.with(getContext().getApplicationContext()).load(Uri.parse(avatar)).into(profileCardImage);
+                                                            Glide.with(profileCardImage).load(Uri.parse(avatar)).into(profileCardImage);
 														}
 													}
 
