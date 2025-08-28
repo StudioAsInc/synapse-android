@@ -29,22 +29,21 @@ import com.synapse.social.studioasinc.model.Attachment;
 import com.synapse.social.studioasinc.util.UIUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageImageCarouselAdapter.ImageCarouselViewHolder> {
     
     private static final String TAG = "MessageImageCarouselAdapter";
     
     private final Context context;
-    private final ArrayList<HashMap<String, Object>> attachments;
+    private final ArrayList<Attachment> attachments;
     private final OnImageClickListener onImageClickListener;
     private final int imageSize;
     
     public interface OnImageClickListener {
-        void onImageClick(int position, ArrayList<HashMap<String, Object>> attachments);
+        void onImageClick(int position, ArrayList<Attachment> attachments);
     }
     
-    public MessageImageCarouselAdapter(Context context, ArrayList<HashMap<String, Object>> attachments, OnImageClickListener listener) {
+    public MessageImageCarouselAdapter(Context context, ArrayList<Attachment> attachments, OnImageClickListener listener) {
         this.context = context;
         this.attachments = attachments;
         this.onImageClickListener = listener;
@@ -60,8 +59,8 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
     
     @Override
     public void onBindViewHolder(@NonNull ImageCarouselViewHolder holder, int position) {
-        HashMap<String, Object> attachment = attachments.get(position);
-        String publicId = (String) attachment.get("publicId");
+        Attachment attachment = attachments.get(position);
+        String publicId = attachment.getPublicId();
         
         // Set consistent size for all carousel images
         ViewGroup.LayoutParams layoutParams = holder.cardView.getLayoutParams();
