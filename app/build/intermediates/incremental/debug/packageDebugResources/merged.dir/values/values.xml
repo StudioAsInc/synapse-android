@@ -244,9 +244,9 @@
     <string name="gender_title">Gender</string>
     <string name="gift">Gift</string>
     <string name="gifts">Gifts</string>
-    <string name="google_api_key" translatable="false">demo-api-key</string>
-    <string name="google_app_id" translatable="false">1:123456789:android:abc123</string>
-    <string name="google_crash_reporting_api_key" translatable="false">demo-api-key</string>
+    <string name="google_api_key" translatable="false">demo-api-key-debug</string>
+    <string name="google_app_id" translatable="false">1:123456789:android:def456</string>
+    <string name="google_crash_reporting_api_key" translatable="false">demo-api-key-debug</string>
     <string name="google_sign_not_available">Sign in with Google is not yet available.</string>
     <string name="google_storage_bucket" translatable="false">demo-project.appspot.com</string>
     <string name="hide_post_from_everyone">Hide post from everyone</string>

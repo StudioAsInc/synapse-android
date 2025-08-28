@@ -9,13 +9,32 @@
       "client_info": {
         "mobilesdk_app_id": "1:123456789:android:abc123",
         "android_client_info": {
-          "package_name": "com.synapse.social.studioasinc.debug"
+          "package_name": "com.synapse.social.studioasinc"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
           "current_key": "demo-api-key"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123456789:android:def456",
+        "android_client_info": {
+          "package_name": "com.synapse.social.studioasinc.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "demo-api-key-debug"
         }
       ],
       "services": {
