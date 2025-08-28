@@ -25,6 +25,15 @@ public class CarouselItemDecoration extends RecyclerView.ItemDecoration {
         this.spacing = spacingDp;
     }
     
+    /**
+     * Creates decoration with standard carousel spacing from dimens.xml
+     */
+    public static CarouselItemDecoration createWithStandardSpacing(View view) {
+        int spacingDp = (int) (view.getResources().getDimension(R.dimen.chat_carousel_spacing) / 
+                              view.getResources().getDisplayMetrics().density);
+        return new CarouselItemDecoration(spacingDp);
+    }
+    
     @Override
     public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, 
                               @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {

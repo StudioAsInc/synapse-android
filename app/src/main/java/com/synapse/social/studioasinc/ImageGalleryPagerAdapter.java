@@ -27,7 +27,6 @@ import com.github.chrisbanes.photoview.PhotoView;
 import com.synapse.social.studioasinc.model.Attachment;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class ImageGalleryPagerAdapter extends RecyclerView.Adapter<ImageGalleryPagerAdapter.ImageViewHolder> {
     private final Context context;
@@ -53,28 +52,29 @@ public class ImageGalleryPagerAdapter extends RecyclerView.Adapter<ImageGalleryP
         if (imageUrl != null && !imageUrl.isEmpty()) {
             holder.progressBar.setVisibility(View.VISIBLE);
             
+            int crossfadeDuration = context.getResources().getInteger(R.integer.crossfade_duration);
+            
             Glide.with(context)
                 .load(imageUrl)
-                .transition(DrawableTransitionOptions.withCrossFade(300))
-                .into(new com.bumptech.glide.request.target.CustomTarget<android.graphics.drawable.Drawable>() {
+                .transition(DrawableTransitionOptions.withCrossFade(crossfadeDuration))
+                .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
                     @Override
-                    public void onResourceReady(@NonNull android.graphics.drawable.Drawable resource, 
-                                              com.bumptech.glide.request.transition.Transition<? super android.graphics.drawable.Drawable> transition) {
-                        holder.progressBar.setVisibility(View.GONE);
-                        holder.photoView.setImageDrawable(resource);
-                    }
-                    
-                    @Override
-                    public void onLoadCleared(android.graphics.drawable.Drawable placeholder) {
-                        holder.progressBar.setVisibility(View.GONE);
-                    }
-                    
-                    @Override
-                    public void onLoadFailed(android.graphics.drawable.Drawable errorDrawable) {
+                    public boolean onLoadFailed(@androidx.annotation.Nullable com.bumptech.glide.load.engine.GlideException e, Object model, 
+                                              com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
                         holder.progressBar.setVisibility(View.GONE);
                         holder.photoView.setImageResource(R.drawable.ph_imgbluredsqure);
+                        return false; // Allow Glide to handle the error drawable
                     }
-                });
+                    
+                    @Override
+                    public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, 
+                                                 com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, 
+                                                 com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                        holder.progressBar.setVisibility(View.GONE);
+                        return false; // Allow Glide to set the image
+                    }
+                })
+                .into(holder.photoView);
         } else {
             holder.progressBar.setVisibility(View.GONE);
             holder.photoView.setImageResource(R.drawable.ph_imgbluredsqure);

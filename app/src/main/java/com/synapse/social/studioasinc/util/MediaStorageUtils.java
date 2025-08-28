@@ -79,10 +79,14 @@ public class MediaStorageUtils {
             return;
         }
 
+        // Make variables effectively final for lambda
+        final String finalImageUrl = imageUrl;
+        final String finalBaseFileName = fileName;
+
         executor.execute(() -> {
             try {
                 // Detect file extension and mime type from URL or content
-                FileInfo fileInfo = detectImageFileInfo(imageUrl, fileName);
+                FileInfo fileInfo = detectImageFileInfo(finalImageUrl, finalBaseFileName);
                 String finalFileName = fileInfo.fileName;
                 String mimeType = fileInfo.mimeType;
 
@@ -160,10 +164,14 @@ public class MediaStorageUtils {
             return;
         }
 
+        // Make variables effectively final for lambda
+        final String finalVideoUrl = videoUrl;
+        final String finalBaseFileName = fileName;
+
         executor.execute(() -> {
             try {
                 // Detect file extension and mime type from URL or content
-                FileInfo fileInfo = detectVideoFileInfo(videoUrl, fileName);
+                FileInfo fileInfo = detectVideoFileInfo(finalVideoUrl, finalBaseFileName);
                 String finalFileName = fileInfo.fileName;
                 String mimeType = fileInfo.mimeType;
 

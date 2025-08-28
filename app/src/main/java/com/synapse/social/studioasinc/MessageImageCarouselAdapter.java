@@ -12,7 +12,6 @@
 package com.synapse.social.studioasinc;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,7 +48,7 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
         this.context = context;
         this.attachments = attachments;
         this.onImageClickListener = listener;
-        this.imageSize = UIUtils.dpToPx(context, 200); // Standard size for carousel images
+        this.imageSize = (int) context.getResources().getDimension(R.dimen.chat_carousel_image_size);
     }
     
     @NonNull
@@ -71,13 +70,17 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
         holder.cardView.setLayoutParams(layoutParams);
         
         if (publicId != null && !publicId.isEmpty()) {
-            String imageUrl = CloudinaryConfig.buildCarouselImageUrl(publicId);
+            // Use optimized image URL based on actual view size for better performance
+            int densityDpi = context.getResources().getDisplayMetrics().densityDpi;
+            String imageUrl = CloudinaryConfig.buildCarouselImageUrl(publicId, densityDpi);
+            
+            int cornerRadius = (int) context.getResources().getDimension(R.dimen.gallery_image_corner_radius);
             
             Glide.with(context)
                 .load(imageUrl)
                 .placeholder(R.drawable.ph_imgbluredsqure)
                 .error(R.drawable.ph_imgbluredsqure)
-                .transform(new RoundedCorners(UIUtils.dpToPx(context, 16)))
+                .transform(new RoundedCorners(cornerRadius))
                 .into(holder.imageView);
         } else {
             holder.imageView.setImageResource(R.drawable.ph_imgbluredsqure);
@@ -96,14 +99,18 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
         holder.cardView.setForeground(context.getDrawable(outValue.resourceId));
         
         // Add subtle scale animation on touch
+        int animationDuration = context.getResources().getInteger(R.integer.touch_feedback_duration);
+        float scaleDown = 0.95f; // Scale down value
+        float scaleNormal = 1.0f; // Normal scale value
+        
         holder.itemView.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case android.view.MotionEvent.ACTION_DOWN:
-                    v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100).start();
+                    v.animate().scaleX(scaleDown).scaleY(scaleDown).setDuration(animationDuration).start();
                     break;
                 case android.view.MotionEvent.ACTION_UP:
                 case android.view.MotionEvent.ACTION_CANCEL:
-                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start();
+                    v.animate().scaleX(scaleNormal).scaleY(scaleNormal).setDuration(animationDuration).start();
                     break;
             }
             return false; // Allow the click listener to handle the click

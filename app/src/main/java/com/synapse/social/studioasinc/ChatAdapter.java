@@ -155,9 +155,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         if (holder.message_layout != null) {
             ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.message_layout.getLayoutParams();
-            int sideMarginPx = UIUtils.dpToPx(_context, 40);
-            int topBottomPaddingPx = UIUtils.dpToPx(_context, 2);
-            int innerPaddingPx = UIUtils.dpToPx(_context, 8);
+            int sideMarginPx = (int) _context.getResources().getDimension(R.dimen.chat_side_margin);
+            int topBottomPaddingPx = (int) _context.getResources().getDimension(R.dimen.chat_padding_vertical);
+            int innerPaddingPx = (int) _context.getResources().getDimension(R.dimen.chat_padding_inner);
 
             if (isMyMessage) {
                 params.setMargins(sideMarginPx, topBottomPaddingPx, innerPaddingPx, topBottomPaddingPx);
@@ -282,7 +282,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         String publicId = (String) attachments.get(0).get("publicId");
                                         if (publicId != null && !publicId.isEmpty() && _context != null) {
                                             String imageUrl = CloudinaryConfig.buildReplyPreviewUrl(publicId);
-                                            Glide.with(_context).load(imageUrl).placeholder(R.drawable.ph_imgbluredsqure).error(R.drawable.ph_imgbluredsqure).transform(new RoundedCorners(UIUtils.dpToPx(_context, 20))).into(holder.mRepliedMessageLayoutImage);
+                                            int cornerRadius = (int) _context.getResources().getDimension(R.dimen.reply_preview_corner_radius);
+                                            Glide.with(_context).load(imageUrl).placeholder(R.drawable.ph_imgbluredsqure).error(R.drawable.ph_imgbluredsqure).transform(new RoundedCorners(cornerRadius)).into(holder.mRepliedMessageLayoutImage);
                                         } else {
                                             holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
                                         }
@@ -311,7 +312,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
                                 leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
                                 leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
-                                leftBarDrawable.setCornerRadius(UIUtils.dpToPx(_context, 100));
+                                int leftBarRadius = (int) _context.getResources().getDimension(R.dimen.left_bar_corner_radius);
+                                leftBarDrawable.setCornerRadius(leftBarRadius);
                                 holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
                             }
 
@@ -513,7 +515,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         // Add item decoration for proper spacing
         if (holder.mediaCarouselRecyclerView.getItemDecorationCount() == 0) {
-            holder.mediaCarouselRecyclerView.addItemDecoration(new CarouselItemDecoration(8));
+            holder.mediaCarouselRecyclerView.addItemDecoration(
+                CarouselItemDecoration.createWithStandardSpacing(holder.mediaCarouselRecyclerView));
         }
         
         // Create adapter with click listener to open gallery
@@ -548,7 +551,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int count = attachments.size();
         int colCount = 2;
         int maxImages = 4;
-        int totalGridWidth = UIUtils.dpToPx(_context, 250);
+        int totalGridWidth = (int) _context.getResources().getDimension(R.dimen.chat_grid_width);
         int imageSize = totalGridWidth / 2;
 
         ViewGroup.LayoutParams cardParams = holder.mediaContainerCard.getLayoutParams();
