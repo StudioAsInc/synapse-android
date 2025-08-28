@@ -808,7 +808,6 @@ public class FragInboxChatsActivity extends Fragment {
                                                 }
                                             }
                                         });
-                                        });
                                     }
 
                                     @Override
