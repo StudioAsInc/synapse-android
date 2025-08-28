@@ -40,6 +40,7 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import android.content.Intent;
 import android.app.Activity;
+import android.view.Gravity;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -419,40 +420,82 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
         String msgText = data.getOrDefault("message_text", "").toString();
-        holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
-        if (!msgText.isEmpty()) {
-            com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
+        
+        // Ensure message text is always visible and has content if available
+        if (holder.message_text != null) {
+            holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
+            if (!msgText.isEmpty()) {
+                com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
+            }
         }
 
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
         Log.d(TAG, "Attachments found: " + (attachments != null ? attachments.size() : 0));
         
+        // CRITICAL FIX: Always ensure at least one layout is visible
         if (attachments == null || attachments.isEmpty()) {
-            Log.w(TAG, "No attachments found, hiding media layouts");
+            Log.w(TAG, "No attachments found, showing only message text");
             if (holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.GONE);
             if (holder.mediaCarouselContainer != null) holder.mediaCarouselContainer.setVisibility(View.GONE);
+            
+            // If no message text either, show a minimal placeholder to prevent thin line
+            if (msgText.isEmpty() && holder.message_text != null) {
+                holder.message_text.setVisibility(View.VISIBLE);
+                holder.message_text.setText("Media message");
+            }
             return;
         }
 
         int count = attachments.size();
         Log.d(TAG, "Processing " + count + " attachments");
 
-        // Decide between grid layout (for 1-2 images) and carousel (for 3+ images or enhanced UX)
-        // Carousel provides better UX for multiple images with "View All" functionality
-        boolean useCarousel = count >= 3;
+        // TEMPORARY FIX: Always use grid layout for now to ensure messages show properly
+        // TODO: Re-enable carousel after debugging
+        boolean useCarousel = false; // count >= 3;
+        
+        Log.d(TAG, "useCarousel: " + useCarousel + ", count: " + count);
         
         if (useCarousel && holder.mediaCarouselContainer != null && holder.mediaCarouselRecyclerView != null) {
             // Hide grid layout and show carousel
+            Log.d(TAG, "Using carousel layout");
             if (holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.GONE);
             holder.mediaCarouselContainer.setVisibility(View.VISIBLE);
             
-            setupCarouselLayout(holder, attachments);
+            try {
+                setupCarouselLayout(holder, attachments);
+            } catch (Exception e) {
+                Log.e(TAG, "Error setting up carousel, falling back to grid: " + e.getMessage());
+                // Fallback to grid layout if carousel fails
+                if (holder.mediaCarouselContainer != null) holder.mediaCarouselContainer.setVisibility(View.GONE);
+                if (holder.mediaGridLayout != null) {
+                    holder.mediaGridLayout.setVisibility(View.VISIBLE);
+                    setupGridLayout(holder, attachments);
+                }
+            }
         } else {
-            // Use traditional grid layout for 1-2 images
+            // Use traditional grid layout
+            Log.d(TAG, "Using grid layout");
             if (holder.mediaCarouselContainer != null) holder.mediaCarouselContainer.setVisibility(View.GONE);
             if (holder.mediaGridLayout != null) {
                 holder.mediaGridLayout.setVisibility(View.VISIBLE);
-                setupGridLayout(holder, attachments);
+                try {
+                    setupGridLayout(holder, attachments);
+                    Log.d(TAG, "Grid layout setup completed successfully");
+                } catch (Exception e) {
+                    Log.e(TAG, "Error setting up grid layout: " + e.getMessage());
+                    // Fallback: show message text instead
+                    if (holder.message_text != null) {
+                        holder.message_text.setVisibility(View.VISIBLE);
+                        holder.message_text.setText("Media message (" + attachments.size() + " images)");
+                    }
+                }
+            } else {
+                Log.e(TAG, "mediaGridLayout is null!");
+                // Fallback: show message text instead
+                if (holder.message_text != null) {
+                    holder.message_text.setVisibility(View.VISIBLE);
+                    holder.message_text.setText("Media message (" + attachments.size() + " images)");
+                }
             }
         }
     }
@@ -499,6 +542,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         gridLayout.removeAllViews();
         
         int count = attachments.size();
+        int colCount = 2;
+        int maxImages = 4;
         int totalGridWidth = dpToPx(250);
         int imageSize = totalGridWidth / 2;
 
@@ -506,16 +551,97 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         cardParams.width = totalGridWidth;
         holder.mediaContainerCard.setLayoutParams(cardParams);
 
+        gridLayout.setColumnCount(colCount);
+        
+        // Ensure grid layout has minimum dimensions to prevent thin line
+        ViewGroup.LayoutParams gridParams = gridLayout.getLayoutParams();
+        if (gridParams == null) {
+            gridParams = new ViewGroup.LayoutParams(totalGridWidth, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+        gridParams.width = totalGridWidth;
+        gridLayout.setLayoutParams(gridParams);
+
         if (count == 1) {
             gridLayout.setColumnCount(1);
             HashMap<String, Object> attachment = attachments.get(0);
             ImageView iv = createImageView(attachment, totalGridWidth, true, 0, attachments);
             gridLayout.addView(iv);
-        } else if (count == 2) {
-            gridLayout.setColumnCount(2);
-            for (int i = 0; i < count; i++) {
+
+        } else if (count == 3) {
+            int portraitIndex = -1;
+            for(int i=0; i < attachments.size(); i++){
+                HashMap<String, Object> attachment = attachments.get(i);
+                Object widthObj = attachment.get("width");
+                Object heightObj = attachment.get("height");
+
+                if (widthObj != null && heightObj != null) {
+                    double width = ((Number) widthObj).doubleValue();
+                    double height = ((Number) heightObj).doubleValue();
+                    if(height > width){
+                        portraitIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if(portraitIndex != -1){
+                // Tall layout
+                ImageView iv1 = createImageView(attachments.get(portraitIndex), imageSize, false, portraitIndex, attachments);
+                GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 2, 1f), GridLayout.spec(0, 1, 1f));
+                iv1.setLayoutParams(params1);
+                gridLayout.addView(iv1);
+
+                int attachmentIndex = 0;
+                for(int i=0; i<2; i++){
+                    if(attachmentIndex == portraitIndex) attachmentIndex++;
+                    ImageView iv = createImageView(attachments.get(attachmentIndex), imageSize, false, attachmentIndex, attachments);
+                    GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(i, 1, 1f), GridLayout.spec(1, 1, 1f));
+                    iv.setLayoutParams(params);
+                    gridLayout.addView(iv);
+                    attachmentIndex++;
+                }
+
+            } else {
+                // Wide layout
+                ImageView iv1 = createImageView(attachments.get(0), totalGridWidth, false, 0, attachments);
+                GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
+                iv1.setLayoutParams(params1);
+                gridLayout.addView(iv1);
+
+                for (int i = 1; i < 3; i++) {
+                    ImageView iv = createImageView(attachments.get(i), imageSize, false, i, attachments);
+                    GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
+                    iv.setLayoutParams(params);
+                    gridLayout.addView(iv);
+                }
+            }
+        } else { // 2, 4, or >4 images
+            int limit = Math.min(count, maxImages);
+            for (int i = 0; i < limit; i++) {
+                View viewToAdd;
                 ImageView iv = createImageView(attachments.get(i), imageSize, false, i, attachments);
-                gridLayout.addView(iv);
+
+                if (i == maxImages - 1 && count > maxImages) {
+                    RelativeLayout overlayContainer = new RelativeLayout(_context);
+                    overlayContainer.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
+                    overlayContainer.addView(iv);
+
+                    View overlay = new View(_context);
+                    overlay.setBackgroundColor(0x40000000);
+                    overlayContainer.addView(overlay, new ViewGroup.LayoutParams(imageSize, imageSize));
+
+                    TextView moreText = new TextView(_context);
+                    moreText.setText("+" + (count - maxImages));
+                    moreText.setTextColor(Color.WHITE);
+                    moreText.setTextSize(24);
+                    moreText.setGravity(Gravity.CENTER);
+                    overlayContainer.addView(moreText, new ViewGroup.LayoutParams(imageSize, imageSize));
+                    viewToAdd = overlayContainer;
+                    viewToAdd.setOnClickListener(v -> openImageGallery(attachments, 3));
+                } else {
+                    viewToAdd = iv;
+                }
+                gridLayout.addView(viewToAdd);
             }
         }
     }

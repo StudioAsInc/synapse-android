@@ -84,9 +84,18 @@ class MediaViewHolder extends BaseMessageViewHolder {
         super(view);
         mediaGridLayout = view.findViewById(R.id.mediaGridLayout);
         mediaContainerCard = view.findViewById(R.id.mediaContainerCard);
-        mediaCarouselContainer = view.findViewById(R.id.mediaCarouselContainer);
-        mediaCarouselRecyclerView = view.findViewById(R.id.mediaCarouselRecyclerView);
-        viewAllImagesButton = view.findViewById(R.id.viewAllImagesButton);
+        
+        // These might be null if layout doesn't contain them, handle gracefully
+        try {
+            mediaCarouselContainer = view.findViewById(R.id.mediaCarouselContainer);
+            mediaCarouselRecyclerView = view.findViewById(R.id.mediaCarouselRecyclerView);
+            viewAllImagesButton = view.findViewById(R.id.viewAllImagesButton);
+        } catch (Exception e) {
+            // Layout might not contain these newer elements
+            mediaCarouselContainer = null;
+            mediaCarouselRecyclerView = null;
+            viewAllImagesButton = null;
+        }
     }
 }
 
