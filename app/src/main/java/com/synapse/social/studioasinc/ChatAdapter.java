@@ -326,7 +326,20 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             if (holder.mRepliedMessageLayoutMessage != null) holder.mRepliedMessageLayoutMessage.setOnClickListener(clickListener);
                             if (holder.mRepliedMessageLayoutImage != null) holder.mRepliedMessageLayoutImage.setOnClickListener(clickListener);
                         } else {
-                            holder.mRepliedMessageLayout.setVisibility(View.GONE);
+                            // Show a lightweight loading state while the replied message loads
+                            holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
+
+                            if (holder.mRepliedMessageLayoutImage != null) {
+                                holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
+                            }
+                            if (holder.mRepliedMessageLayoutUsername != null) {
+                                holder.mRepliedMessageLayoutUsername.setText("Loading…");
+                                holder.mRepliedMessageLayoutUsername.setTextColor(isMyMessage ? Color.WHITE : Color.parseColor("#1A1A1A"));
+                            }
+                            if (holder.mRepliedMessageLayoutMessage != null) {
+                                holder.mRepliedMessageLayoutMessage.setText("");
+                                holder.mRepliedMessageLayoutMessage.setVisibility(View.GONE);
+                            }
                         }
                     } else {
                         holder.mRepliedMessageLayout.setVisibility(View.GONE);
