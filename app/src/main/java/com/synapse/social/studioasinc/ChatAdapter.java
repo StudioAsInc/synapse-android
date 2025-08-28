@@ -521,6 +521,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         // Convert to typed attachments once and create adapter with click listener to open gallery
         ArrayList<Attachment> typedAttachments = AttachmentUtils.fromHashMapList(attachments);
+        if (typedAttachments == null || typedAttachments.isEmpty()) {
+            return;
+        }
         MessageImageCarouselAdapter adapter = new MessageImageCarouselAdapter(_context, typedAttachments, 
             (position, attachmentList) -> openImageGalleryTyped(attachmentList, position));
         holder.mediaCarouselRecyclerView.setAdapter(adapter);
@@ -656,20 +659,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     
     private void openImageGallery(ArrayList<HashMap<String, Object>> attachments, int position) {
         if (_context != null && chatActivity != null) {
-            Intent intent = new Intent(_context, ImageGalleryActivity.class);
-            
-            // Convert to new Parcelable format for better performance and type safety
-            ArrayList<Attachment> parcelableAttachments = AttachmentUtils.fromHashMapList(attachments);
-            intent.putParcelableArrayListExtra("attachments_parcelable", parcelableAttachments);
-            
-            intent.putExtra("position", position);
-            
-            _context.startActivity(intent);
-            
-            // Add smooth transition animations
-            if (_context instanceof Activity) {
-                ((Activity) _context).overridePendingTransition(R.anim.slide_in_from_right, R.anim.slide_out_to_left);
-            }
+            ArrayList<Attachment> typed = AttachmentUtils.fromHashMapList(attachments);
+            openImageGalleryTyped(typed, position);
         }
     }
 

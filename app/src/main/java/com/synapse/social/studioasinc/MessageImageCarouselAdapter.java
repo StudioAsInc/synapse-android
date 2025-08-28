@@ -59,6 +59,11 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
     
     @Override
     public void onBindViewHolder(@NonNull ImageCarouselViewHolder holder, int position) {
+        if (attachments == null || position < 0 || position >= attachments.size()) {
+            holder.imageView.setImageResource(R.drawable.ph_imgbluredsqure);
+            holder.itemView.setOnClickListener(null);
+            return;
+        }
         Attachment attachment = attachments.get(position);
         String publicId = attachment.getPublicId();
         
@@ -87,7 +92,7 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
         
         // Set click listener to open gallery
         holder.itemView.setOnClickListener(v -> {
-            if (onImageClickListener != null) {
+            if (onImageClickListener != null && position >= 0 && position < attachments.size()) {
                 onImageClickListener.onImageClick(position, attachments);
             }
         });
