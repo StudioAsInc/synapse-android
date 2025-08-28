@@ -499,7 +499,7 @@ public class FragInboxChatsActivity extends Fragment {
                 View _view = _holder.itemView;
                 
                 LinearLayout main = _view.findViewById(R.id.main);
-                ImageView circleimageview1 = _view.findViewById(R.id.circleimageview);
+                ImageView circleimageview1 = _view.findViewById(R.id.imageview1);
                 TextView textview1 = _view.findViewById(R.id.textview1);
                 TextView textview2 = _view.findViewById(R.id.textview2);
                 TextView textview3 = _view.findViewById(R.id.textview3);
