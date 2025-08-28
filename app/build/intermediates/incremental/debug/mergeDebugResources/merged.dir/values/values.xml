@@ -2777,6 +2777,7 @@
     <string name="chat">Chat</string>
     <string name="clear_text_end_icon_content_description">Clear text</string>
     <string name="close_app">Close App</string>
+    <string name="com.google.firebase.crashlytics.mapping_file_id" ns1:ignore="UnusedResources,TypographyDashes" translatable="false">00000000000000000000000000000000</string>
     <string name="comment">Comment</string>
     <string name="comment_liked_by_publisher">This comment was liked by the publisher</string>
     <string name="comments">Comments</string>
@@ -2862,15 +2863,17 @@
     <string name="followers">Followers</string>
     <string name="following">Following</string>
     <string name="forgot_password">Forgot password?</string>
+    <string name="gcm_defaultSenderId" translatable="false">123456789</string>
     <string name="gender_gone_title">I do not want to specify</string>
     <string name="gender_subtitle">By specifying your gender in your profile, you can get other people to know you and you can be recommended to people who use filters, thus increasing your interaction.</string>
     <string name="gender_title">Gender</string>
     <string name="gift">Gift</string>
     <string name="gifts">Gifts</string>
-    <string name="google_api_key" translatable="false">AIzaSyCJSkL4MsVRVwb9sWGvkFQHz-RaGUY-2xo</string>
-    <string name="google_app_id" translatable="false">1:308269400761:android:91c2e7415671cc49ed9168</string>
+    <string name="google_api_key" translatable="false">demo-api-key</string>
+    <string name="google_app_id" translatable="false">1:123456789:android:abc123</string>
+    <string name="google_crash_reporting_api_key" translatable="false">demo-api-key</string>
     <string name="google_sign_not_available">Sign in with Google is not yet available.</string>
-    <string name="google_storage_bucket" translatable="false">sai-synapse.firebasestorage.app</string>
+    <string name="google_storage_bucket" translatable="false">demo-project.appspot.com</string>
     <string name="hide_bottom_view_on_scroll_behavior" translatable="false">com.google.android.material.behavior.HideBottomViewOnScrollBehavior</string>
     <string name="hide_post_from_everyone">Hide post from everyone</string>
     <string name="hide_post_from_everyone_subtitle">Enable this to hide the post from everyone but comments are not supported on private posts and all comments will be deleted if you have already created this post.</string>
@@ -3117,7 +3120,7 @@
     <string name="profile_history_title">Profile Photo History</string>
     <string name="profile_image_url">Profile Image Url</string>
     <string name="profile_tab">PROFILE</string>
-    <string name="project_id" translatable="false">sai-synapse</string>
+    <string name="project_id" translatable="false">demo-project</string>
     <string name="public_psts">Global</string>
     <string name="publish">Post</string>
     <string name="reasons_may_be">Possible reasons:</string>

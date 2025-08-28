@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-91:/values-v23/values-v23.xml",
+            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/values-v23/values-v23.xml",
             "map": [
                 {
                     "source": "/home/ubuntu/.gradle/caches/8.13/transforms/d581cfb7cad9802cffa5de432990479c/transformed/work-runtime-2.10.3/res/values-v23/values-v23.xml",

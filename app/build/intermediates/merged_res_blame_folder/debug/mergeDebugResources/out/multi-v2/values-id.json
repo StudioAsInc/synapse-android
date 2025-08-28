@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-91:/values-id/values-id.xml",
+            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/values-id/values-id.xml",
             "map": [
                 {
                     "source": "/home/ubuntu/.gradle/caches/8.13/transforms/63bb874587f141fc3584619c875dcb61/transformed/jetified-android-image-cropper-2.8.0/res/values-id/values-id.xml",
