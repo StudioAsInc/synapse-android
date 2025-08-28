@@ -1945,7 +1945,6 @@ public class ChatActivity extends AppCompatActivity {
 
                 @Override
                 public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                    // CRITICAL FIX: Check activity state before processing Firebase events
                     if (isFinishing() || isActivityDestroyed() || ChatMessagesList == null || chatAdapter == null) {
                         Log.w("ChatActivity", "Skipping onChildChanged - activity is finishing or destroyed");
                         return;
@@ -1954,22 +1953,20 @@ public class ChatActivity extends AppCompatActivity {
                     try {
                         if (snapshot.exists()) {
                             HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-                        if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
-                            String key = updatedMessage.get(KEY_KEY).toString();
+                            if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
+                                String key = updatedMessage.get(KEY_KEY).toString();
 
-                            // Find the exact position of the message to update
-                            for (int i = 0; i < ChatMessagesList.size(); i++) {
-                                if (ChatMessagesList.get(i).get(KEY_KEY) != null &&
-                                    ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
+                                for (int i = 0; i < ChatMessagesList.size(); i++) {
+                                    if (ChatMessagesList.get(i).get(KEY_KEY) != null &&
+                                        ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
 
-                                    // Update the message in the list
-                                    ChatMessagesList.set(i, updatedMessage);
+                                        ChatMessagesList.set(i, updatedMessage);
 
-                                    // Notify adapter of the specific item change
-                                    if (chatAdapter != null) {
-                                        chatAdapter.notifyItemChanged(i);
+                                        if (chatAdapter != null) {
+                                            chatAdapter.notifyItemChanged(i);
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
@@ -1980,7 +1977,6 @@ public class ChatActivity extends AppCompatActivity {
 
                 @Override
                 public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-                    // CRITICAL FIX: Check activity state before processing Firebase events
                     if (isFinishing() || isActivityDestroyed() || ChatMessagesList == null || chatAdapter == null) {
                         Log.w("ChatActivity", "Skipping onChildRemoved - activity is finishing or destroyed");
                         return;
@@ -1988,31 +1984,27 @@ public class ChatActivity extends AppCompatActivity {
 
                     try {
                         if (snapshot.exists()) {
-                        String removedKey = snapshot.getKey();
-                        if (removedKey != null) {
-                            // Find and remove the message by key (not by position)
-                            for (int i = 0; i < ChatMessagesList.size(); i++) {
-                                if (ChatMessagesList.get(i).get(KEY_KEY) != null &&
-                                    ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
+                            String removedKey = snapshot.getKey();
+                            if (removedKey != null) {
+                                for (int i = 0; i < ChatMessagesList.size(); i++) {
+                                    if (ChatMessagesList.get(i).get(KEY_KEY) != null &&
+                                        ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
 
-                                    // Remove the message from the list
-                                    ChatMessagesList.remove(i);
+                                        ChatMessagesList.remove(i);
 
-                                    // Notify adapter of the removal
-                                    if (chatAdapter != null) {
-                                        chatAdapter.notifyItemRemoved(i);
+                                        if (chatAdapter != null) {
+                                            chatAdapter.notifyItemRemoved(i);
 
-                                        // Update the last item's timestamp if needed
-                                        if (!ChatMessagesList.isEmpty() && i < ChatMessagesList.size()) {
-                                            chatAdapter.notifyItemChanged(Math.min(i, ChatMessagesList.size() - 1));
+                                            if (!ChatMessagesList.isEmpty() && i < ChatMessagesList.size()) {
+                                                chatAdapter.notifyItemChanged(Math.min(i, ChatMessagesList.size() - 1));
+                                            }
                                         }
-                                    }
 
-                                    // Check if list is empty
-                                    if (ChatMessagesList.isEmpty()) {
-                                        _safeUpdateRecyclerView();
+                                        if (ChatMessagesList.isEmpty()) {
+                                            _safeUpdateRecyclerView();
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
@@ -2023,7 +2015,7 @@ public class ChatActivity extends AppCompatActivity {
 
                 @Override
                 public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                    // Not implemented - message reordering not needed for this chat
+                    Log.d("ChatActivity", "onChildMoved - not implemented");
                 }
 
                 @Override
@@ -3461,7 +3453,7 @@ public class ChatActivity extends AppCompatActivity {
         gemini.setShowThinking(showThinking);
         gemini.setSystemInstruction(
         "You are a concise text assistant. Always return ONLY the transformed text (no explanation, no labels). " +
-        "Preserve original formatting. Censor profanity by replacing letters with asterisks (e.g., s***t). " +
+        "Preserve original formatting. Censor profanity by replacing letters with asterisks (e.g., st). " +
         "Keep the language and tone of the input unless asked to change it."
         );
         gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
