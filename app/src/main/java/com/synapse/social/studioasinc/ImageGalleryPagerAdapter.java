@@ -24,15 +24,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.github.chrisbanes.photoview.PhotoView;
+import com.synapse.social.studioasinc.model.Attachment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ImageGalleryPagerAdapter extends RecyclerView.Adapter<ImageGalleryPagerAdapter.ImageViewHolder> {
     private final Context context;
-    private final ArrayList<HashMap<String, Object>> attachments;
+    private final ArrayList<Attachment> attachments;
     
-    public ImageGalleryPagerAdapter(Context context, ArrayList<HashMap<String, Object>> attachments) {
+    public ImageGalleryPagerAdapter(Context context, ArrayList<Attachment> attachments) {
         this.context = context;
         this.attachments = attachments;
     }
@@ -46,8 +47,8 @@ public class ImageGalleryPagerAdapter extends RecyclerView.Adapter<ImageGalleryP
     
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
-        HashMap<String, Object> attachment = attachments.get(position);
-        String imageUrl = (String) attachment.get("url");
+        Attachment attachment = attachments.get(position);
+        String imageUrl = attachment.getUrl();
         
         if (imageUrl != null && !imageUrl.isEmpty()) {
             holder.progressBar.setVisibility(View.VISIBLE);

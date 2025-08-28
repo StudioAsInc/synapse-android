@@ -25,6 +25,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.synapse.social.studioasinc.config.CloudinaryConfig;
+import com.synapse.social.studioasinc.model.Attachment;
+import com.synapse.social.studioasinc.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +49,7 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
         this.context = context;
         this.attachments = attachments;
         this.onImageClickListener = listener;
-        this.imageSize = dpToPx(context, 200); // Standard size for carousel images
+        this.imageSize = UIUtils.dpToPx(context, 200); // Standard size for carousel images
     }
     
     @NonNull
@@ -68,13 +71,13 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
         holder.cardView.setLayoutParams(layoutParams);
         
         if (publicId != null && !publicId.isEmpty()) {
-            String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill/" + publicId;
+            String imageUrl = CloudinaryConfig.buildCarouselImageUrl(publicId);
             
             Glide.with(context)
                 .load(imageUrl)
                 .placeholder(R.drawable.ph_imgbluredsqure)
                 .error(R.drawable.ph_imgbluredsqure)
-                .transform(new RoundedCorners(dpToPx(context, 16)))
+                .transform(new RoundedCorners(UIUtils.dpToPx(context, 16)))
                 .into(holder.imageView);
         } else {
             holder.imageView.setImageResource(R.drawable.ph_imgbluredsqure);
@@ -121,9 +124,5 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
             cardView = itemView.findViewById(R.id.carouselImageCard);
             imageView = itemView.findViewById(R.id.carouselImageView);
         }
-    }
-    
-    private int dpToPx(Context context, int dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
     }
 }

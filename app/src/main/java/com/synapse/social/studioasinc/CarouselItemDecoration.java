@@ -12,10 +12,10 @@
 package com.synapse.social.studioasinc;
 
 import android.graphics.Rect;
-import android.util.TypedValue;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.synapse.social.studioasinc.util.UIUtils;
 
 public class CarouselItemDecoration extends RecyclerView.ItemDecoration {
     
@@ -31,7 +31,7 @@ public class CarouselItemDecoration extends RecyclerView.ItemDecoration {
         int position = parent.getChildAdapterPosition(view);
         int itemCount = state.getItemCount();
         
-        int spacingPx = dpToPx(view, spacing);
+        int spacingPx = UIUtils.dpToPx(view, spacing);
         
         // Add spacing to start of first item
         if (position == 0) {
@@ -45,10 +45,5 @@ public class CarouselItemDecoration extends RecyclerView.ItemDecoration {
         if (position == itemCount - 1) {
             outRect.right = spacingPx * 2;
         }
-    }
-    
-    private int dpToPx(View view, int dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, 
-                view.getResources().getDisplayMetrics());
     }
 }

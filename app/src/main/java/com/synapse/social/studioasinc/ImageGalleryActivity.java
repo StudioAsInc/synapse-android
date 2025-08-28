@@ -28,6 +28,10 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.synapse.social.studioasinc.model.Attachment;
+import com.synapse.social.studioasinc.util.AttachmentUtils;
+import com.synapse.social.studioasinc.util.MediaStorageUtils;
+import com.synapse.social.studioasinc.util.SystemUIUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,7 +44,7 @@ public class ImageGalleryActivity extends AppCompatActivity {
     private TextView counterText;
     private ImageView closeButton;
     private FloatingActionButton downloadFab;
-    private ArrayList<HashMap<String, Object>> attachments;
+    private ArrayList<Attachment> attachments;
     private ImageGalleryPagerAdapter adapter;
     private int initialPosition = 0;
 
@@ -48,17 +52,8 @@ public class ImageGalleryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Full screen immersive mode
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getWindow().getDecorView().setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            | View.SYSTEM_UI_FLAG_FULLSCREEN
-            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        );
+        // Setup immersive mode using modern API
+        SystemUIUtils.setupImmersiveActivity(this);
         
         setContentView(R.layout.activity_image_gallery);
         
@@ -77,13 +72,20 @@ public class ImageGalleryActivity extends AppCompatActivity {
     
     private void handleIntent() {
         Intent intent = getIntent();
-        if (intent != null && intent.hasExtra("attachments")) {
-            attachments = (ArrayList<HashMap<String, Object>>) intent.getSerializableExtra("attachments");
+        if (intent != null) {
             initialPosition = intent.getIntExtra("position", 0);
-        } else {
-            // No attachments provided, finish activity
-            finish();
-            return;
+            
+            // Try to get Parcelable attachments first (new format)
+            if (intent.hasExtra("attachments_parcelable")) {
+                attachments = intent.getParcelableArrayListExtra("attachments_parcelable");
+            }
+            // Fallback to Serializable format (legacy)
+            else if (intent.hasExtra("attachments")) {
+                @SuppressWarnings("unchecked")
+                ArrayList<HashMap<String, Object>> hashMapAttachments = 
+                    (ArrayList<HashMap<String, Object>>) intent.getSerializableExtra("attachments");
+                attachments = AttachmentUtils.fromHashMapList(hashMapAttachments);
+            }
         }
         
         if (attachments == null || attachments.isEmpty()) {
@@ -130,31 +132,67 @@ public class ImageGalleryActivity extends AppCompatActivity {
         
         int currentPosition = viewPager.getCurrentItem();
         if (currentPosition >= 0 && currentPosition < attachments.size()) {
-            HashMap<String, Object> attachment = attachments.get(currentPosition);
-            String imageUrl = (String) attachment.get("url");
+            Attachment attachment = attachments.get(currentPosition);
+            String imageUrl = attachment.getUrl();
             
             if (imageUrl != null && !imageUrl.isEmpty()) {
-                downloadImage(imageUrl);
+                downloadImage(imageUrl, attachment);
             } else {
                 Toast.makeText(this, "Unable to download image", Toast.LENGTH_SHORT).show();
             }
         }
     }
     
-    private void downloadImage(String imageUrl) {
-        // Use Android DownloadManager for image download
+    private void downloadImage(String imageUrl, Attachment attachment) {
+        // Use modern MediaStore API for image download
         try {
-            android.app.DownloadManager downloadManager = (android.app.DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-            android.app.DownloadManager.Request request = new android.app.DownloadManager.Request(Uri.parse(imageUrl));
+            String fileName = "synapse_image_" + System.currentTimeMillis();
             
-            String fileName = "synapse_image_" + System.currentTimeMillis() + ".jpg";
-            request.setTitle("Synapse Image");
-            request.setDescription("Downloading image...");
-            request.setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+            if (attachment.isVideo()) {
+                MediaStorageUtils.downloadVideo(this, imageUrl, fileName, new MediaStorageUtils.DownloadCallback() {
+                    @Override
+                    public void onSuccess(Uri savedUri, String fileName) {
+                        runOnUiThread(() -> 
+                            Toast.makeText(ImageGalleryActivity.this, "Video saved to gallery", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                    
+                    @Override
+                    public void onProgress(int progress) {
+                        // Could show progress if needed
+                    }
+                    
+                    @Override
+                    public void onError(String error) {
+                        runOnUiThread(() -> 
+                            Toast.makeText(ImageGalleryActivity.this, "Download failed: " + error, Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                });
+            } else {
+                MediaStorageUtils.downloadImage(this, imageUrl, fileName, new MediaStorageUtils.DownloadCallback() {
+                    @Override
+                    public void onSuccess(Uri savedUri, String fileName) {
+                        runOnUiThread(() -> 
+                            Toast.makeText(ImageGalleryActivity.this, "Image saved to gallery", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                    
+                    @Override
+                    public void onProgress(int progress) {
+                        // Could show progress if needed
+                    }
+                    
+                    @Override
+                    public void onError(String error) {
+                        runOnUiThread(() -> 
+                            Toast.makeText(ImageGalleryActivity.this, "Download failed: " + error, Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                });
+            }
             
-            downloadManager.enqueue(request);
-            Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Download started...", Toast.LENGTH_SHORT).show();
             
         } catch (Exception e) {
             Toast.makeText(this, "Download failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -169,20 +207,8 @@ public class ImageGalleryActivity extends AppCompatActivity {
         closeButton.setVisibility(visibility);
         downloadFab.setVisibility(visibility);
         
-        if (isVisible) {
-            // Hide system UI
-            getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            );
-        } else {
-            // Show system UI
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-        }
+        // Use modern SystemUI utility
+        SystemUIUtils.toggleImmersiveMode(this, isVisible);
     }
     
     @Override

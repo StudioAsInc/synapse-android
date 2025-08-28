@@ -41,6 +41,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.content.Intent;
 import android.app.Activity;
 import android.view.Gravity;
+import com.synapse.social.studioasinc.config.CloudinaryConfig;
+import com.synapse.social.studioasinc.model.Attachment;
+import com.synapse.social.studioasinc.util.AttachmentUtils;
+import com.synapse.social.studioasinc.util.UIUtils;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -151,9 +155,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         if (holder.message_layout != null) {
             ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.message_layout.getLayoutParams();
-            int sideMarginPx = dpToPx(40);
-            int topBottomPaddingPx = dpToPx(2);
-            int innerPaddingPx = dpToPx(8);
+            int sideMarginPx = UIUtils.dpToPx(_context, 40);
+            int topBottomPaddingPx = UIUtils.dpToPx(_context, 2);
+            int innerPaddingPx = UIUtils.dpToPx(_context, 8);
 
             if (isMyMessage) {
                 params.setMargins(sideMarginPx, topBottomPaddingPx, innerPaddingPx, topBottomPaddingPx);
@@ -277,8 +281,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                         holder.mRepliedMessageLayoutImage.setVisibility(View.VISIBLE);
                                         String publicId = (String) attachments.get(0).get("publicId");
                                         if (publicId != null && !publicId.isEmpty() && _context != null) {
-                                            String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
-                                            Glide.with(_context).load(imageUrl).placeholder(R.drawable.ph_imgbluredsqure).error(R.drawable.ph_imgbluredsqure).transform(new RoundedCorners(dpToPx(20))).into(holder.mRepliedMessageLayoutImage);
+                                            String imageUrl = CloudinaryConfig.buildReplyPreviewUrl(publicId);
+                                            Glide.with(_context).load(imageUrl).placeholder(R.drawable.ph_imgbluredsqure).error(R.drawable.ph_imgbluredsqure).transform(new RoundedCorners(UIUtils.dpToPx(_context, 20))).into(holder.mRepliedMessageLayoutImage);
                                         } else {
                                             holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
                                         }
@@ -307,7 +311,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
                                 leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
                                 leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
-                                leftBarDrawable.setCornerRadius(dpToPx(100));
+                                leftBarDrawable.setCornerRadius(UIUtils.dpToPx(_context, 100));
                                 holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
                             }
 
@@ -544,7 +548,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int count = attachments.size();
         int colCount = 2;
         int maxImages = 4;
-        int totalGridWidth = dpToPx(250);
+        int totalGridWidth = UIUtils.dpToPx(_context, 250);
         int imageSize = totalGridWidth / 2;
 
         ViewGroup.LayoutParams cardParams = holder.mediaContainerCard.getLayoutParams();
@@ -649,8 +653,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void openImageGallery(ArrayList<HashMap<String, Object>> attachments, int position) {
         if (_context != null && chatActivity != null) {
             Intent intent = new Intent(_context, ImageGalleryActivity.class);
+            
+            // Convert to new Parcelable format for better performance and type safety
+            ArrayList<Attachment> parcelableAttachments = AttachmentUtils.fromHashMapList(attachments);
+            intent.putParcelableArrayListExtra("attachments_parcelable", parcelableAttachments);
+            
+            // Keep legacy format for backward compatibility
             intent.putExtra("attachments", attachments);
             intent.putExtra("position", position);
+            
             _context.startActivity(intent);
             
             // Add smooth transition animations
@@ -782,17 +793,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // scroll listener in ChatActivity. No action needed here.
     }
 
-    private int dpToPx(int dp) {
-        // CRITICAL FIX: Safe dp to px conversion with null checks
-        try {
-            if (_context != null && _context.getResources() != null && _context.getResources().getDisplayMetrics() != null) {
-                return (int) (dp * _context.getResources().getDisplayMetrics().density);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error converting dp to px: " + e.getMessage());
-        }
-        return dp; // Fallback to dp value
-    }
     
     // CRITICAL FIX: Smart timestamp visibility logic
     private boolean _shouldShowTimestamp(int position, HashMap<String, Object> currentMessage) {
