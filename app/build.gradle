@@ -2,7 +2,6 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
-    id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
     //id 'com.google.firebase.firebase-perf'
 }
@@ -188,4 +187,10 @@ dependencies {
     implementation 'io.noties.markwon:html:4.6.2'
 
     // Testing
+}
+
+// Apply Google Services plugin only if credentials file exists
+def googleServicesFile = file('google-services.json')
+if (googleServicesFile.exists()) {
+    apply plugin: 'com.google.gms.google-services'
 }
