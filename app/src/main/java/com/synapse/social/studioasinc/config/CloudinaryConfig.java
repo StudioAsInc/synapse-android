@@ -24,25 +24,27 @@ public class CloudinaryConfig {
     
     // Common image transformations
     public static final class ImageTransformations {
-        // Gallery thumbnails
-        public static final String GALLERY_THUMBNAIL = "w_400,h_400,c_fill";
+        // Gallery thumbnails (optimized for actual view size)
+        public static final String GALLERY_THUMBNAIL = "w_400,h_400,c_fill,q_auto,f_auto";
         
-        // Reply message preview
-        public static final String REPLY_PREVIEW = "w_120,h_120,c_fill";
+        // Reply message preview (120dp = ~120px on mdpi)
+        public static final String REPLY_PREVIEW = "w_120,h_120,c_fill,q_auto,f_auto";
         
-        // Carousel images
-        public static final String CAROUSEL_IMAGE = "w_400,h_400,c_fill";
+        // Carousel images (200dp = ~200px on mdpi, but we'll optimize for density)
+        public static final String CAROUSEL_IMAGE_SMALL = "w_200,h_200,c_fill,q_auto,f_auto";
+        public static final String CAROUSEL_IMAGE_MEDIUM = "w_400,h_400,c_fill,q_auto,f_auto";
+        public static final String CAROUSEL_IMAGE_LARGE = "w_600,h_600,c_fill,q_auto,f_auto";
         
         // Full resolution for gallery
         public static final String FULL_RESOLUTION = "q_auto,f_auto";
         
         // Profile pictures
-        public static final String PROFILE_SMALL = "w_100,h_100,c_fill,g_face";
-        public static final String PROFILE_MEDIUM = "w_200,h_200,c_fill,g_face";
+        public static final String PROFILE_SMALL = "w_100,h_100,c_fill,g_face,q_auto,f_auto";
+        public static final String PROFILE_MEDIUM = "w_200,h_200,c_fill,g_face,q_auto,f_auto";
         
         // Post images
-        public static final String POST_THUMBNAIL = "w_300,h_300,c_fill";
-        public static final String POST_FULL = "w_800,h_800,c_limit,q_auto";
+        public static final String POST_THUMBNAIL = "w_300,h_300,c_fill,q_auto,f_auto";
+        public static final String POST_FULL = "w_800,h_800,c_limit,q_auto,f_auto";
     }
     
     // Video transformations
@@ -105,13 +107,45 @@ public class CloudinaryConfig {
     }
     
     /**
-     * Builds a URL for carousel display.
+     * Builds a URL for carousel display with optimal size based on device density.
+     * 
+     * @param publicId The Cloudinary public ID
+     * @param densityDpi The device density DPI
+     * @return Complete Cloudinary URL for carousel
+     */
+    public static String buildCarouselImageUrl(String publicId, int densityDpi) {
+        String transformation;
+        if (densityDpi >= 480) { // xxhdpi and above
+            transformation = ImageTransformations.CAROUSEL_IMAGE_LARGE;
+        } else if (densityDpi >= 320) { // xhdpi and hdpi
+            transformation = ImageTransformations.CAROUSEL_IMAGE_MEDIUM;
+        } else { // mdpi and below
+            transformation = ImageTransformations.CAROUSEL_IMAGE_SMALL;
+        }
+        return buildImageUrl(publicId, transformation);
+    }
+    
+    /**
+     * Builds a URL for carousel display with default medium size.
      * 
      * @param publicId The Cloudinary public ID
      * @return Complete Cloudinary URL for carousel
      */
     public static String buildCarouselImageUrl(String publicId) {
-        return buildImageUrl(publicId, ImageTransformations.CAROUSEL_IMAGE);
+        return buildImageUrl(publicId, ImageTransformations.CAROUSEL_IMAGE_MEDIUM);
+    }
+    
+    /**
+     * Builds a URL with custom dimensions for optimal performance.
+     * 
+     * @param publicId The Cloudinary public ID
+     * @param widthPx Width in pixels
+     * @param heightPx Height in pixels
+     * @return Complete Cloudinary URL with custom dimensions
+     */
+    public static String buildOptimizedImageUrl(String publicId, int widthPx, int heightPx) {
+        String transformation = String.format("w_%d,h_%d,c_fill,q_auto,f_auto", widthPx, heightPx);
+        return buildImageUrl(publicId, transformation);
     }
     
     /**

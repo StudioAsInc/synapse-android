@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +48,21 @@ public class MediaStorageUtils {
     }
 
     /**
+     * Helper class to store file information.
+     */
+    private static class FileInfo {
+        String fileName;
+        String mimeType;
+        String extension;
+
+        FileInfo(String fileName, String mimeType, String extension) {
+            this.fileName = fileName;
+            this.mimeType = mimeType;
+            this.extension = extension;
+        }
+    }
+
+    /**
      * Downloads an image from URL and saves it to the device's Pictures directory
      * using the modern MediaStore API.
      * 
@@ -65,15 +81,15 @@ public class MediaStorageUtils {
 
         executor.execute(() -> {
             try {
-                // Ensure filename has proper extension
-                if (!fileName.toLowerCase().endsWith(".jpg") && !fileName.toLowerCase().endsWith(".jpeg") && !fileName.toLowerCase().endsWith(".png")) {
-                    fileName += ".jpg";
-                }
+                // Detect file extension and mime type from URL or content
+                FileInfo fileInfo = detectImageFileInfo(imageUrl, fileName);
+                String finalFileName = fileInfo.fileName;
+                String mimeType = fileInfo.mimeType;
 
                 // Create content values for MediaStore
                 ContentValues contentValues = new ContentValues();
-                contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
-                contentValues.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+                contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, finalFileName);
+                contentValues.put(MediaStore.Images.Media.MIME_TYPE, mimeType);
                 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     // For Android 10+ (API 29+), use relative path
@@ -146,14 +162,14 @@ public class MediaStorageUtils {
 
         executor.execute(() -> {
             try {
-                // Ensure filename has proper extension
-                if (!fileName.toLowerCase().endsWith(".mp4") && !fileName.toLowerCase().endsWith(".mov")) {
-                    fileName += ".mp4";
-                }
+                // Detect file extension and mime type from URL or content
+                FileInfo fileInfo = detectVideoFileInfo(videoUrl, fileName);
+                String finalFileName = fileInfo.fileName;
+                String mimeType = fileInfo.mimeType;
 
                 ContentValues contentValues = new ContentValues();
-                contentValues.put(MediaStore.Video.Media.DISPLAY_NAME, fileName);
-                contentValues.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
+                contentValues.put(MediaStore.Video.Media.DISPLAY_NAME, finalFileName);
+                contentValues.put(MediaStore.Video.Media.MIME_TYPE, mimeType);
                 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     contentValues.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/Synapse");
@@ -248,6 +264,122 @@ public class MediaStorageUtils {
         } finally {
             connection.disconnect();
         }
+    }
+
+    /**
+     * Detects file extension and mime type from image URL.
+     * 
+     * @param imageUrl The image URL
+     * @param baseFileName The base filename without extension
+     * @return FileInfo with detected information
+     */
+    private static FileInfo detectImageFileInfo(String imageUrl, String baseFileName) {
+        String extension = ".jpg"; // Default
+        String mimeType = "image/jpeg"; // Default
+        
+        try {
+            // First, try to detect from URL
+            String urlLower = imageUrl.toLowerCase();
+            if (urlLower.contains(".png")) {
+                extension = ".png";
+                mimeType = "image/png";
+            } else if (urlLower.contains(".gif")) {
+                extension = ".gif";
+                mimeType = "image/gif";
+            } else if (urlLower.contains(".webp")) {
+                extension = ".webp";
+                mimeType = "image/webp";
+            } else if (urlLower.contains(".bmp")) {
+                extension = ".bmp";
+                mimeType = "image/bmp";
+            } else if (urlLower.contains(".jpeg") || urlLower.contains(".jpg")) {
+                extension = ".jpg";
+                mimeType = "image/jpeg";
+            }
+            
+            // Try to get more accurate info from URL path
+            Uri uri = Uri.parse(imageUrl);
+            String path = uri.getPath();
+            if (path != null) {
+                int lastDot = path.lastIndexOf('.');
+                if (lastDot > 0 && lastDot < path.length() - 1) {
+                    String urlExtension = path.substring(lastDot).toLowerCase();
+                    String detectedMimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(urlExtension.substring(1));
+                    if (detectedMimeType != null && detectedMimeType.startsWith("image/")) {
+                        extension = urlExtension;
+                        mimeType = detectedMimeType;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Error detecting file type from URL, using defaults: " + e.getMessage());
+        }
+        
+        // Ensure filename has the correct extension
+        String finalFileName = baseFileName;
+        if (!finalFileName.toLowerCase().endsWith(extension.toLowerCase())) {
+            finalFileName += extension;
+        }
+        
+        return new FileInfo(finalFileName, mimeType, extension);
+    }
+
+    /**
+     * Detects file extension and mime type from video URL.
+     * 
+     * @param videoUrl The video URL
+     * @param baseFileName The base filename without extension
+     * @return FileInfo with detected information
+     */
+    private static FileInfo detectVideoFileInfo(String videoUrl, String baseFileName) {
+        String extension = ".mp4"; // Default
+        String mimeType = "video/mp4"; // Default
+        
+        try {
+            // Try to detect from URL
+            String urlLower = videoUrl.toLowerCase();
+            if (urlLower.contains(".mov")) {
+                extension = ".mov";
+                mimeType = "video/quicktime";
+            } else if (urlLower.contains(".avi")) {
+                extension = ".avi";
+                mimeType = "video/x-msvideo";
+            } else if (urlLower.contains(".mkv")) {
+                extension = ".mkv";
+                mimeType = "video/x-matroska";
+            } else if (urlLower.contains(".webm")) {
+                extension = ".webm";
+                mimeType = "video/webm";
+            } else if (urlLower.contains(".mp4")) {
+                extension = ".mp4";
+                mimeType = "video/mp4";
+            }
+            
+            // Try to get more accurate info from URL path
+            Uri uri = Uri.parse(videoUrl);
+            String path = uri.getPath();
+            if (path != null) {
+                int lastDot = path.lastIndexOf('.');
+                if (lastDot > 0 && lastDot < path.length() - 1) {
+                    String urlExtension = path.substring(lastDot).toLowerCase();
+                    String detectedMimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(urlExtension.substring(1));
+                    if (detectedMimeType != null && detectedMimeType.startsWith("video/")) {
+                        extension = urlExtension;
+                        mimeType = detectedMimeType;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Error detecting file type from URL, using defaults: " + e.getMessage());
+        }
+        
+        // Ensure filename has the correct extension
+        String finalFileName = baseFileName;
+        if (!finalFileName.toLowerCase().endsWith(extension.toLowerCase())) {
+            finalFileName += extension;
+        }
+        
+        return new FileInfo(finalFileName, mimeType, extension);
     }
 
     /**
