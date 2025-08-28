@@ -263,7 +263,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 holder.mRepliedMessageLayout.setCardBackgroundColor(Color.parseColor("#F5F5F5"));
                             }
 
-                            String repliedUid = (String) snapshot.get("uid");
+                            String repliedUid = snapshot.get("uid") instanceof String ? (String) snapshot.get("uid") : null;
                             String repliedText = (String) snapshot.get("message_text");
 
                             if (holder.mRepliedMessageLayoutImage != null) {
