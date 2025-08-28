@@ -927,7 +927,7 @@ public class ZoomInImageView extends ImageView {
    Discouraged APIs are allowed and are not deprecated, but they may be unfit
    for common use (e.g. due to slow performance or subtle behavior).
 
-/workspace/app/src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java:98: Warning: Use AppCompatResources.getDrawable() [UseCompatLoadingForDrawables from androidx.appcompat]
+/workspace/app/src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java:103: Warning: Use AppCompatResources.getDrawable() [UseCompatLoadingForDrawables from androidx.appcompat]
         holder.cardView.setForeground(context.getDrawable(outValue.resourceId));
                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -3597,7 +3597,7 @@ public class ZoomInImageView extends ImageView {
    </lint>
    ```
 
-/workspace/app/src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java:105: Warning: onTouch lambda should call View#performClick when a click is detected [ClickableViewAccessibility]
+/workspace/app/src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java:110: Warning: onTouch lambda should call View#performClick when a click is detected [ClickableViewAccessibility]
         holder.itemView.setOnTouchListener((v, event) -> {
                                            ^
 /workspace/app/src/main/java/com/synapse/social/studioasinc/widget/ZoomImageViewLib/ZoomInImageViewAttacher.java:60: Warning: Custom view `ImageView` has setOnTouchListener called on it but does not override performClick [ClickableViewAccessibility]
@@ -4570,22 +4570,22 @@ public class ZoomInImageView extends ImageView {
 /workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:503: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
                     holder.message_text.setText("Media message (" + attachments.size() + " images)");
                                                                                          ~~~~~~~~~~
-/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:533: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:536: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
                 holder.viewAllImagesButton.setText("View all " + attachments.size() + " images");
                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:533: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:536: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
                 holder.viewAllImagesButton.setText("View all " + attachments.size() + " images");
                                                    ~~~~~~~~~~~
-/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:533: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:536: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
                 holder.viewAllImagesButton.setText("View all " + attachments.size() + " images");
                                                                                       ~~~~~~~~~
-/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:642: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:645: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
                     moreText.setText("+" + (count - maxImages));
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~
-/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:774: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:765: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
             if (holder.linkPreviewTitle != null) holder.linkPreviewTitle.setText("Loading Preview...");
                                                                                  ~~~~~~~~~~~~~~~~~~~~
-/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:796: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java:787: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
                     if (holder.linkPreviewTitle != null) holder.linkPreviewTitle.setText("Cannot load preview");
                                                                                          ~~~~~~~~~~~~~~~~~~~~~
 /workspace/app/src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java:287: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]

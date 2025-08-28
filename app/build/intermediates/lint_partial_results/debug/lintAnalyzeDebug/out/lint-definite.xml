@@ -2998,12 +2998,12 @@
         message="Use `AppCompatResources.getDrawable()`">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java"
-            line="98"
+            line="103"
             column="39"
-            startOffset="4031"
-            endLine="98"
+            startOffset="4327"
+            endLine="103"
             endColumn="79"
-            endOffset="4071"/>
+            endOffset="4367"/>
     </incident>
 
     <incident
@@ -8559,12 +8559,12 @@
         message="`onTouch` lambda should call `View#performClick` when a click is detected">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java"
-            line="105"
+            line="110"
             column="44"
-            startOffset="4393"
-            endLine="116"
+            startOffset="4689"
+            endLine="121"
             endColumn="10"
-            endOffset="4998"/>
+            endOffset="5294"/>
     </incident>
 
     <incident
@@ -16973,12 +16973,12 @@
         message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="533"
+            line="536"
             column="52"
-            startOffset="31182"
-            endLine="533"
+            startOffset="31282"
+            endLine="536"
             endColumn="96"
-            endOffset="31226"/>
+            endOffset="31326"/>
     </incident>
 
     <incident
@@ -16987,12 +16987,12 @@
         message="String literal in `setText` can not be translated. Use Android resources instead.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="533"
+            line="536"
             column="52"
-            startOffset="31182"
-            endLine="533"
+            startOffset="31282"
+            endLine="536"
             endColumn="63"
-            endOffset="31193"/>
+            endOffset="31293"/>
     </incident>
 
     <incident
@@ -17001,12 +17001,12 @@
         message="String literal in `setText` can not be translated. Use Android resources instead.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="533"
+            line="536"
             column="87"
-            startOffset="31217"
-            endLine="533"
+            startOffset="31317"
+            endLine="536"
             endColumn="96"
-            endOffset="31226"/>
+            endOffset="31326"/>
     </incident>
 
     <incident
@@ -17015,12 +17015,12 @@
         message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="642"
+            line="645"
             column="38"
-            startOffset="36560"
-            endLine="642"
+            startOffset="36660"
+            endLine="645"
             endColumn="63"
-            endOffset="36585"/>
+            endOffset="36685"/>
     </incident>
 
     <incident
@@ -17029,12 +17029,12 @@
         message="String literal in `setText` can not be translated. Use Android resources instead.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="774"
+            line="765"
             column="82"
-            startOffset="43562"
-            endLine="774"
+            startOffset="43060"
+            endLine="765"
             endColumn="102"
-            endOffset="43582"/>
+            endOffset="43080"/>
     </incident>
 
     <incident
@@ -17043,12 +17043,12 @@
         message="String literal in `setText` can not be translated. Use Android resources instead.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="796"
+            line="787"
             column="90"
-            startOffset="45132"
-            endLine="796"
+            startOffset="44630"
+            endLine="787"
             endColumn="111"
-            endOffset="45153"/>
+            endOffset="44651"/>
     </incident>
 
     <incident

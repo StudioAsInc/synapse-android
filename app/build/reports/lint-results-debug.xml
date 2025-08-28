@@ -3434,7 +3434,7 @@
         errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/workspace/app/src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java"
-            line="98"
+            line="103"
             column="39"/>
     </issue>
 
@@ -16590,7 +16590,7 @@
         errorLine2="                                           ^">
         <location
             file="/workspace/app/src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java"
-            line="105"
+            line="110"
             column="44"/>
     </issue>
 
@@ -22254,7 +22254,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="533"
+            line="536"
             column="52"/>
     </issue>
 
@@ -22272,7 +22272,7 @@
         errorLine2="                                                   ~~~~~~~~~~~">
         <location
             file="/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="533"
+            line="536"
             column="52"/>
     </issue>
 
@@ -22290,7 +22290,7 @@
         errorLine2="                                                                                      ~~~~~~~~~">
         <location
             file="/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="533"
+            line="536"
             column="87"/>
     </issue>
 
@@ -22308,7 +22308,7 @@
         errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="642"
+            line="645"
             column="38"/>
     </issue>
 
@@ -22326,7 +22326,7 @@
         errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="774"
+            line="765"
             column="82"/>
     </issue>
 
@@ -22344,7 +22344,7 @@
         errorLine2="                                                                                         ~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/workspace/app/src/main/java/com/synapse/social/studioasinc/ChatAdapter.java"
-            line="796"
+            line="787"
             column="90"/>
     </issue>
 

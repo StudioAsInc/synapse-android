@@ -179,7 +179,7 @@ document.getElementById(id).style.display = 'none';
     <div class="mdl-layout__header-row">
       <span class="mdl-layout-title">Lint Report: 96 errors and 2114 warnings</span>
       <div class="mdl-layout-spacer"></div>
-      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Thu Aug 28 15:12:17 UTC 2025 by AGP (8.12.0)</nav>
+      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Thu Aug 28 15:16:06 UTC 2025 by AGP (8.12.0)</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">
@@ -3614,14 +3614,14 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java">../../src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java</a>:98</span>: <span class="message">Use <code>AppCompatResources.getDrawable()</code></span><br /><pre class="errorlines">
-<span class="lineno">  95 </span>  <span class="comment">// Add ripple effect with hover animation</span>
-<span class="lineno">  96 </span>  TypedValue outValue = <span class="keyword">new</span> TypedValue();
-<span class="lineno">  97 </span>  context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, <span class="keyword">true</span>);
-<span class="caretline"><span class="lineno">  98 </span>  holder.cardView.setForeground(<span class="warning">context.getDrawable(outValue.resourceId)</span>);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  99 </span>  
-<span class="lineno"> 100 </span>  <span class="comment">// Add subtle scale animation on touch</span>
-<span class="lineno"> 101 </span>  <span class="keyword">int</span> animationDuration = context.getResources().getInteger(R.integer.touch_feedback_duration);
+<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java">../../src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java</a>:103</span>: <span class="message">Use <code>AppCompatResources.getDrawable()</code></span><br /><pre class="errorlines">
+<span class="lineno"> 100 </span>  <span class="comment">// Add ripple effect with hover animation</span>
+<span class="lineno"> 101 </span>  TypedValue outValue = <span class="keyword">new</span> TypedValue();
+<span class="lineno"> 102 </span>  context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, <span class="keyword">true</span>);
+<span class="caretline"><span class="lineno"> 103 </span>  holder.cardView.setForeground(<span class="warning">context.getDrawable(outValue.resourceId)</span>);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 104 </span>  
+<span class="lineno"> 105 </span>  <span class="comment">// Add subtle scale animation on touch</span>
+<span class="lineno"> 106 </span>  <span class="keyword">int</span> animationDuration = context.getResources().getInteger(R.integer.touch_feedback_duration);
 </pre>
 
 </div>
@@ -7619,14 +7619,14 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java">../../src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java</a>:105</span>: <span class="message"><code>onTouch</code> lambda should call <code>View#performClick</code> when a click is detected</span><br /><pre class="errorlines">
-<span class="lineno"> 102 </span>  <span class="keyword">float</span> scaleDown = <span class="number">0.95f</span>; <span class="comment">// Scale down value</span>
-<span class="lineno"> 103 </span>  <span class="keyword">float</span> scaleNormal = <span class="number">1.0f</span>; <span class="comment">// Normal scale value</span>
-<span class="lineno"> 104 </span>  
-<span class="caretline"><span class="lineno"> 105 </span>  holder.itemView.setOnTouchListener(<span class="warning">(v, event) -> {</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 106 </span>      <span class="keyword">switch</span> (event.getAction()) {
-<span class="lineno"> 107 </span>          <span class="keyword">case</span> android.view.MotionEvent.ACTION_DOWN:
-<span class="lineno"> 108 </span>              v.animate().scaleX(scaleDown).scaleY(scaleDown).setDuration(animationDuration).start();
+<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java">../../src/main/java/com/synapse/social/studioasinc/MessageImageCarouselAdapter.java</a>:110</span>: <span class="message"><code>onTouch</code> lambda should call <code>View#performClick</code> when a click is detected</span><br /><pre class="errorlines">
+<span class="lineno"> 107 </span>  <span class="keyword">float</span> scaleDown = <span class="number">0.95f</span>; <span class="comment">// Scale down value</span>
+<span class="lineno"> 108 </span>  <span class="keyword">float</span> scaleNormal = <span class="number">1.0f</span>; <span class="comment">// Normal scale value</span>
+<span class="lineno"> 109 </span>  
+<span class="caretline"><span class="lineno"> 110 </span>  holder.itemView.setOnTouchListener(<span class="warning">(v, event) -> {</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 111 </span>      <span class="keyword">switch</span> (event.getAction()) {
+<span class="lineno"> 112 </span>          <span class="keyword">case</span> android.view.MotionEvent.ACTION_DOWN:
+<span class="lineno"> 113 </span>              v.animate().scaleX(scaleDown).scaleY(scaleDown).setDuration(animationDuration).start();
 </pre>
 
 <span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/widget/ZoomImageViewLib/ZoomInImageViewAttacher.java">../../src/main/java/com/synapse/social/studioasinc/widget/ZoomImageViewLib/ZoomInImageViewAttacher.java</a>:60</span>: <span class="message">Custom view `<code>ImageView</code>` has <code>setOnTouchListener</code> called on it but does not override <code>performClick</code></span><br /><pre class="errorlines">
@@ -8489,63 +8489,63 @@ Dismiss</button>            </div>
 <span class="lineno"> 506 </span>  }
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:533</span>: <span class="message">Do not concatenate text displayed with <code>setText</code>. Use resource string with placeholders.</span><br /><pre class="errorlines">
-<span class="lineno"> 530 </span>  <span class="keyword">if</span> (holder.viewAllImagesButton != <span class="keyword">null</span>) {
-<span class="lineno"> 531 </span>      <span class="keyword">if</span> (attachments.size() > <span class="number">3</span>) {
-<span class="lineno"> 532 </span>          holder.viewAllImagesButton.setVisibility(View.VISIBLE);
-<span class="caretline"><span class="lineno"> 533 </span>          holder.viewAllImagesButton.setText(<span class="warning"><span class="string">"View all "</span> + attachments.size() + <span class="string">" images"</span></span>);&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 534 </span>          holder.viewAllImagesButton.setOnClickListener(v -> openImageGalleryTyped(typedAttachments, <span class="number">0</span>));
-<span class="lineno"> 535 </span>      } <span class="keyword">else</span> {
-<span class="lineno"> 536 </span>          holder.viewAllImagesButton.setVisibility(View.GONE);
+<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:536</span>: <span class="message">Do not concatenate text displayed with <code>setText</code>. Use resource string with placeholders.</span><br /><pre class="errorlines">
+<span class="lineno"> 533 </span>  <span class="keyword">if</span> (holder.viewAllImagesButton != <span class="keyword">null</span>) {
+<span class="lineno"> 534 </span>      <span class="keyword">if</span> (attachments.size() > <span class="number">3</span>) {
+<span class="lineno"> 535 </span>          holder.viewAllImagesButton.setVisibility(View.VISIBLE);
+<span class="caretline"><span class="lineno"> 536 </span>          holder.viewAllImagesButton.setText(<span class="warning"><span class="string">"View all "</span> + attachments.size() + <span class="string">" images"</span></span>);&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 537 </span>          holder.viewAllImagesButton.setOnClickListener(v -> openImageGalleryTyped(typedAttachments, <span class="number">0</span>));
+<span class="lineno"> 538 </span>      } <span class="keyword">else</span> {
+<span class="lineno"> 539 </span>          holder.viewAllImagesButton.setVisibility(View.GONE);
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:533</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
-<span class="lineno"> 530 </span>  <span class="keyword">if</span> (holder.viewAllImagesButton != <span class="keyword">null</span>) {
-<span class="lineno"> 531 </span>      <span class="keyword">if</span> (attachments.size() > <span class="number">3</span>) {
-<span class="lineno"> 532 </span>          holder.viewAllImagesButton.setVisibility(View.VISIBLE);
-<span class="caretline"><span class="lineno"> 533 </span>          holder.viewAllImagesButton.setText(<span class="warning"><span class="string">"View all "</span></span> + attachments.size() + <span class="string">" images"</span>);&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 534 </span>          holder.viewAllImagesButton.setOnClickListener(v -> openImageGalleryTyped(typedAttachments, <span class="number">0</span>));
-<span class="lineno"> 535 </span>      } <span class="keyword">else</span> {
-<span class="lineno"> 536 </span>          holder.viewAllImagesButton.setVisibility(View.GONE);
+<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:536</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 533 </span>  <span class="keyword">if</span> (holder.viewAllImagesButton != <span class="keyword">null</span>) {
+<span class="lineno"> 534 </span>      <span class="keyword">if</span> (attachments.size() > <span class="number">3</span>) {
+<span class="lineno"> 535 </span>          holder.viewAllImagesButton.setVisibility(View.VISIBLE);
+<span class="caretline"><span class="lineno"> 536 </span>          holder.viewAllImagesButton.setText(<span class="warning"><span class="string">"View all "</span></span> + attachments.size() + <span class="string">" images"</span>);&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 537 </span>          holder.viewAllImagesButton.setOnClickListener(v -> openImageGalleryTyped(typedAttachments, <span class="number">0</span>));
+<span class="lineno"> 538 </span>      } <span class="keyword">else</span> {
+<span class="lineno"> 539 </span>          holder.viewAllImagesButton.setVisibility(View.GONE);
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:533</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
-<span class="lineno"> 530 </span>  <span class="keyword">if</span> (holder.viewAllImagesButton != <span class="keyword">null</span>) {
-<span class="lineno"> 531 </span>      <span class="keyword">if</span> (attachments.size() > <span class="number">3</span>) {
-<span class="lineno"> 532 </span>          holder.viewAllImagesButton.setVisibility(View.VISIBLE);
-<span class="caretline"><span class="lineno"> 533 </span>          holder.viewAllImagesButton.setText(<span class="string">"View all "</span> + attachments.size() + <span class="warning"><span class="string">" images"</span></span>);&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 534 </span>          holder.viewAllImagesButton.setOnClickListener(v -> openImageGalleryTyped(typedAttachments, <span class="number">0</span>));
-<span class="lineno"> 535 </span>      } <span class="keyword">else</span> {
-<span class="lineno"> 536 </span>          holder.viewAllImagesButton.setVisibility(View.GONE);
+<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:536</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 533 </span>  <span class="keyword">if</span> (holder.viewAllImagesButton != <span class="keyword">null</span>) {
+<span class="lineno"> 534 </span>      <span class="keyword">if</span> (attachments.size() > <span class="number">3</span>) {
+<span class="lineno"> 535 </span>          holder.viewAllImagesButton.setVisibility(View.VISIBLE);
+<span class="caretline"><span class="lineno"> 536 </span>          holder.viewAllImagesButton.setText(<span class="string">"View all "</span> + attachments.size() + <span class="warning"><span class="string">" images"</span></span>);&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 537 </span>          holder.viewAllImagesButton.setOnClickListener(v -> openImageGalleryTyped(typedAttachments, <span class="number">0</span>));
+<span class="lineno"> 538 </span>      } <span class="keyword">else</span> {
+<span class="lineno"> 539 </span>          holder.viewAllImagesButton.setVisibility(View.GONE);
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:642</span>: <span class="message">Do not concatenate text displayed with <code>setText</code>. Use resource string with placeholders.</span><br /><pre class="errorlines">
-<span class="lineno"> 639 </span>  overlayContainer.addView(overlay, <span class="keyword">new</span> ViewGroup.LayoutParams(imageSize, imageSize));
-<span class="lineno"> 640 </span>
-<span class="lineno"> 641 </span>  TextView moreText = <span class="keyword">new</span> TextView(_context);
-<span class="caretline"><span class="lineno"> 642 </span>  moreText.setText(<span class="warning"><span class="string">"+"</span> + (count - maxImages)</span>);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 643 </span>  moreText.setTextColor(Color.WHITE);
-<span class="lineno"> 644 </span>  moreText.setTextSize(<span class="number">24</span>);
-<span class="lineno"> 645 </span>  moreText.setGravity(Gravity.CENTER);
+<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:645</span>: <span class="message">Do not concatenate text displayed with <code>setText</code>. Use resource string with placeholders.</span><br /><pre class="errorlines">
+<span class="lineno"> 642 </span>  overlayContainer.addView(overlay, <span class="keyword">new</span> ViewGroup.LayoutParams(imageSize, imageSize));
+<span class="lineno"> 643 </span>
+<span class="lineno"> 644 </span>  TextView moreText = <span class="keyword">new</span> TextView(_context);
+<span class="caretline"><span class="lineno"> 645 </span>  moreText.setText(<span class="warning"><span class="string">"+"</span> + (count - maxImages)</span>);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 646 </span>  moreText.setTextColor(Color.WHITE);
+<span class="lineno"> 647 </span>  moreText.setTextSize(<span class="number">24</span>);
+<span class="lineno"> 648 </span>  moreText.setGravity(Gravity.CENTER);
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:774</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
-<span class="lineno"> 771 </span>  <span class="keyword">if</span> (urlToPreview != <span class="keyword">null</span>) {
-<span class="lineno"> 772 </span>      <span class="comment">// Check if link preview views exist before accessing them</span>
-<span class="lineno"> 773 </span>      <span class="keyword">if</span> (holder.linkPreviewImage != <span class="keyword">null</span>) holder.linkPreviewImage.setVisibility(View.GONE);
-<span class="caretline"><span class="lineno"> 774 </span>      <span class="keyword">if</span> (holder.linkPreviewTitle != <span class="keyword">null</span>) holder.linkPreviewTitle.setText(<span class="warning"><span class="string">"Loading Preview..."</span></span>);</span>
-<span class="lineno"> 775 </span>      <span class="keyword">if</span> (holder.linkPreviewDescription != <span class="keyword">null</span>) holder.linkPreviewDescription.setText(<span class="string">""</span>);
-<span class="lineno"> 776 </span>      <span class="keyword">if</span> (holder.linkPreviewDomain != <span class="keyword">null</span>) holder.linkPreviewDomain.setText(urlToPreview);
+<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:765</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 762 </span>  <span class="keyword">if</span> (urlToPreview != <span class="keyword">null</span>) {
+<span class="lineno"> 763 </span>      <span class="comment">// Check if link preview views exist before accessing them</span>
+<span class="lineno"> 764 </span>      <span class="keyword">if</span> (holder.linkPreviewImage != <span class="keyword">null</span>) holder.linkPreviewImage.setVisibility(View.GONE);
+<span class="caretline"><span class="lineno"> 765 </span>      <span class="keyword">if</span> (holder.linkPreviewTitle != <span class="keyword">null</span>) holder.linkPreviewTitle.setText(<span class="warning"><span class="string">"Loading Preview..."</span></span>);</span>
+<span class="lineno"> 766 </span>      <span class="keyword">if</span> (holder.linkPreviewDescription != <span class="keyword">null</span>) holder.linkPreviewDescription.setText(<span class="string">""</span>);
+<span class="lineno"> 767 </span>      <span class="keyword">if</span> (holder.linkPreviewDomain != <span class="keyword">null</span>) holder.linkPreviewDomain.setText(urlToPreview);
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:796</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
-<span class="lineno"> 793 </span>  <span class="annotation">@Override</span>
-<span class="lineno"> 794 </span>  <span class="keyword">public</span> <span class="keyword">void</span> onError(Exception e) {
-<span class="lineno"> 795 </span>      Log.e(TAG, <span class="string">"Link preview error: "</span> + e.getMessage());
-<span class="caretline"><span class="lineno"> 796 </span>      <span class="keyword">if</span> (holder.linkPreviewTitle != <span class="keyword">null</span>) holder.linkPreviewTitle.setText(<span class="warning"><span class="string">"Cannot load preview"</span></span>);</span>
-<span class="lineno"> 797 </span>      <span class="keyword">if</span> (holder.linkPreviewDescription != <span class="keyword">null</span>) holder.linkPreviewDescription.setText(<span class="string">""</span>);
-<span class="lineno"> 798 </span>      <span class="keyword">if</span> (holder.linkPreviewDomain != <span class="keyword">null</span>) holder.linkPreviewDomain.setText(urlToPreview);
-<span class="lineno"> 799 </span>      <span class="keyword">if</span> (holder.linkPreviewImage != <span class="keyword">null</span>) holder.linkPreviewImage.setVisibility(View.GONE);
+<span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java">../../src/main/java/com/synapse/social/studioasinc/ChatAdapter.java</a>:787</span>: <span class="message">String literal in <code>setText</code> can not be translated. Use Android resources instead.</span><br /><pre class="errorlines">
+<span class="lineno"> 784 </span>  <span class="annotation">@Override</span>
+<span class="lineno"> 785 </span>  <span class="keyword">public</span> <span class="keyword">void</span> onError(Exception e) {
+<span class="lineno"> 786 </span>      Log.e(TAG, <span class="string">"Link preview error: "</span> + e.getMessage());
+<span class="caretline"><span class="lineno"> 787 </span>      <span class="keyword">if</span> (holder.linkPreviewTitle != <span class="keyword">null</span>) holder.linkPreviewTitle.setText(<span class="warning"><span class="string">"Cannot load preview"</span></span>);</span>
+<span class="lineno"> 788 </span>      <span class="keyword">if</span> (holder.linkPreviewDescription != <span class="keyword">null</span>) holder.linkPreviewDescription.setText(<span class="string">""</span>);
+<span class="lineno"> 789 </span>      <span class="keyword">if</span> (holder.linkPreviewDomain != <span class="keyword">null</span>) holder.linkPreviewDomain.setText(urlToPreview);
+<span class="lineno"> 790 </span>      <span class="keyword">if</span> (holder.linkPreviewImage != <span class="keyword">null</span>) holder.linkPreviewImage.setVisibility(View.GONE);
 </pre>
 
 <span class="location"><a href="../../src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java">../../src/main/java/com/synapse/social/studioasinc/FragInboxChatsActivity.java</a>:287</span>: <span class="message">Do not concatenate text displayed with <code>setText</code>. Use resource string with placeholders.</span><br /><pre class="errorlines">
