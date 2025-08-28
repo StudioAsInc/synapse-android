@@ -810,6 +810,7 @@ public class FragInboxChatsActivity extends Fragment {
                                         });
                                     }
 
+
                                     @Override
                                     public void onCancelled(@NonNull DatabaseError databaseError) {
                                         Log.e("FragInboxChatsActivity", "Unread count listener cancelled: " + databaseError.getMessage());
@@ -818,7 +819,6 @@ public class FragInboxChatsActivity extends Fragment {
                             }
                         });
                     }
-
                 }
                 main.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -844,5 +844,6 @@ public class FragInboxChatsActivity extends Fragment {
                 super(v);
             }
         }
+    }
     }
 }
