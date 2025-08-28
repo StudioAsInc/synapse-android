@@ -3,3 +3,5 @@
 keystore.properties
 # Temporary javac argument files
 javac.*.args
+
+# Allow minimal Android SDK in repository
