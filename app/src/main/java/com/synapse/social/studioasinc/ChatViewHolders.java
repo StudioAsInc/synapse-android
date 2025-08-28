@@ -73,11 +73,13 @@ class BaseMessageViewHolder extends RecyclerView.ViewHolder {
 class TextViewHolder extends BaseMessageViewHolder { public TextViewHolder(View view) { super(view); } }
 
 class MediaViewHolder extends BaseMessageViewHolder {
-    GridLayout mediaGridLayout;
+    RecyclerView mediaCarouselRecyclerView;
+    TextView viewAllButton;
     CardView mediaContainerCard;
     public MediaViewHolder(View view) {
         super(view);
-        mediaGridLayout = view.findViewById(R.id.mediaGridLayout);
+        mediaCarouselRecyclerView = view.findViewById(R.id.mediaCarouselRecyclerView);
+        viewAllButton = view.findViewById(R.id.view_all_button);
         mediaContainerCard = view.findViewById(R.id.mediaContainerCard);
     }
 }

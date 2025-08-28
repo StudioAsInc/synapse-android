@@ -37,6 +37,9 @@ import android.widget.RelativeLayout;
 import com.google.firebase.database.GenericTypeIndicator;
 import android.view.MotionEvent;
 import android.widget.Toast;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import java.util.stream.Collectors;
+
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -422,163 +425,35 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
-        Log.d(TAG, "Attachments found: " + (attachments != null ? attachments.size() : 0));
-        
-        GridLayout gridLayout = holder.mediaGridLayout;
-        if (gridLayout == null) {
-            Log.e(TAG, "mediaGridLayout is null in MediaViewHolder");
-            return;
-        }
-
-        gridLayout.removeAllViews();
-        gridLayout.setVisibility(View.VISIBLE);
-
         if (attachments == null || attachments.isEmpty()) {
-            Log.w(TAG, "No attachments found, hiding grid layout");
-            gridLayout.setVisibility(View.GONE);
+            holder.mediaCarouselRecyclerView.setVisibility(View.GONE);
+            holder.viewAllButton.setVisibility(View.GONE);
             return;
         }
 
-        Log.d(TAG, "Processing " + attachments.size() + " attachments");
-        int count = attachments.size();
-        int colCount = 2;
-        int maxImages = 4;
-        int totalGridWidth = dpToPx(250);
-        int imageSize = totalGridWidth / 2;
+        holder.mediaCarouselRecyclerView.setVisibility(View.VISIBLE);
 
-        ViewGroup.LayoutParams cardParams = holder.mediaContainerCard.getLayoutParams();
-        cardParams.width = totalGridWidth;
-        holder.mediaContainerCard.setLayoutParams(cardParams);
+        // Set up the carousel RecyclerView
+        MediaCarouselAdapter carouselAdapter = new MediaCarouselAdapter(_context, attachments);
+        holder.mediaCarouselRecyclerView.setLayoutManager(new LinearLayoutManager(_context, LinearLayoutManager.HORIZONTAL, false));
+        holder.mediaCarouselRecyclerView.setAdapter(carouselAdapter);
 
-        gridLayout.setColumnCount(colCount);
-
-        if (count == 1) {
-            gridLayout.setColumnCount(1);
-            HashMap<String, Object> attachment = attachments.get(0);
-            ImageView iv = createImageView(attachment, totalGridWidth, true);
-            gridLayout.addView(iv);
-
-        } else if (count == 3) {
-            int portraitIndex = -1;
-            for(int i=0; i < attachments.size(); i++){
-                HashMap<String, Object> attachment = attachments.get(i);
-                Object widthObj = attachment.get("width");
-                Object heightObj = attachment.get("height");
-
-                if (widthObj != null && heightObj != null) {
-                    double width = ((Number) widthObj).doubleValue();
-                    double height = ((Number) heightObj).doubleValue();
-                    if(height > width){
-                        portraitIndex = i;
-                        break;
-                    }
-                }
-            }
-
-            if(portraitIndex != -1){
-                // Tall layout
-                ImageView iv1 = createImageView(attachments.get(portraitIndex), imageSize, false);
-                GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 2, 1f), GridLayout.spec(0, 1, 1f));
-                iv1.setLayoutParams(params1);
-                gridLayout.addView(iv1);
-
-                int attachmentIndex = 0;
-                for(int i=0; i<2; i++){
-                    if(attachmentIndex == portraitIndex) attachmentIndex++;
-                    ImageView iv = createImageView(attachments.get(attachmentIndex), imageSize, false);
-                    GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(i, 1, 1f), GridLayout.spec(1, 1, 1f));
-                    iv.setLayoutParams(params);
-                    gridLayout.addView(iv);
-                    attachmentIndex++;
-                }
-
-            } else {
-                // Wide layout
-                ImageView iv1 = createImageView(attachments.get(0), totalGridWidth, false);
-                GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
-                iv1.setLayoutParams(params1);
-                gridLayout.addView(iv1);
-
-                for (int i = 1; i < 3; i++) {
-                    ImageView iv = createImageView(attachments.get(i), imageSize, false);
-                    GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
-                    iv.setLayoutParams(params);
-                    gridLayout.addView(iv);
-                }
-            }
-        } else { // 2, 4, or >4 images
-            int limit = Math.min(count, maxImages);
-            for (int i = 0; i < limit; i++) {
-                View viewToAdd;
-                ImageView iv = createImageView(attachments.get(i), imageSize, false);
-
-                if (i == maxImages - 1 && count > maxImages) {
-                    RelativeLayout overlayContainer = new RelativeLayout(_context);
-                    overlayContainer.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
-                    overlayContainer.addView(iv);
-
-                    View overlay = new View(_context);
-                    overlay.setBackgroundColor(0x40000000);
-                    overlayContainer.addView(overlay, new ViewGroup.LayoutParams(imageSize, imageSize));
-
-                    TextView moreText = new TextView(_context);
-                    moreText.setText("+" + (count - maxImages));
-                    moreText.setTextColor(Color.WHITE);
-                    moreText.setTextSize(24);
-                    moreText.setGravity(Gravity.CENTER);
-                    overlayContainer.addView(moreText, new ViewGroup.LayoutParams(imageSize, imageSize));
-                    viewToAdd = overlayContainer;
-                    viewToAdd.setOnClickListener(v -> {
-                        if (chatActivity != null) {
-                             chatActivity._OpenWebView(attachments.get(3).get("url").toString());
-                        }
-                    });
-                } else {
-                    viewToAdd = iv;
-                }
-                gridLayout.addView(viewToAdd);
-            }
-        }
-    }
-
-    private ImageView createImageView(HashMap<String, Object> attachment, int width, boolean adjustBounds) {
-        String url = String.valueOf(attachment.get("url"));
-        ImageView imageView = new ImageView(_context);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-
-        if (adjustBounds) {
-            imageView.setAdjustViewBounds(true);
-            imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            Glide.with(_context).load(url).into(imageView);
+        // Set up the "View All" button
+        if (attachments.size() > 4) {
+            holder.viewAllButton.setVisibility(View.VISIBLE);
+            holder.viewAllButton.setText("View all " + attachments.size() + " images");
+            holder.viewAllButton.setOnClickListener(v -> {
+                Intent intent = new Intent(_context, GalleryActivity.class);
+                ArrayList<String> imageUrls = attachments.stream()
+                                                     .map(p -> (String) p.get("url"))
+                                                     .collect(Collectors.toCollection(ArrayList::new));
+                intent.putStringArrayListExtra(GalleryActivity.EXTRA_IMAGE_URLS, imageUrls);
+                intent.putExtra(GalleryActivity.EXTRA_INITIAL_POSITION, 0);
+                _context.startActivity(intent);
+            });
         } else {
-            int height;
-            Object widthObj = attachment.get("width");
-            Object heightObj = attachment.get("height");
-
-            if (widthObj != null && heightObj != null) {
-                double imageWidth = ((Number) widthObj).doubleValue();
-                double imageHeight = ((Number) heightObj).doubleValue();
-                if (imageWidth > 0) {
-                    double ratio = imageHeight / imageWidth;
-                    height = (int) (width * ratio);
-                } else {
-                    height = width; // Fallback to square
-                }
-            } else {
-                // Fallback for old messages without dimensions
-                height = width;
-            }
-
-            imageView.setLayoutParams(new ViewGroup.LayoutParams(width, height));
-            Glide.with(_context).load(url).override(width, height).into(imageView);
+            holder.viewAllButton.setVisibility(View.GONE);
         }
-
-        imageView.setOnClickListener(v -> {
-            if (chatActivity != null) {
-                chatActivity._OpenWebView(url);
-            }
-        });
-        return imageView;
     }
 
     private void bindVideoViewHolder(VideoViewHolder holder, int position) {
