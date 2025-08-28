@@ -4185,6 +4185,7 @@ drawable ic_camera
 drawable ic_category
 drawable ic_chat_48px
 drawable ic_check_black
+drawable ic_check_circle
 drawable ic_chevron_right_black
 drawable ic_clear_black_24
 drawable ic_clock_black_24dp
@@ -4198,6 +4199,7 @@ drawable ic_delete_48px
 drawable ic_docs_48px
 drawable ic_download
 drawable ic_edit_note_48px
+drawable ic_error
 drawable ic_expand_less_22px
 drawable ic_expand_less_black
 drawable ic_expand_more_22px
@@ -4248,6 +4250,7 @@ drawable ic_shield_lock
 drawable ic_text_fields_48px
 drawable ic_thumb_up_48px
 drawable ic_touch
+drawable ic_upload
 drawable ic_vertical_align_bottom_black
 drawable ic_video_chat_48px
 drawable ic_video_library_48px
