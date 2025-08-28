@@ -352,7 +352,7 @@ public class HomeActivity extends AppCompatActivity {
 		miniPostLayoutImagePost.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), CreateImagePostActivity.class);
+				intent.setClass(getApplicationContext(), CreatePostActivity.class);
 				startActivity(intent);
 			}
 		});

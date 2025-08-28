@@ -143,14 +143,7 @@
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
-			android:name=".CreateImagePostNextStepActivity"
-			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
-			android:hardwareAccelerated="true"
-			android:supportsPictureInPicture="true"
-			android:screenOrientation="portrait"
-			android:windowSoftInputMode="stateHidden" />
-		<activity
-			android:name=".CreateImagePostActivity"
+			android:name=".CreatePostActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
