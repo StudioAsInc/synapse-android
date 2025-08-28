@@ -49,8 +49,8 @@ android {
         applicationId = "com.synapse.social.studioasinc"
         minSdk = 26
         targetSdk = 32 // Keep 32
-        versionCode = 14
-        versionName = "1.0.0-alpha06"
+        versionCode = 15
+        versionName = "1.0.0-alpha07"
         multiDexEnabled = true
 
         vectorDrawables.useSupportLibrary = true
