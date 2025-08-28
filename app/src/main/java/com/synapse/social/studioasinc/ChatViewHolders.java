@@ -75,10 +75,21 @@ class TextViewHolder extends BaseMessageViewHolder { public TextViewHolder(View 
 class MediaViewHolder extends BaseMessageViewHolder {
     GridLayout mediaGridLayout;
     CardView mediaContainerCard;
+    // New carousel components
+    LinearLayout carouselContainer;
+    RecyclerView mediaCarouselRecycler;
+    LinearLayout viewAllButton;
+    TextView viewAllText;
+    
     public MediaViewHolder(View view) {
         super(view);
         mediaGridLayout = view.findViewById(R.id.mediaGridLayout);
         mediaContainerCard = view.findViewById(R.id.mediaContainerCard);
+        // Initialize carousel components
+        carouselContainer = view.findViewById(R.id.carouselContainer);
+        mediaCarouselRecycler = view.findViewById(R.id.mediaCarouselRecycler);
+        viewAllButton = view.findViewById(R.id.viewAllButton);
+        viewAllText = view.findViewById(R.id.viewAllText);
     }
 }
 

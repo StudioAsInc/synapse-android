@@ -129,6 +129,13 @@
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
+			android:name=".FullScreenGalleryActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:theme="@style/FullscreenTheme"
+			android:screenOrientation="user"
+			android:windowSoftInputMode="stateHidden" />
+		<activity
 			android:name=".ChatsettingsActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"

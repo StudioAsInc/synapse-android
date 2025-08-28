@@ -424,6 +424,79 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
         Log.d(TAG, "Attachments found: " + (attachments != null ? attachments.size() : 0));
         
+        if (attachments == null || attachments.isEmpty()) {
+            Log.w(TAG, "No attachments found, hiding media views");
+            if (holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.GONE);
+            if (holder.carouselContainer != null) holder.carouselContainer.setVisibility(View.GONE);
+            return;
+        }
+
+        int count = attachments.size();
+        Log.d(TAG, "Processing " + count + " attachments");
+        
+        // Decide between grid and carousel layout based on attachment count and type
+        boolean useCarousel = shouldUseCarousel(attachments);
+        
+        if (useCarousel) {
+            setupCarouselView(holder, attachments, msgText);
+        } else {
+            setupGridView(holder, attachments);
+        }
+    }
+    
+    private boolean shouldUseCarousel(ArrayList<HashMap<String, Object>> attachments) {
+        // Use carousel for 5+ images or when explicitly preferred
+        // For now, let's use carousel for 5+ images to maintain single message perception
+        return attachments.size() >= 5;
+    }
+    
+    private void setupCarouselView(MediaViewHolder holder, ArrayList<HashMap<String, Object>> attachments, String msgText) {
+        // Hide grid, show carousel
+        if (holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.GONE);
+        if (holder.carouselContainer != null) holder.carouselContainer.setVisibility(View.VISIBLE);
+        
+        // Setup carousel RecyclerView
+        if (holder.mediaCarouselRecycler != null) {
+            // Validate attachments before proceeding
+            if (!GalleryTestUtils.validateAttachments(attachments)) {
+                Log.e(TAG, "Invalid attachments detected, falling back to grid view");
+                setupGridView(holder, attachments);
+                return;
+            }
+            
+            LinearLayoutManager layoutManager = new LinearLayoutManager(_context, LinearLayoutManager.HORIZONTAL, false);
+            holder.mediaCarouselRecycler.setLayoutManager(layoutManager);
+            
+            MessageCarouselAdapter carouselAdapter = new MessageCarouselAdapter(attachments, _context);
+            carouselAdapter.setOnImageClickListener((clickPosition, allAttachments) -> {
+                openFullScreenGallery(clickPosition, allAttachments, msgText);
+            });
+            holder.mediaCarouselRecycler.setAdapter(carouselAdapter);
+            
+            // Add snap helper for smooth scrolling
+            try {
+                androidx.recyclerview.widget.PagerSnapHelper snapHelper = new androidx.recyclerview.widget.PagerSnapHelper();
+                snapHelper.attachToRecyclerView(holder.mediaCarouselRecycler);
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to attach snap helper: " + e.getMessage());
+            }
+        }
+        
+        // Setup "View all" button
+        if (holder.viewAllButton != null && holder.viewAllText != null) {
+            holder.viewAllButton.setVisibility(View.VISIBLE);
+            String buttonText = attachments.size() == 1 ? "View image" : "View all " + attachments.size() + " images";
+            holder.viewAllText.setText(buttonText);
+            holder.viewAllButton.setOnClickListener(v -> {
+                openFullScreenGallery(0, attachments, msgText);
+            });
+        }
+    }
+    
+    private void setupGridView(MediaViewHolder holder, ArrayList<HashMap<String, Object>> attachments) {
+        // Hide carousel, show grid
+        if (holder.carouselContainer != null) holder.carouselContainer.setVisibility(View.GONE);
+        
         GridLayout gridLayout = holder.mediaGridLayout;
         if (gridLayout == null) {
             Log.e(TAG, "mediaGridLayout is null in MediaViewHolder");
@@ -433,13 +506,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         gridLayout.removeAllViews();
         gridLayout.setVisibility(View.VISIBLE);
 
-        if (attachments == null || attachments.isEmpty()) {
-            Log.w(TAG, "No attachments found, hiding grid layout");
-            gridLayout.setVisibility(View.GONE);
-            return;
-        }
-
-        Log.d(TAG, "Processing " + attachments.size() + " attachments");
         int count = attachments.size();
         int colCount = 2;
         int maxImages = 4;
@@ -456,6 +522,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             gridLayout.setColumnCount(1);
             HashMap<String, Object> attachment = attachments.get(0);
             ImageView iv = createImageView(attachment, totalGridWidth, true);
+            // Add click listener for single image
+            iv.setOnClickListener(v -> openFullScreenGallery(0, attachments, ""));
             gridLayout.addView(iv);
 
         } else if (count == 3) {
@@ -477,7 +545,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             if(portraitIndex != -1){
                 // Tall layout
-                ImageView iv1 = createImageView(attachments.get(portraitIndex), imageSize, false);
+                ImageView iv1 = createImageViewWithGallery(attachments.get(portraitIndex), imageSize, false, portraitIndex, attachments);
                 GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 2, 1f), GridLayout.spec(0, 1, 1f));
                 iv1.setLayoutParams(params1);
                 gridLayout.addView(iv1);
@@ -485,7 +553,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 int attachmentIndex = 0;
                 for(int i=0; i<2; i++){
                     if(attachmentIndex == portraitIndex) attachmentIndex++;
-                    ImageView iv = createImageView(attachments.get(attachmentIndex), imageSize, false);
+                    ImageView iv = createImageViewWithGallery(attachments.get(attachmentIndex), imageSize, false, attachmentIndex, attachments);
                     GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(i, 1, 1f), GridLayout.spec(1, 1, 1f));
                     iv.setLayoutParams(params);
                     gridLayout.addView(iv);
@@ -494,13 +562,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             } else {
                 // Wide layout
-                ImageView iv1 = createImageView(attachments.get(0), totalGridWidth, false);
+                ImageView iv1 = createImageViewWithGallery(attachments.get(0), totalGridWidth, false, 0, attachments);
                 GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
                 iv1.setLayoutParams(params1);
                 gridLayout.addView(iv1);
 
                 for (int i = 1; i < 3; i++) {
-                    ImageView iv = createImageView(attachments.get(i), imageSize, false);
+                    ImageView iv = createImageViewWithGallery(attachments.get(i), imageSize, false, i, attachments);
                     GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
                     iv.setLayoutParams(params);
                     gridLayout.addView(iv);
@@ -510,7 +578,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             int limit = Math.min(count, maxImages);
             for (int i = 0; i < limit; i++) {
                 View viewToAdd;
-                ImageView iv = createImageView(attachments.get(i), imageSize, false);
+                ImageView iv = createImageViewWithGallery(attachments.get(i), imageSize, false, i, attachments);
 
                 if (i == maxImages - 1 && count > maxImages) {
                     RelativeLayout overlayContainer = new RelativeLayout(_context);
@@ -528,16 +596,29 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     moreText.setGravity(Gravity.CENTER);
                     overlayContainer.addView(moreText, new ViewGroup.LayoutParams(imageSize, imageSize));
                     viewToAdd = overlayContainer;
-                    viewToAdd.setOnClickListener(v -> {
-                        if (chatActivity != null) {
-                             chatActivity._OpenWebView(attachments.get(3).get("url").toString());
-                        }
-                    });
+                    viewToAdd.setOnClickListener(v -> openFullScreenGallery(i, attachments, ""));
                 } else {
                     viewToAdd = iv;
                 }
                 gridLayout.addView(viewToAdd);
             }
+        }
+    }
+    
+    private ImageView createImageViewWithGallery(HashMap<String, Object> attachment, int width, boolean adjustBounds, int position, ArrayList<HashMap<String, Object>> allAttachments) {
+        ImageView imageView = createImageView(attachment, width, adjustBounds);
+        imageView.setOnClickListener(v -> openFullScreenGallery(position, allAttachments, ""));
+        return imageView;
+    }
+    
+    private void openFullScreenGallery(int position, ArrayList<HashMap<String, Object>> attachments, String messageText) {
+        if (chatActivity != null) {
+            Intent intent = new Intent(chatActivity, FullScreenGalleryActivity.class);
+            intent.putExtra("attachments", attachments);
+            intent.putExtra("position", position);
+            intent.putExtra("messageText", messageText);
+            chatActivity.startActivity(intent);
+            chatActivity.overridePendingTransition(R.anim.slide_in_up, R.anim.fade_out);
         }
     }
 
@@ -573,11 +654,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Glide.with(_context).load(url).override(width, height).into(imageView);
         }
 
-        imageView.setOnClickListener(v -> {
-            if (chatActivity != null) {
-                chatActivity._OpenWebView(url);
-            }
-        });
+        // Click listeners are now handled by createImageViewWithGallery or carousel adapter
         return imageView;
     }
 
