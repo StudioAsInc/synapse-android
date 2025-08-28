@@ -125,6 +125,10 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
+    
+    // Image zoom functionality
+    implementation 'com.github.chrisbanes:PhotoView:2.3.0'
 
     // AndroidX Architecture Components
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.9.2'

@@ -37,6 +37,9 @@ import android.widget.RelativeLayout;
 import com.google.firebase.database.GenericTypeIndicator;
 import android.view.MotionEvent;
 import android.widget.Toast;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import android.content.Intent;
+import android.app.Activity;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -424,25 +427,78 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
         Log.d(TAG, "Attachments found: " + (attachments != null ? attachments.size() : 0));
         
-        GridLayout gridLayout = holder.mediaGridLayout;
-        if (gridLayout == null) {
-            Log.e(TAG, "mediaGridLayout is null in MediaViewHolder");
-            return;
-        }
-
-        gridLayout.removeAllViews();
-        gridLayout.setVisibility(View.VISIBLE);
-
         if (attachments == null || attachments.isEmpty()) {
-            Log.w(TAG, "No attachments found, hiding grid layout");
-            gridLayout.setVisibility(View.GONE);
+            Log.w(TAG, "No attachments found, hiding media layouts");
+            if (holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.GONE);
+            if (holder.mediaCarouselContainer != null) holder.mediaCarouselContainer.setVisibility(View.GONE);
             return;
         }
 
-        Log.d(TAG, "Processing " + attachments.size() + " attachments");
         int count = attachments.size();
-        int colCount = 2;
-        int maxImages = 4;
+        Log.d(TAG, "Processing " + count + " attachments");
+
+        // Decide between grid layout (for 1-2 images) and carousel (for 3+ images or enhanced UX)
+        // Carousel provides better UX for multiple images with "View All" functionality
+        boolean useCarousel = count >= 3;
+        
+        if (useCarousel && holder.mediaCarouselContainer != null && holder.mediaCarouselRecyclerView != null) {
+            // Hide grid layout and show carousel
+            if (holder.mediaGridLayout != null) holder.mediaGridLayout.setVisibility(View.GONE);
+            holder.mediaCarouselContainer.setVisibility(View.VISIBLE);
+            
+            setupCarouselLayout(holder, attachments);
+        } else {
+            // Use traditional grid layout for 1-2 images
+            if (holder.mediaCarouselContainer != null) holder.mediaCarouselContainer.setVisibility(View.GONE);
+            if (holder.mediaGridLayout != null) {
+                holder.mediaGridLayout.setVisibility(View.VISIBLE);
+                setupGridLayout(holder, attachments);
+            }
+        }
+    }
+    
+    private void setupCarouselLayout(MediaViewHolder holder, ArrayList<HashMap<String, Object>> attachments) {
+        Log.d(TAG, "Setting up carousel layout for " + attachments.size() + " images");
+        
+        // Setup horizontal RecyclerView
+        LinearLayoutManager layoutManager = new LinearLayoutManager(_context, LinearLayoutManager.HORIZONTAL, false);
+        holder.mediaCarouselRecyclerView.setLayoutManager(layoutManager);
+        
+        // Add item decoration for proper spacing
+        if (holder.mediaCarouselRecyclerView.getItemDecorationCount() == 0) {
+            holder.mediaCarouselRecyclerView.addItemDecoration(new CarouselItemDecoration(8));
+        }
+        
+        // Create adapter with click listener to open gallery
+        MessageImageCarouselAdapter adapter = new MessageImageCarouselAdapter(_context, attachments, 
+            (position, attachmentList) -> openImageGallery(attachmentList, position));
+        holder.mediaCarouselRecyclerView.setAdapter(adapter);
+        
+        // Setup "View All" button - shows when there are more than 3 images
+        // This provides easy access to the full-screen gallery experience
+        if (holder.viewAllImagesButton != null) {
+            if (attachments.size() > 3) {
+                holder.viewAllImagesButton.setVisibility(View.VISIBLE);
+                holder.viewAllImagesButton.setText("View all " + attachments.size() + " images");
+                holder.viewAllImagesButton.setOnClickListener(v -> openImageGallery(attachments, 0));
+            } else {
+                holder.viewAllImagesButton.setVisibility(View.GONE);
+            }
+        }
+        
+        // Set optimal card width for carousel
+        ViewGroup.LayoutParams cardParams = holder.mediaContainerCard.getLayoutParams();
+        cardParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        holder.mediaContainerCard.setLayoutParams(cardParams);
+    }
+    
+    private void setupGridLayout(MediaViewHolder holder, ArrayList<HashMap<String, Object>> attachments) {
+        Log.d(TAG, "Setting up grid layout for " + attachments.size() + " images");
+        
+        GridLayout gridLayout = holder.mediaGridLayout;
+        gridLayout.removeAllViews();
+        
+        int count = attachments.size();
         int totalGridWidth = dpToPx(250);
         int imageSize = totalGridWidth / 2;
 
@@ -450,98 +506,35 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         cardParams.width = totalGridWidth;
         holder.mediaContainerCard.setLayoutParams(cardParams);
 
-        gridLayout.setColumnCount(colCount);
-
         if (count == 1) {
             gridLayout.setColumnCount(1);
             HashMap<String, Object> attachment = attachments.get(0);
-            ImageView iv = createImageView(attachment, totalGridWidth, true);
+            ImageView iv = createImageView(attachment, totalGridWidth, true, 0, attachments);
             gridLayout.addView(iv);
-
-        } else if (count == 3) {
-            int portraitIndex = -1;
-            for(int i=0; i < attachments.size(); i++){
-                HashMap<String, Object> attachment = attachments.get(i);
-                Object widthObj = attachment.get("width");
-                Object heightObj = attachment.get("height");
-
-                if (widthObj != null && heightObj != null) {
-                    double width = ((Number) widthObj).doubleValue();
-                    double height = ((Number) heightObj).doubleValue();
-                    if(height > width){
-                        portraitIndex = i;
-                        break;
-                    }
-                }
+        } else if (count == 2) {
+            gridLayout.setColumnCount(2);
+            for (int i = 0; i < count; i++) {
+                ImageView iv = createImageView(attachments.get(i), imageSize, false, i, attachments);
+                gridLayout.addView(iv);
             }
-
-            if(portraitIndex != -1){
-                // Tall layout
-                ImageView iv1 = createImageView(attachments.get(portraitIndex), imageSize, false);
-                GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 2, 1f), GridLayout.spec(0, 1, 1f));
-                iv1.setLayoutParams(params1);
-                gridLayout.addView(iv1);
-
-                int attachmentIndex = 0;
-                for(int i=0; i<2; i++){
-                    if(attachmentIndex == portraitIndex) attachmentIndex++;
-                    ImageView iv = createImageView(attachments.get(attachmentIndex), imageSize, false);
-                    GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(i, 1, 1f), GridLayout.spec(1, 1, 1f));
-                    iv.setLayoutParams(params);
-                    gridLayout.addView(iv);
-                    attachmentIndex++;
-                }
-
-            } else {
-                // Wide layout
-                ImageView iv1 = createImageView(attachments.get(0), totalGridWidth, false);
-                GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
-                iv1.setLayoutParams(params1);
-                gridLayout.addView(iv1);
-
-                for (int i = 1; i < 3; i++) {
-                    ImageView iv = createImageView(attachments.get(i), imageSize, false);
-                    GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
-                    iv.setLayoutParams(params);
-                    gridLayout.addView(iv);
-                }
-            }
-        } else { // 2, 4, or >4 images
-            int limit = Math.min(count, maxImages);
-            for (int i = 0; i < limit; i++) {
-                View viewToAdd;
-                ImageView iv = createImageView(attachments.get(i), imageSize, false);
-
-                if (i == maxImages - 1 && count > maxImages) {
-                    RelativeLayout overlayContainer = new RelativeLayout(_context);
-                    overlayContainer.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
-                    overlayContainer.addView(iv);
-
-                    View overlay = new View(_context);
-                    overlay.setBackgroundColor(0x40000000);
-                    overlayContainer.addView(overlay, new ViewGroup.LayoutParams(imageSize, imageSize));
-
-                    TextView moreText = new TextView(_context);
-                    moreText.setText("+" + (count - maxImages));
-                    moreText.setTextColor(Color.WHITE);
-                    moreText.setTextSize(24);
-                    moreText.setGravity(Gravity.CENTER);
-                    overlayContainer.addView(moreText, new ViewGroup.LayoutParams(imageSize, imageSize));
-                    viewToAdd = overlayContainer;
-                    viewToAdd.setOnClickListener(v -> {
-                        if (chatActivity != null) {
-                             chatActivity._OpenWebView(attachments.get(3).get("url").toString());
-                        }
-                    });
-                } else {
-                    viewToAdd = iv;
-                }
-                gridLayout.addView(viewToAdd);
+        }
+    }
+    
+    private void openImageGallery(ArrayList<HashMap<String, Object>> attachments, int position) {
+        if (_context != null && chatActivity != null) {
+            Intent intent = new Intent(_context, ImageGalleryActivity.class);
+            intent.putExtra("attachments", attachments);
+            intent.putExtra("position", position);
+            _context.startActivity(intent);
+            
+            // Add smooth transition animations
+            if (_context instanceof Activity) {
+                ((Activity) _context).overridePendingTransition(R.anim.slide_in_from_right, R.anim.slide_out_to_left);
             }
         }
     }
 
-    private ImageView createImageView(HashMap<String, Object> attachment, int width, boolean adjustBounds) {
+    private ImageView createImageView(HashMap<String, Object> attachment, int width, boolean adjustBounds, int position, ArrayList<HashMap<String, Object>> attachments) {
         String url = String.valueOf(attachment.get("url"));
         ImageView imageView = new ImageView(_context);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -573,11 +566,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Glide.with(_context).load(url).override(width, height).into(imageView);
         }
 
-        imageView.setOnClickListener(v -> {
-            if (chatActivity != null) {
-                chatActivity._OpenWebView(url);
-            }
-        });
+        // Enhanced click listener to open gallery
+        imageView.setOnClickListener(v -> openImageGallery(attachments, position));
         return imageView;
     }
 
