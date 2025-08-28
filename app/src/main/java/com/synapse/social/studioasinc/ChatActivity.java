@@ -557,6 +557,20 @@ public class ChatActivity extends AppCompatActivity {
 		// 2. A RecyclerView must have a LayoutManager to function.
 		//    We set it to a horizontal layout.
 		rv_attacmentList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+		
+		// Add spacing between attachment items
+		int attachmentSpacing = (int) getResources().getDimension(R.dimen.spacing_small);
+		rv_attacmentList.addItemDecoration(new RecyclerView.ItemDecoration() {
+			@Override
+			public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, 
+			                          @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+				int position = parent.getChildAdapterPosition(view);
+				if (position == 0) {
+					outRect.left = attachmentSpacing;
+				}
+				outRect.right = attachmentSpacing;
+			}
+		});
 
 		// --- END: Critical Initialization ---
 		_getUserReference();

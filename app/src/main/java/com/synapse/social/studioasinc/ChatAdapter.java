@@ -629,15 +629,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 // Wide layout
                 ImageView iv1 = createImageView(attachments.get(0), totalGridWidth, false, 0, attachments);
                 GridLayout.LayoutParams params1 = new GridLayout.LayoutParams(GridLayout.spec(0, 1, 1f), GridLayout.spec(0, 2, 1f));
-                int itemSpacing = (int) _context.getResources().getDimension(R.dimen.spacing_small);
-                params1.setMargins(itemSpacing, itemSpacing, itemSpacing, itemSpacing);
                 iv1.setLayoutParams(params1);
                 gridLayout.addView(iv1);
 
                 for (int i = 1; i < 3; i++) {
                     ImageView iv = createImageView(attachments.get(i), imageSize, false, i, attachments);
                     GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(1, 1, 1f), GridLayout.spec(i - 1, 1, 1f));
-                    params.setMargins(itemSpacing, itemSpacing, itemSpacing, itemSpacing);
                     iv.setLayoutParams(params);
                     gridLayout.addView(iv);
                 }
@@ -650,10 +647,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                 if (i == maxImages - 1 && count > maxImages) {
                     RelativeLayout overlayContainer = new RelativeLayout(_context);
-                    int itemSpacing = (int) _context.getResources().getDimension(R.dimen.spacing_small);
-                    ViewGroup.MarginLayoutParams overlayParams = new ViewGroup.MarginLayoutParams(imageSize, imageSize);
-                    overlayParams.setMargins(itemSpacing, itemSpacing, itemSpacing, itemSpacing);
-                    overlayContainer.setLayoutParams(overlayParams);
+                    overlayContainer.setLayoutParams(new ViewGroup.LayoutParams(imageSize, imageSize));
                     overlayContainer.addView(iv);
 
                     View overlay = new View(_context);
@@ -723,10 +717,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 height = width;
             }
 
-            int itemSpacing = (int) _context.getResources().getDimension(R.dimen.spacing_small);
-            ViewGroup.MarginLayoutParams params = new ViewGroup.MarginLayoutParams(width, height);
-            params.setMargins(itemSpacing, itemSpacing, itemSpacing, itemSpacing);
-            imageView.setLayoutParams(params);
+            imageView.setLayoutParams(new ViewGroup.LayoutParams(width, height));
             Glide.with(_context).load(url).override(width, height).into(imageView);
         }
 
