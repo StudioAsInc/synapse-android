@@ -326,7 +326,20 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             if (holder.mRepliedMessageLayoutMessage != null) holder.mRepliedMessageLayoutMessage.setOnClickListener(clickListener);
                             if (holder.mRepliedMessageLayoutImage != null) holder.mRepliedMessageLayoutImage.setOnClickListener(clickListener);
                         } else {
-                            holder.mRepliedMessageLayout.setVisibility(View.GONE);
+                            // Show a lightweight loading state while the replied message loads
+                            holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
+
+                            if (holder.mRepliedMessageLayoutImage != null) {
+                                holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
+                            }
+                            if (holder.mRepliedMessageLayoutUsername != null) {
+                                holder.mRepliedMessageLayoutUsername.setText("Loading…");
+                                holder.mRepliedMessageLayoutUsername.setTextColor(isMyMessage ? Color.WHITE : Color.parseColor("#1A1A1A"));
+                            }
+                            if (holder.mRepliedMessageLayoutMessage != null) {
+                                holder.mRepliedMessageLayoutMessage.setText("");
+                                holder.mRepliedMessageLayoutMessage.setVisibility(View.GONE);
+                            }
                         }
                     } else {
                         holder.mRepliedMessageLayout.setVisibility(View.GONE);
@@ -519,9 +532,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 CarouselItemDecoration.createWithStandardSpacing(holder.mediaCarouselRecyclerView));
         }
         
-        // Create adapter with click listener to open gallery
-        MessageImageCarouselAdapter adapter = new MessageImageCarouselAdapter(_context, attachments, 
-            (position, attachmentList) -> openImageGallery(attachmentList, position));
+        // Convert to typed attachments once and create adapter with click listener to open gallery
+        ArrayList<Attachment> typedAttachments = AttachmentUtils.fromHashMapList(attachments);
+        if (typedAttachments == null || typedAttachments.isEmpty()) {
+            return;
+        }
+        MessageImageCarouselAdapter adapter = new MessageImageCarouselAdapter(_context, typedAttachments, 
+            (position, attachmentList) -> openImageGalleryTyped(attachmentList, position));
         holder.mediaCarouselRecyclerView.setAdapter(adapter);
         
         // Setup "View All" button - shows when there are more than 3 images
@@ -530,7 +547,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (attachments.size() > 3) {
                 holder.viewAllImagesButton.setVisibility(View.VISIBLE);
                 holder.viewAllImagesButton.setText("View all " + attachments.size() + " images");
-                holder.viewAllImagesButton.setOnClickListener(v -> openImageGallery(attachments, 0));
+                holder.viewAllImagesButton.setOnClickListener(v -> openImageGalleryTyped(typedAttachments, 0));
             } else {
                 holder.viewAllImagesButton.setVisibility(View.GONE);
             }
@@ -655,19 +672,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     
     private void openImageGallery(ArrayList<HashMap<String, Object>> attachments, int position) {
         if (_context != null && chatActivity != null) {
+            ArrayList<Attachment> typed = AttachmentUtils.fromHashMapList(attachments);
+            openImageGalleryTyped(typed, position);
+        }
+    }
+
+    private void openImageGalleryTyped(ArrayList<Attachment> attachments, int position) {
+        if (_context != null && chatActivity != null) {
             Intent intent = new Intent(_context, ImageGalleryActivity.class);
-            
-            // Convert to new Parcelable format for better performance and type safety
-            ArrayList<Attachment> parcelableAttachments = AttachmentUtils.fromHashMapList(attachments);
-            intent.putParcelableArrayListExtra("attachments_parcelable", parcelableAttachments);
-            
-            // Keep legacy format for backward compatibility
-            intent.putExtra("attachments", attachments);
+            intent.putParcelableArrayListExtra("attachments_parcelable", attachments);
             intent.putExtra("position", position);
-            
             _context.startActivity(intent);
-            
-            // Add smooth transition animations
             if (_context instanceof Activity) {
                 ((Activity) _context).overridePendingTransition(R.anim.slide_in_from_right, R.anim.slide_out_to_left);
             }

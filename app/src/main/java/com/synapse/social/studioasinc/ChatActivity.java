@@ -95,6 +95,7 @@ import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
 import com.synapse.social.studioasinc.StorageUtil;
 import com.synapse.social.studioasinc.UploadFiles;
+import com.synapse.social.studioasinc.AsyncUploadService;
 
 import java.io.File;
 import java.io.IOException;
@@ -557,6 +558,20 @@ public class ChatActivity extends AppCompatActivity {
 		// 2. A RecyclerView must have a LayoutManager to function.
 		//    We set it to a horizontal layout.
 		rv_attacmentList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+		
+		// Add spacing between attachment items
+		int attachmentSpacing = (int) getResources().getDimension(R.dimen.spacing_small);
+		rv_attacmentList.addItemDecoration(new RecyclerView.ItemDecoration() {
+			@Override
+			public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, 
+			                          @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+				int position = parent.getChildAdapterPosition(view);
+				if (position == 0) {
+					outRect.left = attachmentSpacing;
+				}
+				outRect.right = attachmentSpacing;
+			}
+		});
 
 		// --- END: Critical Initialization ---
 		_getUserReference();
@@ -799,6 +814,9 @@ public class ChatActivity extends AppCompatActivity {
 		if (rv_attacmentList != null) {
 			rv_attacmentList.setAdapter(null);
 		}
+		
+		// Cancel all active uploads and clear notifications
+		AsyncUploadService.cancelAllUploads(this);
 	}
 
 	@Override
@@ -2268,13 +2286,13 @@ public class ChatActivity extends AppCompatActivity {
 			return;
 		}
 
-		UploadFiles.uploadFile(filePath, file.getName(), new UploadFiles.UploadCallback() {
+		AsyncUploadService.uploadWithNotification(this, filePath, file.getName(), new AsyncUploadService.UploadProgressListener() {
 			@Override
-			public void onProgress(int percent) {
+			public void onProgress(String filePath, int percent) {
 				try {
 					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
 						HashMap<String, Object> currentItem = attactmentmap.get(itemPosition);
-						if (currentItem != null) {
+						if (currentItem != null && filePath.equals(currentItem.get("localPath"))) {
 							currentItem.put("uploadProgress", (double) percent);
 							if (rv_attacmentList.getAdapter() != null) {
 								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
@@ -2287,11 +2305,11 @@ public class ChatActivity extends AppCompatActivity {
 			}
 			
 			@Override
-			public void onSuccess(String url, String publicId) {
+			public void onSuccess(String filePath, String url, String publicId) {
 				try {
 					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
 						HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
-						if (mapToUpdate != null) {
+						if (mapToUpdate != null && filePath.equals(mapToUpdate.get("localPath"))) {
 							mapToUpdate.put("uploadState", "success");
 							mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
 							mapToUpdate.put("publicId", publicId);
@@ -2309,11 +2327,11 @@ public class ChatActivity extends AppCompatActivity {
 			}
 			
 			@Override
-			public void onFailure(String error) {
+			public void onFailure(String filePath, String error) {
 				try {
 					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
 						HashMap<String, Object> currentItem = attactmentmap.get(itemPosition);
-						if (currentItem != null) {
+						if (currentItem != null && filePath.equals(currentItem.get("localPath"))) {
 							currentItem.put("uploadState", "failed");
 							if (rv_attacmentList.getAdapter() != null) {
 								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
@@ -3057,6 +3075,12 @@ public class ChatActivity extends AppCompatActivity {
 						return;
 					}
 
+					// Cancel upload if in progress
+					if ("uploading".equals(currentItemData.get("uploadState"))) {
+						String localPath = currentItemData.get("localPath").toString();
+						AsyncUploadService.cancelUpload(ChatActivity.this, localPath);
+					}
+					
 					// Remove the item
 					attactmentmap.remove(finalPosition);
 					
