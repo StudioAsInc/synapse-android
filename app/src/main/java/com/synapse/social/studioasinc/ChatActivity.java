@@ -84,6 +84,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
@@ -168,6 +169,8 @@ public class ChatActivity extends AppCompatActivity {
 	private ValueEventListener _userStatusListener;
 	private DatabaseReference userRef;
 
+	private HashMap<String, HashMap<String, Object>> repliedMessagesCache = new HashMap<>();
+	private java.util.Set<String> messageKeys = new java.util.HashSet<>();
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
 
@@ -306,8 +309,11 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View _view) {
 				attachmentLayoutListHolder.setVisibility(View.GONE);
-				attactmentmap.clear();
-				rv_attacmentList.getAdapter().notifyDataSetChanged();
+				int oldSize = attactmentmap.size();
+				if (oldSize > 0) {
+					attactmentmap.clear();
+					rv_attacmentList.getAdapter().notifyItemRangeRemoved(0, oldSize);
+				}
 
 				// Clear the attachment draft from SharedPreferences
 				SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
@@ -508,7 +514,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatMessagesListRecycler.setClickable(true);
 		
 		// Create, configure, and set the new ChatAdapter
-		chatAdapter = new ChatAdapter(ChatMessagesList);
+		chatAdapter = new ChatAdapter(ChatMessagesList, repliedMessagesCache);
 		chatAdapter.setHasStableIds(true);
 		chatAdapter.setChatActivity(this);
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
@@ -829,6 +835,63 @@ public class ChatActivity extends AppCompatActivity {
 		}
 		finish();
 	}
+
+	private void _fetchRepliedMessages(ArrayList<HashMap<String, Object>> messages) {
+		java.util.HashSet<String> repliedIdsToFetch = new java.util.HashSet<>();
+		for (HashMap<String, Object> message : messages) {
+			if (message.containsKey("replied_message_id")) {
+				String repliedId = message.get("replied_message_id").toString();
+				if (repliedId != null && !repliedId.equals("null") && !repliedMessagesCache.containsKey(repliedId)) {
+					repliedIdsToFetch.add(repliedId);
+				}
+			}
+		}
+
+		if (repliedIdsToFetch.isEmpty()) {
+			return;
+		}
+
+		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String theirUid = getIntent().getStringExtra("uid");
+		DatabaseReference chatRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(theirUid);
+
+		for (String messageKey : repliedIdsToFetch) {
+			repliedMessagesCache.put(messageKey, new HashMap<>());
+
+			chatRef.child(messageKey).addListenerForSingleValueEvent(new ValueEventListener() {
+				@Override
+				public void onDataChange(@NonNull DataSnapshot snapshot) {
+					if (snapshot.exists()) {
+						HashMap<String, Object> repliedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						if (repliedMessage != null) {
+							repliedMessagesCache.put(messageKey, repliedMessage);
+							_updateMessageInRecyclerView(messageKey);
+						}
+					}
+				}
+
+				@Override
+				public void onCancelled(@NonNull DatabaseError error) {
+					repliedMessagesCache.remove(messageKey);
+				}
+			});
+		}
+	}
+
+	private void _updateMessageInRecyclerView(String repliedMessageKey) {
+		if (chatAdapter == null || isFinishing() || isDestroyed()) return;
+		for (int i = 0; i < ChatMessagesList.size(); i++) {
+			HashMap<String, Object> message = ChatMessagesList.get(i);
+			if (message != null && message.containsKey("replied_message_id") && repliedMessageKey.equals(message.get("replied_message_id").toString())) {
+				final int positionToUpdate = i;
+				runOnUiThread(() -> {
+					if (chatAdapter != null && positionToUpdate < chatAdapter.getItemCount()) {
+						chatAdapter.notifyItemChanged(positionToUpdate);
+					}
+				});
+			}
+		}
+	}
 	public void _stateColor(final int _statusColor, final int _navigationColor) {
 		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		getWindow().setStatusBarColor(_statusColor);
@@ -1086,8 +1149,9 @@ public class ChatActivity extends AppCompatActivity {
 					if(dataSnapshot.exists()) {
 						ChatMessagesListRecycler.setVisibility(View.VISIBLE);
 						noChatText.setVisibility(View.GONE);
-						// We clear the list here before the initial load
+						// We clear the list and keyset here before the initial load
 						ChatMessagesList.clear();
+						messageKeys.clear();
 						ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
 						
 						for (DataSnapshot _data : dataSnapshot.getChildren()) {
@@ -1095,6 +1159,7 @@ public class ChatActivity extends AppCompatActivity {
 								HashMap<String, Object> messageData = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
 									initialMessages.add(messageData);
+									messageKeys.add(messageData.get(KEY_KEY).toString());
 								} else {
 									Log.w("ChatActivity", "Skipping initial message without valid key: " + _data.getKey());
 								}
@@ -1122,6 +1187,7 @@ public class ChatActivity extends AppCompatActivity {
 								chatAdapter.notifyDataSetChanged();
 							}
 							ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+							_fetchRepliedMessages(initialMessages);
 						}
 					} else {
 						ChatMessagesListRecycler.setVisibility(View.GONE);
@@ -1175,64 +1241,44 @@ public class ChatActivity extends AppCompatActivity {
 							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
 							Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + messageKey);
 							
-							// Check if message already exists to avoid duplicates
-							boolean exists = false;
-							int existingPosition = -1;
-							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								HashMap<String, Object> msg = ChatMessagesList.get(i);
-								if (msg.get(KEY_KEY) != null && msg.get(KEY_KEY).toString().equals(messageKey)) {
-									exists = true;
-									existingPosition = i;
-									break;
-								}
-							}
-
-							Log.d("ChatActivity", "Message exists check - Exists: " + exists + ", Position: " + existingPosition + ", Current list size: " + ChatMessagesList.size());
-
-							if (!exists) {
-								// This is a truly new message from Firebase
+							if (!messageKeys.contains(messageKey)) {
+								// This is a truly new message from Firebase. Add it.
+								messageKeys.add(messageKey);
 								_safeUpdateRecyclerView();
 								
-								// CRITICAL FIX: Determine the correct position to insert the message
 								int insertPosition = _findCorrectInsertPosition(newMessage);
-								
-								// Insert message at the correct position
 								ChatMessagesList.add(insertPosition, newMessage);
 								
-								Log.d("ChatActivity", "Added new Firebase message to list at position " + insertPosition + ", total messages: " + ChatMessagesList.size());
+								Log.d("ChatActivity", "Added new Firebase message to list at position " + insertPosition + ", key: " + messageKey);
 								
-								// Notify adapter of the insertion - guard against null adapter
 								if (chatAdapter != null) {
 									chatAdapter.notifyItemInserted(insertPosition);
-								
-									// Update adjacent items if needed
-									if (insertPosition > 0) {
-										chatAdapter.notifyItemChanged(insertPosition - 1);
-									}
-									if (insertPosition < ChatMessagesList.size() - 1) {
-										chatAdapter.notifyItemChanged(insertPosition + 1);
-									}
+									if (insertPosition > 0) chatAdapter.notifyItemChanged(insertPosition - 1);
+									if (insertPosition < ChatMessagesList.size() - 1) chatAdapter.notifyItemChanged(insertPosition + 1);
 								}
 								
-								// Scroll to the new message if it's the most recent
 								if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
-									ChatMessagesListRecycler.post(() -> {
-										scrollToBottom();
-									});
+									ChatMessagesListRecycler.post(() -> scrollToBottom());
+								}
+								
+								if (newMessage.containsKey("replied_message_id")) {
+									ArrayList<HashMap<String, Object>> singleMessageList = new ArrayList<>();
+									singleMessageList.add(newMessage);
+									_fetchRepliedMessages(singleMessageList);
 								}
 							} else {
-								// Message already exists, but check if we need to update it (e.g., remove local flag)
-								Log.d("ChatActivity", "Message already exists at position " + existingPosition + ", checking if update needed");
-								
-								HashMap<String, Object> existingMsg = ChatMessagesList.get(existingPosition);
-								if (existingMsg.containsKey("isLocalMessage")) {
-									// Remove local flag and update the message
-									newMessage.remove("isLocalMessage");
-									ChatMessagesList.set(existingPosition, newMessage);
-									if (chatAdapter != null) {
-										chatAdapter.notifyItemChanged(existingPosition);
+								// The message key already exists. This means it was a local message that has now been confirmed by the server.
+								// We need to find it and update it to remove the 'isLocalMessage' flag and get the server timestamp.
+								for (int i = 0; i < ChatMessagesList.size(); i++) {
+									if (messageKey.equals(ChatMessagesList.get(i).get(KEY_KEY))) {
+										Log.d("ChatActivity", "Updating local message with server data at position " + i);
+										newMessage.remove("isLocalMessage"); // Ensure local flag is removed
+										ChatMessagesList.set(i, newMessage);
+										if (chatAdapter != null) {
+											chatAdapter.notifyItemChanged(i);
+										}
+										break;
 									}
-									Log.d("ChatActivity", "Updated local message with Firebase data at position " + existingPosition);
 								}
 							}
 						} else {
@@ -1282,6 +1328,7 @@ public class ChatActivity extends AppCompatActivity {
 									
 									// Remove the message from the list
 									ChatMessagesList.remove(i);
+									messageKeys.remove(removedKey);
 									
 									// Notify adapter of the removal
 									if (chatAdapter != null) {
@@ -1344,20 +1391,16 @@ public class ChatActivity extends AppCompatActivity {
 	private long _getMessageTimestamp(HashMap<String, Object> message) {
 		try {
 			Object pushDateObj = message.get("push_date");
-			if (pushDateObj != null) {
-				String pushDateStr = pushDateObj.toString();
-				if (pushDateStr.contains(".")) {
-					// Handle double values
-					return (long) Double.parseDouble(pushDateStr);
-				} else {
-					// Handle long values
-					return Long.parseLong(pushDateStr);
-				}
+			if (pushDateObj instanceof Long) {
+				return (Long) pushDateObj;
+			} else if (pushDateObj instanceof Double) {
+				return ((Double) pushDateObj).longValue();
+			} else if (pushDateObj instanceof String) {
+				return Long.parseLong((String) pushDateObj);
 			}
 		} catch (Exception e) {
 			Log.w("ChatActivity", "Error parsing message timestamp: " + e.getMessage());
 		}
-		// Return current time if parsing fails
 		return System.currentTimeMillis();
 	}
 	
@@ -1594,18 +1637,10 @@ public class ChatActivity extends AppCompatActivity {
 							try {
 								HashMap<String, Object> messageData = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
-									// CRITICAL FIX: Check if message already exists to prevent duplicates
-									boolean messageExists = false;
-									for (HashMap<String, Object> existingMsg : ChatMessagesList) {
-										if (existingMsg.get(KEY_KEY) != null && 
-											existingMsg.get(KEY_KEY).toString().equals(messageData.get(KEY_KEY).toString())) {
-											messageExists = true;
-											break;
-										}
-									}
-									
-									if (!messageExists) {
+									// CRITICAL FIX: Check if message already exists using the Set
+									if (!messageKeys.contains(messageData.get(KEY_KEY).toString())) {
 										newMessages.add(messageData);
+										messageKeys.add(messageData.get(KEY_KEY).toString());
 									}
 								} else {
 									Log.w("ChatActivity", "Skipping message without valid key: " + _data.getKey());
@@ -1645,6 +1680,7 @@ public class ChatActivity extends AppCompatActivity {
 								if (firstVisibleView != null) {
 									layoutManager.scrollToPositionWithOffset(firstVisiblePosition + newMessages.size(), topOffset);
 								}
+								_fetchRepliedMessages(newMessages);
 							}
 						} else {
 							// CRITICAL FIX: No more messages to load, set oldestMessageKey to null
@@ -1700,6 +1736,7 @@ public class ChatActivity extends AppCompatActivity {
 				}
 				if (idx != -1) {
 					ChatMessagesList.remove(idx);
+					messageKeys.remove(messageKey);
 					chatAdapter.notifyItemRemoved(idx);
 				}
 			}
@@ -1975,7 +2012,7 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
+				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
 
 				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
 				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
@@ -1986,6 +2023,7 @@ public class ChatActivity extends AppCompatActivity {
 
 				// CRITICAL FIX: Immediately add the message to local list for instant feedback
 				ChatSendMap.put("isLocalMessage", true); // Mark as local message
+				messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
 				// Add to the end since this is a new message being sent
 				ChatMessagesList.add(ChatSendMap);
 				int newPosition = ChatMessagesList.size() - 1;
@@ -2020,9 +2058,6 @@ public class ChatActivity extends AppCompatActivity {
 
 				// Clear UI
 				Log.d("ChatActivity", "Clearing attachment map and UI");
-				attactmentmap.clear();
-				rv_attacmentList.getAdapter().notifyDataSetChanged();
-				attachmentLayoutListHolder.setVisibility(View.GONE);
 				message_et.setText("");
 				ReplyMessageID = "null";
 				mMessageReplyLayout.setVisibility(View.GONE);
@@ -2050,7 +2085,7 @@ public class ChatActivity extends AppCompatActivity {
 			ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 			if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-			ChatSendMap.put(PUSH_DATE_KEY, String.valueOf(Calendar.getInstance().getTimeInMillis()));
+			ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
 
 			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
 			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
@@ -2061,6 +2096,7 @@ public class ChatActivity extends AppCompatActivity {
 
 			// CRITICAL FIX: Immediately add the message to local list for instant feedback
 			ChatSendMap.put("isLocalMessage", true); // Mark as local message
+			messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
 			// Add to the end since this is a new message being sent
 			ChatMessagesList.add(ChatSendMap);
 			int newPosition = ChatMessagesList.size() - 1;
@@ -2298,23 +2334,23 @@ public class ChatActivity extends AppCompatActivity {
 	 */
 	private void resetAttachmentState() {
 		Log.d("ChatActivity", "=== RESETTING ATTACHMENT STATE ===");
-		Log.d("ChatActivity", "Attachment map before reset: " + attactmentmap.toString());
-		
-		// Clear the attachment map
-		attactmentmap.clear();
-		
-		// Reset the path variable
-		path = "";
-		
-		// Update the attachment list adapter
-		if (rv_attacmentList.getAdapter() != null) {
-			rv_attacmentList.getAdapter().notifyDataSetChanged();
-		}
 		
 		// Hide the attachment layout
 		if (attachmentLayoutListHolder != null) {
 			attachmentLayoutListHolder.setVisibility(View.GONE);
 		}
+		
+		// Update the attachment list adapter
+		if (rv_attacmentList.getAdapter() != null) {
+			int oldSize = attactmentmap.size();
+			if (oldSize > 0) {
+				attactmentmap.clear();
+				rv_attacmentList.getAdapter().notifyItemRangeRemoved(0, oldSize);
+			}
+		}
+		
+		// Reset the path variable
+		path = "";
 		
 		Log.d("ChatActivity", "Attachment state reset complete - Map size: " + attactmentmap.size() + ", Path: '" + path + "'");
 		Log.d("ChatActivity", "=== ATTACHMENT STATE RESET COMPLETE ===");
@@ -2349,8 +2385,13 @@ public class ChatActivity extends AppCompatActivity {
 			HashMap<String, Object> loadingMap = new HashMap<>();
 			loadingMap.put("isLoadingMore", true);
 			ChatMessagesList.add(0, loadingMap);
-			// CRITICAL FIX: Use notifyDataSetChanged to prevent RecyclerView recycling issues
-			((ChatAdapter)chatAdapter).notifyDataSetChanged();
+			if (chatAdapter != null) {
+				chatAdapter.notifyItemInserted(0);
+				// Notify the next item as well, as its view might need to change (e.g. remove avatar)
+				if (ChatMessagesList.size() > 1) {
+					chatAdapter.notifyItemChanged(1);
+				}
+			}
 		}
 	}
 

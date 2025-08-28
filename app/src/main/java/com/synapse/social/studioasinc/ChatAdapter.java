@@ -49,6 +49,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int VIEW_TYPE_LOADING_MORE = 99;
 
     private ArrayList<HashMap<String, Object>> _data;
+    private HashMap<String, HashMap<String, Object>> repliedMessagesCache;
     private Context _context;
     private String secondUserAvatarUrl = "";
     private String firstUserName = "";
@@ -57,7 +58,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     // private TextStylingUtil textStylingUtil;
     private ChatActivity chatActivity;
 
-    public ChatAdapter(ArrayList<HashMap<String, Object>> _arr) { _data = _arr; }
+    public ChatAdapter(ArrayList<HashMap<String, Object>> _arr, HashMap<String, HashMap<String, Object>> repliedCache) {
+        _data = _arr;
+        this.repliedMessagesCache = repliedCache;
+    }
     public void setChatActivity(ChatActivity activity) { this.chatActivity = activity; }
     public void setSecondUserAvatar(String url) { this.secondUserAvatarUrl = url; }
     public void setFirstUserName(String name) { this.firstUserName = name; }
@@ -248,165 +252,75 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null")) {
                     Log.d(TAG, "Processing reply for message ID: " + repliedId);
                     
-                    String theirUid = chatActivity.getIntent().getStringExtra("uid");
-                    
-                    Log.d(TAG, "Looking for replied message in chat: " + myUid + "/" + theirUid + " with ID: " + repliedId);
-                    
-                    // Use the same Firebase path structure as the main chat
-                    FirebaseDatabase.getInstance().getReference("skyline/chats")
-                        .child(myUid)
-                        .child(theirUid)
-                        .child(repliedId)
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot snapshot) {
-                                Log.d(TAG, "Firebase reply lookup result - Snapshot exists: " + (snapshot != null && snapshot.exists()) + ", Holder null: " + (holder.mRepliedMessageLayout == null));
-                                
-                                if (snapshot.exists() && holder.mRepliedMessageLayout != null) {
-                                    Log.d(TAG, "Found replied message data, showing reply layout");
-                                    holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
-                                    
-                                    // CRITICAL FIX: Set proper background for reply layout to ensure visibility
-                                    if (isMyMessage) {
-                                        // For my messages, use a semi-transparent white background
-                                        holder.mRepliedMessageLayout.setCardBackgroundColor(Color.parseColor("#80FFFFFF"));
-                                    } else {
-                                        // For other's messages, use a semi-transparent light gray background
-                                        holder.mRepliedMessageLayout.setCardBackgroundColor(Color.parseColor("#F5F5F5"));
-                                    }
-                                    
-                                    String repliedUid = snapshot.child("uid").getValue(String.class);
-                                    String repliedText = snapshot.child("message_text").getValue(String.class);
-                                    
-                                    Log.d(TAG, "Replied message - UID: " + repliedUid + ", Text: " + repliedText);
-                                    
-                                    // CRITICAL FIX: Handle image replies by checking for attachments
-                                    if (holder.mRepliedMessageLayoutImage != null) {
-                                        if (snapshot.hasChild("attachments")) {
-                                            // This is an image/video message
-                                            ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) snapshot.child("attachments").getValue(new GenericTypeIndicator<ArrayList<HashMap<String, Object>>>() {});
-                                            if (attachments != null && !attachments.isEmpty()) {
-                                                // Show image preview
-                                                holder.mRepliedMessageLayoutImage.setVisibility(View.VISIBLE);
-                                                
-                                                // Get the first attachment for preview
-                                                HashMap<String, Object> firstAttachment = attachments.get(0);
-                                                String publicId = firstAttachment.getOrDefault("publicId", "").toString();
-                                                
-                                                if (!publicId.isEmpty()) {
-                                                    // CRITICAL FIX: Load image from Cloudinary - use transform only to avoid double rounding
-                                                    // Also check context validity
-                                                    if (_context != null) {
-                                                        String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
-                                                        Glide.with(_context)
-                                                            .load(imageUrl)
-                                                            .placeholder(R.drawable.ph_imgbluredsqure)
-                                                            .error(R.drawable.ph_imgbluredsqure)
-                                                            .transform(new RoundedCorners(dpToPx(20)))
-                                                            .into(holder.mRepliedMessageLayoutImage);
-                                                        
-                                                        Log.d(TAG, "Loaded reply image preview with client-side rounded corners: " + imageUrl);
-                                                    } else {
-                                                        Log.w(TAG, "Context is null, cannot load reply image");
-                                                    }
-                                                } else {
-                                                    // Fallback to placeholder
-                                                    holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
-                                                }
-                                            } else {
-                                                // No attachments, hide image
-                                                holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
-                                            }
-                                        } else {
-                                            // No attachments, hide image
-                                            holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
-                                        }
-                                    }
-                                    
-                                    if(holder.mRepliedMessageLayoutUsername != null) {
-                                        String username = repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName;
-                                        holder.mRepliedMessageLayoutUsername.setText(username);
-                                        Log.d(TAG, "Set reply username: " + username);
-                                        
-                                        // CRITICAL FIX: Use high-contrast colors for better visibility
-                                        if (isMyMessage) {
-                                            // For my messages (purple background), use white text
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(Color.WHITE);
-                                        } else {
-                                            // For other's messages (white background), use dark text
-                                            holder.mRepliedMessageLayoutUsername.setTextColor(Color.parseColor("#1A1A1A"));
-                                        }
-                                    } else {
-                                        Log.w(TAG, "Reply username TextView is null");
-                                    }
-                                    
-                                    if(holder.mRepliedMessageLayoutMessage != null) {
-                                        String messageText = repliedText != null ? repliedText : "";
-                                        holder.mRepliedMessageLayoutMessage.setText(messageText);
-                                        Log.d(TAG, "Set reply message: " + messageText);
-                                        
-                                        // CRITICAL FIX: Set message text color for better visibility
-                                        if (isMyMessage) {
-                                            holder.mRepliedMessageLayoutMessage.setTextColor(Color.parseColor("#E0E0E0"));
-                                        } else {
-                                            holder.mRepliedMessageLayoutMessage.setTextColor(Color.parseColor("#424242"));
-                                        }
-                                        
-                                        // CRITICAL FIX: Show/hide message text based on content
-                                        if (messageText.isEmpty()) {
-                                            holder.mRepliedMessageLayoutMessage.setVisibility(View.GONE);
-                                        } else {
-                                            holder.mRepliedMessageLayoutMessage.setVisibility(View.VISIBLE);
-                                        }
-                                    } else {
-                                        Log.w(TAG, "Reply message TextView is null");
-                                    }
-                                    
-                                    if(holder.mRepliedMessageLayoutLeftBar != null) {
-                                        android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
-                                        leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
-                                        leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
-                                        leftBarDrawable.setCornerRadius(dpToPx(100));
-                                        holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
-                                    } else {
-                                        Log.w(TAG, "Reply left bar is null");
-                                    }
+                    if (repliedMessagesCache != null && repliedMessagesCache.containsKey(repliedId)) {
+                        HashMap<String, Object> snapshot = repliedMessagesCache.get(repliedId);
+                        if (snapshot != null && !snapshot.isEmpty()) {
+                            holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
 
-                                    // CRITICAL FIX: Make the entire reply layout clickable, not just the main layout
-                                    holder.mRepliedMessageLayout.setOnClickListener(v -> {
-                                        if (chatActivity != null) {
-                                            chatActivity.scrollToMessage(repliedId);
+                            if (isMyMessage) {
+                                holder.mRepliedMessageLayout.setCardBackgroundColor(Color.parseColor("#80FFFFFF"));
+                            } else {
+                                holder.mRepliedMessageLayout.setCardBackgroundColor(Color.parseColor("#F5F5F5"));
+                            }
+
+                            String repliedUid = (String) snapshot.get("uid");
+                            String repliedText = (String) snapshot.get("message_text");
+
+                            if (holder.mRepliedMessageLayoutImage != null) {
+                                if (snapshot.containsKey("attachments")) {
+                                    ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) snapshot.get("attachments");
+                                    if (attachments != null && !attachments.isEmpty()) {
+                                        holder.mRepliedMessageLayoutImage.setVisibility(View.VISIBLE);
+                                        String publicId = (String) attachments.get(0).get("publicId");
+                                        if (publicId != null && !publicId.isEmpty() && _context != null) {
+                                            String imageUrl = "https://res.cloudinary.com/demo/image/upload/w_120,h_120,c_fill/" + publicId;
+                                            Glide.with(_context).load(imageUrl).placeholder(R.drawable.ph_imgbluredsqure).error(R.drawable.ph_imgbluredsqure).transform(new RoundedCorners(dpToPx(20))).into(holder.mRepliedMessageLayoutImage);
+                                        } else {
+                                            holder.mRepliedMessageLayoutImage.setImageResource(R.drawable.ph_imgbluredsqure);
                                         }
-                                    });
-                                    
-                                    // Also make the reply text area clickable
-                                    if (holder.mRepliedMessageLayoutMessage != null) {
-                                        holder.mRepliedMessageLayoutMessage.setOnClickListener(v -> {
-                                            if (chatActivity != null) {
-                                                chatActivity.scrollToMessage(repliedId);
-                                            }
-                                        });
+                                    } else {
+                                        holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
                                     }
-                                    
-                                    // Make the reply image clickable too
-                                    if (holder.mRepliedMessageLayoutImage != null) {
-                                        holder.mRepliedMessageLayoutImage.setOnClickListener(v -> {
-                                            if (chatActivity != null) {
-                                                chatActivity.scrollToMessage(repliedId);
-                                            }
-                                        });
-                                    }
-                                    
-                                    Log.d(TAG, "Reply layout should now be visible with proper styling");
                                 } else {
-                                    Log.d(TAG, "Replied message not found or holder is null. Snapshot exists: " + (snapshot != null && snapshot.exists()) + ", Holder null: " + (holder.mRepliedMessageLayout == null));
+                                    holder.mRepliedMessageLayoutImage.setVisibility(View.GONE);
                                 }
                             }
-                            @Override
-                            public void onCancelled(DatabaseError error) {
-                                Log.e(TAG, "Failed to load replied message: " + error.getMessage());
+
+                            if (holder.mRepliedMessageLayoutUsername != null) {
+                                String username = repliedUid != null && repliedUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ? firstUserName : secondUserName;
+                                holder.mRepliedMessageLayoutUsername.setText(username);
+                                holder.mRepliedMessageLayoutUsername.setTextColor(isMyMessage ? Color.WHITE : Color.parseColor("#1A1A1A"));
                             }
-                        });
+
+                            if (holder.mRepliedMessageLayoutMessage != null) {
+                                String messageText = repliedText != null ? repliedText : "";
+                                holder.mRepliedMessageLayoutMessage.setText(messageText);
+                                holder.mRepliedMessageLayoutMessage.setTextColor(isMyMessage ? Color.parseColor("#E0E0E0") : Color.parseColor("#424242"));
+                                holder.mRepliedMessageLayoutMessage.setVisibility(messageText.isEmpty() ? View.GONE : View.VISIBLE);
+                            }
+
+                            if (holder.mRepliedMessageLayoutLeftBar != null) {
+                                android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
+                                leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+                                leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
+                                leftBarDrawable.setCornerRadius(dpToPx(100));
+                                holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
+                            }
+
+                            View.OnClickListener clickListener = v -> {
+                                if (chatActivity != null) {
+                                    chatActivity.scrollToMessage(repliedId);
+                                }
+                            };
+                            holder.mRepliedMessageLayout.setOnClickListener(clickListener);
+                            if (holder.mRepliedMessageLayoutMessage != null) holder.mRepliedMessageLayoutMessage.setOnClickListener(clickListener);
+                            if (holder.mRepliedMessageLayoutImage != null) holder.mRepliedMessageLayoutImage.setOnClickListener(clickListener);
+                        } else {
+                            holder.mRepliedMessageLayout.setVisibility(View.GONE);
+                        }
+                    } else {
+                        holder.mRepliedMessageLayout.setVisibility(View.GONE);
+                    }
                 } else {
                     Log.d(TAG, "Reply message ID is null or empty for position: " + position);
                 }
@@ -464,66 +378,28 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             FirebaseDatabase.getInstance().getReference("skyline/inbox").child(otherUserUid).child(myUid).child("last_message_state").setValue("seen");
         }
         
-        // CRITICAL FIX: Set up long click listener on the entire message layout for better touch detection
+        // Consolidated long click listener for the message context menu.
         View.OnLongClickListener longClickListener = v -> {
-            Log.d(TAG, "=== LONG CLICK DETECTED ===");
-            Log.d(TAG, "Long click on view: " + v.getClass().getSimpleName() + " at position: " + position);
-            Log.d(TAG, "Message data: " + data.toString());
-            if (chatActivity != null) chatActivity.performHapticFeedbackLight();
-            // Prefer passing the bubble view as anchor if available
-            View anchor = holder.messageBG != null ? holder.messageBG : v;
+            Log.d(TAG, "Long click detected on view: " + v.getClass().getSimpleName() + " at position: " + position);
+            if (chatActivity != null) {
+                chatActivity.performHapticFeedbackLight();
+            }
+            // Use the message bubble (messageBG) as the anchor for the popup if it exists.
+            View anchor = holder.messageBG != null ? holder.messageBG : holder.itemView;
             chatActivity._messageOverviewPopup(anchor, position, _data);
             return true;
         };
-        
-        // CRITICAL FIX: Enhanced touch event handling with multiple fallbacks
-        View.OnTouchListener touchListener = (v, event) -> {
-            // Log all touch events for debugging
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                Log.d(TAG, "=== TOUCH DOWN DETECTED ===");
-                Log.d(TAG, "Touch on view: " + v.getClass().getSimpleName() + " at position: " + position);
-            }
-            
-            // Handle long press manually if needed
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                Log.d(TAG, "=== TOUCH UP DETECTED ===");
-            }
-            
-            return false; // Don't consume the event
-        };
-        
-        // Set long click listener on multiple views to ensure it works
-        if (holder.message_layout != null) {
-            holder.message_layout.setOnLongClickListener(longClickListener);
-            holder.message_layout.setOnTouchListener(touchListener);
-            Log.d(TAG, "Set long click listener on message_layout for position: " + position);
-        }
+
+        // Set the listener on the message bubble itself.
         if (holder.messageBG != null) {
             holder.messageBG.setOnLongClickListener(longClickListener);
-            holder.messageBG.setOnTouchListener(touchListener);
-            Log.d(TAG, "Set long click listener on messageBG for position: " + position);
         }
+
+        // Also set it on the TextView as a fallback, as it may consume touch events
+        // due to the Markdown/link handling.
         if (holder.message_text != null) {
             holder.message_text.setOnLongClickListener(longClickListener);
-            holder.message_text.setOnTouchListener(touchListener);
-            Log.d(TAG, "Set long click listener on message_text for position: " + position);
         }
-        // Also attach to the entire item view as a fallback
-        if (holder.itemView != null) {
-            holder.itemView.setOnLongClickListener(longClickListener);
-            holder.itemView.setOnTouchListener(touchListener);
-            Log.d(TAG, "Set long click listener on itemView for position: " + position);
-        }
-        if (holder.body != null) {
-            holder.body.setOnLongClickListener(longClickListener);
-            holder.body.setOnTouchListener(touchListener);
-            Log.d(TAG, "Set long click listener on body for position: " + position);
-        }
-        
-        // CRITICAL FIX: Also set on the entire item view as a fallback
-        holder.itemView.setOnLongClickListener(longClickListener);
-        holder.itemView.setOnTouchListener(touchListener);
-        Log.d(TAG, "Set long click listener on itemView for position: " + position);
         
         // Keep only one definitive long click handler to avoid conflicts
     }
@@ -831,13 +707,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private long _getMessageTimestamp(HashMap<String, Object> message) {
         try {
             Object pushDateObj = message.get("push_date");
-            if (pushDateObj != null) {
-                if (pushDateObj instanceof Long) {
-                    return (Long) pushDateObj;
-                } else if (pushDateObj instanceof String) {
-                    return Long.parseLong((String) pushDateObj);
-                }
-            }
+			if (pushDateObj instanceof Long) {
+				return (Long) pushDateObj;
+			} else if (pushDateObj instanceof Double) {
+				return ((Double) pushDateObj).longValue();
+			} else if (pushDateObj instanceof String) {
+				return Long.parseLong((String) pushDateObj);
+			}
         } catch (Exception e) {
             Log.w(TAG, "Error parsing message timestamp: " + e.getMessage());
         }
