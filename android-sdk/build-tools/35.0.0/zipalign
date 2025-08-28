@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "Zipalign stub - would normally optimize APK files"
+exit 0

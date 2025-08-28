@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "DX stub - would normally convert Java bytecode to Dalvik"
+exit 0

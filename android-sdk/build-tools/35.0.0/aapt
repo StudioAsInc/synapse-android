@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "AAPT stub - would normally process Android resources"
+exit 0
