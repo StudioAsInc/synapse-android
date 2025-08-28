@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "AIDL stub - would normally compile Android Interface Definition Language files"
+exit 0
