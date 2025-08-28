@@ -571,7 +571,15 @@ public class CreatePostActivity extends AppCompatActivity {
 		cc = Calendar.getInstance();
 		PostSendMap = new HashMap<>();
 		PostSendMap.put("key", UniquePostKey);
-		PostSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+		
+		// Check if user is logged in
+		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+		if (currentUser == null) {
+			Toast.makeText(getApplicationContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+			_LoadingDialog(false);
+			return;
+		}
+		PostSendMap.put("uid", currentUser.getUid());
 		
 		if (hasImage) {
 			PostSendMap.put("post_type", "IMAGE");
@@ -584,10 +592,10 @@ public class CreatePostActivity extends AppCompatActivity {
 			PostSendMap.put("post_text", postDescription.getText().toString().trim());
 		}
 		
-		if (!appSavedData.contains("user_region_data") && appSavedData.getString("user_region_data", "").equals("none")) {
-			PostSendMap.put("post_region", "none");
-		} else {
+		if (appSavedData.contains("user_region_data") && !appSavedData.getString("user_region_data", "").equals("none")) {
 			PostSendMap.put("post_region", appSavedData.getString("user_region_data", ""));
+		} else {
+			PostSendMap.put("post_region", "none");
 		}
 		
 		// Apply post settings

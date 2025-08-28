@@ -610,6 +610,14 @@ public class EditPostActivity extends AppCompatActivity {
 		cc = Calendar.getInstance();
 		PostUpdateMap = new HashMap<>();
 		
+		// Check if user is logged in
+		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+		if (currentUser == null) {
+			Toast.makeText(getApplicationContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+			_LoadingDialog(false);
+			return;
+		}
+		
 		if (hasImage) {
 			PostUpdateMap.put("post_type", "IMAGE");
 			PostUpdateMap.put("post_image", imageUrl);

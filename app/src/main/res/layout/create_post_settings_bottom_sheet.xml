@@ -68,7 +68,6 @@
 				android:textStyle="bold"
 				android:textColor="#000000"
 				android:text="@string/hide_the_number_of_views"
-				android:clickable="false"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
 			<TextView
@@ -96,7 +95,6 @@
 				android:textStyle="bold"
 				android:textColor="#000000"
 				android:text="@string/hide_the_number_of_likes"
-				android:clickable="false"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
 			<TextView
@@ -124,7 +122,6 @@
 				android:textStyle="bold"
 				android:textColor="#000000"
 				android:text="@string/hide_the_number_of_comments"
-				android:clickable="false"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
 			<TextView
@@ -180,7 +177,6 @@
 				android:textStyle="bold"
 				android:textColor="#000000"
 				android:text="@string/hide_post_from_everyone"
-				android:clickable="false"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
 			<TextView
@@ -208,7 +204,6 @@
 				android:textStyle="bold"
 				android:textColor="#000000"
 				android:text="@string/disable_saving_to_favorites"
-				android:clickable="false"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
 			<TextView
@@ -236,7 +231,6 @@
 				android:textStyle="bold"
 				android:textColor="#000000"
 				android:text="@string/disable_comments"
-				android:clickable="false"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
 			<TextView
