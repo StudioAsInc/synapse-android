@@ -485,8 +485,8 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								return;
 						}
 
-						final String uid = uidObj.toString();
-						final String key = keyObj.toString();
+						String uid = uidObj.toString();
+						String key = keyObj.toString();
 						
 						DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
 						DatabaseReference getCommentsRef = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(key);
@@ -546,10 +546,14 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								comment_text.setText("");
 						}
 						
+						final String replyUid = uid;
+						final String replyKey = key;
+						final String parentCommentKey = replyKey;
+
 						body.setOnLongClickListener(new View.OnLongClickListener() {
 								@Override
 								public boolean onLongClick(View v) {
-										if (uid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+										if (replyUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 												PopupMenu popup = new PopupMenu(getContext(), more);
 												popup.getMenu().add("Edit");
 												popup.getMenu().add("Delete");
@@ -563,8 +567,8 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 																				@Override
 																				public void onClick(DialogInterface dialog, int which) {
-																						main.child("posts-comments-replies").child(postKey).child(replyKey).child(key).removeValue();
-																						main.child("posts-comments-replies-like").child(postKey).child(key).removeValue();
+																						main.child("posts-comments-replies").child(postKey).child(parentCommentKey).child(replyKey).removeValue();
+																						main.child("posts-comments-replies-like").child(postKey).child(replyKey).removeValue();
 																						_data.remove(_position);
 																						notifyItemRemoved(_position);
 																						notifyItemRangeChanged(_position, _data.size());
@@ -584,74 +588,10 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																				public void onClick(DialogInterface dialog, int which) {
 																						String newComment = input.getText().toString();
 																						if (!newComment.trim().isEmpty()) {
-																								main.child("posts-comments-replies").child(postKey).child(replyKey).child(key).child("comment").setValue(newComment);
+																								main.child("posts-comments-replies").child(postKey).child(parentCommentKey).child(replyKey).child("comment").setValue(newComment);
 																								replyData.put("comment", newComment);
 																								notifyItemChanged(_position);
 																								Toast.makeText(getContext(), "Reply updated", Toast.LENGTH_SHORT).show();
-																						}
-																				}
-																		})
-																		.setNegativeButton("Cancel", null)
-																		.show();
-																}
-																return true;
-														}
-												});
-												popup.show();
-										}
-										return true;
-								}
-						});
-
-						more.setAlpha(1.0f);
-						more_ic.setImageResource(R.drawable.ic_more_vert);
-
-
-						more.setAlpha(1.0f);
-						more_ic.setImageResource(R.drawable.ic_more_vert);
-
-						body.setOnLongClickListener(new View.OnLongClickListener() {
-								@Override
-								public boolean onLongClick(View v) {
-										if (uid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-												PopupMenu popup = new PopupMenu(getContext(), more);
-												popup.getMenu().add("Edit");
-												popup.getMenu().add("Delete");
-												popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-														@Override
-														public boolean onMenuItemClick(MenuItem item) {
-																if (item.getTitle().equals("Delete")) {
-																		new MaterialAlertDialogBuilder(getContext())
-																		.setTitle("Delete Comment")
-																		.setMessage("Are you sure you want to delete this comment?")
-																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-																				@Override
-																				public void onClick(DialogInterface dialog, int which) {
-																						main.child("posts-comments").child(postKey).child(key).removeValue();
-																						main.child("posts-comments-like").child(postKey).child(key).removeValue();
-																						_data.remove(_position);
-																						notifyItemRemoved(_position);
-																						notifyItemRangeChanged(_position, _data.size());
-																						Toast.makeText(getContext(), "Comment deleted", Toast.LENGTH_SHORT).show();
-																				}
-																		})
-																		.setNegativeButton("Cancel", null)
-																		.show();
-																} else if (item.getTitle().equals("Edit")) {
-																		final EditText input = new EditText(getContext());
-																		input.setText(commentData.get("comment").toString());
-																		new MaterialAlertDialogBuilder(getContext())
-																		.setTitle("Edit Comment")
-																		.setView(input)
-																		.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-																				@Override
-																				public void onClick(DialogInterface dialog, int which) {
-																						String newComment = input.getText().toString();
-																						if (!newComment.trim().isEmpty()) {
-																								main.child("posts-comments").child(postKey).child(key).child("comment").setValue(newComment);
-																								commentData.put("comment", newComment);
-																								notifyItemChanged(_position);
-																								Toast.makeText(getContext(), "Comment updated", Toast.LENGTH_SHORT).show();
 																						}
 																				}
 																		})
@@ -750,14 +690,14 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								}
 						});
 						
-						more.setAlpha(1.0f);
-						more_ic.setImageResource(R.drawable.ic_more_vert);
-
+						final String commentUid = uid;
+						final String commentKey = key;
 						body.setOnLongClickListener(new View.OnLongClickListener() {
 								@Override
 								public boolean onLongClick(View v) {
-										if (uid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+										if (commentUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 												PopupMenu popup = new PopupMenu(getContext(), more);
+												popup.getMenu().add("Edit");
 												popup.getMenu().add("Delete");
 												popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
 														@Override
@@ -769,12 +709,32 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 																				@Override
 																				public void onClick(DialogInterface dialog, int which) {
-																						main.child("posts-comments").child(postKey).child(key).removeValue();
-																						main.child("posts-comments-like").child(postKey).child(key).removeValue();
-																						_data.remove(_position);
+																						main.child("posts-comments").child(postKey).child(commentKey).removeValue();
+																						main.child("posts-comments-like").child(postKey).child(commentKey).removeValue();
+																						commentsListMap.remove(_position);
 																						notifyItemRemoved(_position);
-																						notifyItemRangeChanged(_position, _data.size());
+																						notifyItemRangeChanged(_position, commentsListMap.size());
 																						Toast.makeText(getContext(), "Comment deleted", Toast.LENGTH_SHORT).show();
+																				}
+																		})
+																		.setNegativeButton("Cancel", null)
+																		.show();
+																} else if (item.getTitle().equals("Edit")) {
+																		final EditText input = new EditText(getContext());
+																		input.setText(commentData.get("comment").toString());
+																		new MaterialAlertDialogBuilder(getContext())
+																		.setTitle("Edit Comment")
+																		.setView(input)
+																		.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+																				@Override
+																				public void onClick(DialogInterface dialog, int which) {
+																						String newComment = input.getText().toString();
+																						if (!newComment.trim().isEmpty()) {
+																								main.child("posts-comments").child(postKey).child(commentKey).child("comment").setValue(newComment);
+																								commentData.put("comment", newComment);
+																								notifyItemChanged(_position);
+																								Toast.makeText(getContext(), "Comment updated", Toast.LENGTH_SHORT).show();
+																						}
 																				}
 																		})
 																		.setNegativeButton("Cancel", null)
@@ -1196,9 +1156,9 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								return;
 						}
 
-						final String uid = uidObj.toString();
-						final String key = keyObj.toString();
-						final String replyKey = replyKeyObj.toString();
+						String uid = uidObj.toString();
+						String key = keyObj.toString();
+						String replyKey = replyKeyObj.toString();
 						
 						DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
 						DatabaseReference getCommentsRef = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-replies").child(postKey).child(replyKey).child(key);
