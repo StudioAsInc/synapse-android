@@ -585,6 +585,45 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								}
 						});
 
+						more.setAlpha(1.0f);
+						more_ic.setImageResource(R.drawable.ic_more_vert);
+
+						body.setOnLongClickListener(new View.OnLongClickListener() {
+								@Override
+								public boolean onLongClick(View v) {
+										if (uid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+												PopupMenu popup = new PopupMenu(getContext(), more);
+												popup.getMenu().add("Delete");
+												popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+														@Override
+														public boolean onMenuItemClick(MenuItem item) {
+																if (item.getTitle().equals("Delete")) {
+																		new MaterialAlertDialogBuilder(getContext())
+																		.setTitle("Delete Comment")
+																		.setMessage("Are you sure you want to delete this comment?")
+																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+																				@Override
+																				public void onClick(DialogInterface dialog, int which) {
+																						main.child("posts-comments").child(postKey).child(key).removeValue();
+																						main.child("posts-comments-like").child(postKey).child(key).removeValue();
+																						_data.remove(_position);
+																						notifyItemRemoved(_position);
+																						notifyItemRangeChanged(_position, _data.size());
+																						Toast.makeText(getContext(), "Comment deleted", Toast.LENGTH_SHORT).show();
+																				}
+																		})
+																		.setNegativeButton("Cancel", null)
+																		.show();
+																}
+																return true;
+														}
+												});
+												popup.show();
+										}
+										return true;
+								}
+						});
+
 						other_replies_list.setAdapter(new CommentsRepliesAdapter(commentsRepliesListMap));
 						other_replies_list.setLayoutManager(new LinearLayoutManager(getActivity()));
 						
