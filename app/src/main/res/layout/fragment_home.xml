@@ -1,46 +1,14 @@
 <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tools="http://schemas.android.com/tools"
-	android:id="@+id/swipeLayout"
-	android:layout_width="match_parent"
-	android:layout_height="match_parent">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/swipeLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-	<FrameLayout
-		android:layout_width="match_parent"
-		android:layout_height="match_parent">
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:listitem="@layout/synapse_post_cv" />
 
-		<androidx.recyclerview.widget.RecyclerView
-			android:id="@+id/PublicPostsList"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			tools:listitem="@layout/synapse_post_cv" />
-
-		<TextView
-			android:id="@+id/PublicPostsListNotFound"
-			android:layout_width="match_parent"
-			android:layout_height="350dp"
-			android:padding="8dp"
-			android:gravity="center_horizontal|center_vertical"
-			android:text="There are no public posts available \nat the moment."
-			android:textSize="16sp"
-			android:textColor="?attr/colorOnSurfaceVariant"
-			android:visibility="gone" />
-
-		<LinearLayout
-			android:id="@+id/loadingBody"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:padding="8dp"
-			android:gravity="center_horizontal|center_vertical"
-			android:orientation="horizontal"
-			android:visibility="gone">
-			<ProgressBar
-				android:id="@+id/loading_bar"
-				android:layout_width="48dp"
-				android:layout_height="48dp"
-				android:indeterminate="false"
-				style="?android:progressBarStyle" />
-		</LinearLayout>
-	</FrameLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

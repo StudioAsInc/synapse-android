@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -32,7 +31,6 @@ public class HomeActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private FirebaseDatabase _firebase;
     private DatabaseReference udb;
-    private MaterialToolbar toolbar;
     private ImageView settings_button;
     private ImageView nav_search_ic;
     private ImageView nav_inbox_ic;
@@ -67,17 +65,15 @@ public class HomeActivity extends AppCompatActivity {
         _firebase = FirebaseDatabase.getInstance();
         udb = _firebase.getReference("skyline/users");
 
-        toolbar = findViewById(R.id.topBar);
         tabLayout = findViewById(R.id.tab_layout);
         viewPager = findViewById(R.id.view_pager);
-        settings_button = toolbar.findViewById(R.id.settings_button);
-        nav_search_ic = toolbar.findViewById(R.id.nav_search_ic);
-        nav_inbox_ic = toolbar.findViewById(R.id.nav_inbox_ic);
-        nav_profile_ic = toolbar.findViewById(R.id.nav_profile_ic);
+        settings_button = findViewById(R.id.settings_button);
+        nav_search_ic = findViewById(R.id.nav_search_ic);
+        nav_inbox_ic = findViewById(R.id.nav_inbox_ic);
+        nav_profile_ic = findViewById(R.id.nav_profile_ic);
     }
 
     private void initializeLogic() {
-        setSupportActionBar(toolbar);
         viewPager.setAdapter(new ViewPagerAdapter(this));
 
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
