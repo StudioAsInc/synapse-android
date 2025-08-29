@@ -1122,23 +1122,11 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 										});
 								}
 						});
-						
-						profileCard.setOnClickListener(new View.OnClickListener() {
-								@Override
-								public void onClick(View _view) {
-										intent.setClass(getContext(), ProfileActivity.class);
-										intent.putExtra("uid", _data.get((int)_position).get("uid").toString());
-										getContext().startActivity(intent);
-								}
-						});
 
-						final String replyUid = uid;
-						final String replyCommentKey = key;
-						final String originalCommentKey = replyKey;
 						body.setOnLongClickListener(new View.OnLongClickListener() {
 								@Override
 								public boolean onLongClick(View v) {
-										if (replyUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+										if (uid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 												PopupMenu popup = new PopupMenu(getContext(), more);
 												popup.getMenu().add("Delete");
 												popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -1151,7 +1139,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 																				@Override
 																				public void onClick(DialogInterface dialog, int which) {
-																						main.child("posts-comments-replies").child(postKey).child(originalCommentKey).child(replyCommentKey).removeValue();
+																						main.child("posts-comments-replies").child(postKey).child(replyKey).child(key).removeValue();
 																						_data.remove(_position);
 																						notifyItemRemoved(_position);
 																						notifyItemRangeChanged(_position, _data.size());
@@ -1167,6 +1155,15 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 												popup.show();
 										}
 										return true;
+								}
+						});
+
+						profileCard.setOnClickListener(new View.OnClickListener() {
+								@Override
+								public void onClick(View _view) {
+										intent.setClass(getContext(), ProfileActivity.class);
+										intent.putExtra("uid", _data.get((int)_position).get("uid").toString());
+										getContext().startActivity(intent);
 								}
 						});
 				}
