@@ -43,7 +43,7 @@ public class NotificationUtils {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle error
+                android.util.Log.e("NotificationUtils", "Failed to get sender name for post like notification", databaseError.toException());
             }
         });
     }
