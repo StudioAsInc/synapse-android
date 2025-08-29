@@ -403,6 +403,53 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 				} else {
 				getCommentsCount(key);
 			}
+
+			// Note: The following logic was moved from `_sendCommentLikeNotification`, where it was incorrectly placed.
+			// It needs to be executed when the dialog is opened to fetch comments, not just on a like action.
+			ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
+			Handler mMainHandler = new Handler(Looper.getMainLooper());
+
+			mExecutorService.execute(new Runnable() {
+					@Override
+					public void run() {
+							Query commentsQuery = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).orderByChild("like").limitToLast(commentsLimit);
+							commentsQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+									@Override
+									public void onDataChange(@NonNull DataSnapshot snapshot) {
+											mMainHandler.post(new Runnable() {
+													@Override
+													public void run() {
+															if (snapshot.exists()) {
+																	comments_list.setVisibility(View.VISIBLE);
+																	no_comments_body.setVisibility(View.GONE);
+																	loading_body.setVisibility(View.GONE);
+																	commentsListMap.clear();
+
+																	GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+
+																	for (DataSnapshot _data : snapshot.getChildren()) {
+																			HashMap<String, Object> commentsGetMap = _data.getValue(_ind);
+																			commentsListMap.add(commentsGetMap);
+																			SketchwareUtil.sortListMap(commentsListMap, "like", true, false);
+																	}
+
+																	comments_list.getAdapter().notifyDataSetChanged();
+															} else {
+																	comments_list.setVisibility(View.GONE);
+																	no_comments_body.setVisibility(View.VISIBLE);
+																	loading_body.setVisibility(View.GONE);
+															}
+													}
+											});
+									}
+
+									@Override
+									public void onCancelled(@NonNull DatabaseError error) {
+
+									}
+							});
+					}
+			});
 		}
 
 		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
@@ -431,52 +478,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 					);
 				}
 			});
-				{
-						ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-						Handler mMainHandler = new Handler(Looper.getMainLooper());
-						
-						mExecutorService.execute(new Runnable() {
-								@Override
-								public void run() {
-										Query commentsQuery = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).orderByChild("like").limitToLast(commentsLimit);
-										commentsQuery.addListenerForSingleValueEvent(new ValueEventListener() {
-												@Override
-												public void onDataChange(@NonNull DataSnapshot snapshot) {
-														mMainHandler.post(new Runnable() {
-																@Override
-																public void run() {
-																		if (snapshot.exists()) {
-																				comments_list.setVisibility(View.VISIBLE);
-																				no_comments_body.setVisibility(View.GONE);
-																				loading_body.setVisibility(View.GONE);
-																				commentsListMap.clear();
-																				
-																				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-																				
-																				for (DataSnapshot _data : snapshot.getChildren()) {
-																						HashMap<String, Object> commentsGetMap = _data.getValue(_ind);
-																						commentsListMap.add(commentsGetMap);
-																						SketchwareUtil.sortListMap(commentsListMap, "like", true, false);
-																				}
-																				
-																				comments_list.getAdapter().notifyDataSetChanged();
-																		} else {
-																				comments_list.setVisibility(View.GONE);
-																				no_comments_body.setVisibility(View.VISIBLE);
-																				loading_body.setVisibility(View.GONE);
-																		}
-																}
-														});
-												}
-												
-												@Override
-												public void onCancelled(@NonNull DatabaseError error) {
-														
-												}
-										});
-								}
-						});
-				}
 		}
 		
 		public void getMyUserData(String uid) {
