@@ -90,26 +90,16 @@
 			android:scaleType="centerInside" />
 		<LinearLayout
 			android:id="@+id/miniPostLayoutBottomSpace"
-			android:layout_width="wrap_content"
+			android:layout_width="0dp"
 			android:layout_height="match_parent"
-			android:layout_marginLeft="8dp"
-			android:layout_marginRight="8dp"
-			android:padding="8dp"
 			android:orientation="vertical"
 			android:layout_weight="1" />
-		<TextView
+		<com.google.android.material.button.MaterialButton
 			android:id="@+id/miniPostLayoutTextPostPublish"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:paddingLeft="18dp"
-			android:paddingTop="8dp"
-			android:paddingRight="18dp"
-			android:paddingBottom="8dp"
-			android:background="#757575"
 			android:text="@string/share"
-			android:textSize="16sp"
-			android:textColor="?attr/colorOnSurface"
-			android:fontFamily="@font/product_sans" />
+			style="@style/Widget.Material3.Button" />
 	</LinearLayout>
 	<LinearLayout
 		android:id="@+id/miniPostLayoutBottomSpc"
@@ -122,67 +112,38 @@
 		android:id="@+id/miniPostLayoutFiltersScroll"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:layout_marginTop="10dp"
-		android:layout_marginBottom="10dp"
 		android:scrollbars="none">
-		<LinearLayout
-			android:id="@+id/miniPostLayoutFiltersScrollBody"
+		<com.google.android.material.chip.ChipGroup
+			android:id="@+id/filterChipGroup"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:gravity="center_vertical"
-			android:orientation="horizontal">
-			<TextView
-				android:id="@+id/miniPostLayoutFiltersScrollBodyFilterLOCAL"
+			app:singleLine="true"
+			app:singleSelection="true">
+			<com.google.android.material.chip.Chip
+				android:id="@+id/chip_ai_based"
+				style="@style/Widget.MaterialComponents.Chip.Filter"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_marginLeft="14dp"
-				android:paddingLeft="14dp"
-				android:paddingTop="6dp"
-				android:paddingRight="14dp"
-				android:paddingBottom="6dp"
-				android:background="@android:color/transparent"
-				android:text="AI based"
-				android:textSize="16sp"
-				android:textColor="#616161" />
-			<TextView
-				android:id="@+id/miniPostLayoutFiltersScrollBodyFilterPUBLIC"
+				android:text="AI based" />
+			<com.google.android.material.chip.Chip
+				android:id="@+id/chip_global"
+				style="@style/Widget.MaterialComponents.Chip.Filter"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_marginLeft="14dp"
-				android:paddingLeft="14dp"
-				android:paddingTop="6dp"
-				android:paddingRight="14dp"
-				android:paddingBottom="6dp"
-				android:background="#445E91"
 				android:text="Global"
-				android:textSize="16sp"
-				android:textColor="#FAFAFA"
-				android:fontFamily="@font/product_sans" />
-			<TextView
-				android:id="@+id/miniPostLayoutFiltersScrollBodyFilterFOLLOWED"
+				android:checked="true"/>
+			<com.google.android.material.chip.Chip
+				android:id="@+id/chip_following"
+				style="@style/Widget.MaterialComponents.Chip.Filter"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_marginLeft="14dp"
-				android:paddingLeft="14dp"
-				android:paddingTop="6dp"
-				android:paddingRight="14dp"
-				android:paddingBottom="6dp"
-				android:text="Following"
-				android:textSize="16sp"
-				android:textColor="#616161" />
-			<TextView
-				android:id="@+id/miniPostLayoutFiltersScrollBodyFilterFAVORITE"
+				android:text="Following" />
+			<com.google.android.material.chip.Chip
+				android:id="@+id/chip_saved_posts"
+				style="@style/Widget.MaterialComponents.Chip.Filter"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_marginLeft="14dp"
-				android:layout_marginRight="14dp"
-				android:paddingLeft="14dp"
-				android:paddingTop="6dp"
-				android:paddingRight="14dp"
-				android:paddingBottom="6dp"
-				android:text="Saved posts"
-				android:textSize="16sp"
-				android:textColor="#616161" />
-		</LinearLayout>
+				android:text="Saved posts" />
+		</com.google.android.material.chip.ChipGroup>
 	</HorizontalScrollView>
 </LinearLayout>

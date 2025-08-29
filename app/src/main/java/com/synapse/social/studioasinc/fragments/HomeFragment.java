@@ -47,6 +47,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.*;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.chip.Chip;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -649,6 +651,19 @@ public class HomeFragment extends Fragment {
                     }
                 });
 
+                headerViewHolder.filterChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+                    if (checkedId == R.id.chip_ai_based) {
+                        currentPostFilter = "LOCAL";
+                    } else if (checkedId == R.id.chip_global) {
+                        currentPostFilter = "PUBLIC";
+                    } else if (checkedId == R.id.chip_following) {
+                        currentPostFilter = "FOLLOWED";
+                    } else if (checkedId == R.id.chip_saved_posts) {
+                        currentPostFilter = "FAVORITE";
+                    }
+                    _loadPosts(currentPostFilter);
+                });
+
             } else if (viewType == VIEW_TYPE_STORIES) {
                 StoriesViewHolder storiesViewHolder = (StoriesViewHolder) holder;
                 StoriesItem storiesItem = (StoriesItem) items.get(position);
@@ -902,6 +917,8 @@ public class HomeFragment extends Fragment {
             ImageView miniPostLayoutProfileImage;
             ImageView miniPostLayoutImagePost;
             ImageView miniPostLayoutVideoPost;
+            ChipGroup filterChipGroup;
+
             public HeaderViewHolder(@NonNull View itemView) {
                 super(itemView);
                 miniPostLayoutTextPostInput = itemView.findViewById(R.id.miniPostLayoutTextPostInput);
@@ -909,6 +926,7 @@ public class HomeFragment extends Fragment {
                 miniPostLayoutProfileImage = itemView.findViewById(R.id.miniPostLayoutProfileImage);
                 miniPostLayoutImagePost = itemView.findViewById(R.id.miniPostLayoutImagePost);
                 miniPostLayoutVideoPost = itemView.findViewById(R.id.miniPostLayoutVideoPost);
+                filterChipGroup = itemView.findViewById(R.id.filterChipGroup);
             }
         }
 
