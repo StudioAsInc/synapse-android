@@ -143,6 +143,22 @@ public class CreatePostActivity extends AppCompatActivity {
 			initializeLogic();
 		}
 	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+			PresenceManager.setActivity(FirebaseAuth.getInstance().getCurrentUser().getUid(), "Creating a post");
+		}
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+			PresenceManager.setActivity(FirebaseAuth.getInstance().getCurrentUser().getUid(), "Idle");
+		}
+	}
 	
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
