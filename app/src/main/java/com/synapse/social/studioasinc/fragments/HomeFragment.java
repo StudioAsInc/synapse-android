@@ -158,7 +158,6 @@ public class HomeFragment extends Fragment {
 
     private void initializeLogic() {
         _loadPosts(currentPostFilter);
-        _loadStories();
 
 
         PublicPostsList.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -428,10 +427,20 @@ public class HomeFragment extends Fragment {
             });
         }
 
-        if (PublicPostsList.getAdapter() == null || !(PublicPostsList.getAdapter() instanceof PublicPostsListAdapter)) {
-            PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList));
+        if (PublicPostsList.getAdapter() instanceof ConcatAdapter) {
+            ConcatAdapter concatAdapter = (ConcatAdapter) PublicPostsList.getAdapter();
+            for (RecyclerView.Adapter adapter : concatAdapter.getAdapters()) {
+                if (adapter instanceof PublicPostsListAdapter) {
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        } else if (PublicPostsList.getAdapter() instanceof PublicPostsListAdapter) {
+             ((PublicPostsListAdapter)PublicPostsList.getAdapter()).notifyDataSetChanged();
         } else {
-            ((PublicPostsListAdapter)PublicPostsList.getAdapter()).notifyDataSetChanged();
+            HeaderAdapter headerAdapter = new HeaderAdapter();
+            PublicPostsListAdapter postsAdapter = new PublicPostsListAdapter(PostsList);
+            ConcatAdapter concatAdapter = new ConcatAdapter(headerAdapter, postsAdapter);
+            PublicPostsList.setAdapter(concatAdapter);
         }
 
         if (PostsList.isEmpty()) {
@@ -554,6 +563,7 @@ public class HomeFragment extends Fragment {
             storiesView.setAdapter(new StoriesViewAdapter(storiesList));
             storiesView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false));
             _viewGraphics(miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
+            _loadStories();
 
             DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 	        getReference.addValueEventListener(new ValueEventListener() {
