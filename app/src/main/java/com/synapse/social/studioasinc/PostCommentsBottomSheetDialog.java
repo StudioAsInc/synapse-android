@@ -30,6 +30,10 @@ import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.PopupMenu;
+import android.view.MenuItem;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import android.content.DialogInterface;
 import android.widget.LinearLayout;
 import android.content.res.ColorStateList;
 import android.os.Handler;
@@ -624,6 +628,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								comment_text.setText("");
 						}
 						
+
 						other_replies_list.setAdapter(new CommentsRepliesAdapter(commentsRepliesListMap));
 						other_replies_list.setLayoutManager(new LinearLayoutManager(getActivity()));
 						
@@ -707,6 +712,65 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								}
 						});
 						
+						final String commentUid = uid;
+						final String commentKey = key;
+						body.setOnLongClickListener(new View.OnLongClickListener() {
+								@Override
+								public boolean onLongClick(View v) {
+										if (commentUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+												PopupMenu popup = new PopupMenu(getContext(), more);
+												popup.getMenu().add("Edit");
+												popup.getMenu().add("Delete");
+												popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+														@Override
+														public boolean onMenuItemClick(MenuItem item) {
+																if (item.getTitle().equals("Delete")) {
+																		new MaterialAlertDialogBuilder(getContext())
+																		.setTitle("Delete Comment")
+																		.setMessage("Are you sure you want to delete this comment?")
+																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+																				@Override
+																				public void onClick(DialogInterface dialog, int which) {
+																						main.child("posts-comments").child(postKey).child(commentKey).removeValue();
+																						main.child("posts-comments-like").child(postKey).child(commentKey).removeValue();
+																						commentsListMap.remove(_position);
+																						notifyItemRemoved(_position);
+																						notifyItemRangeChanged(_position, commentsListMap.size());
+																						Toast.makeText(getContext(), "Comment deleted", Toast.LENGTH_SHORT).show();
+																				}
+																		})
+																		.setNegativeButton("Cancel", null)
+																		.show();
+																} else if (item.getTitle().equals("Edit")) {
+																		final EditText input = new EditText(getContext());
+																		input.setText(commentData.get("comment").toString());
+																		new MaterialAlertDialogBuilder(getContext())
+																		.setTitle("Edit Comment")
+																		.setView(input)
+																		.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+																				@Override
+																				public void onClick(DialogInterface dialog, int which) {
+																						String newComment = input.getText().toString();
+																						if (!newComment.trim().isEmpty()) {
+																								main.child("posts-comments").child(postKey).child(commentKey).child("comment").setValue(newComment);
+																								commentData.put("comment", newComment);
+																								notifyItemChanged(_position);
+																								Toast.makeText(getContext(), "Comment updated", Toast.LENGTH_SHORT).show();
+																						}
+																				}
+																		})
+																		.setNegativeButton("Cancel", null)
+																		.show();
+																}
+																return true;
+														}
+												});
+												popup.show();
+										}
+										return true;
+								}
+						});
+
 						if (postPublisherAvatar.equals("null")) {
 								likedByPublisherLayoutAvatar.setImageResource(R.drawable.avatar);
 						} else {
