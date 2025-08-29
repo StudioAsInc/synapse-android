@@ -485,8 +485,8 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								return;
 						}
 
-						String uid = uidObj.toString();
-						String key = keyObj.toString();
+						final String uid = uidObj.toString();
+						final String key = keyObj.toString();
 						
 						DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
 						DatabaseReference getCommentsRef = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(key);
@@ -1114,9 +1114,9 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								return;
 						}
 
-						String uid = uidObj.toString();
-						String key = keyObj.toString();
-						String replyKey = replyKeyObj.toString();
+						final String uid = uidObj.toString();
+						final String key = keyObj.toString();
+						final String replyKey = replyKeyObj.toString();
 						
 						DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
 						DatabaseReference getCommentsRef = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-replies").child(postKey).child(replyKey).child(key);
