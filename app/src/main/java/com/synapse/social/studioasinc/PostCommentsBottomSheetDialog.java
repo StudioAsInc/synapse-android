@@ -313,6 +313,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 												sendCommentMap.put("replyCommentkey", replyToCommentKey);
 												sendCommentMap.put("like", "0");
 												main.child("posts-comments-replies").child(postKey).child(replyToCommentKey).child(pushKey).updateChildren(sendCommentMap);
+												_sendCommentNotification(true, pushKey);
 												comment_send_input.setText("");
 												getCommentsRef(postKey, false);
 										} else {
@@ -325,6 +326,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 												sendCommentMap.put("key", pushKey);
 												sendCommentMap.put("like", "0");
 												main.child("posts-comments").child(postKey).child(pushKey).updateChildren(sendCommentMap);
+												_sendCommentNotification(false, pushKey);
 												comment_send_input.setText("");
 												getCommentsRef(postKey, false);
 										}
@@ -343,12 +345,92 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 				return dialog;
 		}
 		
-		public void getCommentsRef(String key, boolean increaseLimit) {
-				if (increaseLimit) {
-						commentsLimit = commentsLimit + 20;
+		private void _sendCommentNotification(boolean isReply, String commentKey) {
+			FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+			if (currentUser == null) {
+				return;
+			}
+			String currentUid = currentUser.getUid();
+
+			Task<DataSnapshot> senderNameTask = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("username").get();
+
+			if (isReply) {
+				Task<DataSnapshot> originalCommenterTask = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(replyToCommentKey).child("uid").get();
+				com.google.android.gms.tasks.Tasks.whenAllSuccess(senderNameTask, originalCommenterTask).addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<List<Object>>() {
+					@Override
+					public void onSuccess(List<Object> list) {
+						String senderName = ((DataSnapshot) list.get(0)).getValue(String.class);
+						String originalCommenterUid = ((DataSnapshot) list.get(1)).getValue(String.class);
+						if (originalCommenterUid != null) {
+							String message = senderName + " replied to your comment";
+							HashMap<String, String> data = new HashMap<>();
+							data.put("postId", postKey);
+							data.put("commentId", commentKey);
+							NotificationHelper.sendNotification(
+							originalCommenterUid,
+							currentUid,
+							message,
+							NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
+							data
+							);
+						}
+					}
+				});
 				} else {
-						getCommentsCount(key);
+				senderNameTask.addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+					@Override
+					public void onSuccess(DataSnapshot dataSnapshot) {
+						String senderName = dataSnapshot.getValue(String.class);
+						String message = senderName + " commented on your post";
+						HashMap<String, String> data = new HashMap<>();
+						data.put("postId", postKey);
+						data.put("commentId", commentKey);
+						NotificationHelper.sendNotification(
+						postPublisherUID,
+						currentUid,
+						message,
+						NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT,
+						data
+						);
+					}
+				});
+			}
+		}
+
+		public void getCommentsRef(String key, boolean increaseLimit) {
+			if (increaseLimit) {
+				commentsLimit = commentsLimit + 20;
+				} else {
+				getCommentsCount(key);
+			}
+		}
+
+		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
+			FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+			if (currentUser == null) {
+				return;
+			}
+			String currentUid = currentUser.getUid();
+
+			FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("username").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+				@Override
+				public void onSuccess(DataSnapshot dataSnapshot) {
+					String senderName = dataSnapshot.getValue(String.class);
+					String message = senderName + " liked your comment";
+
+					HashMap<String, String> data = new HashMap<>();
+					data.put("postId", postKey);
+					data.put("commentId", commentKey);
+
+					NotificationHelper.sendNotification(
+					commentAuthorUid,
+					currentUid,
+					message,
+					NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_COMMENT,
+					data
+					);
 				}
+			});
 				{
 						ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
 						Handler mMainHandler = new Handler(Looper.getMainLooper());
@@ -356,7 +438,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						mExecutorService.execute(new Runnable() {
 								@Override
 								public void run() {
-										Query commentsQuery = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(key).orderByChild("like").limitToLast(commentsLimit);
+										Query commentsQuery = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).orderByChild("like").limitToLast(commentsLimit);
 										commentsQuery.addListenerForSingleValueEvent(new ValueEventListener() {
 												@Override
 												public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -987,6 +1069,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		like_unlike_ic.setImageResource(R.drawable.post_icons_1_1);
 																} else {
 																		getCommentsLikeCount.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+																		_sendCommentLikeNotification(key, uid);
 																		currentLikes++;
 																		postCommentLikeCountCache.put(key, String.valueOf(currentLikes));
 																		_setCommentLikeCount(like_count, currentLikes);

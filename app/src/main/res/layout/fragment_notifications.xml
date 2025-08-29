@@ -4,11 +4,24 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:gravity="center"
 	android:orientation="vertical">
-	<TextView
+	<ProgressBar
+		android:id="@+id/loading_bar"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:text="Notifications Fragment"
-		android:textSize="20sp" />
+		android:layout_gravity="center"
+		android:visibility="gone"/>
+	<androidx.recyclerview.widget.RecyclerView
+		android:id="@+id/notifications_list"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:visibility="gone"/>
+	<TextView
+		android:id="@+id/no_notifications_text"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="No notifications yet."
+		android:textSize="20sp"
+		android:layout_gravity="center"
+		android:visibility="gone"/>
 </LinearLayout>
