@@ -160,44 +160,6 @@ public class HomeFragment extends Fragment {
         _loadPosts(currentPostFilter);
         _loadStories();
 
-        DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-        getReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()) {
-                    if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-                        Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(miniPostLayoutProfileImage);
-                    } else {
-                        miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-                    }
-                } else {
-                    miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-                }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(getContext(), "Error fetching user profile: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-            }
-        });
-
-        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-        miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-        miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
-        miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-        miniPostLayoutTextPostPublish.setVisibility(View.GONE);
-        miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-        _ImageColor(miniPostLayoutImagePost, 0xFF445E91);
-        _ImageColor(miniPostLayoutVideoPost, 0xFF445E91);
-        _ImageColor(miniPostLayoutTextPost, 0xFF445E91);
-        _ImageColor(miniPostLayoutMoreButton, 0xFF445E91);
-        _viewGraphics(miniPostLayoutImagePost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutVideoPost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutTextPost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
 
         PublicPostsList.setLayoutManager(new LinearLayoutManager(getContext()));
 
