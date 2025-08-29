@@ -1653,6 +1653,7 @@ if ( || ( || )) {
 								likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
 							} else {
 								getLikeCheck.setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+								com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get((int)_position).get("key").toString(), _data.get((int)_position).get("uid").toString());
 								postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString()) + 1)));
 								_setCount(likeButtonCount, Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString()));
 								likeButtonIc.setImageResource(R.drawable.post_icons_1_2);

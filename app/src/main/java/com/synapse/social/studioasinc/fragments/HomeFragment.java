@@ -1022,6 +1022,7 @@ public class HomeFragment extends Fragment {
                             likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
                         } else {
                             likeRef.setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+                            com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get(_position).get("key").toString(), _data.get(_position).get("uid").toString());
                             double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
                             postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
                             _setCount(likeButtonCount, currentLikes + 1);

@@ -25,15 +25,101 @@ object NotificationHelper {
     private const val ONESIGNAL_API_URL = "https://onesignal.com/api/v1/notifications"
     
     /**
+     * Sends a notification to a user.
+     *
+     * @param recipientUid The UID of the user to send the notification to.
+     * @param senderUid The UID of the user sending the notification.
+     * @param message The message to send in the notification.
+     * @param notificationType The type of notification to send.
+     * @param data A map of additional data to send with the notification.
+     */
+    @JvmStatic
+    fun sendNotification(
+        recipientUid: String,
+        senderUid: String,
+        message: String,
+        notificationType: String,
+        data: Map<String, String>? = null
+    ) {
+        if (recipientUid == senderUid) {
+            // Don't send notification to self
+            return
+        }
+
+        val userDb = FirebaseDatabase.getInstance().getReference("skyline/users")
+        userDb.child(recipientUid).child("oneSignalPlayerId").get().addOnSuccessListener {
+            val recipientOneSignalPlayerId = it.getValue(String::class.java)
+            if (recipientOneSignalPlayerId.isNullOrBlank()) {
+                Log.w(TAG, "Recipient OneSignal Player ID is blank. Cannot send notification.")
+                return@addOnSuccessListener
+            }
+
+            val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid/status")
+
+            recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
+                val recipientStatus = dataSnapshot.getValue(String::class.java)
+                val suppressStatus = "chatting_with_$senderUid"
+
+                if (NotificationConfig.ENABLE_SMART_SUPPRESSION) {
+                    if (suppressStatus == recipientStatus) {
+                        if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+                            Log.i(TAG, "Recipient is actively chatting with sender. Suppressing notification.")
+                        }
+                        return@addOnSuccessListener
+                    }
+
+                    if (recipientStatus == "online") {
+                        if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+                            Log.i(TAG, "Recipient is online. Suppressing notification for real-time message visibility.")
+                        }
+                        return@addOnSuccessListener
+                    }
+                }
+
+                if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
+                    sendClientSideNotification(
+                        recipientOneSignalPlayerId,
+                        message,
+                        senderUid,
+                        notificationType,
+                        data
+                    )
+                } else {
+                    sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
+                }
+                saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+            }.addOnFailureListener { e ->
+                Log.e(TAG, "Status check failed. Defaulting to send notification.", e)
+                if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
+                     sendClientSideNotification(
+                        recipientOneSignalPlayerId,
+                        message,
+                        senderUid,
+                        notificationType,
+                        data
+                    )
+                } else {
+                    sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
+                }
+                saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+            }
+        }.addOnFailureListener {
+            Log.e(TAG, "Failed to get recipient's OneSignal Player ID.", it)
+        }
+    }
+
+    /**
      * Enhanced notification sending with smart presence checking and dual system support.
-     * 
+     *
      * @param senderUid The UID of the message sender
      * @param recipientUid The UID of the message recipient
      * @param recipientOneSignalPlayerId The OneSignal Player ID of the recipient
      * @param message The message content to send in the notification
      * @param chatId Optional chat ID for deep linking (can be null)
+     * @deprecated Use sendNotification instead.
      */
     @JvmStatic
+    @Deprecated("Use sendNotification instead.")
     fun sendMessageAndNotifyIfNeeded(
         senderUid: String,
         recipientUid: String,
@@ -41,62 +127,29 @@ object NotificationHelper {
         message: String,
         chatId: String? = null
     ) {
-        if (recipientOneSignalPlayerId.isBlank()) {
-            Log.w(TAG, "Recipient OneSignal Player ID is blank. Cannot send notification.")
-            return
-        }
-
-        val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid/status")
-
-        recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
-            val recipientStatus = dataSnapshot.getValue(String::class.java)
-            val suppressStatus = "chatting_with_$senderUid"
-
-            // Smart notification suppression based on user status
-            if (NotificationConfig.ENABLE_SMART_SUPPRESSION) {
-                // Don't send notification if recipient is actively chatting with the sender
-                if (suppressStatus == recipientStatus) {
-                    if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                        Log.i(TAG, "Recipient is actively chatting with sender. Suppressing notification.")
-                    }
-                    return@addOnSuccessListener
-                }
-                
-                // Don't send notification if recipient is online (they'll see the message in real-time)
-                if (recipientStatus == "online") {
-                    if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                        Log.i(TAG, "Recipient is online. Suppressing notification for real-time message visibility.")
-                    }
-                    return@addOnSuccessListener
-                }
-            }
-
-            // Send notification in all other cases (offline, null status, or other statuses)
-            if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                Log.i(TAG, "Recipient not in chat and not online. Sending notification.")
-            }
-            
-            if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                sendClientSideNotification(recipientOneSignalPlayerId, message, senderUid, chatId)
-            } else {
-                sendServerSideNotification(recipientOneSignalPlayerId, message)
-            }
-        }.addOnFailureListener { e ->
-            // On error, default to sending notification via the configured system
-            Log.e(TAG, "Status check failed. Defaulting to send notification.", e)
-            if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                sendClientSideNotification(recipientOneSignalPlayerId, message, senderUid, chatId)
-            } else {
-                sendServerSideNotification(recipientOneSignalPlayerId, message)
-            }
-        }
+        sendNotification(
+            recipientUid,
+            senderUid,
+            message,
+            "chat_message",
+            if (chatId != null) mapOf("chat_id" to chatId) else null
+        )
     }
 
     /**
      * Sends notification via the existing Cloudflare Worker (server-side).
      */
     @JvmStatic
-    fun sendServerSideNotification(recipientId: String, message: String) {
+    fun sendServerSideNotification(
+        recipientId: String,
+        message: String,
+        notificationType: String,
+        data: Map<String, String>? = null
+    ) {
+        if (notificationType != "chat_message") {
+            Log.w(TAG, "Server-side notification for type $notificationType is not yet implemented. Sending a generic message.")
+        }
+
         val client = OkHttpClient()
         val jsonBody = JSONObject()
         try {
@@ -116,10 +169,9 @@ object NotificationHelper {
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.e(TAG, "Failed to send server-side notification", e)
-                // Fallback to client-side if server fails
                 if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && !NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                     Log.i(TAG, "Falling back to client-side notification due to server failure")
-                    sendClientSideNotification(recipientId, message, null, null)
+                    sendClientSideNotification(recipientId, message, null, notificationType, data)
                 }
             }
 
@@ -129,10 +181,9 @@ object NotificationHelper {
                         Log.i(TAG, "Server-side notification sent successfully.")
                     } else {
                         Log.e(TAG, "Failed to send server-side notification: ${it.code}")
-                        // Fallback to client-side if server returns error
                         if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && !NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                             Log.i(TAG, "Falling back to client-side notification due to server error")
-                            sendClientSideNotification(recipientId, message, null, null)
+                            sendClientSideNotification(recipientId, message, null, notificationType, data)
                         }
                     }
                 }
@@ -145,36 +196,34 @@ object NotificationHelper {
      */
     @JvmStatic
     fun sendClientSideNotification(
-        recipientPlayerId: String, 
-        message: String, 
+        recipientPlayerId: String,
+        message: String,
         senderUid: String? = null,
-        chatId: String? = null
+        notificationType: String,
+        data: Map<String, String>? = null
     ) {
         val client = OkHttpClient()
         val jsonBody = JSONObject()
         
         try {
-            // Required OneSignal fields
             jsonBody.put("app_id", NotificationConfig.ONESIGNAL_APP_ID)
             jsonBody.put("include_player_ids", JSONObject().put("0", recipientPlayerId))
             jsonBody.put("contents", JSONObject().put("en", message))
-            jsonBody.put("headings", JSONObject().put("en", NotificationConfig.NOTIFICATION_TITLE))
+            jsonBody.put("headings", JSONObject().put("en", NotificationConfig.getTitleForNotificationType(notificationType)))
             jsonBody.put("subtitle", JSONObject().put("en", NotificationConfig.NOTIFICATION_SUBTITLE))
             
-            // Optional deep linking data
             if (NotificationConfig.ENABLE_DEEP_LINKING) {
-                val data = JSONObject()
+                val dataJson = JSONObject()
                 if (senderUid != null) {
-                    data.put("sender_uid", senderUid)
+                    dataJson.put("sender_uid", senderUid)
                 }
-                if (chatId != null) {
-                    data.put("chat_id", chatId)
+                dataJson.put("type", notificationType)
+                data?.forEach { (key, value) ->
+                    dataJson.put(key, value)
                 }
-                data.put("type", "chat_message")
-                jsonBody.put("data", data)
+                jsonBody.put("data", dataJson)
             }
             
-            // Notification settings
             jsonBody.put("priority", NotificationConfig.NOTIFICATION_PRIORITY)
             jsonBody.put("android_channel_id", NotificationConfig.NOTIFICATION_CHANNEL_ID)
             
@@ -194,10 +243,9 @@ object NotificationHelper {
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.e(TAG, "Failed to send client-side notification", e)
-                // Fallback to server-side if client-side fails
                 if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                     Log.i(TAG, "Falling back to server-side notification due to client-side failure")
-                    sendServerSideNotification(recipientPlayerId, message)
+                    sendServerSideNotification(recipientPlayerId, message, notificationType, data)
                 }
             }
 
@@ -207,10 +255,9 @@ object NotificationHelper {
                         Log.i(TAG, "Client-side notification sent successfully.")
                     } else {
                         Log.e(TAG, "Failed to send client-side notification: ${it.code} - ${it.body?.string()}")
-                        // Fallback to server-side if client-side returns error
                         if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                             Log.i(TAG, "Falling back to server-side notification due to client-side error")
-                            sendServerSideNotification(recipientPlayerId, message)
+                            sendServerSideNotification(recipientPlayerId, message, notificationType, data)
                         }
                     }
                 }
@@ -244,5 +291,27 @@ object NotificationHelper {
     @JvmStatic
     fun isNotificationSystemConfigured(): Boolean {
         return NotificationConfig.isConfigurationValid()
+    }
+
+    private fun saveNotificationToDatabase(
+        recipientUid: String,
+        senderUid: String,
+        message: String,
+        notificationType: String,
+        data: Map<String, String>?
+    ) {
+        val notificationsRef = FirebaseDatabase.getInstance().getReference("skyline/notifications").child(recipientUid)
+        val notificationId = notificationsRef.push().key
+        if (notificationId != null) {
+            val notification = com.synapse.social.studioasinc.model.Notification(
+                senderUid,
+                message,
+                notificationType,
+                data?.get("postId"),
+                data?.get("commentId"),
+                System.currentTimeMillis()
+            )
+            notificationsRef.child(notificationId).setValue(notification)
+        }
     }
 }
