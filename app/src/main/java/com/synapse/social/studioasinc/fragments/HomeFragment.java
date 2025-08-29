@@ -145,7 +145,7 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
     private void initializeLogic() {
         _loadPosts(currentPostFilter);
         PublicPostsList.setLayoutManager(new LinearLayoutManager(getContext()));
-        PublicPostsList.setAdapter(new PublicPostsListAdapter(new ArrayList<>(), this));
+        PublicPostsList.setAdapter(new PublicPostsListAdapter(new ArrayList<>(), this, getContext()));
     }
 
 	@Override
@@ -214,45 +214,6 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
         _view.setBackground(RE);
     }
 
-    private void _loadStories() {
-        storiesDbRef.orderByChild("publish_date")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        storiesList.clear();
-                        HashMap<String, Object> myStoryPlaceholder = new HashMap<>();
-                        myStoryPlaceholder.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                        storiesList.add(myStoryPlaceholder);
-
-                        if (dataSnapshot.exists()) {
-                            for (DataSnapshot storySnap : dataSnapshot.getChildren()) {
-                                GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-                                HashMap<String, Object> storyMap = storySnap.getValue(_ind);
-                                if (storyMap != null) {
-                                    if (!storyMap.containsKey("uid") || !storyMap.get("uid").equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-                                        storiesList.add(storyMap);
-                                    }
-                                }
-                            }
-                        }
-                        if (storiesView.getAdapter() != null) {
-                            storiesView.getAdapter().notifyDataSetChanged();
-                        } else {
-                            storiesView.setAdapter(new StoriesViewAdapter(storiesList));
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Toast.makeText(getContext(), "Error loading stories: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                        if (storiesView.getAdapter() != null) {
-                            storiesView.getAdapter().notifyDataSetChanged();
-                        } else {
-                            storiesView.setAdapter(new StoriesViewAdapter(storiesList));
-                        }
-                    }
-                });
-    }
 
     public void _loadPosts(final String filterType) {
         swipeLayout.setRefreshing(true);
@@ -460,14 +421,11 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
             });
         }
 
-		ArrayList<HashMap<String, Object>> adapterList = new ArrayList<>(PostsList);
-		adapterList.add(0, new HashMap<>()); // Add dummy item for header
-
         if (PublicPostsList.getAdapter() == null || !(PublicPostsList.getAdapter() instanceof PublicPostsListAdapter)) {
-            PublicPostsList.setAdapter(new PublicPostsListAdapter(adapterList));
+            PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList, this, getContext()));
         } else {
             ((PublicPostsListAdapter)PublicPostsList.getAdapter())._data.clear();
-            ((PublicPostsListAdapter)PublicPostsList.getAdapter())._data.addAll(adapterList);
+            ((PublicPostsListAdapter)PublicPostsList.getAdapter())._data.addAll(PostsList);
             ((PublicPostsListAdapter)PublicPostsList.getAdapter()).notifyDataSetChanged();
         }
 
@@ -563,141 +521,8 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
         customtabsintent.launchUrl(getContext(), Uri.parse(AndroidDevelopersBlogURL));
     }
 
-    public class StoriesViewAdapter extends RecyclerView.Adapter<StoriesViewAdapter.ViewHolder> {
-        ArrayList<HashMap<String, Object>> _data;
-        public StoriesViewAdapter(ArrayList<HashMap<String, Object>> _arr) {
-            _data = _arr;
-        }
-        @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            LayoutInflater _inflater = getLayoutInflater();
-            View _v = _inflater.inflate(R.layout.synapse_story_cv, null);
-            RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            _v.setLayoutParams(_lp);
-            return new ViewHolder(_v);
-        }
-        @Override
-        public void onBindViewHolder(ViewHolder _holder, final int _position) {
-            View _view = _holder.itemView;
-            final LinearLayout storiesMyStory = _view.findViewById(R.id.storiesMyStory);
-            final LinearLayout storiesSecondStory = _view.findViewById(R.id.storiesSecondStory);
-            final androidx.cardview.widget.CardView storiesMyStoryProfileCard = _view.findViewById(R.id.storiesMyStoryProfileCard);
-            final TextView storiesMyStoryTitle = _view.findViewById(R.id.storiesMyStoryTitle);
-            final ImageView storiesMyStoryProfileImage = _view.findViewById(R.id.storiesMyStoryProfileImage);
-            final LinearLayout storiesMyStoryRelativeAddBody = _view.findViewById(R.id.storiesMyStoryRelativeAddBody);
-            final ImageView storiesMyStoryRelativeAdd = _view.findViewById(R.id.storiesMyStoryRelativeAdd);
-            final androidx.cardview.widget.CardView storiesSecondStoryProfileCard = _view.findViewById(R.id.storiesSecondStoryProfileCard);
-            final TextView storiesSecondStoryTitle = _view.findViewById(R.id.storiesSecondStoryTitle);
-            final ImageView storiesSecondStoryProfileImage = _view.findViewById(R.id.storiesSecondStoryProfileImage);
 
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-            (int) (getResources().getDisplayMetrics().density * 80),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-            layoutParams.setMargins(
-            (int) (getResources().getDisplayMetrics().density * 4),
-            (int) (getResources().getDisplayMetrics().density * 8),
-            (int) (getResources().getDisplayMetrics().density * 4),
-            (int) (getResources().getDisplayMetrics().density * 8)
-            );
-            _view.setLayoutParams(layoutParams);
-
-            _ImageColor(storiesMyStoryRelativeAdd, 0xFFFFFFFF);
-            _viewGraphics(storiesMyStory, 0xFFFFFFFF, 0xFFEEEEEE, 18, 0, Color.TRANSPARENT);
-            _viewGraphics(storiesSecondStory, 0xFFFFFFFF, 0xFFEEEEEE, 18, 0, Color.TRANSPARENT);
-            storiesMyStoryRelativeAddBody.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)0, 0x7B000000));
-            storiesMyStoryProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
-            storiesSecondStoryProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
-
-            if (_position == 0) {
-                storiesMyStoryTitle.setText(getResources().getString(R.string.add_story));
-                DatabaseReference getReference = _firebase.getReference().child("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                getReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.exists()) {
-                            if (dataSnapshot.child("avatar").getValue(String.class) != null && dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-                                storiesMyStoryProfileImage.setImageResource(R.drawable.avatar);
-                            } else {
-                                Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(storiesMyStoryProfileImage);
-                            }
-                        } else {
-                            storiesMyStoryProfileImage.setImageResource(R.drawable.avatar);
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Log.e("StoriesAdapter", "Failed to load user avatar for My Story: " + databaseError.getMessage());
-                        storiesMyStoryProfileImage.setImageResource(R.drawable.avatar);
-                    }
-                });
-                storiesMyStory.setVisibility(View.VISIBLE);
-                storiesSecondStory.setVisibility(View.GONE);
-            } else {
-                storiesMyStory.setVisibility(View.GONE);
-                storiesSecondStory.setVisibility(View.VISIBLE);
-                HashMap<String, Object> storyMap = _data.get(_position);
-                String storyUid = (String) storyMap.get("uid");
-                if (UserInfoCacheMap.containsKey("uid-" + storyUid)) {
-                    _displayUserInfoForStory(storyUid, storiesSecondStoryProfileImage, storiesSecondStoryTitle);
-                } else {
-                    udb.child(storyUid).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            if (dataSnapshot.exists()) {
-                                UserInfoCacheMap.put("uid-" + storyUid, storyUid);
-                                UserInfoCacheMap.put("nickname-" + storyUid, dataSnapshot.child("nickname").getValue(String.class));
-                                UserInfoCacheMap.put("username-" + storyUid, dataSnapshot.child("username").getValue(String.class));
-                                UserInfoCacheMap.put("avatar-" + storyUid, dataSnapshot.child("avatar").getValue(String.class));
-                                _displayUserInfoForStory(storyUid, storiesSecondStoryProfileImage, storiesSecondStoryTitle);
-                            } else {
-                                storiesSecondStoryProfileImage.setImageResource(R.drawable.avatar);
-                                storiesSecondStoryTitle.setText("Unknown User");
-                            }
-                        }
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                            Log.e("StoriesAdapter", "Failed to load user info for story: " + databaseError.getMessage());
-                            storiesSecondStoryProfileImage.setImageResource(R.drawable.avatar);
-                            storiesSecondStoryTitle.setText("Error User");
-                        }
-                    });
-                }
-            }
-            storiesMyStory.setOnClickListener(_view1 -> Toast.makeText(getContext(), "Add story clicked", Toast.LENGTH_SHORT).show());
-            storiesSecondStory.setOnClickListener(_view1 -> Toast.makeText(getContext(), "Story ".concat(String.valueOf(_position)).concat(" clicked"), Toast.LENGTH_SHORT).show());
-        }
-        @Override
-        public int getItemCount() {
-            return _data.size();
-        }
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public ViewHolder(View v) {
-                super(v);
-            }
-        }
-        private void _displayUserInfoForStory(String uid, ImageView profileImage, TextView titleTextView) {
-            String avatarUrl = (String) UserInfoCacheMap.get("avatar-" + uid);
-            String nickname = (String) UserInfoCacheMap.get("nickname-" + uid);
-            String username = (String) UserInfoCacheMap.get("username-" + uid);
-
-            if (avatarUrl != null && !avatarUrl.equals("null")) {
-                Glide.with(getContext()).load(Uri.parse(avatarUrl)).into(profileImage);
-            } else {
-                profileImage.setImageResource(R.drawable.avatar);
-            }
-
-            if (nickname != null && !nickname.equals("null") && !nickname.isEmpty()) {
-                titleTextView.setText(nickname);
-            } else if (username != null && !username.equals("null") && !username.isEmpty()) {
-                titleTextView.setText("@" + username);
-            } else {
-                titleTextView.setText("User Story");
-            }
-        }
-    }
-
-    public class PublicPostsListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    public static class PublicPostsListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 		private static final int TYPE_HEADER = 0;
 		private static final int TYPE_ITEM = 1;
 
@@ -710,10 +535,12 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 
         ArrayList<HashMap<String, Object>> _data;
 		private HeaderAdapterListener listener;
+		private Context context;
 
-        public PublicPostsListAdapter(ArrayList<HashMap<String, Object>> _arr, HeaderAdapterListener listener) {
+        public PublicPostsListAdapter(ArrayList<HashMap<String, Object>> _arr, HeaderAdapterListener listener, Context context) {
             _data = _arr;
 			this.listener = listener;
+			this.context = context;
         }
 
 		@Override
@@ -737,9 +564,7 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
         public void onBindViewHolder(RecyclerView.ViewHolder _holder, final int _position) {
 			if (_holder instanceof HeaderViewHolder) {
 				HeaderViewHolder headerHolder = (HeaderViewHolder) _holder;
-				headerHolder.storiesView.setAdapter(new StoriesViewAdapter(storiesList));
-				headerHolder.storiesView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false));
-				_loadStories();
+				headerHolder.storiesView.setLayoutManager(new LinearLayoutManager(context,LinearLayoutManager.HORIZONTAL, false));
 
 				headerHolder.miniPostLayoutTextPostInput.addTextChangedListener(new TextWatcher() {
 					@Override
@@ -863,42 +688,42 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 
 				postImage.setVisibility(View.GONE);
 
-				if (_data.get(_position - 1).containsKey("post_text")) {
-					String postText = _data.get(_position - 1).get("post_text").toString();
+				if (_data.get(_position).containsKey("post_text")) {
+					String postText = _data.get(_position).get("post_text").toString();
 					com.synapse.social.studioasinc.styling.MarkdownRenderer.get(postMessageTextMiddle.getContext()).render(postMessageTextMiddle, postText);
 					postMessageTextMiddle.setVisibility(View.VISIBLE);
 				} else {
 					postMessageTextMiddle.setVisibility(View.GONE);
 				}
 
-				if (_data.get(_position - 1).containsKey("post_image")) {
-					Glide.with(getContext()).load(Uri.parse(_data.get(_position - 1).get("post_image").toString())).into(postImage);
-					postImage.setOnClickListener(_view1 -> _OpenWebView(_data.get(_position - 1).get("post_image").toString()));
+				if (_data.get(_position).containsKey("post_image")) {
+					Glide.with(getContext()).load(Uri.parse(_data.get(_position).get("post_image").toString())).into(postImage);
+					postImage.setOnClickListener(_view1 -> _OpenWebView(_data.get(_position).get("post_image").toString()));
 					postImage.setVisibility(View.VISIBLE);
 				} else {
 					postImage.setVisibility(View.GONE);
 				}
 
-				if (_data.get(_position - 1).get("post_hide_like_count").toString().equals("true")) {
+				if (_data.get(_position).get("post_hide_like_count").toString().equals("true")) {
 					likeButtonCount.setVisibility(View.GONE);
 				} else {
 					likeButtonCount.setVisibility(View.VISIBLE);
 				}
-				if (_data.get(_position - 1).get("post_hide_comments_count").toString().equals("true")) {
+				if (_data.get(_position).get("post_hide_comments_count").toString().equals("true")) {
 					commentsButtonCount.setVisibility(View.GONE);
 				} else {
 					commentsButtonCount.setVisibility(View.VISIBLE);
 				}
-				if (_data.get(_position - 1).get("post_disable_comments").toString().equals("true")) {
+				if (_data.get(_position).get("post_disable_comments").toString().equals("true")) {
 					commentsButton.setVisibility(View.GONE);
 				} else {
 					commentsButton.setVisibility(View.VISIBLE);
 				}
-				_setTime(Double.parseDouble(_data.get(_position - 1).get("publish_date").toString()), postPublishDate);
+				_setTime(Double.parseDouble(_data.get(_position).get("publish_date").toString()), postPublishDate);
 
-				final String postUid = _data.get(_position - 1).get("uid").toString();
+				final String postUid = _data.get(_position).get("uid").toString();
 				if (UserInfoCacheMap.containsKey("uid-".concat(postUid))) {
-					_updatePostViewVisibility(body, postPrivateStateIcon, postUid, _data.get(_position - 1).get("post_visibility").toString());
+					_updatePostViewVisibility(body, postPrivateStateIcon, postUid, _data.get(_position).get("post_visibility").toString());
 					_displayUserInfoFromCache(postUid, userInfoProfileImage, userInfoUsername, userInfoGenderBadge, userInfoUsernameVerifiedBadge);
 				} else {
 					ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
@@ -918,7 +743,7 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 									UserInfoCacheMap.put("verify-".concat(postUid), dataSnapshot.child("verify").getValue(String.class));
 									UserInfoCacheMap.put("acc_type-".concat(postUid), dataSnapshot.child("account_type").getValue(String.class));
 									mMainHandler.post(() -> {
-										_updatePostViewVisibility(body, postPrivateStateIcon, postUid, _data.get(_position - 1).get("post_visibility").toString());
+										_updatePostViewVisibility(body, postPrivateStateIcon, postUid, _data.get(_position).get("post_visibility").toString());
 										_displayUserInfoFromCache(postUid, userInfoProfileImage, userInfoUsername, userInfoGenderBadge, userInfoUsernameVerifiedBadge);
 									});
 								} else {
@@ -945,10 +770,10 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 					});
 				}
 
-				DatabaseReference getLikeCheck = _firebase.getReference("skyline/posts-likes").child(_data.get(_position - 1).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-				DatabaseReference getCommentsCount = _firebase.getReference("skyline/posts-comments").child(_data.get(_position - 1).get("key").toString());
-				DatabaseReference getLikesCount = _firebase.getReference("skyline/posts-likes").child(_data.get(_position - 1).get("key").toString());
-				DatabaseReference getFavoriteCheck = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position - 1).get("key").toString());
+				DatabaseReference getLikeCheck = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+				DatabaseReference getCommentsCount = _firebase.getReference("skyline/posts-comments").child(_data.get(_position).get("key").toString());
+				DatabaseReference getLikesCount = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString());
+				DatabaseReference getFavoriteCheck = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position).get("key").toString());
 
 				getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 					@Override
@@ -975,7 +800,7 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 					public void onDataChange(DataSnapshot dataSnapshot) {
 						long count = dataSnapshot.getChildrenCount();
 						_setCount(likeButtonCount, count);
-						postLikeCountCache.put(_data.get(_position - 1).get("key").toString(), String.valueOf(count));
+						postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf(count));
 					}
 					@Override
 					public void onCancelled(DatabaseError databaseError) {}
@@ -994,21 +819,21 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 				});
 
 				likeButton.setOnClickListener(_view1 -> {
-					DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get(_position - 1).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+					DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 					likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
 						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 							if(dataSnapshot.exists()) {
 								likeRef.removeValue();
-								double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position - 1).get("key").toString()).toString());
-								postLikeCountCache.put(_data.get(_position - 1).get("key").toString(), String.valueOf((long)(currentLikes - 1)));
+								double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
+								postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes - 1)));
 								_setCount(likeButtonCount, currentLikes - 1);
 								likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
 							} else {
 								likeRef.setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
-								com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get(_position - 1).get("key").toString(), _data.get(_position - 1).get("uid").toString());
-								double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position - 1).get("key").toString()).toString());
-								postLikeCountCache.put(_data.get(_position - 1).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
+								com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get(_position).get("key").toString(), _data.get(_position).get("uid").toString());
+								double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
+								postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
 								_setCount(likeButtonCount, currentLikes + 1);
 								likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
 							}
@@ -1020,20 +845,20 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 				});
 				commentsButton.setOnClickListener(_view1 -> {
 					Bundle sendPostKey = new Bundle();
-					sendPostKey.putString("postKey", _data.get(_position - 1).get("key").toString());
-					sendPostKey.putString("postPublisherUID", _data.get(_position - 1).get("uid").toString());
-					sendPostKey.putString("postPublisherAvatar", UserInfoCacheMap.get("avatar-".concat(_data.get(_position - 1).get("uid").toString())).toString());
+					sendPostKey.putString("postKey", _data.get(_position).get("key").toString());
+					sendPostKey.putString("postPublisherUID", _data.get(_position).get("uid").toString());
+					sendPostKey.putString("postPublisherAvatar", UserInfoCacheMap.get("avatar-".concat(_data.get(_position).get("uid").toString())).toString());
 					PostCommentsBottomSheetDialog postCommentsBottomSheet = new PostCommentsBottomSheetDialog();
 					postCommentsBottomSheet.setArguments(sendPostKey);
 					postCommentsBottomSheet.show(getParentFragmentManager(), postCommentsBottomSheet.getTag());
 				});
 				userInfoProfileImage.setOnClickListener(_view1 -> {
 					intent.setClass(getContext(), ProfileActivity.class);
-					intent.putExtra("uid", _data.get(_position - 1).get("uid").toString());
+					intent.putExtra("uid", _data.get(_position).get("uid").toString());
 					startActivity(intent);
 				});
 				favoritePostButton.setOnClickListener(_view1 -> {
-					DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position - 1).get("key").toString());
+					DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position).get("key").toString());
 					favoriteRef.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
 						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -1041,7 +866,7 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 								favoriteRef.removeValue();
 								favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
 							} else {
-								favoriteRef.setValue(_data.get(_position - 1).get("key").toString());
+								favoriteRef.setValue(_data.get(_position).get("key").toString());
 								favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
 							}
 						}
@@ -1052,16 +877,16 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 				});
 				topMoreButton.setOnClickListener(_view1 -> {
 					Bundle sendPostKey = new Bundle();
-					sendPostKey.putString("postKey", _data.get(_position - 1).get("key").toString());
-					sendPostKey.putString("postPublisherUID", _data.get(_position - 1).get("uid").toString());
-					sendPostKey.putString("postType", _data.get(_position - 1).get("post_type").toString());
-					if (_data.get(_position - 1).containsKey("post_text") && _data.get(_position - 1).get("post_text") != null) {
-						sendPostKey.putString("postText", _data.get(_position - 1).get("post_text").toString());
+					sendPostKey.putString("postKey", _data.get(_position).get("key").toString());
+					sendPostKey.putString("postPublisherUID", _data.get(_position).get("uid").toString());
+					sendPostKey.putString("postType", _data.get(_position).get("post_type").toString());
+					if (_data.get(_position).containsKey("post_text") && _data.get(_position).get("post_text") != null) {
+						sendPostKey.putString("postText", _data.get(_position).get("post_text").toString());
 					} else {
 						sendPostKey.putString("postText", "");
 					}
-					if (_data.get(_position - 1).containsKey("post_image") && _data.get(_position - 1).get("post_image") != null && !_data.get(_position - 1).get("post_image").toString().isEmpty()) {
-						sendPostKey.putString("postImg", _data.get(_position - 1).get("post_image").toString());
+					if (_data.get(_position).containsKey("post_image") && _data.get(_position).get("post_image") != null && !_data.get(_position).get("post_image").toString().isEmpty()) {
+						sendPostKey.putString("postImg", _data.get(_position).get("post_image").toString());
 					}
 					PostMoreBottomSheetDialog postMoreBottomSheetDialog = new PostMoreBottomSheetDialog();
 					postMoreBottomSheetDialog.setArguments(sendPostKey);
