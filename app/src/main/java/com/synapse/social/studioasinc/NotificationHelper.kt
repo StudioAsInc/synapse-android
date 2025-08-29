@@ -67,13 +67,6 @@ object NotificationHelper {
                         }
                         return@addOnSuccessListener
                     }
-
-                    if (recipientStatus == "online") {
-                        if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                            Log.i(TAG, "Recipient is online. Suppressing notification for real-time message visibility.")
-                        }
-                        return@addOnSuccessListener
-                    }
                 }
 
                 if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
