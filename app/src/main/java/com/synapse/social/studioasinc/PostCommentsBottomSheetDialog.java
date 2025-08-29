@@ -546,66 +546,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								comment_text.setText("");
 						}
 						
-						final String replyUid = uid;
-						final String replyKey = key;
-						final String parentCommentKey = replyKey;
-
-						body.setOnLongClickListener(new View.OnLongClickListener() {
-								@Override
-								public boolean onLongClick(View v) {
-										if (replyUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-												PopupMenu popup = new PopupMenu(getContext(), more);
-												popup.getMenu().add("Edit");
-												popup.getMenu().add("Delete");
-												popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-														@Override
-														public boolean onMenuItemClick(MenuItem item) {
-																if (item.getTitle().equals("Delete")) {
-																		new MaterialAlertDialogBuilder(getContext())
-																		.setTitle("Delete Reply")
-																		.setMessage("Are you sure you want to delete this reply?")
-																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-																				@Override
-																				public void onClick(DialogInterface dialog, int which) {
-																						main.child("posts-comments-replies").child(postKey).child(parentCommentKey).child(replyKey).removeValue();
-																						main.child("posts-comments-replies-like").child(postKey).child(replyKey).removeValue();
-																						_data.remove(_position);
-																						notifyItemRemoved(_position);
-																						notifyItemRangeChanged(_position, _data.size());
-																						Toast.makeText(getContext(), "Reply deleted", Toast.LENGTH_SHORT).show();
-																				}
-																		})
-																		.setNegativeButton("Cancel", null)
-																		.show();
-																} else if (item.getTitle().equals("Edit")) {
-																		final EditText input = new EditText(getContext());
-																		input.setText(replyData.get("comment").toString());
-																		new MaterialAlertDialogBuilder(getContext())
-																		.setTitle("Edit Reply")
-																		.setView(input)
-																		.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-																				@Override
-																				public void onClick(DialogInterface dialog, int which) {
-																						String newComment = input.getText().toString();
-																						if (!newComment.trim().isEmpty()) {
-																								main.child("posts-comments-replies").child(postKey).child(parentCommentKey).child(replyKey).child("comment").setValue(newComment);
-																								replyData.put("comment", newComment);
-																								notifyItemChanged(_position);
-																								Toast.makeText(getContext(), "Reply updated", Toast.LENGTH_SHORT).show();
-																						}
-																				}
-																		})
-																		.setNegativeButton("Cancel", null)
-																		.show();
-																}
-																return true;
-														}
-												});
-												popup.show();
-										}
-										return true;
-								}
-						});
 
 						other_replies_list.setAdapter(new CommentsRepliesAdapter(commentsRepliesListMap));
 						other_replies_list.setLayoutManager(new LinearLayoutManager(getActivity()));
