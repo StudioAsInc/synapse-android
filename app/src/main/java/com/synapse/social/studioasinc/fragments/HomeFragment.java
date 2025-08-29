@@ -97,21 +97,8 @@ public class HomeFragment extends Fragment {
 
     private LinearLayout loadingBody;
     private SwipeRefreshLayout swipeLayout;
-    private RecyclerView storiesView;
     private RecyclerView PublicPostsList;
     private TextView PublicPostsListNotFound;
-    private CardView miniPostLayoutProfileCard;
-    private EditText miniPostLayoutTextPostInput;
-    private ImageView miniPostLayoutProfileImage;
-    private ImageView miniPostLayoutImagePost;
-    private ImageView miniPostLayoutVideoPost;
-    private ImageView miniPostLayoutTextPost;
-    private ImageView miniPostLayoutMoreButton;
-    private TextView miniPostLayoutTextPostPublish;
-    private TextView miniPostLayoutFiltersScrollBodyFilterLOCAL;
-    private TextView miniPostLayoutFiltersScrollBodyFilterPUBLIC;
-    private TextView miniPostLayoutFiltersScrollBodyFilterFOLLOWED;
-    private TextView miniPostLayoutFiltersScrollBodyFilterFAVORITE;
 	private ProgressBar loading_bar;
 
     private Intent intent = new Intent();
@@ -152,7 +139,6 @@ public class HomeFragment extends Fragment {
 
         swipeLayout.setOnRefreshListener(() -> {
             _loadPosts(currentPostFilter);
-            _loadStories();
         });
     }
 
@@ -181,7 +167,7 @@ public class HomeFragment extends Fragment {
         _view.setBackground(RE);
     }
 
-    private void _loadStories() {
+    private void _loadStories(final RecyclerView storiesView, final ArrayList<HashMap<String, Object>> storiesList) {
         storiesDbRef.orderByChild("publish_date")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -202,9 +188,9 @@ public class HomeFragment extends Fragment {
                                 }
                             }
                         }
-                        if (storiesView.getAdapter() != null) {
+                        if (storiesView != null && storiesView.getAdapter() != null) {
                             storiesView.getAdapter().notifyDataSetChanged();
-                        } else {
+                        } else if (storiesView != null) {
                             storiesView.setAdapter(new StoriesViewAdapter(storiesList));
                         }
                     }
@@ -212,9 +198,9 @@ public class HomeFragment extends Fragment {
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                         Toast.makeText(getContext(), "Error loading stories: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                        if (storiesView.getAdapter() != null) {
+                        if (storiesView != null && storiesView.getAdapter() != null) {
                             storiesView.getAdapter().notifyDataSetChanged();
-                        } else {
+                        } else if (storiesView != null) {
                             storiesView.setAdapter(new StoriesViewAdapter(storiesList));
                         }
                     }
@@ -536,6 +522,43 @@ public class HomeFragment extends Fragment {
     }
 
     public class HeaderAdapter extends RecyclerView.Adapter<HeaderAdapter.ViewHolder> {
+
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            final RecyclerView storiesView;
+            final CardView miniPostLayoutProfileCard;
+            final EditText miniPostLayoutTextPostInput;
+            final ImageView miniPostLayoutProfileImage;
+            final ImageView miniPostLayoutImagePost;
+            final ImageView miniPostLayoutVideoPost;
+            final ImageView miniPostLayoutTextPost;
+            final ImageView miniPostLayoutMoreButton;
+            final TextView miniPostLayoutTextPostPublish;
+            final TextView miniPostLayoutFiltersScrollBodyFilterLOCAL;
+            final TextView miniPostLayoutFiltersScrollBodyFilterPUBLIC;
+            final TextView miniPostLayoutFiltersScrollBodyFilterFOLLOWED;
+            final TextView miniPostLayoutFiltersScrollBodyFilterFAVORITE;
+
+            ValueEventListener profileListener;
+            DatabaseReference profileRef;
+
+            public ViewHolder(View view) {
+                super(view);
+                storiesView = view.findViewById(R.id.storiesView);
+                miniPostLayoutProfileCard = view.findViewById(R.id.miniPostLayoutProfileCard);
+                miniPostLayoutTextPostInput = view.findViewById(R.id.miniPostLayoutTextPostInput);
+                miniPostLayoutProfileImage = view.findViewById(R.id.miniPostLayoutProfileImage);
+                miniPostLayoutImagePost = view.findViewById(R.id.miniPostLayoutImagePost);
+                miniPostLayoutVideoPost = view.findViewById(R.id.miniPostLayoutVideoPost);
+                miniPostLayoutTextPost = view.findViewById(R.id.miniPostLayoutTextPost);
+                miniPostLayoutMoreButton = view.findViewById(R.id.miniPostLayoutMoreButton);
+                miniPostLayoutTextPostPublish = view.findViewById(R.id.miniPostLayoutTextPostPublish);
+                miniPostLayoutFiltersScrollBodyFilterLOCAL = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterLOCAL);
+                miniPostLayoutFiltersScrollBodyFilterPUBLIC = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterPUBLIC);
+                miniPostLayoutFiltersScrollBodyFilterFOLLOWED = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFOLLOWED);
+                miniPostLayoutFiltersScrollBodyFilterFAVORITE = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFAVORITE);
+            }
+        }
+
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater _inflater = getLayoutInflater();
@@ -544,75 +567,61 @@ public class HomeFragment extends Fragment {
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder _holder, final int _position) {
-            final View view = _holder.itemView;
-            storiesView = view.findViewById(R.id.storiesView);
-            miniPostLayoutProfileCard = view.findViewById(R.id.miniPostLayoutProfileCard);
-            miniPostLayoutTextPostInput = view.findViewById(R.id.miniPostLayoutTextPostInput);
-            miniPostLayoutProfileImage = view.findViewById(R.id.miniPostLayoutProfileImage);
-            miniPostLayoutImagePost = view.findViewById(R.id.miniPostLayoutImagePost);
-            miniPostLayoutVideoPost = view.findViewById(R.id.miniPostLayoutVideoPost);
-            miniPostLayoutTextPost = view.findViewById(R.id.miniPostLayoutTextPost);
-            miniPostLayoutMoreButton = view.findViewById(R.id.miniPostLayoutMoreButton);
-            miniPostLayoutTextPostPublish = view.findViewById(R.id.miniPostLayoutTextPostPublish);
-            miniPostLayoutFiltersScrollBodyFilterLOCAL = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterLOCAL);
-            miniPostLayoutFiltersScrollBodyFilterPUBLIC = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterPUBLIC);
-            miniPostLayoutFiltersScrollBodyFilterFOLLOWED = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFOLLOWED);
-            miniPostLayoutFiltersScrollBodyFilterFAVORITE = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFAVORITE);
+        public void onBindViewHolder(ViewHolder holder, final int _position) {
+            holder.storiesView.setAdapter(new StoriesViewAdapter(storiesList));
+            holder.storiesView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false));
+            _viewGraphics(holder.miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
+            _loadStories(holder.storiesView, storiesList);
 
-            storiesView.setAdapter(new StoriesViewAdapter(storiesList));
-            storiesView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false));
-            _viewGraphics(miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
-            _loadStories();
-
-            DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-	        getReference.addValueEventListener(new ValueEventListener() {
+            holder.profileRef = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+	        holder.profileListener = new ValueEventListener() {
 	            @Override
 	            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 	                if(dataSnapshot.exists()) {
 	                    if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-	                        Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(miniPostLayoutProfileImage);
+	                        Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(holder.miniPostLayoutProfileImage);
 	                    } else {
-	                        miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+	                        holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
 	                    }
 	                } else {
-	                    miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+	                    holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
 	                }
 	            }
 	            @Override
 	            public void onCancelled(@NonNull DatabaseError databaseError) {
 	                Toast.makeText(getContext(), "Error fetching user profile: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-	                miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+	                holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
 	            }
-	        });
+	        };
+            holder.profileRef.addValueEventListener(holder.profileListener);
 
-	        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-	        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-	        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-	        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-	        miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-	        miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
-	        miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-	        miniPostLayoutTextPostPublish.setVisibility(View.GONE);
-	        miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-	        _ImageColor(miniPostLayoutImagePost, 0xFF445E91);
-	        _ImageColor(miniPostLayoutVideoPost, 0xFF445E91);
-	        _ImageColor(miniPostLayoutTextPost, 0xFF445E91);
-	        _ImageColor(miniPostLayoutMoreButton, 0xFF445E91);
-	        _viewGraphics(miniPostLayoutImagePost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-	        _viewGraphics(miniPostLayoutVideoPost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-	        _viewGraphics(miniPostLayoutTextPost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-	        _viewGraphics(miniPostLayoutMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
+	        _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+	        _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
+	        _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+	        _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+	        holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
+	        holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
+	        holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
+	        holder.miniPostLayoutTextPostPublish.setVisibility(View.GONE);
+	        holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
+	        _ImageColor(holder.miniPostLayoutImagePost, 0xFF445E91);
+	        _ImageColor(holder.miniPostLayoutVideoPost, 0xFF445E91);
+	        _ImageColor(holder.miniPostLayoutTextPost, 0xFF445E91);
+	        _ImageColor(holder.miniPostLayoutMoreButton, 0xFF445E91);
+	        _viewGraphics(holder.miniPostLayoutImagePost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
+	        _viewGraphics(holder.miniPostLayoutVideoPost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
+	        _viewGraphics(holder.miniPostLayoutTextPost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
+	        _viewGraphics(holder.miniPostLayoutMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
 
-            miniPostLayoutTextPostInput.addTextChangedListener(new TextWatcher() {
+            holder.miniPostLayoutTextPostInput.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
                     final String _charSeq = _param1.toString();
                     if (_charSeq.length() == 0) {
-                        miniPostLayoutTextPostPublish.setVisibility(View.GONE);
+                        holder.miniPostLayoutTextPostPublish.setVisibility(View.GONE);
                     } else {
-                        _viewGraphics(miniPostLayoutTextPostPublish, getResources().getColor(R.color.colorPrimary), 0xFFC5CAE9, 300, 0, Color.TRANSPARENT);
-                        miniPostLayoutTextPostPublish.setVisibility(View.VISIBLE);
+                        _viewGraphics(holder.miniPostLayoutTextPostPublish, getResources().getColor(R.color.colorPrimary), 0xFFC5CAE9, 300, 0, Color.TRANSPARENT);
+                        holder.miniPostLayoutTextPostPublish.setVisibility(View.VISIBLE);
                     }
                 }
 
@@ -623,27 +632,27 @@ public class HomeFragment extends Fragment {
                 public void afterTextChanged(Editable _param1) {}
             });
 
-            miniPostLayoutImagePost.setOnClickListener(v -> {
+            holder.miniPostLayoutImagePost.setOnClickListener(v -> {
                 intent.setClass(getContext(), CreatePostActivity.class);
                 startActivity(intent);
             });
 
-            miniPostLayoutVideoPost.setOnClickListener(v -> {
+            holder.miniPostLayoutVideoPost.setOnClickListener(v -> {
                 intent.setClass(getContext(), CreateLineVideoActivity.class);
                 startActivity(intent);
             });
 
-            miniPostLayoutTextPostPublish.setOnClickListener(v -> {
-                if (miniPostLayoutTextPostInput.getText().toString().trim().equals("")) {
+            holder.miniPostLayoutTextPostPublish.setOnClickListener(v -> {
+                if (holder.miniPostLayoutTextPostInput.getText().toString().trim().equals("")) {
                     Toast.makeText(getContext(), getResources().getString(R.string.please_enter_text), Toast.LENGTH_SHORT).show();
                 } else {
-                    if (!(miniPostLayoutTextPostInput.getText().toString().length() > 1500)) {
+                    if (!(holder.miniPostLayoutTextPostInput.getText().toString().length() > 1500)) {
                         String uniqueKey = udb.push().getKey();
                         cc = Calendar.getInstance();
                         createPostMap = new HashMap<>();
                         createPostMap.put("key", uniqueKey);
                         createPostMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                        createPostMap.put("post_text", miniPostLayoutTextPostInput.getText().toString().trim());
+                        createPostMap.put("post_text", holder.miniPostLayoutTextPostInput.getText().toString().trim());
                         createPostMap.put("post_type", "TEXT");
                         createPostMap.put("post_hide_views_count", "false");
                         createPostMap.put("post_region", "none");
@@ -662,74 +671,76 @@ public class HomeFragment extends Fragment {
                                 Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                             }
                         });
-                        miniPostLayoutTextPostInput.setText("");
+                        holder.miniPostLayoutTextPostInput.setText("");
                     }
                 }
                 vbr.vibrate((long)(48));
             });
 
-            miniPostLayoutFiltersScrollBodyFilterLOCAL.setOnClickListener(v -> {
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFFFFFFFF);
-                miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-                miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-                miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
+            holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setOnClickListener(v -> {
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFFFFFFFF);
+                holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
+                holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
+                holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
                 currentPostFilter = "LOCAL";
                 _loadPosts(currentPostFilter);
             });
 
-            miniPostLayoutFiltersScrollBodyFilterPUBLIC.setOnClickListener(v -> {
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF1A237E, 300, 0, Color.TRANSPARENT);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-                miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
-                miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-                miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
+            holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setOnClickListener(v -> {
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF1A237E, 300, 0, Color.TRANSPARENT);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
+                holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
+                holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
+                holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
                 currentPostFilter = "PUBLIC";
                 _loadPosts(currentPostFilter);
             });
 
-            miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setOnClickListener(v -> {
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, getResources().getColor(R.color.colorPrimary), 0xFF616161, 300, 0, Color.TRANSPARENT);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-                miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-                miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFFFFFFFF);
-                miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
+            holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setOnClickListener(v -> {
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, getResources().getColor(R.color.colorPrimary), 0xFF616161, 300, 0, Color.TRANSPARENT);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
+                holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
+                holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFFFFFFFF);
+                holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
                 currentPostFilter = "FOLLOWED";
                 _loadPosts(currentPostFilter);
             });
 
-            miniPostLayoutFiltersScrollBodyFilterFAVORITE.setOnClickListener(v -> {
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-                miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-                miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-                miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-                miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFFFFFFFF);
+            holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setOnClickListener(v -> {
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
+                holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
+                holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
+                holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
+                holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFFFFFFFF);
                 currentPostFilter = "FAVORITE";
                 _loadPosts(currentPostFilter);
             });
         }
 
         @Override
-        public int getItemCount() {
-            return 1;
+        public void onViewRecycled(@NonNull ViewHolder holder) {
+            super.onViewRecycled(holder);
+            if (holder.profileRef != null && holder.profileListener != null) {
+                holder.profileRef.removeEventListener(holder.profileListener);
+            }
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public ViewHolder(View v) {
-                super(v);
-            }
+        @Override
+        public int getItemCount() {
+            return 1;
         }
     }
 
