@@ -80,7 +80,9 @@ object NotificationHelper {
                 } else {
                     sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
                 }
-                saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+                if (notificationType != NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT) {
+                    saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+                }
             }.addOnFailureListener { e ->
                 Log.e(TAG, "Status check failed. Defaulting to send notification.", e)
                 if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
