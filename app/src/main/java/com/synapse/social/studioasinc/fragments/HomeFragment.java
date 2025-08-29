@@ -79,7 +79,7 @@ import java.util.concurrent.Executors;
 import android.os.Handler;
 import android.os.Looper;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements PublicPostsListAdapter.OnHeaderInteractionListener {
 
     private FirebaseDatabase _firebase;
     private DatabaseReference udb;
@@ -144,8 +144,49 @@ public class HomeFragment extends Fragment {
 
     private void initializeLogic() {
         PublicPostsList.setLayoutManager(new LinearLayoutManager(getContext()));
-        PublicPostsList.setAdapter(new PublicPostsListAdapter(feedItems));
+        PublicPostsList.setAdapter(new PublicPostsListAdapter(feedItems, this));
         _loadFeed();
+    }
+
+    @Override
+    public void onPublishPost(String text) {
+        if (text.trim().equals("")) {
+            Toast.makeText(getContext(), getResources().getString(R.string.please_enter_text), Toast.LENGTH_SHORT).show();
+        } else {
+            if (!(text.length() > 1500)) {
+                String uniqueKey = udb.push().getKey();
+                cc = Calendar.getInstance();
+                createPostMap = new HashMap<>();
+                createPostMap.put("key", uniqueKey);
+                createPostMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+                createPostMap.put("post_text", text.trim());
+                createPostMap.put("post_type", "TEXT");
+                createPostMap.put("post_hide_views_count", "false");
+                createPostMap.put("post_region", "none");
+                createPostMap.put("post_hide_like_count", "false");
+                createPostMap.put("post_hide_comments_count", "false");
+                createPostMap.put("post_visibility", "public");
+                createPostMap.put("post_disable_favorite", "false");
+                createPostMap.put("post_disable_comments", "false");
+                createPostMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
+                FirebaseDatabase.getInstance().getReference("skyline/posts").child(uniqueKey).updateChildren(createPostMap, (databaseError, databaseReference) -> {
+                    if (databaseError == null) {
+                        Toast.makeText(getContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
+                        currentPostFilter = "PUBLIC";
+                        _loadFeed();
+                    } else {
+                        Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }
+        vbr.vibrate((long)(48));
+    }
+
+    @Override
+    public void onFilterChanged(String filter) {
+        currentPostFilter = filter;
+        _loadPosts(currentPostFilter);
     }
 
     public void _ImageColor(final ImageView _image, final int _color) {
@@ -533,9 +574,16 @@ public class HomeFragment extends Fragment {
         private static final int VIEW_TYPE_POST = 2;
 
         private ArrayList<Object> items;
+        private OnHeaderInteractionListener mListener;
 
-        public PublicPostsListAdapter(ArrayList<Object> items) {
+        public interface OnHeaderInteractionListener {
+            void onPublishPost(String text);
+            void onFilterChanged(String filter);
+        }
+
+        public PublicPostsListAdapter(ArrayList<Object> items, OnHeaderInteractionListener listener) {
             this.items = items;
+            this.mListener = listener;
         }
 
         @Override
@@ -597,39 +645,11 @@ public class HomeFragment extends Fragment {
                     startActivity(intent);
                 });
                  headerViewHolder.miniPostLayoutTextPostPublish.setOnClickListener(v -> {
-                    if (headerViewHolder.miniPostLayoutTextPostInput.getText().toString().trim().equals("")) {
-                        Toast.makeText(getContext(), getResources().getString(R.string.please_enter_text), Toast.LENGTH_SHORT).show();
-                    } else {
-                        if (!(headerViewHolder.miniPostLayoutTextPostInput.getText().toString().length() > 1500)) {
-                            String uniqueKey = udb.push().getKey();
-                            cc = Calendar.getInstance();
-                            createPostMap = new HashMap<>();
-                            createPostMap.put("key", uniqueKey);
-                            createPostMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                            createPostMap.put("post_text", headerViewHolder.miniPostLayoutTextPostInput.getText().toString().trim());
-                            createPostMap.put("post_type", "TEXT");
-                            createPostMap.put("post_hide_views_count", "false");
-                            createPostMap.put("post_region", "none");
-                            createPostMap.put("post_hide_like_count", "false");
-                            createPostMap.put("post_hide_comments_count", "false");
-                            createPostMap.put("post_visibility", "public");
-                            createPostMap.put("post_disable_favorite", "false");
-                            createPostMap.put("post_disable_comments", "false");
-                            createPostMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
-                            FirebaseDatabase.getInstance().getReference("skyline/posts").child(uniqueKey).updateChildren(createPostMap, (databaseError, databaseReference) -> {
-                                if (databaseError == null) {
-                                    Toast.makeText(getContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
-                                    currentPostFilter = "PUBLIC";
-                                    _loadFeed();
-                                } else {
-                                    Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            headerViewHolder.miniPostLayoutTextPostInput.setText("");
-                        }
+                    if (mListener != null) {
+                        mListener.onPublishPost(headerViewHolder.miniPostLayoutTextPostInput.getText().toString());
+                        headerViewHolder.miniPostLayoutTextPostInput.setText("");
                     }
-                    vbr.vibrate((long)(48));
-                });
+                 });
                 DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
                 getReference.addValueEventListener(new ValueEventListener() {
                     @Override
@@ -652,16 +672,19 @@ public class HomeFragment extends Fragment {
                 });
 
                 headerViewHolder.filterChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
-                    if (checkedId == R.id.chip_ai_based) {
-                        currentPostFilter = "LOCAL";
-                    } else if (checkedId == R.id.chip_global) {
-                        currentPostFilter = "PUBLIC";
-                    } else if (checkedId == R.id.chip_following) {
-                        currentPostFilter = "FOLLOWED";
-                    } else if (checkedId == R.id.chip_saved_posts) {
-                        currentPostFilter = "FAVORITE";
+                    if (mListener != null) {
+                        String filter = "PUBLIC";
+                        if (checkedId == R.id.chip_ai_based) {
+                            filter = "LOCAL";
+                        } else if (checkedId == R.id.chip_global) {
+                            filter = "PUBLIC";
+                        } else if (checkedId == R.id.chip_following) {
+                            filter = "FOLLOWED";
+                        } else if (checkedId == R.id.chip_saved_posts) {
+                            filter = "FAVORITE";
+                        }
+                        mListener.onFilterChanged(filter);
                     }
-                    _loadPosts(currentPostFilter);
                 });
 
             } else if (viewType == VIEW_TYPE_STORIES) {
@@ -672,70 +695,51 @@ public class HomeFragment extends Fragment {
             } else {
                 PostViewHolder postViewHolder = (PostViewHolder) holder;
                 HashMap<String, Object> postData = (HashMap<String, Object>) items.get(position);
-                // All the post binding logic from the old onBindViewHolder
-                View _view = postViewHolder.itemView;
-                final LinearLayout body = _view.findViewById(R.id.body);
-                final ImageView topMoreButton = _view.findViewById(R.id.topMoreButton);
-                final androidx.cardview.widget.CardView userInfoProfileCard = _view.findViewById(R.id.userInfoProfileCard);
-                final ImageView userInfoProfileImage = _view.findViewById(R.id.userInfoProfileImage);
-                final TextView userInfoUsername = _view.findViewById(R.id.userInfoUsername);
-                final ImageView userInfoGenderBadge = _view.findViewById(R.id.userInfoGenderBadge);
-                final ImageView userInfoUsernameVerifiedBadge = _view.findViewById(R.id.userInfoUsernameVerifiedBadge);
-                final TextView postPublishDate = _view.findViewById(R.id.postPublishDate);
-                final ImageView postPrivateStateIcon = _view.findViewById(R.id.postPrivateStateIcon);
-                final TextView postMessageTextMiddle = _view.findViewById(R.id.postMessageTextMiddle);
-                final ImageView postImage = _view.findViewById(R.id.postImage);
-                final LinearLayout likeButton = _view.findViewById(R.id.likeButton);
-                final LinearLayout commentsButton = _view.findViewById(R.id.commentsButton);
-                final ImageView favoritePostButton = _view.findViewById(R.id.favoritePostButton);
-                final ImageView likeButtonIc = _view.findViewById(R.id.likeButtonIc);
-                final TextView likeButtonCount = _view.findViewById(R.id.likeButtonCount);
-                final TextView commentsButtonCount = _view.findViewById(R.id.commentsButtonCount);
 
-                body.setVisibility(View.GONE);
-                userInfoProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
-                _ImageColor(postPrivateStateIcon, 0xFF616161);
-                _viewGraphics(topMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
+                postViewHolder.body.setVisibility(View.GONE);
+                postViewHolder.userInfoProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
+                _ImageColor(postViewHolder.postPrivateStateIcon, 0xFF616161);
+                _viewGraphics(postViewHolder.topMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
 
-                postImage.setVisibility(View.GONE);
+                postViewHolder.postImage.setVisibility(View.GONE);
 
                 if (postData.containsKey("post_text")) {
                     String postText = postData.get("post_text").toString();
-                    com.synapse.social.studioasinc.styling.MarkdownRenderer.get(postMessageTextMiddle.getContext()).render(postMessageTextMiddle, postText);
-                    postMessageTextMiddle.setVisibility(View.VISIBLE);
+                    com.synapse.social.studioasinc.styling.MarkdownRenderer.get(postViewHolder.postMessageTextMiddle.getContext()).render(postViewHolder.postMessageTextMiddle, postText);
+                    postViewHolder.postMessageTextMiddle.setVisibility(View.VISIBLE);
                 } else {
-                    postMessageTextMiddle.setVisibility(View.GONE);
+                    postViewHolder.postMessageTextMiddle.setVisibility(View.GONE);
                 }
 
                 if (postData.containsKey("post_image")) {
-                    Glide.with(getContext()).load(Uri.parse(postData.get("post_image").toString())).into(postImage);
-                    postImage.setOnClickListener(_view1 -> _OpenWebView(postData.get("post_image").toString()));
-                    postImage.setVisibility(View.VISIBLE);
+                    Glide.with(getContext()).load(Uri.parse(postData.get("post_image").toString())).into(postViewHolder.postImage);
+                    postViewHolder.postImage.setOnClickListener(_view1 -> _OpenWebView(postData.get("post_image").toString()));
+                    postViewHolder.postImage.setVisibility(View.VISIBLE);
                 } else {
-                    postImage.setVisibility(View.GONE);
+                    postViewHolder.postImage.setVisibility(View.GONE);
                 }
 
                 if (postData.get("post_hide_like_count").toString().equals("true")) {
-                    likeButtonCount.setVisibility(View.GONE);
+                    postViewHolder.likeButtonCount.setVisibility(View.GONE);
                 } else {
-                    likeButtonCount.setVisibility(View.VISIBLE);
+                    postViewHolder.likeButtonCount.setVisibility(View.VISIBLE);
                 }
                 if (postData.get("post_hide_comments_count").toString().equals("true")) {
-                    commentsButtonCount.setVisibility(View.GONE);
+                    postViewHolder.commentsButtonCount.setVisibility(View.GONE);
                 } else {
-                    commentsButtonCount.setVisibility(View.VISIBLE);
+                    postViewHolder.commentsButtonCount.setVisibility(View.VISIBLE);
                 }
                 if (postData.get("post_disable_comments").toString().equals("true")) {
-                    commentsButton.setVisibility(View.GONE);
+                    postViewHolder.commentsButton.setVisibility(View.GONE);
                 } else {
-                    commentsButton.setVisibility(View.VISIBLE);
+                    postViewHolder.commentsButton.setVisibility(View.VISIBLE);
                 }
-                _setTime(Double.parseDouble(postData.get("publish_date").toString()), postPublishDate);
+                _setTime(Double.parseDouble(postData.get("publish_date").toString()), postViewHolder.postPublishDate);
 
                 final String postUid = postData.get("uid").toString();
                 if (UserInfoCacheMap.containsKey("uid-".concat(postUid))) {
-                    _updatePostViewVisibility(body, postPrivateStateIcon, postUid, postData.get("post_visibility").toString());
-                    _displayUserInfoFromCache(postUid, userInfoProfileImage, userInfoUsername, userInfoGenderBadge, userInfoUsernameVerifiedBadge);
+                    _updatePostViewVisibility(postViewHolder.body, postViewHolder.postPrivateStateIcon, postUid, postData.get("post_visibility").toString());
+                    _displayUserInfoFromCache(postUid, postViewHolder.userInfoProfileImage, postViewHolder.userInfoUsername, postViewHolder.userInfoGenderBadge, postViewHolder.userInfoUsernameVerifiedBadge);
                 } else {
                     ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
                     Handler mMainHandler = new Handler(Looper.getMainLooper());
@@ -939,8 +943,43 @@ public class HomeFragment extends Fragment {
         }
 
         public class PostViewHolder extends RecyclerView.ViewHolder {
+            final LinearLayout body;
+            final ImageView topMoreButton;
+            final androidx.cardview.widget.CardView userInfoProfileCard;
+            final ImageView userInfoProfileImage;
+            final TextView userInfoUsername;
+            final ImageView userInfoGenderBadge;
+            final ImageView userInfoUsernameVerifiedBadge;
+            final TextView postPublishDate;
+            final ImageView postPrivateStateIcon;
+            final TextView postMessageTextMiddle;
+            final ImageView postImage;
+            final LinearLayout likeButton;
+            final LinearLayout commentsButton;
+            final ImageView favoritePostButton;
+            final ImageView likeButtonIc;
+            final TextView likeButtonCount;
+            final TextView commentsButtonCount;
+
             public PostViewHolder(View v) {
                 super(v);
+                body = v.findViewById(R.id.body);
+                topMoreButton = v.findViewById(R.id.topMoreButton);
+                userInfoProfileCard = v.findViewById(R.id.userInfoProfileCard);
+                userInfoProfileImage = v.findViewById(R.id.userInfoProfileImage);
+                userInfoUsername = v.findViewById(R.id.userInfoUsername);
+                userInfoGenderBadge = v.findViewById(R.id.userInfoGenderBadge);
+                userInfoUsernameVerifiedBadge = v.findViewById(R.id.userInfoUsernameVerifiedBadge);
+                postPublishDate = v.findViewById(R.id.postPublishDate);
+                postPrivateStateIcon = v.findViewById(R.id.postPrivateStateIcon);
+                postMessageTextMiddle = v.findViewById(R.id.postMessageTextMiddle);
+                postImage = v.findViewById(R.id.postImage);
+                likeButton = v.findViewById(R.id.likeButton);
+                commentsButton = v.findViewById(R.id.commentsButton);
+                favoritePostButton = v.findViewById(R.id.favoritePostButton);
+                likeButtonIc = v.findViewById(R.id.likeButtonIc);
+                likeButtonCount = v.findViewById(R.id.likeButtonCount);
+                commentsButtonCount = v.findViewById(R.id.commentsButtonCount);
             }
         }
     }
