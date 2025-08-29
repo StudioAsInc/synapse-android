@@ -366,6 +366,9 @@ public class FragInboxChatsActivity extends Fragment {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
 	}
 
+	private boolean isNullOrEmpty(String str) {
+		return str == null || str.trim().isEmpty() || "null".equalsIgnoreCase(str);
+	}
 	public class InboxListRecyclerViewAdapter extends RecyclerView.Adapter<InboxListRecyclerViewAdapter.ViewHolder> {
 
 		ArrayList<HashMap<String, Object>> _data;
@@ -491,10 +494,10 @@ public class FragInboxChatsActivity extends Fragment {
 					} else {
 						// Handle avatar with null check
 						Object avatarObj = UserInfoCacheMap.get("avatar-".concat(uid));
-						if (avatarObj == null || avatarObj.toString().equals("null")) {
+						if (isNullOrEmpty(avatarObj != null ? avatarObj.toString() : null)) {
 							profileCardImage.setImageResource(R.drawable.avatar);
 						} else {
-							Glide.with(getContext().getApplicationContext())
+							Glide.with(getContext())
 							.load(Uri.parse(avatarObj.toString()))
 							.into(profileCardImage);
 						}
@@ -502,7 +505,7 @@ public class FragInboxChatsActivity extends Fragment {
 					
 					// Handle nickname with null check
 					Object nicknameObj = UserInfoCacheMap.get("nickname-".concat(uid));
-					if (nicknameObj == null || nicknameObj.toString().equals("null")) {
+					if (isNullOrEmpty(nicknameObj != null ? nicknameObj.toString() : null)) {
 						Object usernameObj = UserInfoCacheMap.get("username-".concat(uid));
 						username.setText("@" + (usernameObj != null ? usernameObj.toString() : "unknown"));
 					} else {
@@ -516,7 +519,7 @@ public class FragInboxChatsActivity extends Fragment {
 					
 					// Handle gender with null check
 					Object genderObj = UserInfoCacheMap.get("gender-".concat(uid));
-					if (genderObj == null || genderObj.toString().equals("hidden")) {
+					if (isNullOrEmpty(genderObj != null ? genderObj.toString() : null) || "hidden".equals(genderObj != null ? genderObj.toString() : null)) {
 						genderBadge.setVisibility(View.GONE);
 					} else {
 						genderBadge.setVisibility(View.VISIBLE);
@@ -589,63 +592,66 @@ public class FragInboxChatsActivity extends Fragment {
 													UserInfoCacheMap.put("account_premium-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("account_premium").getValue(String.class));
 													UserInfoCacheMap.put("verify-".concat(_data.get((int)_position).get("uid").toString()), dataSnapshot.child("verify").getValue(String.class));
 													main.setVisibility(View.VISIBLE);
-													if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
+													String banned = dataSnapshot.child("banned").getValue(String.class);
+													String avatar = dataSnapshot.child("avatar").getValue(String.class);
+													String nickname = dataSnapshot.child("nickname").getValue(String.class);
+													String usernameValue = dataSnapshot.child("username").getValue(String.class);
+													String status = dataSnapshot.child("status").getValue(String.class);
+													String gender = dataSnapshot.child("gender").getValue(String.class);
+													String accountType = dataSnapshot.child("account_type").getValue(String.class);
+													String accountPremium = dataSnapshot.child("account_premium").getValue(String.class);
+													String verify = dataSnapshot.child("verify").getValue(String.class);
+
+													if ("true".equals(banned)) {
 														profileCardImage.setImageResource(R.drawable.banned_avatar);
 													} else {
-														if (dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+														if (isNullOrEmpty(avatar)) {
 															profileCardImage.setImageResource(R.drawable.avatar);
 														} else {
-															Glide.with(getContext().getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profileCardImage);
+															Glide.with(getContext()).load(Uri.parse(avatar)).into(profileCardImage);
 														}
 													}
-													if (dataSnapshot.child("nickname").getValue(String.class).equals("null")) {
-														username.setText("@" + dataSnapshot.child("username").getValue(String.class));
+
+													if (isNullOrEmpty(nickname)) {
+														username.setText("@" + (usernameValue != null ? usernameValue : ""));
 													} else {
-														username.setText(dataSnapshot.child("nickname").getValue(String.class));
+														username.setText(nickname);
 													}
-													if (dataSnapshot.child("status").getValue(String.class).equals("online")) {
+
+													if ("online".equals(status)) {
 														userStatusCircleBG.setVisibility(View.VISIBLE);
 													} else {
 														userStatusCircleBG.setVisibility(View.GONE);
 													}
-													if (dataSnapshot.child("gender").getValue(String.class).equals("hidden")) {
+
+													if (isNullOrEmpty(gender) || "hidden".equals(gender)) {
 														genderBadge.setVisibility(View.GONE);
 													} else {
-														if (dataSnapshot.child("gender").getValue(String.class).equals("male")) {
+														if ("male".equals(gender)) {
 															genderBadge.setImageResource(R.drawable.male_badge);
 															genderBadge.setVisibility(View.VISIBLE);
-														} else {
-															if (dataSnapshot.child("gender").getValue(String.class).equals("female")) {
-																genderBadge.setImageResource(R.drawable.female_badge);
-																genderBadge.setVisibility(View.VISIBLE);
-															}
+														} else if ("female".equals(gender)) {
+															genderBadge.setImageResource(R.drawable.female_badge);
+															genderBadge.setVisibility(View.VISIBLE);
 														}
 													}
-													if (dataSnapshot.child("account_type").getValue(String.class).equals("admin")) {
+
+													verifiedBadge.setVisibility(View.GONE);
+													if ("admin".equals(accountType)) {
 														verifiedBadge.setImageResource(R.drawable.admin_badge);
 														verifiedBadge.setVisibility(View.VISIBLE);
-													} else {
-														if (dataSnapshot.child("account_type").getValue(String.class).equals("moderator")) {
-															verifiedBadge.setImageResource(R.drawable.moderator_badge);
-															verifiedBadge.setVisibility(View.VISIBLE);
-														} else {
-															if (dataSnapshot.child("account_type").getValue(String.class).equals("support")) {
-																verifiedBadge.setImageResource(R.drawable.support_badge);
-																verifiedBadge.setVisibility(View.VISIBLE);
-															} else {
-																if (dataSnapshot.child("account_premium").getValue(String.class).equals("true")) {
-																	verifiedBadge.setImageResource(R.drawable.premium_badge);
-																	verifiedBadge.setVisibility(View.VISIBLE);
-																} else {
-																	if (dataSnapshot.child("verify").getValue(String.class).equals("true")) {
-																		verifiedBadge.setImageResource(R.drawable.verified_badge);
-																		verifiedBadge.setVisibility(View.VISIBLE);
-																	} else {
-																		verifiedBadge.setVisibility(View.GONE);
-																	}
-																}
-															}
-														}
+													} else if ("moderator".equals(accountType)) {
+														verifiedBadge.setImageResource(R.drawable.moderator_badge);
+														verifiedBadge.setVisibility(View.VISIBLE);
+													} else if ("support".equals(accountType)) {
+														verifiedBadge.setImageResource(R.drawable.support_badge);
+														verifiedBadge.setVisibility(View.VISIBLE);
+													} else if ("true".equals(accountPremium)) {
+														verifiedBadge.setImageResource(R.drawable.premium_badge);
+														verifiedBadge.setVisibility(View.VISIBLE);
+													} else if ("true".equals(verify)) {
+														verifiedBadge.setImageResource(R.drawable.verified_badge);
+														verifiedBadge.setVisibility(View.VISIBLE);
 													}
 												} else {
 												}
