@@ -59,5 +59,18 @@ public class SettingsActivity extends AppCompatActivity {
 	
 	private void initializeLogic() {
 	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null) {
+			PresenceManager.setActivity(com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid(), "In Settings");
+		}
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+	}
 	
 }
