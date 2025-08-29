@@ -434,7 +434,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						mExecutorService.execute(new Runnable() {
 								@Override
 								public void run() {
-										Query commentsQuery = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(key).orderByChild("like").limitToLast(commentsLimit);
+										Query commentsQuery = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).orderByChild("like").limitToLast(commentsLimit);
 										commentsQuery.addListenerForSingleValueEvent(new ValueEventListener() {
 												@Override
 												public void onDataChange(@NonNull DataSnapshot snapshot) {
