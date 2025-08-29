@@ -5,295 +5,50 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:orientation="vertical">
-	<androidx.coordinatorlayout.widget.CoordinatorLayout
-		android:id="@+id/m_coordinator_layout"
+	<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+		android:id="@+id/swipeLayout"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent">
-		<com.google.android.material.appbar.AppBarLayout
-			android:id="@+id/m_coordinator_layout_appbar"
+		android:layout_height="match_parent"
+>
+		<LinearLayout
+			android:id="@+id/swipeLayoutBody"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:orientation="vertical"
-			android:background="@null"
-			app:elevation="0dp">
-			<com.google.android.material.appbar.CollapsingToolbarLayout
-				android:id="@+id/m_coordinator_layout_collapsing_toolbar"
+			android:layout_height="match_parent"
+			android:orientation="vertical">
+			<LinearLayout
+				android:id="@+id/PublicPostsBody"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:orientation="vertical"
-				app:layout_scrollFlags="scroll|enterAlwaysCollapsed">
-				<LinearLayout
-					android:id="@+id/m_coordinator_layout_collapsing_toolbar_body"
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:orientation="vertical">
-					<LinearLayout
-						android:id="@+id/storiesAndMiniPostsSpc"
-						android:layout_width="match_parent"
-						android:layout_height="1dp"
-						android:padding="8dp"
-						android:background="?attr/colorSurfaceVariant"
-						android:orientation="horizontal" />
-					<LinearLayout
-						android:id="@+id/stories"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:orientation="vertical">
-						<androidx.recyclerview.widget.RecyclerView
-							android:id="@+id/storiesView"
-							android:layout_width="match_parent"
-							android:layout_height="wrap_content"
-							tools:listitem="@layout/synapse_story_cv" />
-					</LinearLayout>
-					<LinearLayout
-						android:id="@+id/miniPostLayout"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:orientation="vertical"
-						android:animateLayoutChanges="true">
-						<LinearLayout
-							android:id="@+id/miniPostLayoutTop"
-							android:layout_width="match_parent"
-							android:layout_height="wrap_content"
-							android:padding="14dp"
-							android:orientation="horizontal">
-							<androidx.cardview.widget.CardView
-								android:id="@+id/miniPostLayoutProfileCard"
-								android:layout_width="38dp"
-								android:layout_height="38dp"
-								android:layout_marginRight="8dp"
-								app:cardElevation="1dp"
-								app:cardCornerRadius="300dp">
-								<ImageView
-									android:id="@+id/miniPostLayoutProfileImage"
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:src="@drawable/avatar"
-									android:scaleType="centerCrop" />
-							</androidx.cardview.widget.CardView>
-							<EditText
-								android:id="@+id/miniPostLayoutTextPostInput"
-								android:layout_width="match_parent"
-								android:layout_height="wrap_content"
-								android:padding="8dp"
-								android:background="@android:color/transparent"
-								android:textSize="18sp"
-								android:textColor="?attr/colorOnSurface"
-								android:hint="@string/whats_new_today"
-								android:textColorHint="#757575"
-								android:layout_gravity="center_vertical"
-								android:maxLength="1500" />
-						</LinearLayout>
-						<LinearLayout
-							android:id="@+id/miniPostLayoutMiddleSpc"
-							android:layout_width="match_parent"
-							android:layout_height="1dp"
-							android:padding="8dp"
-							android:background="?attr/colorSurfaceVariant"
-							android:orientation="horizontal" />
-						<LinearLayout
-							android:id="@+id/miniPostLayoutBottom"
-							android:layout_width="match_parent"
-							android:layout_height="wrap_content"
-							android:layout_marginTop="10dp"
-							android:layout_marginBottom="10dp"
-							android:paddingLeft="14dp"
-							android:paddingTop="2dp"
-							android:paddingRight="14dp"
-							android:paddingBottom="2dp"
-							android:gravity="center_vertical"
-							android:orientation="horizontal">
-							<ImageView
-								android:id="@+id/miniPostLayoutImagePost"
-								android:layout_width="32dp"
-								android:layout_height="32dp"
-								android:layout_marginRight="8dp"
-								android:padding="6dp"
-								android:src="@drawable/ic_photo_library_48px"
-								android:scaleType="fitCenter" />
-							<ImageView
-								android:id="@+id/miniPostLayoutVideoPost"
-								android:layout_width="32dp"
-								android:layout_height="32dp"
-								android:layout_marginRight="8dp"
-								android:padding="6dp"
-								android:src="@drawable/ic_video_library_48px"
-								android:scaleType="fitCenter" />
-							<ImageView
-								android:id="@+id/miniPostLayoutTextPost"
-								android:layout_width="32dp"
-								android:layout_height="32dp"
-								android:layout_marginRight="8dp"
-								android:padding="6dp"
-								android:src="@drawable/ic_newsmode_48px"
-								android:scaleType="fitCenter" />
-							<ImageView
-								android:id="@+id/miniPostLayoutMoreButton"
-								android:layout_width="32dp"
-								android:layout_height="32dp"
-								android:padding="6dp"
-								android:src="@drawable/more_ic"
-								android:scaleType="centerInside" />
-							<LinearLayout
-								android:id="@+id/miniPostLayoutBottomSpace"
-								android:layout_width="wrap_content"
-								android:layout_height="match_parent"
-								android:layout_marginLeft="8dp"
-								android:layout_marginRight="8dp"
-								android:padding="8dp"
-								android:orientation="vertical"
-								android:layout_weight="1" />
-							<TextView
-								android:id="@+id/miniPostLayoutTextPostPublish"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:paddingLeft="18dp"
-								android:paddingTop="8dp"
-								android:paddingRight="18dp"
-								android:paddingBottom="8dp"
-								android:background="#757575"
-								android:text="@string/share"
-								android:textSize="16sp"
-								android:textColor="?attr/colorOnSurface"
-								android:fontFamily="@font/product_sans" />
-						</LinearLayout>
-						<LinearLayout
-							android:id="@+id/miniPostLayoutBottomSpc"
-							android:layout_width="match_parent"
-							android:layout_height="1dp"
-							android:padding="8dp"
-							android:background="?attr/colorSurfaceVariant"
-							android:orientation="horizontal" />
-					</LinearLayout>
-					<HorizontalScrollView
-						android:id="@+id/miniPostLayoutFiltersScroll"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:layout_marginTop="10dp"
-						android:layout_marginBottom="10dp"
-						android:scrollbars="none">
-						<LinearLayout
-							android:id="@+id/miniPostLayoutFiltersScrollBody"
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="center_vertical"
-							android:orientation="horizontal">
-							<TextView
-								android:id="@+id/miniPostLayoutFiltersScrollBodyFilterLOCAL"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_marginLeft="14dp"
-								android:paddingLeft="14dp"
-								android:paddingTop="6dp"
-								android:paddingRight="14dp"
-								android:paddingBottom="6dp"
-								android:background="@android:color/transparent"
-								android:text="AI based"
-								android:textSize="16sp"
-								android:textColor="#616161" />
-							<TextView
-								android:id="@+id/miniPostLayoutFiltersScrollBodyFilterPUBLIC"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_marginLeft="14dp"
-								android:paddingLeft="14dp"
-								android:paddingTop="6dp"
-								android:paddingRight="14dp"
-								android:paddingBottom="6dp"
-								android:background="#445E91"
-								android:text="Global"
-								android:textSize="16sp"
-								android:textColor="#FAFAFA"
-								android:fontFamily="@font/product_sans" />
-							<TextView
-								android:id="@+id/miniPostLayoutFiltersScrollBodyFilterFOLLOWED"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_marginLeft="14dp"
-								android:paddingLeft="14dp"
-								android:paddingTop="6dp"
-								android:paddingRight="14dp"
-								android:paddingBottom="6dp"
-								android:text="Following"
-								android:textSize="16sp"
-								android:textColor="#616161" />
-							<TextView
-								android:id="@+id/miniPostLayoutFiltersScrollBodyFilterFAVORITE"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_marginLeft="14dp"
-								android:layout_marginRight="14dp"
-								android:paddingLeft="14dp"
-								android:paddingTop="6dp"
-								android:paddingRight="14dp"
-								android:paddingBottom="6dp"
-								android:text="Saved posts"
-								android:textSize="16sp"
-								android:textColor="#616161" />
-						</LinearLayout>
-					</HorizontalScrollView>
-				</LinearLayout>
-				<LinearLayout
-					android:id="@+id/topSpc14"
-					android:layout_width="match_parent"
-					android:layout_height="1dp"
-					android:padding="4dp"
-					android:background="?attr/colorSurfaceVariant"
-					android:orientation="horizontal" />
-			</com.google.android.material.appbar.CollapsingToolbarLayout>
-			<LinearLayout
-				android:id="@+id/topCollapsingSpc"
-				android:layout_width="match_parent"
-				android:layout_height="1dp"
-				android:padding="8dp"
-				android:background="?attr/colorSurfaceVariant"
-				android:orientation="horizontal" />
-		</com.google.android.material.appbar.AppBarLayout>
-		<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-			android:id="@+id/swipeLayout"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
-			<LinearLayout
-				android:id="@+id/swipeLayoutBody"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent"
 				android:orientation="vertical">
-				<LinearLayout
-					android:id="@+id/PublicPostsBody"
+				<androidx.recyclerview.widget.RecyclerView
+					android:id="@+id/PublicPostsList"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:orientation="vertical">
-					<androidx.recyclerview.widget.RecyclerView
-						android:id="@+id/PublicPostsList"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						tools:listitem="@layout/synapse_post_cv" />
-					<TextView
-						android:id="@+id/PublicPostsListNotFound"
-						android:layout_width="match_parent"
-						android:layout_height="350dp"
-						android:padding="8dp"
-						android:gravity="center_horizontal|center_vertical"
-						android:text="There are no public posts available \nat the moment."
-						android:textSize="16sp"
-						android:textColor="?attr/colorOnSurfaceVariant" />
-				</LinearLayout>
+					tools:listitem="@layout/synapse_post_cv" />
+				<TextView
+					android:id="@+id/PublicPostsListNotFound"
+					android:layout_width="match_parent"
+					android:layout_height="350dp"
+					android:padding="8dp"
+					android:gravity="center_horizontal|center_vertical"
+					android:text="There are no public posts available \nat the moment."
+					android:textSize="16sp"
+					android:textColor="?attr/colorOnSurfaceVariant" />
 			</LinearLayout>
-		</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-		<LinearLayout
-			android:id="@+id/loadingBody"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:padding="8dp"
-			android:gravity="center_horizontal|center_vertical"
-			android:orientation="horizontal">
-			<ProgressBar
-				android:id="@+id/loading_bar"
-				android:layout_width="48dp"
-				android:layout_height="48dp"
-				android:indeterminate="false"
-				style="?android:progressBarStyle" />
 		</LinearLayout>
-	</androidx.coordinatorlayout.widget.CoordinatorLayout>
+	</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+	<LinearLayout
+		android:id="@+id/loadingBody"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:padding="8dp"
+		android:gravity="center_horizontal|center_vertical"
+		android:orientation="horizontal">
+		<ProgressBar
+			android:id="@+id/loading_bar"
+			android:layout_width="48dp"
+			android:layout_height="48dp"
+			android:indeterminate="false"
+			style="?android:progressBarStyle" />
+	</LinearLayout>
 </LinearLayout>
