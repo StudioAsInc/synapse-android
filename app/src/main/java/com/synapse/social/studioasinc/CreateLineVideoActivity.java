@@ -65,10 +65,10 @@ public class CreateLineVideoActivity extends AppCompatActivity {
 	private ImageView back;
 	private TextView title;
 	private LinearLayout topSpc;
-	private TextView continueButton;
+	private Button continueButton;
 	private VideoView video_preview;
-	private TextView selectVideo;
-	private TextView addFromUrlBtn;
+	private Button selectVideo;
+	private Button addFromUrlBtn;
 	
 	private Intent intent = new Intent();
 	private Intent VIDEO_PICKER = new Intent(Intent.ACTION_GET_CONTENT);
@@ -187,9 +187,6 @@ public class CreateLineVideoActivity extends AppCompatActivity {
 	private void initializeLogic() {
 		_stateColor(0xFFFFFFFF, 0xFF000000);
 		_viewGraphics(back, 0xFFFFFFFF, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
-		_viewGraphics(continueButton, getResources().getColor(R.color.colorPrimary), 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
-		_viewGraphics(selectVideo, getResources().getColor(R.color.colorPrimary), 0xFF448AFF, 300, 0, Color.TRANSPARENT);
-		_viewGraphics(addFromUrlBtn, getResources().getColor(R.color.colorPrimary), 0xFF388E3C, 300, 0, Color.TRANSPARENT);
 	}
 	
 	@Override

@@ -569,12 +569,51 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 			
 		} else {
 			UniquePostKey = maindb.push().getKey();
-			storage.child("skyline/" + "posts/" + UniquePostKey + "/image.png").putFile(Uri.fromFile(new File(_path))).addOnFailureListener(_storage_failure_listener).addOnProgressListener(_storage_upload_progress_listener).continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-				@Override
-				public Task<Uri> then(Task<UploadTask.TaskSnapshot> task) throws Exception {
-					return storage.child("skyline/" + "posts/" + UniquePostKey + "/image.png").getDownloadUrl();
-				}}).addOnCompleteListener(_storage_upload_success_listener);
 			_LoadingDialog(true);
+			UploadFiles.uploadFile(_path, new File(_path).getName(), new UploadFiles.UploadCallback() {
+				@Override
+				public void onProgress(int percent) {
+					// You can update the progress dialog here if you want
+				}
+
+				@Override
+				public void onSuccess(String url, String publicId) {
+					cc = Calendar.getInstance();
+					PostSendMap = new HashMap<>();
+					PostSendMap.put("key", UniquePostKey);
+					PostSendMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+					PostSendMap.put("post_type", "LINE_VIDEO");
+					if (!postDescription.getText().toString().trim().equals("")) {
+						PostSendMap.put("post_text", postDescription.getText().toString().trim());
+					}
+					PostSendMap.put("videoUri", url);
+					if (!appSavedData.contains("user_region_data") && appSavedData.getString("user_region_data", "").equals("none")) {
+						PostSendMap.put("post_region", "none");
+					} else {
+						PostSendMap.put("post_region", appSavedData.getString("user_region_data", ""));
+					}
+					PostSendMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
+					FirebaseDatabase.getInstance().getReference("skyline/line-posts").child(UniquePostKey).updateChildren(PostSendMap, new DatabaseReference.CompletionListener() {
+						@Override
+						public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+							if (databaseError == null) {
+								SketchwareUtil.showMessage(getApplicationContext(), getResources().getString(R.string.post_publish_success));
+								_LoadingDialog(false);
+								finish();
+							} else {
+								SketchwareUtil.showMessage(getApplicationContext(), databaseError.getMessage());
+								_LoadingDialog(false);
+							}
+						}
+					});
+				}
+
+				@Override
+				public void onFailure(String error) {
+					_LoadingDialog(false);
+					SketchwareUtil.showMessage(getApplicationContext(), error);
+				}
+			});
 		}
 	}
 	
