@@ -1,95 +1,109 @@
-<LinearLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical"
 	android:id="@+id/_main">
-	<LinearLayout
-		android:id="@+id/body"
+
+	<com.google.android.material.appbar.AppBarLayout
+		android:id="@+id/app_bar_layout"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:background="?attr/colorSurface"
-		android:orientation="vertical">
-		<LinearLayout
+		android:layout_height="wrap_content"
+		android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+		<com.google.android.material.appbar.MaterialToolbar
 			android:id="@+id/topBar"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:paddingLeft="16dp"
-			android:paddingRight="16dp"
+			android:layout_height="?attr/actionBarSize"
+			app:layout_scrollFlags="scroll|enterAlways|snap"
 			android:background="?attr/colorSurface"
-			android:gravity="center_vertical"
-			android:orientation="horizontal">
-			<TextView
-				android:id="@+id/app_name_bar"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:text="@string/app_name"
-				android:textSize="40sp"
-				android:textStyle="bold"
-				android:textColor="@color/colorPrimary"
-				android:fontFamily="@font/product_sans_bold" />
+			app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
 			<LinearLayout
-				android:id="@+id/topBarSpace"
-				android:layout_width="wrap_content"
-				android:layout_height="match_parent"
-				android:padding="8dp"
-				android:orientation="vertical"
-				android:layout_weight="1" />
-            <ImageView
-                android:id="@+id/nav_search_ic"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_search_48px"
-                android:scaleType="centerInside"
-                android:layout_marginLeft="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless" />
-            <ImageView
-                android:id="@+id/nav_inbox_ic"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_comment_48px"
-                android:scaleType="centerInside"
-                android:layout_marginLeft="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless" />
-            <ImageView
-                android:id="@+id/nav_profile_ic"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_account_circle_48px"
-                android:scaleType="centerCrop"
-                android:layout_marginLeft="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless" />
-			<ImageView
-				android:id="@+id/settings_button"
-				android:layout_width="32dp"
-				android:layout_height="32dp"
-				android:src="@drawable/baseline_logout_black_48dp"
-				android:scaleType="centerInside"
-				android:layout_marginLeft="8dp"
-				android:clickable="true"
-				android:focusable="true"
-				android:background="?attr/selectableItemBackgroundBorderless" />
-		</LinearLayout>
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:paddingRight="16dp"
+				android:gravity="center_vertical"
+				android:orientation="horizontal">
+
+				<TextView
+					android:id="@+id/app_name_bar"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/app_name"
+					android:textSize="40sp"
+					android:textStyle="bold"
+					android:textColor="@color/colorPrimary"
+					android:fontFamily="@font/product_sans_bold" />
+
+				<LinearLayout
+					android:id="@+id/topBarSpace"
+					android:layout_width="0dp"
+					android:layout_height="match_parent"
+					android:orientation="vertical"
+					android:layout_weight="1" />
+
+				<ImageView
+					android:id="@+id/nav_search_ic"
+					android:layout_width="32dp"
+					android:layout_height="32dp"
+					android:src="@drawable/ic_search_48px"
+					android:scaleType="centerInside"
+					android:layout_marginLeft="8dp"
+					android:clickable="true"
+					android:focusable="true"
+					android:background="?attr/selectableItemBackgroundBorderless" />
+
+				<ImageView
+					android:id="@+id/nav_inbox_ic"
+					android:layout_width="32dp"
+					android:layout_height="32dp"
+					android:src="@drawable/ic_comment_48px"
+					android:scaleType="centerInside"
+					android:layout_marginLeft="8dp"
+					android:clickable="true"
+					android:focusable="true"
+					android:background="?attr/selectableItemBackgroundBorderless" />
+
+				<ImageView
+					android:id="@+id/nav_profile_ic"
+					android:layout_width="32dp"
+					android:layout_height="32dp"
+					android:src="@drawable/ic_account_circle_48px"
+					android:scaleType="centerCrop"
+					android:layout_marginLeft="8dp"
+					android:clickable="true"
+					android:focusable="true"
+					android:background="?attr/selectableItemBackgroundBorderless" />
+
+				<ImageView
+					android:id="@+id/settings_button"
+					android:layout_width="32dp"
+					android:layout_height="32dp"
+					android:src="@drawable/baseline_logout_black_48dp"
+					android:scaleType="centerInside"
+					android:layout_marginLeft="8dp"
+					android:clickable="true"
+					android:focusable="true"
+					android:background="?attr/selectableItemBackgroundBorderless" />
+			</LinearLayout>
+		</com.google.android.material.appbar.MaterialToolbar>
 
 		<com.google.android.material.tabs.TabLayout
 			android:id="@+id/tab_layout"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			app:tabMode="fixed"
-			app:tabGravity="fill"/>
+			app:tabGravity="fill"
+			app:layout_scrollFlags="scroll|enterAlways|snap"/>
 
-		<androidx.viewpager2.widget.ViewPager2
-			android:id="@+id/view_pager"
-			android:layout_width="match_parent"
-			android:layout_height="0dp"
-			android:layout_weight="1"/>
-	</LinearLayout>
-</LinearLayout>
+	</com.google.android.material.appbar.AppBarLayout>
+
+	<androidx.viewpager2.widget.ViewPager2
+		android:id="@+id/view_pager"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
