@@ -49,6 +49,10 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.*;
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
+import androidx.viewpager2.widget.ViewPager2;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -76,6 +80,33 @@ import java.util.concurrent.Executors;
 import android.os.Handler;
 import android.os.Looper;
 
+// HomePagerAdapter for ViewPager2
+class HomePagerAdapter extends FragmentStateAdapter {
+    
+    public HomePagerAdapter(FragmentActivity fragmentActivity) {
+        super(fragmentActivity);
+    }
+    
+    @Override
+    public Fragment createFragment(int position) {
+        switch (position) {
+            case 0:
+                return new HomeFeedFragment();
+            case 1:
+                return new ReelsFragment();
+            case 2:
+                return new NotificationFragment();
+            default:
+                return new HomeFeedFragment();
+        }
+    }
+    
+    @Override
+    public int getItemCount() {
+        return 3;
+    }
+}
+
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -98,11 +129,13 @@ public class HomeActivity extends AppCompatActivity {
 	private LinearLayout middleLayout;
 	private LinearLayout bottomSpc;
     private ImageView miniPostLayoutImagePost;
+    
+    // TabLayout and ViewPager2 for fragments
+    private TabLayout tabLayout;
+    private ViewPager2 viewPager;
+    private HomePagerAdapter pagerAdapter;
 	private CoordinatorLayout m_coordinator_layout;
-	private LinearLayout noInternetBody;
-	private LinearLayout loadingBody;
 	private AppBarLayout m_coordinator_layout_appbar;
-	private SwipeRefreshLayout swipeLayout;
 	private LinearLayout m_coordinator_layout_collapsing_toolbar_body; 
 	private LinearLayout topCollapsingSpc;
 	private LinearLayout topSpc14;
@@ -111,20 +144,12 @@ public class HomeActivity extends AppCompatActivity {
 	private LinearLayout miniPostLayout;
 	private HorizontalScrollView miniPostLayoutFiltersScroll;
 	private LinearLayout topBar;
-	private LinearLayout bottomBar;
 	private RecyclerView storiesView;
 	private TextView app_name_bar;
 	private LinearLayout topBarSpace;
 	private ImageView imageview1;
 	private ImageView settings_button;
-	private LinearLayout nav_feed;
-	private LinearLayout nav_search;
-	private LinearLayout nav_reels;
-	private LinearLayout nav_inbox;
-	private LinearLayout nav_profile;
-	private ImageView nav_feed_ic;
-	private ImageView nav_search_ic;
-	private ImageView nav_reels_ic;
+
 	private ImageView nav_inbox_ic;
 	private ImageView nav_profile_ic;
 	private LinearLayout miniPostLayoutTop;
@@ -144,15 +169,7 @@ public class HomeActivity extends AppCompatActivity {
 	private TextView miniPostLayoutFiltersScrollBodyFilterPUBLIC;
 	private TextView miniPostLayoutFiltersScrollBodyFilterFOLLOWED;
 	private TextView miniPostLayoutFiltersScrollBodyFilterFAVORITE;
-	private LinearLayout swipeLayoutBody;
-	private LinearLayout PublicPostsBody;
-	private RecyclerView PublicPostsList;
-	private TextView PublicPostsListNotFound;
-	private ImageView noInternetBodyIc;
-	private TextView noInternetBodyTitle;
-	private TextView noInternetBodySubtitle;
-	private TextView noInternetBodyRetry;
-	private ProgressBar loading_bar;
+
 	
 	private Intent intent = new Intent();
 	private Vibrator vbr;
@@ -224,10 +241,7 @@ public class HomeActivity extends AppCompatActivity {
 		middleLayout = findViewById(R.id.middleLayout);
 		bottomSpc = findViewById(R.id.bottomSpc);
 		m_coordinator_layout = findViewById(R.id.m_coordinator_layout);
-		noInternetBody = findViewById(R.id.noInternetBody);
-		loadingBody = findViewById(R.id.loadingBody);
 		m_coordinator_layout_appbar = findViewById(R.id.m_coordinator_layout_appbar);
-		swipeLayout = findViewById(R.id.swipeLayout);
 		m_coordinator_layout_collapsing_toolbar_body = findViewById(R.id.m_coordinator_layout_collapsing_toolbar_body); 
 		topCollapsingSpc = findViewById(R.id.topCollapsingSpc);
 		topSpc14 = findViewById(R.id.topSpc14);
@@ -236,21 +250,13 @@ public class HomeActivity extends AppCompatActivity {
 		miniPostLayout = findViewById(R.id.miniPostLayout);
 		miniPostLayoutFiltersScroll = findViewById(R.id.miniPostLayoutFiltersScroll);
 		topBar = findViewById(R.id.topBar);
-		bottomBar = findViewById(R.id.bottomBar);
 		storiesView = findViewById(R.id.storiesView);
 		app_name_bar = findViewById(R.id.app_name_bar);
 		topBarSpace = findViewById(R.id.topBarSpace);
 		imageview1 = findViewById(R.id.imageview1);
 		settings_button = findViewById(R.id.settings_button);
-		nav_feed = findViewById(R.id.nav_feed);
-		nav_search = findViewById(R.id.nav_search);
-		nav_reels = findViewById(R.id.nav_reels);
-		nav_inbox = findViewById(R.id.nav_inbox);
-		nav_profile = findViewById(R.id.nav_profile);
-		nav_feed_ic = findViewById(R.id.nav_feed_ic);
-		nav_search_ic = findViewById(R.id.nav_search_ic);
-		nav_reels_ic = findViewById(R.id.nav_reels_ic);
 		nav_inbox_ic = findViewById(R.id.nav_inbox_ic);
+		nav_search_ic = findViewById(R.id.nav_search_ic);
 		nav_profile_ic = findViewById(R.id.nav_profile_ic);
 		miniPostLayoutTop = findViewById(R.id.miniPostLayoutTop);
 		miniPostLayoutMiddleSpc = findViewById(R.id.miniPostLayoutMiddleSpc);
@@ -270,27 +276,49 @@ public class HomeActivity extends AppCompatActivity {
 		miniPostLayoutFiltersScrollBodyFilterPUBLIC = findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterPUBLIC);
 		miniPostLayoutFiltersScrollBodyFilterFOLLOWED = findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFOLLOWED);
 		miniPostLayoutFiltersScrollBodyFilterFAVORITE = findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFAVORITE);
-		swipeLayoutBody = findViewById(R.id.swipeLayoutBody);
-		PublicPostsBody = findViewById(R.id.PublicPostsBody);
-		PublicPostsList = findViewById(R.id.PublicPostsList);
-		PublicPostsListNotFound = findViewById(R.id.PublicPostsListNotFound);
-		noInternetBodyIc = findViewById(R.id.noInternetBodyIc);
-		noInternetBodyTitle = findViewById(R.id.noInternetBodyTitle);
-		noInternetBodySubtitle = findViewById(R.id.noInternetBodySubtitle);
-		noInternetBodyRetry = findViewById(R.id.noInternetBodyRetry);
-		loading_bar = findViewById(R.id.loading_bar);
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		auth = FirebaseAuth.getInstance();
 		
-		swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+		// Initialize TabLayout and ViewPager2
+		tabLayout = findViewById(R.id.tabLayout);
+		viewPager = findViewById(R.id.viewPager);
+		
+		// Set up ViewPager2 adapter
+		pagerAdapter = new HomePagerAdapter(this);
+		viewPager.setAdapter(pagerAdapter);
+		
+		// Set up TabLayout with ViewPager2
+		TabLayoutMediator mediator = new TabLayoutMediator(tabLayout, viewPager, new TabLayoutMediator.TabConfigurationStrategy() {
 			@Override
-			public void onRefresh() {
-				_loadPosts(currentPostFilter); 
-                _loadStories(); // Also refresh stories
+			public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
+				switch (position) {
+					case 0:
+						tab.setText("Feed");
+						tab.setIcon(R.drawable.home_24px);
+						break;
+					case 1:
+						tab.setText("Reels");
+						tab.setIcon(R.drawable.ic_video_library_48px);
+						break;
+					case 2:
+						tab.setText("Notifications");
+						tab.setIcon(R.drawable.ic_chat_48px);
+						break;
+				}
+			}
+		});
+		mediator.attach();
+		
+		// Set up navigation icon click listeners
+		nav_inbox_ic.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				intent.setClass(getApplicationContext(), InboxActivity.class);
+				startActivity(intent);
 			}
 		});
 		
-		nav_search.setOnClickListener(new View.OnClickListener() {
+		nav_search_ic.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), SearchActivity.class);
@@ -299,25 +327,7 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		});
 		
-		nav_reels.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), LineVideoPlayerActivity.class);
-				startActivity(intent);
-				finish();
-			}
-		});
-		
-		nav_inbox.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), InboxActivity.class);
-				startActivity(intent);
-				finish();
-			}
-		});
-		
-		nav_profile.setOnClickListener(new View.OnClickListener() {
+		nav_profile_ic.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), ProfileActivity.class);
@@ -414,77 +424,7 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		});
 		
-		miniPostLayoutFiltersScrollBodyFilterLOCAL.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFFFFFFFF);
-				miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-				miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-				miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-				currentPostFilter = "LOCAL";
-				_loadPosts(currentPostFilter);
-			}
-		});
-		
-		miniPostLayoutFiltersScrollBodyFilterPUBLIC.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF1A237E, 300, 0, Color.TRANSPARENT);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-				miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
-				miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-				miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-				currentPostFilter = "PUBLIC";
-				_loadPosts(currentPostFilter);
-			}
-		});
-		
-		miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, getResources().getColor(R.color.colorPrimary), 0xFF616161, 300, 0, Color.TRANSPARENT);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-				miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-				miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFFFFFFFF);
-				miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-				currentPostFilter = "FOLLOWED";
-				_loadPosts(currentPostFilter);
-			}
-		});
-		
-		miniPostLayoutFiltersScrollBodyFilterFAVORITE.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-				_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-				miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-				miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-				miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-				miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFFFFFFFF);
-				currentPostFilter = "FAVORITE";
-				_loadPosts(currentPostFilter);
-			}
-		});
-		
-		noInternetBodyRetry.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_loadPosts(currentPostFilter);
-                _loadStories(); // Also retry stories
-			}
-		});
+
 		
 		_udb_child_listener = new ChildEventListener() {
 			@Override
@@ -559,19 +499,8 @@ public class HomeActivity extends AppCompatActivity {
 			}
 		});
 
-		noInternetBodySubtitle.setText(getResources().getString(R.string.reasons_may_be).concat("\n\n".concat(getResources().getString(R.string.err_no_internet).concat("\n".concat(getResources().getString(R.string.err_app_maintenance).concat("\n".concat(getResources().getString(R.string.err_problem_on_our_side))))))));
-		_viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-		_viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-		_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-		_viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-		miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-		miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
-		miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-		miniPostLayoutTextPostPublish.setVisibility(View.GONE);
-		miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-		PublicPostsBody.setVisibility(View.VISIBLE); 
+		// Set up basic UI styling
 		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
-		_viewGraphics(noInternetBodyRetry, 0xFF445E91, 0xFF1976D2, 24, 3, 0xFF1E88E5);
 		_ImageColor(miniPostLayoutImagePost, 0xFF445E91);
 		_ImageColor(miniPostLayoutVideoPost, 0xFF445E91);
 		_ImageColor(miniPostLayoutTextPost, 0xFF445E91);
@@ -581,13 +510,16 @@ public class HomeActivity extends AppCompatActivity {
 		_viewGraphics(miniPostLayoutTextPost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
 		_viewGraphics(miniPostLayoutMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
 		
+		// Set up stories view
 		storiesView.setAdapter(new StoriesViewAdapter(storiesList));
 		storiesView.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL, false));
-		PublicPostsList.setLayoutManager(new LinearLayoutManager(this));
-		PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList));
 		_ImgRound(nav_profile_ic, 360);
 		_viewGraphics(miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
-	//  app_name_bar.setTypeface(Typeface.createFromAsset(getAssets(),"font/product_sans_bold.ttf"), 1);
+	}
+	
+	private void initializeLogic() {
+		// Load stories for the main activity
+		_loadStories();
 	}
 	
 	@Override
