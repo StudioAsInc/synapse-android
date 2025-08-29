@@ -1144,6 +1144,44 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 										getContext().startActivity(intent);
 								}
 						});
+
+						final String replyUid = uid;
+						final String replyCommentKey = key;
+						final String originalCommentKey = replyKey;
+						body.setOnLongClickListener(new View.OnLongClickListener() {
+								@Override
+								public boolean onLongClick(View v) {
+										if (replyUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+												PopupMenu popup = new PopupMenu(getContext(), more);
+												popup.getMenu().add("Delete");
+												popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+														@Override
+														public boolean onMenuItemClick(MenuItem item) {
+																if (item.getTitle().equals("Delete")) {
+																		new MaterialAlertDialogBuilder(getContext())
+																		.setTitle("Delete Reply")
+																		.setMessage("Are you sure you want to delete this reply?")
+																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+																				@Override
+																				public void onClick(DialogInterface dialog, int which) {
+																						main.child("posts-comments-replies").child(postKey).child(originalCommentKey).child(replyCommentKey).removeValue();
+																						_data.remove(_position);
+																						notifyItemRemoved(_position);
+																						notifyItemRangeChanged(_position, _data.size());
+																						Toast.makeText(getContext(), "Reply deleted", Toast.LENGTH_SHORT).show();
+																				}
+																		})
+																		.setNegativeButton("Cancel", null)
+																		.show();
+																}
+																return true;
+														}
+												});
+												popup.show();
+										}
+										return true;
+								}
+						});
 				}
 				
 				@Override
