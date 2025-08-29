@@ -546,9 +546,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								comment_text.setText("");
 						}
 						
-						more.setAlpha(1.0f);
-						more_ic.setImageResource(R.drawable.ic_more_vert);
-
 						body.setOnLongClickListener(new View.OnLongClickListener() {
 								@Override
 								public boolean onLongClick(View v) {
@@ -605,6 +602,10 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 										return true;
 								}
 						});
+
+						more.setAlpha(1.0f);
+						more_ic.setImageResource(R.drawable.ic_more_vert);
+
 
 						more.setAlpha(1.0f);
 						more_ic.setImageResource(R.drawable.ic_more_vert);
