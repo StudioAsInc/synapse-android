@@ -22,10 +22,12 @@ import com.onesignal.OneSignal;
 import com.onesignal.debug.LogLevel;
 import com.onesignal.user.subscriptions.IPushSubscriptionObserver;
 import com.onesignal.user.subscriptions.PushSubscriptionChangedState;
-
 import java.util.Calendar;
+import androidx.lifecycle.DefaultLifecycleObserver;
+import androidx.lifecycle.ProcessLifecycleOwner;
+import androidx.lifecycle.LifecycleOwner;
 
-public class SynapseApp extends Application {
+public class SynapseApp extends Application implements DefaultLifecycleObserver {
     
     private static Context mContext;
     private Thread.UncaughtExceptionHandler mExceptionHandler;
@@ -76,7 +78,7 @@ public class SynapseApp extends Application {
                 }
             });
         
-        setUserStatus();
+        ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
 
         // Initialize OneSignal
         final String ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
@@ -96,6 +98,20 @@ public class SynapseApp extends Application {
                 }
             }
         });
+    }
+
+    @Override
+    public void onStart(@NonNull LifecycleOwner owner) {
+        if (mAuth.getCurrentUser() != null) {
+            PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
+        }
+    }
+
+    @Override
+    public void onStop(@NonNull LifecycleOwner owner) {
+        if (mAuth.getCurrentUser() != null) {
+            PresenceManager.goOffline(mAuth.getCurrentUser().getUid());
+        }
     }
     
     private void createNotificationChannels() {
@@ -130,116 +146,6 @@ public class SynapseApp extends Application {
             // Create the channels
             notificationManager.createNotificationChannel(messagesChannel);
             notificationManager.createNotificationChannel(generalChannel);
-        }
-    }
-    
-    public static void setUserStatus() {
-        if (mAuth.getCurrentUser() != null) {
-            setUserStatusReference = FirebaseDatabase.getInstance().getReference("skyline/users")
-                .child(mAuth.getCurrentUser().getUid())
-                .child("status");
-            
-            // Enable offline sync for status reference
-            setUserStatusReference.keepSynced(true);
-            
-            getCheckUserReference.child(mAuth.getCurrentUser().getUid())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            setUserStatusRef.addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                    Boolean connected = dataSnapshot.getValue(Boolean.class);
-                                    if (connected != null && connected) {
-                                        // Set online status and prepare offline handler
-                                        setUserStatusReference.setValue("online");
-                                        setUserStatusReference.onDisconnect()
-                                            .setValue(String.valueOf(mCalendar.getTimeInMillis()))
-                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<Void> task) {
-                                                    if (task.isSuccessful()) {
-                                                        Log.d("SynapseApp", "Offline status handler set");
-                                                    }
-                                                }
-                                            });
-                                    }
-                                }
-                                
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
-                                    Log.e("SynapseApp", "Connection listener cancelled", databaseError.toException());
-                                }
-                            });
-                        }
-                    }
-                    
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Log.e("SynapseApp", "User check cancelled", databaseError.toException());
-                    }
-                });
-        }
-    }
-    
-    public static void setUserStatusOnline() {
-        if (mAuth.getCurrentUser() != null) {
-            DatabaseReference statusRef = FirebaseDatabase.getInstance()
-                .getReference("skyline/users")
-                .child(mAuth.getCurrentUser().getUid())
-                .child("status");
-            
-            // Cancel any pending offline operations
-            statusRef.onDisconnect().cancel();
-            
-            // Set online status
-            statusRef.setValue("online")
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (!task.isSuccessful()) {
-                            Log.e("SynapseApp", "Failed to set online status");
-                            // Retry setting online status
-                            statusRef.setValue("online");
-                        }
-                    }
-                });
-        }
-    }
-    
-    public static void setUserStatusOffline() {
-        if (mAuth.getCurrentUser() != null) {
-            DatabaseReference statusRef = FirebaseDatabase.getInstance()
-                .getReference("skyline/users")
-                .child(mAuth.getCurrentUser().getUid())
-                .child("status");
-            
-            statusRef.setValue(String.valueOf(mCalendar.getTimeInMillis()))
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (!task.isSuccessful()) {
-                            Log.e("SynapseApp", "Failed to set offline status");
-                            // Retry setting offline status
-                            statusRef.setValue(String.valueOf(mCalendar.getTimeInMillis()));
-                        }
-                    }
-                });
-        }
-    }
-    
-    public static void setUserStatusOfflineListenerCancel() {
-        if (setUserStatusReference != null) {
-            setUserStatusReference.onDisconnect().cancel()
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Log.d("SynapseApp", "Offline status handler cancelled");
-                        }
-                    }
-                });
         }
     }
     

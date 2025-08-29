@@ -311,7 +311,6 @@ public class HomeFragment extends Fragment {
                     } else {
                         miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
                     }
-                    SynapseApp.setUserStatus();
                 } else {
                     miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
                 }

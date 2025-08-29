@@ -130,6 +130,7 @@ dependencies {
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
 
     // AndroidX Architecture Components
+    implementation 'androidx.lifecycle:lifecycle-process:2.9.2'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.9.2'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.9.3'

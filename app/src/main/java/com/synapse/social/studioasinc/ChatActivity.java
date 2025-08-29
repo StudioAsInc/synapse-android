@@ -320,6 +320,9 @@ public class ChatActivity extends AppCompatActivity {
 				SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
 				String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra("uid"));
 				drafts.edit().remove(chatId + "_attachments").apply();
+				if (auth.getCurrentUser() != null) {
+					PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
+				}
 			}
 		});
 
@@ -703,11 +706,6 @@ public class ChatActivity extends AppCompatActivity {
 	public void onPause() {
 		super.onPause();
 		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
-
-		// Set user status back to online when leaving the chat screen
-		if (auth.getCurrentUser() != null) {
-			PresenceManager.stopChatting(auth.getCurrentUser().getUid());
-		}
 	}
 
 	@Override
@@ -1989,6 +1987,9 @@ public class ChatActivity extends AppCompatActivity {
 	 * It's now called after the recipient's OneSignal ID has been fetched.
 	 */
 	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
+		if (auth.getCurrentUser() != null) {
+			PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
+		}
 		Log.d("ChatActivity", "=== MESSAGE SENDING START ===");
 		Log.d("ChatActivity", "Message text: '" + messageText + "'");
 		Log.d("ChatActivity", "Sender: " + senderUid + ", Recipient: " + recipientUid);
@@ -2229,6 +2230,9 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _startUploadForItem(final double _position) {
+		if (auth.getCurrentUser() != null) {
+			PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Sending an attachment");
+		}
 		// Use the correct parameter name '_position' as defined by your More Block
 		final int itemPosition = (int) _position;
 

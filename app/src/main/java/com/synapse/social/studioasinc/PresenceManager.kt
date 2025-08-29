@@ -25,9 +25,11 @@ object PresenceManager {
     @JvmStatic
     fun goOnline(uid: String) {
         val statusRef = getUserStatusRef(uid)
+        val activityRef = usersRef.child(uid).child("activity")
         statusRef.setValue("online")
         // On disconnect, set the last seen time as a timestamp string
         statusRef.onDisconnect().setValue(System.currentTimeMillis().toString())
+        activityRef.onDisconnect().removeValue()
     }
 
     /**
@@ -47,7 +49,7 @@ object PresenceManager {
      */
     @JvmStatic
     fun setChattingWith(currentUserUid: String, otherUserUid: String) {
-        getUserStatusRef(currentUserUid).setValue("chatting_with_$otherUserUid")
+        UserActivity.setActivity(currentUserUid, "chatting_with_$otherUserUid")
     }
 
     /**
@@ -56,8 +58,11 @@ object PresenceManager {
      */
     @JvmStatic
     fun stopChatting(currentUserUid: String) {
-        // Revert to "online" when the user leaves the chat screen.
-        // The onDisconnect handler from goOnline() will take care of app closes.
-        getUserStatusRef(currentUserUid).setValue("online")
+        UserActivity.clearActivity(currentUserUid)
+    }
+
+    @JvmStatic
+    fun setActivity(uid: String, activity: String) {
+        UserActivity.setActivity(uid, activity)
     }
 }
