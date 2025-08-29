@@ -37,6 +37,13 @@ public class HomeActivity extends AppCompatActivity {
     private ImageView nav_profile_ic;
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
+    private View topBar;
+
+    // Scroll-collapse state
+    private int topBarHeight;
+    private int tabLayoutHeight;
+    private int totalBarsHeight;
+    private float currentOffsetPx = 0f;
 
     @Override
     protected void onCreate(Bundle _savedInstanceState) {
@@ -45,6 +52,9 @@ public class HomeActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
         initialize();
         initializeLogic();
+        if (_savedInstanceState != null) {
+            currentOffsetPx = _savedInstanceState.getFloat("bars_offset_px", 0f);
+        }
     }
 
     @Override
@@ -71,6 +81,7 @@ public class HomeActivity extends AppCompatActivity {
         nav_search_ic = findViewById(R.id.nav_search_ic);
         nav_inbox_ic = findViewById(R.id.nav_inbox_ic);
         nav_profile_ic = findViewById(R.id.nav_profile_ic);
+        topBar = findViewById(R.id.topBar);
     }
 
     private void initializeLogic() {
@@ -133,6 +144,14 @@ public class HomeActivity extends AppCompatActivity {
                 nav_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
             }
         });
+
+        // Measure bar heights once laid out
+        tabLayout.post(() -> {
+            topBarHeight = topBar != null ? topBar.getHeight() : 0;
+            tabLayoutHeight = tabLayout.getHeight();
+            totalBarsHeight = topBarHeight + tabLayoutHeight;
+            applyBarsTranslation();
+        });
     }
 
     @Override
@@ -145,5 +164,42 @@ public class HomeActivity extends AppCompatActivity {
                 .setNegativeButton("Cancel", null)
                 .create()
                 .show();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putFloat("bars_offset_px", currentOffsetPx);
+    }
+
+    // Called by fragments to report vertical scroll deltas of the feed
+    public void onFeedScrolled(int dy) {
+        if (totalBarsHeight == 0) return;
+        // dy>0 means list scrolls down (user swipes up) -> hide bars
+        float newOffset = currentOffsetPx + dy;
+        if (newOffset < 0f) newOffset = 0f;
+        if (newOffset > totalBarsHeight) newOffset = totalBarsHeight;
+        if (Math.abs(newOffset - currentOffsetPx) < 0.5f) return;
+        currentOffsetPx = newOffset;
+        applyBarsTranslation();
+    }
+
+    // Called when list reached top to fully expand
+    public void expandBarsIfAtTop(boolean atTop) {
+        if (!atTop) return;
+        if (currentOffsetPx == 0f) return;
+        currentOffsetPx = 0f;
+        applyBarsTranslation();
+    }
+
+    // Apply split translation so top bar and tabs move smoothly together
+    private void applyBarsTranslation() {
+        if (topBar == null || tabLayout == null) return;
+        float remaining = currentOffsetPx;
+        float topBarTranslation = -Math.min(remaining, topBarHeight);
+        remaining -= Math.min(currentOffsetPx, topBarHeight);
+        float tabTranslation = -(remaining > 0 ? Math.min(remaining, tabLayoutHeight) : 0);
+        topBar.setTranslationY(topBarTranslation);
+        tabLayout.setTranslationY(tabTranslation);
     }
 }

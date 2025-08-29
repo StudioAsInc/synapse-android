@@ -344,6 +344,43 @@ public class HomeFragment extends Fragment {
         storiesView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false));
         PublicPostsList.setLayoutManager(new LinearLayoutManager(getContext()));
         PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList));
+
+        // Drive top bar collapse based on feed scroll
+        PublicPostsList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (getActivity() instanceof AppCompatActivity) {
+                    // Call into HomeActivity if available
+                    try {
+                        Class<?> activityClass = getActivity().getClass();
+                        java.lang.reflect.Method m = activityClass.getMethod("onFeedScrolled", int.class);
+                        m.invoke(getActivity(), dy);
+                    } catch (Exception ignored) { }
+                }
+            }
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    // When at top, expand fully
+                    RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
+                    boolean atTop = false;
+                    if (lm instanceof LinearLayoutManager) {
+                        atTop = ((LinearLayoutManager) lm).findFirstVisibleItemPosition() <= 0
+                                && (recyclerView.computeVerticalScrollOffset() == 0);
+                    }
+                    if (getActivity() != null) {
+                        try {
+                            Class<?> activityClass = getActivity().getClass();
+                            java.lang.reflect.Method m = activityClass.getMethod("expandBarsIfAtTop", boolean.class);
+                            m.invoke(getActivity(), atTop);
+                        } catch (Exception ignored) { }
+                    }
+                }
+            }
+        });
         _viewGraphics(miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
     }
 
