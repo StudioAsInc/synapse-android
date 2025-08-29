@@ -617,7 +617,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						_viewGraphics(body, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, Color.TRANSPARENT);
 						profileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
 						likedByPublisherLayoutHeartIc.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFFFFFFFF));
-						_ImageColor(likedByPublisherLayoutHeartIc, 0xFFE91E63);        
+						_ImageColor(likedByPublisherLayoutHeartIc, 0xFFE91E63);
 						_ImageColor(top_popular_1_fire_ic, 0xFFF50057);
 						_ImageColor(top_popular_2_fire_ic, 0xFFFF5722);
 						_ImageColor(top_popular_3_fire_ic, 0xFFFF9800);
@@ -1123,41 +1123,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								}
 						});
 
-						body.setOnLongClickListener(new View.OnLongClickListener() {
-								@Override
-								public boolean onLongClick(View v) {
-										if (uid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-												PopupMenu popup = new PopupMenu(getContext(), more);
-												popup.getMenu().add("Delete");
-												popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-														@Override
-														public boolean onMenuItemClick(MenuItem item) {
-																if (item.getTitle().equals("Delete")) {
-																		new MaterialAlertDialogBuilder(getContext())
-																		.setTitle("Delete Reply")
-																		.setMessage("Are you sure you want to delete this reply?")
-																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-																				@Override
-																				public void onClick(DialogInterface dialog, int which) {
-																						main.child("posts-comments-replies").child(postKey).child(replyKey).child(key).removeValue();
-																						_data.remove(_position);
-																						notifyItemRemoved(_position);
-																						notifyItemRangeChanged(_position, _data.size());
-																						Toast.makeText(getContext(), "Reply deleted", Toast.LENGTH_SHORT).show();
-																				}
-																		})
-																		.setNegativeButton("Cancel", null)
-																		.show();
-																}
-																return true;
-														}
-												});
-												popup.show();
-										}
-										return true;
-								}
-						});
-
 						profileCard.setOnClickListener(new View.OnClickListener() {
 								@Override
 								public void onClick(View _view) {
@@ -1262,7 +1227,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						replies_layout.setVisibility(View.GONE);
 						profileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
 						likedByPublisherLayoutHeartIc.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFFFFFFFF));
-						_ImageColor(likedByPublisherLayoutHeartIc, 0xFFE91E63);        
+						_ImageColor(likedByPublisherLayoutHeartIc, 0xFFE91E63);
 						_ImageColor(top_popular_1_fire_ic, 0xFFF50057);
 						_ImageColor(top_popular_2_fire_ic, 0xFFFF5722);
 						_ImageColor(top_popular_3_fire_ic, 0xFFFF9800);
@@ -1623,6 +1588,41 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 								}
 						});
 						
+						body.setOnLongClickListener(new View.OnLongClickListener() {
+								@Override
+								public boolean onLongClick(View v) {
+										if (uid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+												PopupMenu popup = new PopupMenu(getContext(), more);
+												popup.getMenu().add("Delete");
+												popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+														@Override
+														public boolean onMenuItemClick(MenuItem item) {
+																if (item.getTitle().equals("Delete")) {
+																		new MaterialAlertDialogBuilder(getContext())
+																		.setTitle("Delete Reply")
+																		.setMessage("Are you sure you want to delete this reply?")
+																		.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+																				@Override
+																				public void onClick(DialogInterface dialog, int which) {
+																						main.child("posts-comments-replies").child(postKey).child(replyKey).child(key).removeValue();
+																						_data.remove(_position);
+																						notifyItemRemoved(_position);
+																						notifyItemRangeChanged(_position, _data.size());
+																						Toast.makeText(getContext(), "Reply deleted", Toast.LENGTH_SHORT).show();
+																				}
+																		})
+																		.setNegativeButton("Cancel", null)
+																		.show();
+																}
+																return true;
+														}
+												});
+												popup.show();
+										}
+										return true;
+								}
+						});
+
 						profileCard.setOnClickListener(new View.OnClickListener() {
 								@Override
 								public void onClick(View _view) {
@@ -1657,7 +1657,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 				comment_send_layout.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)75, 0xFFF5F5F5));
 				profile_image_bg_2_x2.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
 				_viewGraphics(comment_send_button, 0xFFF50057, 0xFFAD1457, 300, 0, Color.TRANSPARENT);
-				_ImageColor(comment_send_button, 0xFFFFFFFF);        
+				_ImageColor(comment_send_button, 0xFFFFFFFF);
 				_viewGraphics(emoji1, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
 				_viewGraphics(emoji2, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
 				_viewGraphics(emoji3, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
