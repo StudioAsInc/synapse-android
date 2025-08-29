@@ -79,7 +79,7 @@ import java.util.concurrent.Executors;
 import android.os.Handler;
 import android.os.Looper;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements PublicPostsListAdapter.HeaderAdapterListener {
 
     private FirebaseDatabase _firebase;
     private DatabaseReference udb;
@@ -95,29 +95,10 @@ public class HomeFragment extends Fragment {
     private ArrayList<HashMap<String, Object>> storiesList = new ArrayList<>();
     private ArrayList<HashMap<String, Object>> PostsList = new ArrayList<>();
 
-    private CoordinatorLayout m_coordinator_layout;
     private LinearLayout loadingBody;
-    private AppBarLayout m_coordinator_layout_appbar;
     private SwipeRefreshLayout swipeLayout;
-    private LinearLayout m_coordinator_layout_collapsing_toolbar_body;
-    private LinearLayout stories;
-    private LinearLayout miniPostLayout;
-    private HorizontalScrollView miniPostLayoutFiltersScroll;
-    private RecyclerView storiesView;
     private RecyclerView PublicPostsList;
     private TextView PublicPostsListNotFound;
-    private CardView miniPostLayoutProfileCard;
-    private EditText miniPostLayoutTextPostInput;
-    private ImageView miniPostLayoutProfileImage;
-    private ImageView miniPostLayoutImagePost;
-    private ImageView miniPostLayoutVideoPost;
-    private ImageView miniPostLayoutTextPost;
-    private ImageView miniPostLayoutMoreButton;
-    private TextView miniPostLayoutTextPostPublish;
-    private TextView miniPostLayoutFiltersScrollBodyFilterLOCAL;
-    private TextView miniPostLayoutFiltersScrollBodyFilterPUBLIC;
-    private TextView miniPostLayoutFiltersScrollBodyFilterFOLLOWED;
-    private TextView miniPostLayoutFiltersScrollBodyFilterFAVORITE;
 	private ProgressBar loading_bar;
 
     private Intent intent = new Intent();
@@ -147,205 +128,78 @@ public class HomeFragment extends Fragment {
     }
 
     private void initialize(View view) {
-        m_coordinator_layout = view.findViewById(R.id.m_coordinator_layout);
-        loadingBody = view.findViewById(R.id.loadingBody);
-        m_coordinator_layout_appbar = view.findViewById(R.id.m_coordinator_layout_appbar);
-        swipeLayout = view.findViewById(R.id.swipeLayout);
-        m_coordinator_layout_collapsing_toolbar_body = view.findViewById(R.id.m_coordinator_layout_collapsing_toolbar_body);
-        stories = view.findViewById(R.id.stories);
-        miniPostLayout = view.findViewById(R.id.miniPostLayout);
-        miniPostLayoutFiltersScroll = view.findViewById(R.id.miniPostLayoutFiltersScroll);
-        storiesView = view.findViewById(R.id.storiesView);
-        miniPostLayoutProfileCard = view.findViewById(R.id.miniPostLayoutProfileCard);
-        miniPostLayoutTextPostInput = view.findViewById(R.id.miniPostLayoutTextPostInput);
-        miniPostLayoutProfileImage = view.findViewById(R.id.miniPostLayoutProfileImage);
-        miniPostLayoutImagePost = view.findViewById(R.id.miniPostLayoutImagePost);
-        miniPostLayoutVideoPost = view.findViewById(R.id.miniPostLayoutVideoPost);
-        miniPostLayoutTextPost = view.findViewById(R.id.miniPostLayoutTextPost);
-        miniPostLayoutMoreButton = view.findViewById(R.id.miniPostLayoutMoreButton);
-        miniPostLayoutTextPostPublish = view.findViewById(R.id.miniPostLayoutTextPostPublish);
-        miniPostLayoutFiltersScrollBodyFilterLOCAL = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterLOCAL);
-        miniPostLayoutFiltersScrollBodyFilterPUBLIC = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterPUBLIC);
-        miniPostLayoutFiltersScrollBodyFilterFOLLOWED = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFOLLOWED);
-        miniPostLayoutFiltersScrollBodyFilterFAVORITE = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFAVORITE);
         PublicPostsList = view.findViewById(R.id.PublicPostsList);
         PublicPostsListNotFound = view.findViewById(R.id.PublicPostsListNotFound);
 		loading_bar = view.findViewById(R.id.loading_bar);
+        swipeLayout = view.findViewById(R.id.swipeLayout);
+        loadingBody = view.findViewById(R.id.loadingBody);
 
         vbr = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
         auth = FirebaseAuth.getInstance();
 
         swipeLayout.setOnRefreshListener(() -> {
             _loadPosts(currentPostFilter);
-            _loadStories();
-        });
-
-        miniPostLayoutTextPostInput.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-                final String _charSeq = _param1.toString();
-                if (_charSeq.length() == 0) {
-                    miniPostLayoutTextPostPublish.setVisibility(View.GONE);
-                } else {
-                    _viewGraphics(miniPostLayoutTextPostPublish, getResources().getColor(R.color.colorPrimary), 0xFFC5CAE9, 300, 0, Color.TRANSPARENT);
-                    miniPostLayoutTextPostPublish.setVisibility(View.VISIBLE);
-                }
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {}
-
-            @Override
-            public void afterTextChanged(Editable _param1) {}
-        });
-
-        miniPostLayoutImagePost.setOnClickListener(v -> {
-            intent.setClass(getContext(), CreatePostActivity.class);
-            startActivity(intent);
-        });
-
-        miniPostLayoutVideoPost.setOnClickListener(v -> {
-            intent.setClass(getContext(), CreateLineVideoActivity.class);
-            startActivity(intent);
-        });
-
-        miniPostLayoutTextPostPublish.setOnClickListener(v -> {
-            if (miniPostLayoutTextPostInput.getText().toString().trim().equals("")) {
-                Toast.makeText(getContext(), getResources().getString(R.string.please_enter_text), Toast.LENGTH_SHORT).show();
-            } else {
-                if (!(miniPostLayoutTextPostInput.getText().toString().length() > 1500)) {
-                    String uniqueKey = udb.push().getKey();
-                    cc = Calendar.getInstance();
-                    createPostMap = new HashMap<>();
-                    createPostMap.put("key", uniqueKey);
-                    createPostMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                    createPostMap.put("post_text", miniPostLayoutTextPostInput.getText().toString().trim());
-                    createPostMap.put("post_type", "TEXT");
-                    createPostMap.put("post_hide_views_count", "false");
-                    createPostMap.put("post_region", "none");
-                    createPostMap.put("post_hide_like_count", "false");
-                    createPostMap.put("post_hide_comments_count", "false");
-                    createPostMap.put("post_visibility", "public");
-                    createPostMap.put("post_disable_favorite", "false");
-                    createPostMap.put("post_disable_comments", "false");
-                    createPostMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
-                    FirebaseDatabase.getInstance().getReference("skyline/posts").child(uniqueKey).updateChildren(createPostMap, (databaseError, databaseReference) -> {
-                        if (databaseError == null) {
-                            Toast.makeText(getContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
-                            currentPostFilter = "PUBLIC";
-                            _loadPosts(currentPostFilter);
-                        } else {
-                            Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    miniPostLayoutTextPostInput.setText("");
-                }
-            }
-            vbr.vibrate((long)(48));
-        });
-
-        miniPostLayoutFiltersScrollBodyFilterLOCAL.setOnClickListener(v -> {
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFFFFFFFF);
-            miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-            miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-            miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-            currentPostFilter = "LOCAL";
-            _loadPosts(currentPostFilter);
-        });
-
-        miniPostLayoutFiltersScrollBodyFilterPUBLIC.setOnClickListener(v -> {
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF1A237E, 300, 0, Color.TRANSPARENT);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-            miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
-            miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-            miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-            currentPostFilter = "PUBLIC";
-            _loadPosts(currentPostFilter);
-        });
-
-        miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setOnClickListener(v -> {
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, getResources().getColor(R.color.colorPrimary), 0xFF616161, 300, 0, Color.TRANSPARENT);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-            miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-            miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFFFFFFFF);
-            miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-            currentPostFilter = "FOLLOWED";
-            _loadPosts(currentPostFilter);
-        });
-
-        miniPostLayoutFiltersScrollBodyFilterFAVORITE.setOnClickListener(v -> {
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-            _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-            miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-            miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-            miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-            miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFFFFFFFF);
-            currentPostFilter = "FAVORITE";
-            _loadPosts(currentPostFilter);
         });
     }
 
     private void initializeLogic() {
         _loadPosts(currentPostFilter);
-        _loadStories();
-
-        DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-        getReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()) {
-                    if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-                        Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(miniPostLayoutProfileImage);
-                    } else {
-                        miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-                    }
-                } else {
-                    miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-                }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(getContext(), "Error fetching user profile: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-            }
-        });
-
-        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-        miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-        miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
-        miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-        miniPostLayoutTextPostPublish.setVisibility(View.GONE);
-        miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-        _ImageColor(miniPostLayoutImagePost, 0xFF445E91);
-        _ImageColor(miniPostLayoutVideoPost, 0xFF445E91);
-        _ImageColor(miniPostLayoutTextPost, 0xFF445E91);
-        _ImageColor(miniPostLayoutMoreButton, 0xFF445E91);
-        _viewGraphics(miniPostLayoutImagePost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutVideoPost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutTextPost, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-        _viewGraphics(miniPostLayoutMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 1, 0xFFEEEEEE);
-
-        storiesView.setAdapter(new StoriesViewAdapter(storiesList));
-        storiesView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false));
         PublicPostsList.setLayoutManager(new LinearLayoutManager(getContext()));
-        PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList));
-        _viewGraphics(miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
+        PublicPostsList.setAdapter(new PublicPostsListAdapter(new ArrayList<>(), this));
     }
+
+	@Override
+	public void onImagePostClick() {
+		intent.setClass(getContext(), CreatePostActivity.class);
+		startActivity(intent);
+	}
+
+	@Override
+	public void onVideoPostClick() {
+		intent.setClass(getContext(), CreateLineVideoActivity.class);
+		startActivity(intent);
+	}
+
+	@Override
+	public void onTextPostClick(String text) {
+		if (text.trim().equals("")) {
+			Toast.makeText(getContext(), getResources().getString(R.string.please_enter_text), Toast.LENGTH_SHORT).show();
+		} else {
+			if (!(text.length() > 1500)) {
+				String uniqueKey = udb.push().getKey();
+				cc = Calendar.getInstance();
+				createPostMap = new HashMap<>();
+				createPostMap.put("key", uniqueKey);
+				createPostMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+				createPostMap.put("post_text", text.trim());
+				createPostMap.put("post_type", "TEXT");
+				createPostMap.put("post_hide_views_count", "false");
+				createPostMap.put("post_region", "none");
+				createPostMap.put("post_hide_like_count", "false");
+				createPostMap.put("post_hide_comments_count", "false");
+				createPostMap.put("post_visibility", "public");
+				createPostMap.put("post_disable_favorite", "false");
+				createPostMap.put("post_disable_comments", "false");
+				createPostMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
+				FirebaseDatabase.getInstance().getReference("skyline/posts").child(uniqueKey).updateChildren(createPostMap, (databaseError, databaseReference) -> {
+					if (databaseError == null) {
+						Toast.makeText(getContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
+						currentPostFilter = "PUBLIC";
+						_loadPosts(currentPostFilter);
+					} else {
+						Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+					}
+				});
+			}
+		}
+		vbr.vibrate((long)(48));
+	}
+
+	@Override
+	public void onFilterClick(String filter) {
+		currentPostFilter = filter;
+		_loadPosts(currentPostFilter);
+	}
 
     public void _ImageColor(final ImageView _image, final int _color) {
         _image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
@@ -606,9 +460,14 @@ public class HomeFragment extends Fragment {
             });
         }
 
+		ArrayList<HashMap<String, Object>> adapterList = new ArrayList<>(PostsList);
+		adapterList.add(0, new HashMap<>()); // Add dummy item for header
+
         if (PublicPostsList.getAdapter() == null || !(PublicPostsList.getAdapter() instanceof PublicPostsListAdapter)) {
-            PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList));
+            PublicPostsList.setAdapter(new PublicPostsListAdapter(adapterList));
         } else {
+            ((PublicPostsListAdapter)PublicPostsList.getAdapter())._data.clear();
+            ((PublicPostsListAdapter)PublicPostsList.getAdapter())._data.addAll(adapterList);
             ((PublicPostsListAdapter)PublicPostsList.getAdapter()).notifyDataSetChanged();
         }
 
@@ -838,261 +697,414 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    public class PublicPostsListAdapter extends RecyclerView.Adapter<PublicPostsListAdapter.ViewHolder> {
+    public class PublicPostsListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+		private static final int TYPE_HEADER = 0;
+		private static final int TYPE_ITEM = 1;
+
+		public interface HeaderAdapterListener {
+			void onImagePostClick();
+			void onVideoPostClick();
+			void onTextPostClick(String text);
+			void onFilterClick(String filter);
+		}
+
         ArrayList<HashMap<String, Object>> _data;
-        public PublicPostsListAdapter(ArrayList<HashMap<String, Object>> _arr) {
+		private HeaderAdapterListener listener;
+
+        public PublicPostsListAdapter(ArrayList<HashMap<String, Object>> _arr, HeaderAdapterListener listener) {
             _data = _arr;
+			this.listener = listener;
+        }
+
+		@Override
+		public int getItemViewType(int position) {
+			if (position == 0) {
+				return TYPE_HEADER;
+			}
+			return TYPE_ITEM;
+		}
+
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+			if (viewType == TYPE_HEADER) {
+				View _v = getLayoutInflater().inflate(R.layout.home_feed_header, parent, false);
+				return new HeaderViewHolder(_v);
+			}
+            View _v = getLayoutInflater().inflate(R.layout.synapse_post_cv, parent, false);
+            return new ItemViewHolder(_v);
         }
         @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            LayoutInflater _inflater = getLayoutInflater();
-            View _v = _inflater.inflate(R.layout.synapse_post_cv, null);
-            RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            _v.setLayoutParams(_lp);
-            return new ViewHolder(_v);
-        }
-        @Override
-        public void onBindViewHolder(ViewHolder _holder, final int _position) {
-            View _view = _holder.itemView;
-            final LinearLayout body = _view.findViewById(R.id.body);
-            final ImageView topMoreButton = _view.findViewById(R.id.topMoreButton);
-            final androidx.cardview.widget.CardView userInfoProfileCard = _view.findViewById(R.id.userInfoProfileCard);
-            final ImageView userInfoProfileImage = _view.findViewById(R.id.userInfoProfileImage);
-            final TextView userInfoUsername = _view.findViewById(R.id.userInfoUsername);
-            final ImageView userInfoGenderBadge = _view.findViewById(R.id.userInfoGenderBadge);
-            final ImageView userInfoUsernameVerifiedBadge = _view.findViewById(R.id.userInfoUsernameVerifiedBadge);
-            final TextView postPublishDate = _view.findViewById(R.id.postPublishDate);
-            final ImageView postPrivateStateIcon = _view.findViewById(R.id.postPrivateStateIcon);
-            final TextView postMessageTextMiddle = _view.findViewById(R.id.postMessageTextMiddle);
-            final ImageView postImage = _view.findViewById(R.id.postImage);
-            final LinearLayout likeButton = _view.findViewById(R.id.likeButton);
-            final LinearLayout commentsButton = _view.findViewById(R.id.commentsButton);
-            final ImageView favoritePostButton = _view.findViewById(R.id.favoritePostButton);
-            final ImageView likeButtonIc = _view.findViewById(R.id.likeButtonIc);
-            final TextView likeButtonCount = _view.findViewById(R.id.likeButtonCount);
-            final TextView commentsButtonCount = _view.findViewById(R.id.commentsButtonCount);
+        public void onBindViewHolder(RecyclerView.ViewHolder _holder, final int _position) {
+			if (_holder instanceof HeaderViewHolder) {
+				HeaderViewHolder headerHolder = (HeaderViewHolder) _holder;
+				headerHolder.storiesView.setAdapter(new StoriesViewAdapter(storiesList));
+				headerHolder.storiesView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false));
+				_loadStories();
 
-            body.setVisibility(View.GONE);
-            userInfoProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
-            _ImageColor(postPrivateStateIcon, 0xFF616161);
-            _viewGraphics(topMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
+				headerHolder.miniPostLayoutTextPostInput.addTextChangedListener(new TextWatcher() {
+					@Override
+					public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
+						final String _charSeq = _param1.toString();
+						if (_charSeq.length() == 0) {
+							headerHolder.miniPostLayoutTextPostPublish.setVisibility(View.GONE);
+						} else {
+							_viewGraphics(headerHolder.miniPostLayoutTextPostPublish, getResources().getColor(R.color.colorPrimary), 0xFFC5CAE9, 300, 0, Color.TRANSPARENT);
+							headerHolder.miniPostLayoutTextPostPublish.setVisibility(View.VISIBLE);
+						}
+					}
+					@Override
+					public void beforeTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {}
+					@Override
+					public void afterTextChanged(Editable _param1) {}
+				});
 
-            postImage.setVisibility(View.GONE);
+				headerHolder.miniPostLayoutImagePost.setOnClickListener(v -> listener.onImagePostClick());
 
-            if (_data.get(_position).containsKey("post_text")) {
-                String postText = _data.get(_position).get("post_text").toString();
-                com.synapse.social.studioasinc.styling.MarkdownRenderer.get(postMessageTextMiddle.getContext()).render(postMessageTextMiddle, postText);
-                postMessageTextMiddle.setVisibility(View.VISIBLE);
-            } else {
-                postMessageTextMiddle.setVisibility(View.GONE);
-            }
+				headerHolder.miniPostLayoutVideoPost.setOnClickListener(v -> listener.onVideoPostClick());
 
-            if (_data.get(_position).containsKey("post_image")) {
-                Glide.with(getContext()).load(Uri.parse(_data.get(_position).get("post_image").toString())).into(postImage);
-                postImage.setOnClickListener(_view1 -> _OpenWebView(_data.get(_position).get("post_image").toString()));
-                postImage.setVisibility(View.VISIBLE);
-            } else {
-                postImage.setVisibility(View.GONE);
-            }
+				headerHolder.miniPostLayoutTextPostPublish.setOnClickListener(v -> {
+					listener.onTextPostClick(headerHolder.miniPostLayoutTextPostInput.getText().toString());
+					headerHolder.miniPostLayoutTextPostInput.setText("");
+				});
 
-            if (_data.get(_position).get("post_hide_like_count").toString().equals("true")) {
-                likeButtonCount.setVisibility(View.GONE);
-            } else {
-                likeButtonCount.setVisibility(View.VISIBLE);
-            }
-            if (_data.get(_position).get("post_hide_comments_count").toString().equals("true")) {
-                commentsButtonCount.setVisibility(View.GONE);
-            } else {
-                commentsButtonCount.setVisibility(View.VISIBLE);
-            }
-            if (_data.get(_position).get("post_disable_comments").toString().equals("true")) {
-                commentsButton.setVisibility(View.GONE);
-            } else {
-                commentsButton.setVisibility(View.VISIBLE);
-            }
-            _setTime(Double.parseDouble(_data.get(_position).get("publish_date").toString()), postPublishDate);
+				DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+				getReference.addValueEventListener(new ValueEventListener() {
+					@Override
+					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+						if(dataSnapshot.exists()) {
+							if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+								Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(headerHolder.miniPostLayoutProfileImage);
+							} else {
+								headerHolder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+							}
+						} else {
+							headerHolder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+						}
+					}
+					@Override
+					public void onCancelled(@NonNull DatabaseError databaseError) {
+						Toast.makeText(getContext(), "Error fetching user profile: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+						headerHolder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+					}
+				});
 
-            final String postUid = _data.get(_position).get("uid").toString();
-            if (UserInfoCacheMap.containsKey("uid-".concat(postUid))) {
-                _updatePostViewVisibility(body, postPrivateStateIcon, postUid, _data.get(_position).get("post_visibility").toString());
-                _displayUserInfoFromCache(postUid, userInfoProfileImage, userInfoUsername, userInfoGenderBadge, userInfoUsernameVerifiedBadge);
-            } else {
-                ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-                Handler mMainHandler = new Handler(Looper.getMainLooper());
-                mExecutorService.execute(() -> {
-                    DatabaseReference userRef = _firebase.getReference().child("skyline/users").child(postUid);
-                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            if(dataSnapshot.exists()) {
-                                UserInfoCacheMap.put("uid-".concat(postUid), postUid);
-                                UserInfoCacheMap.put("banned-".concat(postUid), dataSnapshot.child("banned").getValue(String.class));
-                                UserInfoCacheMap.put("nickname-".concat(postUid), dataSnapshot.child("nickname").getValue(String.class));
-                                UserInfoCacheMap.put("username-".concat(postUid), dataSnapshot.child("username").getValue(String.class));
-                                UserInfoCacheMap.put("avatar-".concat(postUid), dataSnapshot.child("avatar").getValue(String.class));
-                                UserInfoCacheMap.put("gender-".concat(postUid), dataSnapshot.child("gender").getValue(String.class));
-                                UserInfoCacheMap.put("verify-".concat(postUid), dataSnapshot.child("verify").getValue(String.class));
-                                UserInfoCacheMap.put("acc_type-".concat(postUid), dataSnapshot.child("account_type").getValue(String.class));
-                                mMainHandler.post(() -> {
-                                    _updatePostViewVisibility(body, postPrivateStateIcon, postUid, _data.get(_position).get("post_visibility").toString());
-                                    _displayUserInfoFromCache(postUid, userInfoProfileImage, userInfoUsername, userInfoGenderBadge, userInfoUsernameVerifiedBadge);
-                                });
-                            } else {
-                                mMainHandler.post(() -> {
-                                    userInfoProfileImage.setImageResource(R.drawable.avatar);
-                                    userInfoUsername.setText("Unknown User");
-                                    userInfoGenderBadge.setVisibility(View.GONE);
-                                    userInfoUsernameVerifiedBadge.setVisibility(View.GONE);
-                                    body.setVisibility(View.GONE);
-                                });
-                            }
-                        }
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                            mMainHandler.post(() -> {
-                                userInfoProfileImage.setImageResource(R.drawable.avatar);
-                                userInfoUsername.setText("Error User");
-                                userInfoGenderBadge.setVisibility(View.GONE);
-                                userInfoUsernameVerifiedBadge.setVisibility(View.GONE);
-                                body.setVisibility(View.GONE);
-                            });
-                        }
-                    });
-                });
-            }
+				headerHolder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setOnClickListener(v -> {
+					listener.onFilterClick("LOCAL");
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterLOCAL, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFFFFFFFF);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
+				});
 
-            DatabaseReference getLikeCheck = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-            DatabaseReference getCommentsCount = _firebase.getReference("skyline/posts-comments").child(_data.get(_position).get("key").toString());
-            DatabaseReference getLikesCount = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString());
-            DatabaseReference getFavoriteCheck = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position).get("key").toString());
+				headerHolder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setOnClickListener(v -> {
+					listener.onFilterClick("PUBLIC");
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF1A237E, 300, 0, Color.TRANSPARENT);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
+				});
 
-            getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if(dataSnapshot.exists()) {
-                        likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
-                    } else {
-                        likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
-                    }
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {}
-            });
-            getCommentsCount.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    _setCount(commentsButtonCount, dataSnapshot.getChildrenCount());
-                }
-                @Override
-                public void onCancelled(DatabaseError databaseError) {}
-            });
-            getLikesCount.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    long count = dataSnapshot.getChildrenCount();
-                    _setCount(likeButtonCount, count);
-                    postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf(count));
-                }
-                @Override
-                public void onCancelled(DatabaseError databaseError) {}
-            });
-            getFavoriteCheck.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if(dataSnapshot.exists()) {
-                        favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
-                    } else {
-                        favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
-                    }
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {}
-            });
+				headerHolder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setOnClickListener(v -> {
+					listener.onFilterClick("FOLLOWED");
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, getResources().getColor(R.color.colorPrimary), 0xFF616161, 300, 0, Color.TRANSPARENT);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFFFFFFFF);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
+				});
 
-            likeButton.setOnClickListener(_view1 -> {
-                DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.exists()) {
-                            likeRef.removeValue();
-                            double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
-                            postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes - 1)));
-                            _setCount(likeButtonCount, currentLikes - 1);
-                            likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
-                        } else {
-                            likeRef.setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                            com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get(_position).get("key").toString(), _data.get(_position).get("uid").toString());
-                            double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
-                            postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
-                            _setCount(likeButtonCount, currentLikes + 1);
-                            likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {}
-                });
-                vbr.vibrate((long)(24));
-            });
-            commentsButton.setOnClickListener(_view1 -> {
-                Bundle sendPostKey = new Bundle();
-                sendPostKey.putString("postKey", _data.get(_position).get("key").toString());
-                sendPostKey.putString("postPublisherUID", _data.get(_position).get("uid").toString());
-                sendPostKey.putString("postPublisherAvatar", UserInfoCacheMap.get("avatar-".concat(_data.get(_position).get("uid").toString())).toString());
-                PostCommentsBottomSheetDialog postCommentsBottomSheet = new PostCommentsBottomSheetDialog();
-                postCommentsBottomSheet.setArguments(sendPostKey);
-                postCommentsBottomSheet.show(getParentFragmentManager(), postCommentsBottomSheet.getTag());
-            });
-            userInfoProfileImage.setOnClickListener(_view1 -> {
-                intent.setClass(getContext(), ProfileActivity.class);
-                intent.putExtra("uid", _data.get(_position).get("uid").toString());
-                startActivity(intent);
-            });
-            favoritePostButton.setOnClickListener(_view1 -> {
-                DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position).get("key").toString());
-                favoriteRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.exists()) {
-                            favoriteRef.removeValue();
-                            favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
-                        } else {
-                            favoriteRef.setValue(_data.get(_position).get("key").toString());
-                            favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {}
-                });
-                vbr.vibrate((long)(24));
-            });
-            topMoreButton.setOnClickListener(_view1 -> {
-                Bundle sendPostKey = new Bundle();
-                sendPostKey.putString("postKey", _data.get(_position).get("key").toString());
-                sendPostKey.putString("postPublisherUID", _data.get(_position).get("uid").toString());
-                sendPostKey.putString("postType", _data.get(_position).get("post_type").toString());
-                if (_data.get(_position).containsKey("post_text") && _data.get(_position).get("post_text") != null) {
-                    sendPostKey.putString("postText", _data.get(_position).get("post_text").toString());
-                } else {
-                    sendPostKey.putString("postText", "");
-                }
-                if (_data.get(_position).containsKey("post_image") && _data.get(_position).get("post_image") != null && !_data.get(_position).get("post_image").toString().isEmpty()) {
-                    sendPostKey.putString("postImg", _data.get(_position).get("post_image").toString());
-                }
-                PostMoreBottomSheetDialog postMoreBottomSheetDialog = new PostMoreBottomSheetDialog();
-                postMoreBottomSheetDialog.setArguments(sendPostKey);
-                postMoreBottomSheetDialog.show(getParentFragmentManager(), postMoreBottomSheetDialog.getTag());
-            });
+				headerHolder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setOnClickListener(v -> {
+					listener.onFilterClick("FAVORITE");
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
+					_viewGraphics(headerHolder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
+					headerHolder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFFFFFFFF);
+				});
+			} else if (_holder instanceof ItemViewHolder) {
+				ItemViewHolder itemHolder = (ItemViewHolder) _holder;
+				View _view = itemHolder.itemView;
+				final LinearLayout body = _view.findViewById(R.id.body);
+				final ImageView topMoreButton = _view.findViewById(R.id.topMoreButton);
+				final androidx.cardview.widget.CardView userInfoProfileCard = _view.findViewById(R.id.userInfoProfileCard);
+				final ImageView userInfoProfileImage = _view.findViewById(R.id.userInfoProfileImage);
+				final TextView userInfoUsername = _view.findViewById(R.id.userInfoUsername);
+				final ImageView userInfoGenderBadge = _view.findViewById(R.id.userInfoGenderBadge);
+				final ImageView userInfoUsernameVerifiedBadge = _view.findViewById(R.id.userInfoUsernameVerifiedBadge);
+				final TextView postPublishDate = _view.findViewById(R.id.postPublishDate);
+				final ImageView postPrivateStateIcon = _view.findViewById(R.id.postPrivateStateIcon);
+				final TextView postMessageTextMiddle = _view.findViewById(R.id.postMessageTextMiddle);
+				final ImageView postImage = _view.findViewById(R.id.postImage);
+				final LinearLayout likeButton = _view.findViewById(R.id.likeButton);
+				final LinearLayout commentsButton = _view.findViewById(R.id.commentsButton);
+				final ImageView favoritePostButton = _view.findViewById(R.id.favoritePostButton);
+				final ImageView likeButtonIc = _view.findViewById(R.id.likeButtonIc);
+				final TextView likeButtonCount = _view.findViewById(R.id.likeButtonCount);
+				final TextView commentsButtonCount = _view.findViewById(R.id.commentsButtonCount);
+
+				body.setVisibility(View.GONE);
+				userInfoProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
+				_ImageColor(postPrivateStateIcon, 0xFF616161);
+				_viewGraphics(topMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
+
+				postImage.setVisibility(View.GONE);
+
+				if (_data.get(_position - 1).containsKey("post_text")) {
+					String postText = _data.get(_position - 1).get("post_text").toString();
+					com.synapse.social.studioasinc.styling.MarkdownRenderer.get(postMessageTextMiddle.getContext()).render(postMessageTextMiddle, postText);
+					postMessageTextMiddle.setVisibility(View.VISIBLE);
+				} else {
+					postMessageTextMiddle.setVisibility(View.GONE);
+				}
+
+				if (_data.get(_position - 1).containsKey("post_image")) {
+					Glide.with(getContext()).load(Uri.parse(_data.get(_position - 1).get("post_image").toString())).into(postImage);
+					postImage.setOnClickListener(_view1 -> _OpenWebView(_data.get(_position - 1).get("post_image").toString()));
+					postImage.setVisibility(View.VISIBLE);
+				} else {
+					postImage.setVisibility(View.GONE);
+				}
+
+				if (_data.get(_position - 1).get("post_hide_like_count").toString().equals("true")) {
+					likeButtonCount.setVisibility(View.GONE);
+				} else {
+					likeButtonCount.setVisibility(View.VISIBLE);
+				}
+				if (_data.get(_position - 1).get("post_hide_comments_count").toString().equals("true")) {
+					commentsButtonCount.setVisibility(View.GONE);
+				} else {
+					commentsButtonCount.setVisibility(View.VISIBLE);
+				}
+				if (_data.get(_position - 1).get("post_disable_comments").toString().equals("true")) {
+					commentsButton.setVisibility(View.GONE);
+				} else {
+					commentsButton.setVisibility(View.VISIBLE);
+				}
+				_setTime(Double.parseDouble(_data.get(_position - 1).get("publish_date").toString()), postPublishDate);
+
+				final String postUid = _data.get(_position - 1).get("uid").toString();
+				if (UserInfoCacheMap.containsKey("uid-".concat(postUid))) {
+					_updatePostViewVisibility(body, postPrivateStateIcon, postUid, _data.get(_position - 1).get("post_visibility").toString());
+					_displayUserInfoFromCache(postUid, userInfoProfileImage, userInfoUsername, userInfoGenderBadge, userInfoUsernameVerifiedBadge);
+				} else {
+					ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
+					Handler mMainHandler = new Handler(Looper.getMainLooper());
+					mExecutorService.execute(() -> {
+						DatabaseReference userRef = _firebase.getReference().child("skyline/users").child(postUid);
+						userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+							@Override
+							public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+								if(dataSnapshot.exists()) {
+									UserInfoCacheMap.put("uid-".concat(postUid), postUid);
+									UserInfoCacheMap.put("banned-".concat(postUid), dataSnapshot.child("banned").getValue(String.class));
+									UserInfoCacheMap.put("nickname-".concat(postUid), dataSnapshot.child("nickname").getValue(String.class));
+									UserInfoCacheMap.put("username-".concat(postUid), dataSnapshot.child("username").getValue(String.class));
+									UserInfoCacheMap.put("avatar-".concat(postUid), dataSnapshot.child("avatar").getValue(String.class));
+									UserInfoCacheMap.put("gender-".concat(postUid), dataSnapshot.child("gender").getValue(String.class));
+									UserInfoCacheMap.put("verify-".concat(postUid), dataSnapshot.child("verify").getValue(String.class));
+									UserInfoCacheMap.put("acc_type-".concat(postUid), dataSnapshot.child("account_type").getValue(String.class));
+									mMainHandler.post(() -> {
+										_updatePostViewVisibility(body, postPrivateStateIcon, postUid, _data.get(_position - 1).get("post_visibility").toString());
+										_displayUserInfoFromCache(postUid, userInfoProfileImage, userInfoUsername, userInfoGenderBadge, userInfoUsernameVerifiedBadge);
+									});
+								} else {
+									mMainHandler.post(() -> {
+										userInfoProfileImage.setImageResource(R.drawable.avatar);
+										userInfoUsername.setText("Unknown User");
+										userInfoGenderBadge.setVisibility(View.GONE);
+										userInfoUsernameVerifiedBadge.setVisibility(View.GONE);
+										body.setVisibility(View.GONE);
+									});
+								}
+							}
+							@Override
+							public void onCancelled(@NonNull DatabaseError databaseError) {
+								mMainHandler.post(() -> {
+									userInfoProfileImage.setImageResource(R.drawable.avatar);
+									userInfoUsername.setText("Error User");
+									userInfoGenderBadge.setVisibility(View.GONE);
+									userInfoUsernameVerifiedBadge.setVisibility(View.GONE);
+									body.setVisibility(View.GONE);
+								});
+							}
+						});
+					});
+				}
+
+				DatabaseReference getLikeCheck = _firebase.getReference("skyline/posts-likes").child(_data.get(_position - 1).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+				DatabaseReference getCommentsCount = _firebase.getReference("skyline/posts-comments").child(_data.get(_position - 1).get("key").toString());
+				DatabaseReference getLikesCount = _firebase.getReference("skyline/posts-likes").child(_data.get(_position - 1).get("key").toString());
+				DatabaseReference getFavoriteCheck = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position - 1).get("key").toString());
+
+				getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
+					@Override
+					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+						if(dataSnapshot.exists()) {
+							likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
+						} else {
+							likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
+						}
+					}
+					@Override
+					public void onCancelled(@NonNull DatabaseError databaseError) {}
+				});
+				getCommentsCount.addListenerForSingleValueEvent(new ValueEventListener() {
+					@Override
+					public void onDataChange(DataSnapshot dataSnapshot) {
+						_setCount(commentsButtonCount, dataSnapshot.getChildrenCount());
+					}
+					@Override
+					public void onCancelled(DatabaseError databaseError) {}
+				});
+				getLikesCount.addListenerForSingleValueEvent(new ValueEventListener() {
+					@Override
+					public void onDataChange(DataSnapshot dataSnapshot) {
+						long count = dataSnapshot.getChildrenCount();
+						_setCount(likeButtonCount, count);
+						postLikeCountCache.put(_data.get(_position - 1).get("key").toString(), String.valueOf(count));
+					}
+					@Override
+					public void onCancelled(DatabaseError databaseError) {}
+				});
+				getFavoriteCheck.addListenerForSingleValueEvent(new ValueEventListener() {
+					@Override
+					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+						if(dataSnapshot.exists()) {
+							favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
+						} else {
+							favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
+						}
+					}
+					@Override
+					public void onCancelled(@NonNull DatabaseError databaseError) {}
+				});
+
+				likeButton.setOnClickListener(_view1 -> {
+					DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get(_position - 1).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+					likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+						@Override
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+							if(dataSnapshot.exists()) {
+								likeRef.removeValue();
+								double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position - 1).get("key").toString()).toString());
+								postLikeCountCache.put(_data.get(_position - 1).get("key").toString(), String.valueOf((long)(currentLikes - 1)));
+								_setCount(likeButtonCount, currentLikes - 1);
+								likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
+							} else {
+								likeRef.setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+								com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get(_position - 1).get("key").toString(), _data.get(_position - 1).get("uid").toString());
+								double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position - 1).get("key").toString()).toString());
+								postLikeCountCache.put(_data.get(_position - 1).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
+								_setCount(likeButtonCount, currentLikes + 1);
+								likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
+							}
+						}
+						@Override
+						public void onCancelled(@NonNull DatabaseError databaseError) {}
+					});
+					vbr.vibrate((long)(24));
+				});
+				commentsButton.setOnClickListener(_view1 -> {
+					Bundle sendPostKey = new Bundle();
+					sendPostKey.putString("postKey", _data.get(_position - 1).get("key").toString());
+					sendPostKey.putString("postPublisherUID", _data.get(_position - 1).get("uid").toString());
+					sendPostKey.putString("postPublisherAvatar", UserInfoCacheMap.get("avatar-".concat(_data.get(_position - 1).get("uid").toString())).toString());
+					PostCommentsBottomSheetDialog postCommentsBottomSheet = new PostCommentsBottomSheetDialog();
+					postCommentsBottomSheet.setArguments(sendPostKey);
+					postCommentsBottomSheet.show(getParentFragmentManager(), postCommentsBottomSheet.getTag());
+				});
+				userInfoProfileImage.setOnClickListener(_view1 -> {
+					intent.setClass(getContext(), ProfileActivity.class);
+					intent.putExtra("uid", _data.get(_position - 1).get("uid").toString());
+					startActivity(intent);
+				});
+				favoritePostButton.setOnClickListener(_view1 -> {
+					DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position - 1).get("key").toString());
+					favoriteRef.addListenerForSingleValueEvent(new ValueEventListener() {
+						@Override
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+							if(dataSnapshot.exists()) {
+								favoriteRef.removeValue();
+								favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
+							} else {
+								favoriteRef.setValue(_data.get(_position - 1).get("key").toString());
+								favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
+							}
+						}
+						@Override
+						public void onCancelled(@NonNull DatabaseError databaseError) {}
+					});
+					vbr.vibrate((long)(24));
+				});
+				topMoreButton.setOnClickListener(_view1 -> {
+					Bundle sendPostKey = new Bundle();
+					sendPostKey.putString("postKey", _data.get(_position - 1).get("key").toString());
+					sendPostKey.putString("postPublisherUID", _data.get(_position - 1).get("uid").toString());
+					sendPostKey.putString("postType", _data.get(_position - 1).get("post_type").toString());
+					if (_data.get(_position - 1).containsKey("post_text") && _data.get(_position - 1).get("post_text") != null) {
+						sendPostKey.putString("postText", _data.get(_position - 1).get("post_text").toString());
+					} else {
+						sendPostKey.putString("postText", "");
+					}
+					if (_data.get(_position - 1).containsKey("post_image") && _data.get(_position - 1).get("post_image") != null && !_data.get(_position - 1).get("post_image").toString().isEmpty()) {
+						sendPostKey.putString("postImg", _data.get(_position - 1).get("post_image").toString());
+					}
+					PostMoreBottomSheetDialog postMoreBottomSheetDialog = new PostMoreBottomSheetDialog();
+					postMoreBottomSheetDialog.setArguments(sendPostKey);
+					postMoreBottomSheetDialog.show(getParentFragmentManager(), postMoreBottomSheetDialog.getTag());
+				});
+			}
         }
         @Override
         public int getItemCount() {
-            return _data.size();
+            return _data.size() + 1;
         }
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public ViewHolder(View v) {
+        public class ItemViewHolder extends RecyclerView.ViewHolder {
+            public ItemViewHolder(View v) {
                 super(v);
             }
         }
+
+		public class HeaderViewHolder extends RecyclerView.ViewHolder {
+			RecyclerView storiesView;
+			EditText miniPostLayoutTextPostInput;
+			TextView miniPostLayoutTextPostPublish;
+			ImageView miniPostLayoutProfileImage;
+			ImageView miniPostLayoutImagePost;
+			ImageView miniPostLayoutVideoPost;
+			TextView miniPostLayoutFiltersScrollBodyFilterLOCAL;
+			TextView miniPostLayoutFiltersScrollBodyFilterPUBLIC;
+			TextView miniPostLayoutFiltersScrollBodyFilterFOLLOWED;
+			TextView miniPostLayoutFiltersScrollBodyFilterFAVORITE;
+
+			public HeaderViewHolder(View v) {
+				super(v);
+				storiesView = v.findViewById(R.id.storiesView);
+				miniPostLayoutTextPostInput = v.findViewById(R.id.miniPostLayoutTextPostInput);
+				miniPostLayoutTextPostPublish = v.findViewById(R.id.miniPostLayoutTextPostPublish);
+				miniPostLayoutProfileImage = v.findViewById(R.id.miniPostLayoutProfileImage);
+				miniPostLayoutImagePost = v.findViewById(R.id.miniPostLayoutImagePost);
+				miniPostLayoutVideoPost = v.findViewById(R.id.miniPostLayoutVideoPost);
+				miniPostLayoutFiltersScrollBodyFilterLOCAL = v.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterLOCAL);
+				miniPostLayoutFiltersScrollBodyFilterPUBLIC = v.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterPUBLIC);
+				miniPostLayoutFiltersScrollBodyFilterFOLLOWED = v.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFOLLOWED);
+				miniPostLayoutFiltersScrollBodyFilterFAVORITE = v.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFAVORITE);
+			}
+		}
     }
 
     private void _updatePostViewVisibility(LinearLayout body, ImageView postPrivateStateIcon, String postUid, String postVisibility) {

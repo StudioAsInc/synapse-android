@@ -1,26 +1,27 @@
-<LinearLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical"
 	android:id="@+id/_main">
-	<LinearLayout
-		android:id="@+id/body"
+
+	<com.google.android.material.appbar.AppBarLayout
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:background="?attr/colorSurface"
-		android:orientation="vertical">
+		android:layout_height="wrap_content"
+		android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
 		<LinearLayout
 			android:id="@+id/topBar"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
+			android:layout_height="?attr/actionBarSize"
 			android:paddingLeft="16dp"
 			android:paddingRight="16dp"
 			android:background="?attr/colorSurface"
 			android:gravity="center_vertical"
-			android:orientation="horizontal">
+			android:orientation="horizontal"
+			app:layout_scrollFlags="scroll|enterAlways">
+
 			<TextView
 				android:id="@+id/app_name_bar"
 				android:layout_width="wrap_content"
@@ -30,43 +31,48 @@
 				android:textStyle="bold"
 				android:textColor="@color/colorPrimary"
 				android:fontFamily="@font/product_sans_bold" />
+
 			<LinearLayout
 				android:id="@+id/topBarSpace"
-				android:layout_width="wrap_content"
+				android:layout_width="0dp"
 				android:layout_height="match_parent"
-				android:padding="8dp"
+				android:layout_weight="1"
 				android:orientation="vertical"
-				android:layout_weight="1" />
-            <ImageView
-                android:id="@+id/nav_search_ic"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_search_48px"
-                android:scaleType="centerInside"
-                android:layout_marginLeft="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless" />
-            <ImageView
-                android:id="@+id/nav_inbox_ic"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_comment_48px"
-                android:scaleType="centerInside"
-                android:layout_marginLeft="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless" />
-            <ImageView
-                android:id="@+id/nav_profile_ic"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_account_circle_48px"
-                android:scaleType="centerCrop"
-                android:layout_marginLeft="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless" />
+				android:padding="8dp" />
+
+			<ImageView
+				android:id="@+id/nav_search_ic"
+				android:layout_width="32dp"
+				android:layout_height="32dp"
+				android:src="@drawable/ic_search_48px"
+				android:scaleType="centerInside"
+				android:layout_marginLeft="8dp"
+				android:clickable="true"
+				android:focusable="true"
+				android:background="?attr/selectableItemBackgroundBorderless" />
+
+			<ImageView
+				android:id="@+id/nav_inbox_ic"
+				android:layout_width="32dp"
+				android:layout_height="32dp"
+				android:src="@drawable/ic_comment_48px"
+				android:scaleType="centerInside"
+				android:layout_marginLeft="8dp"
+				android:clickable="true"
+				android:focusable="true"
+				android:background="?attr/selectableItemBackgroundBorderless" />
+
+			<ImageView
+				android:id="@+id/nav_profile_ic"
+				android:layout_width="32dp"
+				android:layout_height="32dp"
+				android:src="@drawable/ic_account_circle_48px"
+				android:scaleType="centerCrop"
+				android:layout_marginLeft="8dp"
+				android:clickable="true"
+				android:focusable="true"
+				android:background="?attr/selectableItemBackgroundBorderless" />
+
 			<ImageView
 				android:id="@+id/settings_button"
 				android:layout_width="32dp"
@@ -84,12 +90,14 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			app:tabMode="fixed"
-			app:tabGravity="fill"/>
+			app:tabGravity="fill"
+			app:layout_scrollFlags="scroll|enterAlways" />
+	</com.google.android.material.appbar.AppBarLayout>
 
-		<androidx.viewpager2.widget.ViewPager2
-			android:id="@+id/view_pager"
-			android:layout_width="match_parent"
-			android:layout_height="0dp"
-			android:layout_weight="1"/>
-	</LinearLayout>
-</LinearLayout>
+	<androidx.viewpager2.widget.ViewPager2
+		android:id="@+id/view_pager"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
