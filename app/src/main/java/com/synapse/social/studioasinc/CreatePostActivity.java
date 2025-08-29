@@ -371,6 +371,7 @@ public class CreatePostActivity extends AppCompatActivity {
 			@Override
 			public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 				if (databaseError == null) {
+					_sendNotificationsToFollowers(UniquePostKey);
 					Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
 					_LoadingDialog(false);
 					finish();
@@ -382,6 +383,53 @@ public class CreatePostActivity extends AppCompatActivity {
 		});
 	}
 	
+	private void _sendNotificationsToFollowers(String postKey) {
+		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+		if (currentUser == null) {
+			return;
+		}
+		String currentUid = currentUser.getUid();
+		DatabaseReference followersRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("followers");
+		followersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				List<Task<DataSnapshot>> tasks = new ArrayList<>();
+				for (DataSnapshot followerSnapshot : dataSnapshot.getChildren()) {
+					String followerUid = followerSnapshot.getKey();
+					if (followerUid != null) {
+						tasks.add(FirebaseDatabase.getInstance().getReference("skyline/users").child(followerUid).get());
+					}
+				}
+
+				com.google.android.gms.tasks.Tasks.whenAllSuccess(tasks).addOnSuccessListener(new OnSuccessListener<List<Object>>() {
+					@Override
+					public void onSuccess(List<Object> list) {
+						for (Object object : list) {
+							DataSnapshot snapshot = (DataSnapshot) object;
+							String followerUid = snapshot.getKey();
+							String senderName = currentUser.getDisplayName();
+							String message = senderName + " has a new post";
+							HashMap<String, String> data = new HashMap<>();
+							data.put("postId", postKey);
+							NotificationHelper.sendNotification(
+							followerUid,
+							currentUid,
+							message,
+							NotificationConfig.NOTIFICATION_TYPE_NEW_POST,
+							data
+							);
+						}
+					}
+				});
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
+				// Handle error
+			}
+		});
+	}
+
 	private void _showPostSettingsBottomSheet() {
 		BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
 		View bottomSheetView = getLayoutInflater().inflate(R.layout.create_post_settings_bottom_sheet, null);

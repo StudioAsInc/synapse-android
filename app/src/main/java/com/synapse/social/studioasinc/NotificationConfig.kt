@@ -23,6 +23,20 @@ object NotificationConfig {
     const val NOTIFICATION_SUBTITLE = "Synapse Social"
     const val NOTIFICATION_CHANNEL_ID = "chat_messages"
     const val NOTIFICATION_PRIORITY = 10 // High priority
+
+    // ===== NOTIFICATION TYPES =====
+    const val NOTIFICATION_TYPE_NEW_POST = "NEW_POST"
+    const val NOTIFICATION_TYPE_NEW_COMMENT = "NEW_COMMENT"
+    const val NOTIFICATION_TYPE_NEW_REPLY = "NEW_REPLY"
+    const val NOTIFICATION_TYPE_NEW_LIKE_POST = "NEW_LIKE_POST"
+    const val NOTIFICATION_TYPE_NEW_LIKE_COMMENT = "NEW_LIKE_COMMENT"
+
+    // ===== NOTIFICATION TITLES =====
+    const val NOTIFICATION_TITLE_NEW_POST = "New Post"
+    const val NOTIFICATION_TITLE_NEW_COMMENT = "New Comment"
+    const val NOTIFICATION_TITLE_NEW_REPLY = "New Reply"
+    const val NOTIFICATION_TITLE_NEW_LIKE_POST = "New Like"
+    const val NOTIFICATION_TITLE_NEW_LIKE_COMMENT = "New Like"
     
     // ===== SERVER-SIDE CONFIGURATION =====
     const val WORKER_URL = "https://my-app-notification-sender.mashikahamed0.workers.dev"
@@ -59,6 +73,21 @@ object NotificationConfig {
         }
     }
     
+    /**
+     * Gets title for a given notification type.
+     * @return Title for the given notification type
+     */
+    fun getTitleForNotificationType(type: String): String {
+        return when (type) {
+            NOTIFICATION_TYPE_NEW_POST -> NOTIFICATION_TITLE_NEW_POST
+            NOTIFICATION_TYPE_NEW_COMMENT -> NOTIFICATION_TITLE_NEW_COMMENT
+            NOTIFICATION_TYPE_NEW_REPLY -> NOTIFICATION_TITLE_NEW_REPLY
+            NOTIFICATION_TYPE_NEW_LIKE_POST -> NOTIFICATION_TITLE_NEW_LIKE_POST
+            NOTIFICATION_TYPE_NEW_LIKE_COMMENT -> NOTIFICATION_TITLE_NEW_LIKE_COMMENT
+            else -> NOTIFICATION_TITLE
+        }
+    }
+
     /**
      * Gets a human-readable description of the current notification system.
      * @return Description of the active notification system

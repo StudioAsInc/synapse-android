@@ -2070,7 +2070,15 @@ public class ChatActivity extends AppCompatActivity {
 					notificationPreview = messageText;
 				}
 				String notificationMessage = senderDisplayName + ": " + notificationPreview;
-				NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, notificationMessage, chatId);
+				HashMap<String, String> data = new HashMap<>();
+				data.put("chatId", chatId);
+				NotificationHelper.sendNotification(
+					recipientUid,
+					senderUid,
+					notificationMessage,
+					"chat_message",
+					data
+				);
 
 				_updateInbox(lastMessage);
 
