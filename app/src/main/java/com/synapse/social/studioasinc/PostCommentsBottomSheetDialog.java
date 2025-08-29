@@ -313,7 +313,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 												sendCommentMap.put("replyCommentkey", replyToCommentKey);
 												sendCommentMap.put("like", "0");
 												main.child("posts-comments-replies").child(postKey).child(replyToCommentKey).child(pushKey).updateChildren(sendCommentMap);
-												_sendCommentNotification(true, pushKey);
+												sendCommentNotification(true, pushKey);
 												comment_send_input.setText("");
 												getCommentsRef(postKey, false);
 										} else {
@@ -326,7 +326,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 												sendCommentMap.put("key", pushKey);
 												sendCommentMap.put("like", "0");
 												main.child("posts-comments").child(postKey).child(pushKey).updateChildren(sendCommentMap);
-												_sendCommentNotification(false, pushKey);
+												sendCommentNotification(false, pushKey);
 												comment_send_input.setText("");
 												getCommentsRef(postKey, false);
 										}
@@ -345,56 +345,67 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 				return dialog;
 		}
 		
-		private void _sendCommentNotification(boolean isReply, String commentKey) {
+		private void sendCommentNotification(boolean isReply, String commentKey) {
 			FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 			if (currentUser == null) {
 				return;
 			}
 			String currentUid = currentUser.getUid();
 
-			Task<DataSnapshot> senderNameTask = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("username").get();
-
-			if (isReply) {
-				Task<DataSnapshot> originalCommenterTask = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(replyToCommentKey).child("uid").get();
-				com.google.android.gms.tasks.Tasks.whenAllSuccess(senderNameTask, originalCommenterTask).addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<List<Object>>() {
-					@Override
-					public void onSuccess(List<Object> list) {
-						String senderName = ((DataSnapshot) list.get(0)).getValue(String.class);
-						String originalCommenterUid = ((DataSnapshot) list.get(1)).getValue(String.class);
-						if (originalCommenterUid != null) {
-							String message = senderName + " replied to your comment";
-							HashMap<String, String> data = new HashMap<>();
-							data.put("postId", postKey);
-							data.put("commentId", commentKey);
-							NotificationHelper.sendNotification(
-							originalCommenterUid,
-							currentUid,
-							message,
-							NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
-							data
-							);
-						}
+			DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid);
+			userRef.child("username").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+				@Override
+				public void onSuccess(DataSnapshot dataSnapshot) {
+					String senderName = dataSnapshot.getValue(String.class);
+					if (senderName == null) {
+						return;
 					}
-				});
-				} else {
-				senderNameTask.addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
-					@Override
-					public void onSuccess(DataSnapshot dataSnapshot) {
-						String senderName = dataSnapshot.getValue(String.class);
-						String message = senderName + " commented on your post";
+
+					String message;
+					String recipientUid;
+					String notificationType;
+
+					if (isReply) {
+						message = senderName + " replied to your comment";
+						notificationType = NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY;
+						DatabaseReference originalCommenterRef = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(replyToCommentKey).child("uid");
+						originalCommenterRef.get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+							@Override
+							public void onSuccess(DataSnapshot dataSnapshot) {
+								String originalCommenterUid = dataSnapshot.getValue(String.class);
+								if (originalCommenterUid != null) {
+									HashMap<String, String> data = new HashMap<>();
+									data.put("postId", postKey);
+									data.put("commentId", commentKey);
+									NotificationHelper.sendNotification(
+										originalCommenterUid,
+										currentUid,
+										message,
+										notificationType,
+										data
+									);
+								}
+							}
+						});
+					} else {
+						message = senderName + " commented on your post";
+						notificationType = NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT;
+						recipientUid = postPublisherUID;
+
 						HashMap<String, String> data = new HashMap<>();
 						data.put("postId", postKey);
 						data.put("commentId", commentKey);
+
 						NotificationHelper.sendNotification(
-						postPublisherUID,
-						currentUid,
-						message,
-						NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT,
-						data
+							recipientUid,
+							currentUid,
+							message,
+							notificationType,
+							data
 						);
 					}
-				});
-			}
+				}
+			});
 		}
 
 		public void getCommentsRef(String key, boolean increaseLimit) {
