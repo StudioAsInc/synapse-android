@@ -23,12 +23,11 @@ import com.onesignal.debug.LogLevel;
 import com.onesignal.user.subscriptions.IPushSubscriptionObserver;
 import com.onesignal.user.subscriptions.PushSubscriptionChangedState;
 import java.util.Calendar;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleObserver;
-import androidx.lifecycle.OnLifecycleEvent;
+import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
+import androidx.lifecycle.LifecycleOwner;
 
-public class SynapseApp extends Application implements LifecycleObserver {
+public class SynapseApp extends Application implements DefaultLifecycleObserver {
     
     private static Context mContext;
     private Thread.UncaughtExceptionHandler mExceptionHandler;
@@ -101,15 +100,15 @@ public class SynapseApp extends Application implements LifecycleObserver {
         });
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    public void onAppForegrounded() {
+    @Override
+    public void onStart(@NonNull LifecycleOwner owner) {
         if (mAuth.getCurrentUser() != null) {
             PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
         }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    public void onAppBackgrounded() {
+    @Override
+    public void onStop(@NonNull LifecycleOwner owner) {
         if (mAuth.getCurrentUser() != null) {
             PresenceManager.goOffline(mAuth.getCurrentUser().getUid());
         }

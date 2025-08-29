@@ -25,9 +25,11 @@ object PresenceManager {
     @JvmStatic
     fun goOnline(uid: String) {
         val statusRef = getUserStatusRef(uid)
+        val activityRef = usersRef.child(uid).child("activity")
         statusRef.setValue("online")
         // On disconnect, set the last seen time as a timestamp string
         statusRef.onDisconnect().setValue(System.currentTimeMillis().toString())
+        activityRef.onDisconnect().removeValue()
     }
 
     /**

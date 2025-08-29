@@ -58,9 +58,6 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            PresenceManager.setActivity(FirebaseAuth.getInstance().getCurrentUser().getUid(), "Idle");
-        }
     }
 
     private void initialize() {

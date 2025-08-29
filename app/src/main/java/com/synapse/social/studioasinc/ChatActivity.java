@@ -706,11 +706,6 @@ public class ChatActivity extends AppCompatActivity {
 	public void onPause() {
 		super.onPause();
 		_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF).removeValue();
-
-		// Set user status back to online when leaving the chat screen
-		if (auth.getCurrentUser() != null) {
-			PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
-		}
 	}
 
 	@Override

@@ -71,9 +71,6 @@ public class SettingsActivity extends AppCompatActivity {
 	@Override
 	protected void onStop() {
 		super.onStop();
-		if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null) {
-			PresenceManager.setActivity(com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid(), "Idle");
-		}
 	}
 	
 }
