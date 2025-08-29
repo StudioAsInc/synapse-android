@@ -25,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -78,6 +79,11 @@ public class PublicPostsListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         this.listener = listener;
         this.context = context;
         vbr = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+    }
+
+    public void setData(ArrayList<HashMap<String, Object>> data) {
+        this._data = data;
+        notifyDataSetChanged();
     }
 
     @Override

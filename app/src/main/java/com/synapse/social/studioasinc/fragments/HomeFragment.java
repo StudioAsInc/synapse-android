@@ -89,12 +89,8 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
     private DatabaseReference storiesDbRef;
 
     private HashMap<String, Object> createPostMap = new HashMap<>();
-    private HashMap<String, Object> postLikeCountCache = new HashMap<>();
-    private HashMap<String, Object> UserInfoCacheMap = new HashMap<>();
-    private HashMap<String, Object> postFavoriteCountCache = new HashMap<>();
     private String currentPostFilter = "PUBLIC";
 
-    private ArrayList<HashMap<String, Object>> storiesList = new ArrayList<>();
     private ArrayList<HashMap<String, Object>> PostsList = new ArrayList<>();
 
     private LinearLayout loadingBody;
@@ -147,7 +143,7 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
     private void initializeLogic() {
         _loadPosts(currentPostFilter);
         PublicPostsList.setLayoutManager(new LinearLayoutManager(getContext()));
-        PublicPostsList.setAdapter(new PublicPostsListAdapter(new ArrayList<>(), this, getContext(), this));
+        PublicPostsList.setAdapter(new PublicPostsListAdapter(new ArrayList<>(), this, getContext()));
     }
 
 	@Override
@@ -202,20 +198,6 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
 		currentPostFilter = filter;
 		_loadPosts(currentPostFilter);
 	}
-
-    public void _ImageColor(final ImageView _image, final int _color) {
-        _image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
-    }
-
-    public void _viewGraphics(final View _view, final int _onFocus, final int _onRipple, final double _radius, final double _stroke, final int _strokeColor) {
-        android.graphics.drawable.GradientDrawable GG = new android.graphics.drawable.GradientDrawable();
-        GG.setColor(_onFocus);
-        GG.setCornerRadius((float)_radius);
-        GG.setStroke((int) _stroke, _strokeColor);
-        android.graphics.drawable.RippleDrawable RE = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{ _onRipple}), GG, null);
-        _view.setBackground(RE);
-    }
-
 
     public void _loadPosts(final String filterType) {
         swipeLayout.setRefreshing(true);
@@ -426,9 +408,7 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
         if (PublicPostsList.getAdapter() == null || !(PublicPostsList.getAdapter() instanceof PublicPostsListAdapter)) {
             PublicPostsList.setAdapter(new PublicPostsListAdapter(PostsList, this, getContext()));
         } else {
-            ((PublicPostsListAdapter)PublicPostsList.getAdapter())._data.clear();
-            ((PublicPostsListAdapter)PublicPostsList.getAdapter())._data.addAll(PostsList);
-            ((PublicPostsListAdapter)PublicPostsList.getAdapter()).notifyDataSetChanged();
+            ((PublicPostsListAdapter)PublicPostsList.getAdapter()).setData(PostsList);
         }
 
         if (PostsList.isEmpty()) {
@@ -441,148 +421,5 @@ public class HomeFragment extends Fragment implements PublicPostsListAdapter.Hea
         }
         loadingBody.setVisibility(View.GONE);
         swipeLayout.setRefreshing(false);
-    }
-
-    public void _setTime(final double _currentTime, final TextView _txt) {
-		Calendar c1 = Calendar.getInstance();
-		Calendar c2 = Calendar.getInstance();
-		double time_diff = c1.getTimeInMillis() - _currentTime;
-		if (time_diff < 60000) {
-			if ((time_diff / 1000) < 2) {
-				_txt.setText("1" + " " + getResources().getString(R.string.seconds_ago));
-			} else {
-				_txt.setText(String.valueOf((long)(time_diff / 1000)).concat(" " + getResources().getString(R.string.seconds_ago)));
-			}
-		} else {
-			if (time_diff < (60 * 60000)) {
-				if ((time_diff / 60000) < 2) {
-					_txt.setText("1" + " " + getResources().getString(R.string.minutes_ago));
-				} else {
-					_txt.setText(String.valueOf((long)(time_diff / 60000)).concat(" " + getResources().getString(R.string.minutes_ago)));
-				}
-			} else {
-				if (time_diff < (24 * (60 * 60000))) {
-					if ((time_diff / (60 * 60000)) < 2) {
-						_txt.setText(String.valueOf((long)(time_diff / (60 * 60000))).concat(" " + getResources().getString(R.string.hours_ago)));
-					} else {
-						_txt.setText(String.valueOf((long)(time_diff / (60 * 60000))).concat(" " + getResources().getString(R.string.hours_ago)));
-					}
-				} else {
-					if (time_diff < (7 * (24 * (60 * 60000)))) {
-						if ((time_diff / (24 * (60 * 60000))) < 2) {
-							_txt.setText(String.valueOf((long)(time_diff / (24 * (60 * 60000)))).concat(" " + getResources().getString(R.string.days_ago)));
-						} else {
-							_txt.setText(String.valueOf((long)(time_diff / (24 * (60 * 60000)))).concat(" " + getResources().getString(R.string.days_ago)));
-						}
-					} else {
-						c2.setTimeInMillis((long)(_currentTime));
-						_txt.setText(new SimpleDateFormat("dd-MM-yyyy").format(c2.getTime()));
-					}
-				}
-			}
-		}
-	}
-
-    public void _setCount(final TextView _txt, final double _number) {
-        if (_number < 10000) {
-            _txt.setText(String.valueOf((long) _number));
-        } else {
-            DecimalFormat decimalFormat = new DecimalFormat("0.0");
-            String numberFormat;
-            double formattedNumber;
-            if (_number < 1000000) {
-                numberFormat = "K";
-                formattedNumber = _number / 1000;
-            } else if (_number < 1000000000) {
-                numberFormat = "M";
-                formattedNumber = _number / 1000000;
-            } else if (_number < 1000000000000L) {
-                numberFormat = "B";
-                formattedNumber = _number / 1000000000;
-            } else {
-                numberFormat = "T";
-                formattedNumber = _number / 1000000000000L;
-            }
-            _txt.setText(decimalFormat.format(formattedNumber) + numberFormat);
-        }
-    }
-
-    public void _ImgRound(final ImageView _imageview, final double _value) {
-        android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable ();
-        gd.setColor(android.R.color.transparent);
-        gd.setCornerRadius((int)_value);
-        _imageview.setClipToOutline(true);
-        _imageview.setBackground(gd);
-    }
-
-    public void _OpenWebView(final String _URL) {
-        String AndroidDevelopersBlogURL = _URL;
-        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-        builder.setToolbarColor(Color.parseColor("#242D39"));
-        CustomTabsIntent customtabsintent = builder.build();
-        customtabsintent.launchUrl(getContext(), Uri.parse(AndroidDevelopersBlogURL));
-    }
-
-
-    private void _updatePostViewVisibility(LinearLayout body, ImageView postPrivateStateIcon, String postUid, String postVisibility) {
-        if ("private".equals(postVisibility)) {
-            if (postUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-                postPrivateStateIcon.setVisibility(View.VISIBLE);
-                body.setVisibility(View.VISIBLE);
-            } else {
-                body.setVisibility(View.GONE);
-            }
-        } else {
-            body.setVisibility(View.VISIBLE);
-            postPrivateStateIcon.setVisibility(View.GONE);
-        }
-    }
-
-    private void _displayUserInfoFromCache(String postUid, ImageView userInfoProfileImage, TextView userInfoUsername, ImageView userInfoGenderBadge, ImageView userInfoUsernameVerifiedBadge) {
-        if (UserInfoCacheMap.get("banned-".concat(postUid)).toString().equals("true")) {
-            userInfoProfileImage.setImageResource(R.drawable.banned_avatar);
-        } else {
-            if (UserInfoCacheMap.get("avatar-".concat(postUid)).toString().equals("null")) {
-                userInfoProfileImage.setImageResource(R.drawable.avatar);
-            } else {
-                Glide.with(getContext()).load(Uri.parse(UserInfoCacheMap.get("avatar-".concat(postUid)).toString())).into(userInfoProfileImage);
-            }
-        }
-
-        if (UserInfoCacheMap.get("nickname-".concat(postUid)).toString().equals("null")) {
-            userInfoUsername.setText("@" + UserInfoCacheMap.get("username-".concat(postUid)).toString());
-        } else {
-            userInfoUsername.setText(UserInfoCacheMap.get("nickname-".concat(postUid)).toString());
-        }
-
-        if (UserInfoCacheMap.get("gender-".concat(postUid)).toString().equals("hidden")) {
-            userInfoGenderBadge.setVisibility(View.GONE);
-        } else {
-            if (UserInfoCacheMap.get("gender-".concat(postUid)).toString().equals("male")) {
-                userInfoGenderBadge.setImageResource(R.drawable.male_badge);
-                userInfoGenderBadge.setVisibility(View.VISIBLE);
-            } else if (UserInfoCacheMap.get("gender-".concat(postUid)).toString().equals("female")) {
-                userInfoGenderBadge.setImageResource(R.drawable.female_badge);
-                userInfoGenderBadge.setVisibility(View.VISIBLE);
-            }
-        }
-
-        String accountType = UserInfoCacheMap.get("acc_type-".concat(postUid)).toString();
-        if ("admin".equals(accountType)) {
-            userInfoUsernameVerifiedBadge.setImageResource(R.drawable.admin_badge);
-            userInfoUsernameVerifiedBadge.setVisibility(View.VISIBLE);
-        } else if ("moderator".equals(accountType)) {
-            userInfoUsernameVerifiedBadge.setImageResource(R.drawable.moderator_badge);
-            userInfoUsernameVerifiedBadge.setVisibility(View.VISIBLE);
-        } else if ("support".equals(accountType)) {
-            userInfoUsernameVerifiedBadge.setImageResource(R.drawable.support_badge);
-            userInfoUsernameVerifiedBadge.setVisibility(View.VISIBLE);
-        } else if ("user".equals(accountType)) {
-            if (UserInfoCacheMap.get("verify-".concat(postUid)).toString().equals("true")) {
-                userInfoUsernameVerifiedBadge.setVisibility(View.VISIBLE);
-            } else {
-                userInfoUsernameVerifiedBadge.setVisibility(View.GONE);
-            }
-        }
     }
 }
