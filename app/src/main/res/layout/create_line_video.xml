@@ -68,13 +68,13 @@
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content" />
 		</LinearLayout>
-		<LinearLayout
+		<com.google.android.material.button.MaterialButtonToggleGroup
 			android:id="@+id/bottomButtons"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:padding="8dp"
 			android:background="#000000"
-			android:orientation="horizontal">
+			app:singleSelection="true">
 			<com.google.android.material.button.MaterialButton
 				android:id="@+id/selectVideo"
 				style="@style/Widget.Material3.Button.ElevatedButton"
@@ -91,6 +91,6 @@
 				android:layout_marginLeft="4dp"
 				android:layout_weight="1"
 				android:text="Add from Url" />
-		</LinearLayout>
+		</com.google.android.material.button.MaterialButtonToggleGroup>
 	</LinearLayout>
 </LinearLayout>
