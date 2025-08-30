@@ -32,6 +32,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.*;
@@ -79,13 +80,14 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.regex.*;
 import org.json.*;
-
+
+
 
 public class CreateLineVideoNextStepActivity extends AppCompatActivity {
-	
+
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
 	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
-	
+
 	private ProgressDialog SynapseLoadingDialog;
 	private HashMap<String, Object> PostSendMap = new HashMap<>();
 	private String UniquePostKey = "";
@@ -94,7 +96,7 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 	private String extension = "";
 	private String fileSize = "";
 	private String fileName = "";
-	
+
 	private LinearLayout main;
 	private LinearLayout top;
 	private LinearLayout topSpace;
@@ -110,7 +112,7 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 	private LinearLayout HashtagLayoutBody;
 	private EditText postDescription;
 	private RecyclerView recyclerview1;
-	
+
 	private DatabaseReference maindb = _firebase.getReference("/");
 	private ChildEventListener _maindb_child_listener;
 	private FirebaseAuth auth;
@@ -137,21 +139,21 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 	private DatabaseReference fdb = _firebase.getReference("notify");
 	private ChildEventListener _fdb_child_listener;
 	private SharedPreferences theme;
-	
+
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
 		setContentView(R.layout.create_line_video_next_step);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
-		
+
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
 		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
 			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);} else {
 			initializeLogic();
 		}
 	}
-	
+
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -159,7 +161,7 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 			initializeLogic();
 		}
 	}
-	
+
 	private void initialize(Bundle _savedInstanceState) {
 		main = findViewById(R.id.main);
 		top = findViewById(R.id.top);
@@ -179,14 +181,14 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 		auth = FirebaseAuth.getInstance();
 		appSavedData = getSharedPreferences("data", Activity.MODE_PRIVATE);
 		theme = getSharedPreferences("theme", Activity.MODE_PRIVATE);
-		
+
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				onBackPressed();
 			}
 		});
-		
+
 		continueButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -203,7 +205,7 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 				}
 			}
 		});
-		
+
 		postDescription.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
@@ -214,73 +216,73 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 					_TransitionManager(PostInfoTop1, 200);
 				}
 			}
-			
+
 			@Override
 			public void beforeTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-				
+
 			}
-			
+
 			@Override
 			public void afterTextChanged(Editable _param1) {
-				
+
 			}
 		});
-		
+
 		_maindb_child_listener = new ChildEventListener() {
 			@Override
 			public void onChildAdded(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildChanged(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildMoved(DataSnapshot _param1, String _param2) {
-				
+
 			}
-			
+
 			@Override
 			public void onChildRemoved(DataSnapshot _param1) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError _param1) {
 				final int _errorCode = _param1.getCode();
 				final String _errorMessage = _param1.getMessage();
-				
+
 			}
 		};
 		maindb.addChildEventListener(_maindb_child_listener);
-		
+
 		_storage_upload_progress_listener = new OnProgressListener<UploadTask.TaskSnapshot>() {
 			@Override
 			public void onProgress(UploadTask.TaskSnapshot _param1) {
 				double _progressValue = (100.0 * _param1.getBytesTransferred()) / _param1.getTotalByteCount();
-				
+
 			}
 		};
-		
+
 		_storage_download_progress_listener = new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
 			@Override
 			public void onProgress(FileDownloadTask.TaskSnapshot _param1) {
 				double _progressValue = (100.0 * _param1.getBytesTransferred()) / _param1.getTotalByteCount();
-				
+
 			}
 		};
-		
+
 		_storage_upload_success_listener = new OnCompleteListener<Uri>() {
 			@Override
 			public void onComplete(Task<Uri> _param1) {
@@ -313,25 +315,25 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 						}
 					}
 				});
-				
+
 			}
 		};
-		
+
 		_storage_download_success_listener = new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
 			@Override
 			public void onSuccess(FileDownloadTask.TaskSnapshot _param1) {
 				final long _totalByteCount = _param1.getTotalByteCount();
-				
+
 			}
 		};
-		
+
 		_storage_delete_success_listener = new OnSuccessListener() {
 			@Override
 			public void onSuccess(Object _param1) {
-				
+
 			}
 		};
-		
+
 		_storage_failure_listener = new OnFailureListener() {
 			@Override
 			public void onFailure(Exception _param1) {
@@ -340,144 +342,149 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 				SketchwareUtil.showMessage(getApplicationContext(), _message);
 			}
 		};
-		
+
 		_fdb_child_listener = new ChildEventListener() {
 			@Override
 			public void onChildAdded(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildChanged(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildMoved(DataSnapshot _param1, String _param2) {
-				
+
 			}
-			
+
 			@Override
 			public void onChildRemoved(DataSnapshot _param1) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError _param1) {
 				final int _errorCode = _param1.getCode();
 				final String _errorMessage = _param1.getMessage();
-				
+
 			}
 		};
 		fdb.addChildEventListener(_fdb_child_listener);
-		
+
 		auth_updateEmailListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_updatePasswordListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_emailVerificationSentListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_deleteUserListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_phoneAuthListener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> task) {
 				final boolean _success = task.isSuccessful();
 				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_updateProfileListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_googleSignInListener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> task) {
 				final boolean _success = task.isSuccessful();
 				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_create_user_listener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_sign_in_listener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_reset_password_listener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
-				
+
 			}
 		};
 	}
-	
+
 	private void initializeLogic() {
+		if (getIntent().getStringExtra("path") == null || getIntent().getStringExtra("path").isEmpty()) {
+			continueButton.setEnabled(false);
+			Toast.makeText(this, "No video selected", Toast.LENGTH_SHORT).show();
+		}
 	}
-	
+
 	@Override
 	public void onBackPressed() {
 		finish();
 	}
-	
+
+
 	public void _LoadingDialog(final boolean _visibility) {
 		m = new HashMap<>();
 		m.put("title", "".concat(" has recently shared a video".concat(".")));
@@ -508,10 +515,10 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 				SynapseLoadingDialog.dismiss();
 			}
 		}
-		
+
 	}
-	
-	
+
+
 	public void _viewGraphics(final View _view, final int _onFocus, final int _onRipple, final double _radius, final double _stroke, final int _strokeColor) {
 		android.graphics.drawable.GradientDrawable GG = new android.graphics.drawable.GradientDrawable();
 		GG.setColor(_onFocus);
@@ -520,20 +527,20 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 		android.graphics.drawable.RippleDrawable RE = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{ _onRipple}), GG, null);
 		_view.setBackground(RE);
 	}
-	
-	
+
+
 	public void _stateColor(final int _statusColor, final int _navigationColor) {
 		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		getWindow().setStatusBarColor(_statusColor);
 		getWindow().setNavigationBarColor(_navigationColor);
 	}
-	
-	
+
+
 	public void _ImageColor(final ImageView _image, final int _color) {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
 	}
-	
-	
+
+
 	public void _uploadLineVideo(final String _path, final boolean _isUrl) {
 		if (_isUrl) {
 			_LoadingDialog(true);
@@ -566,7 +573,7 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 					}
 				}
 			});
-			
+
 		} else {
 			UniquePostKey = maindb.push().getKey();
 			_LoadingDialog(true);
@@ -616,12 +623,12 @@ public class CreateLineVideoNextStepActivity extends AppCompatActivity {
 			});
 		}
 	}
-	
-	
+
+
 	public void _TransitionManager(final View _view, final double _duration) {
 		LinearLayout viewgroup =(LinearLayout) _view;
 		
 		android.transition.AutoTransition autoTransition = new android.transition.AutoTransition(); autoTransition.setDuration((long)_duration); android.transition.TransitionManager.beginDelayedTransition(viewgroup, autoTransition);
 	}
-	
-}
+
+}
