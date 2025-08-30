@@ -1031,29 +1031,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		explainLayout.setOnClickListener(v -> {
 			int position = (int)_position;
-
-			// Build context strings
-			StringBuilder beforeContext = new StringBuilder();
-			int startIndex = Math.max(0, position - EXPLAIN_CONTEXT_MESSAGES_BEFORE);
-			for (int i = startIndex; i < position; i++) {
-				appendMessageToContext(beforeContext, ChatMessagesList.get(i));
-			}
-
-			StringBuilder afterContext = new StringBuilder();
-			int endIndex = Math.min(ChatMessagesList.size(), position + EXPLAIN_CONTEXT_MESSAGES_AFTER + 1);
-			for (int i = position + 1; i < endIndex; i++) {
-				appendMessageToContext(afterContext, ChatMessagesList.get(i));
-			}
-
-			String senderOfMessageToExplain = getSenderNameForMessage(messageData);
-
-			String prompt = getString(R.string.gemini_explanation_prompt,
-					SecondUserName,
-					beforeContext.toString(),
-					senderOfMessageToExplain,
-					messageText,
-					afterContext.toString());
-
+			String prompt = buildExplanationPrompt(position, messageText, messageData);
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
@@ -2697,7 +2675,6 @@ public class ChatActivity extends AppCompatActivity {
 
 	private void callGemini(String prompt, boolean showThinking) {
 		gemini.setModel(GEMINI_MODEL);
-		gemini.setTone(GEMINI_TONE);
 		gemini.setShowThinking(showThinking);
 		gemini.setSystemInstruction(
 		"You are a concise text assistant. Always return ONLY the transformed text (no explanation, no labels). " +
@@ -2725,7 +2702,7 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void callGeminiForSummary(String prompt, final BaseMessageViewHolder viewHolder) {
-		callGeminiForAiFeature(
+		AiFeatureParams params = new AiFeatureParams(
 				prompt,
 				getString(R.string.gemini_system_instruction_summary),
 				GEMINI_MODEL,
@@ -2734,10 +2711,11 @@ public class ChatActivity extends AppCompatActivity {
 				getString(R.string.gemini_error_summary),
 				viewHolder
 		);
+		callGeminiForAiFeature(params);
 	}
 
 	private void callGeminiForExplanation(String prompt, final BaseMessageViewHolder viewHolder) {
-		callGeminiForAiFeature(
+		AiFeatureParams params = new AiFeatureParams(
 				prompt,
 				getString(R.string.gemini_system_instruction_explanation),
 				GEMINI_EXPLANATION_MODEL,
@@ -2746,23 +2724,44 @@ public class ChatActivity extends AppCompatActivity {
 				getString(R.string.gemini_error_explanation),
 				viewHolder
 		);
+		callGeminiForAiFeature(params);
 	}
 
-	private void callGeminiForAiFeature(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, final BaseMessageViewHolder viewHolder) {
+	private static class AiFeatureParams {
+		String prompt;
+		String systemInstruction;
+		String model;
+		String bottomSheetTitle;
+		String logTag;
+		String errorMessage;
+		BaseMessageViewHolder viewHolder;
+
+		AiFeatureParams(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, BaseMessageViewHolder viewHolder) {
+			this.prompt = prompt;
+			this.systemInstruction = systemInstruction;
+			this.model = model;
+			this.bottomSheetTitle = bottomSheetTitle;
+			this.logTag = logTag;
+			this.errorMessage = errorMessage;
+			this.viewHolder = viewHolder;
+		}
+	}
+
+	private void callGeminiForAiFeature(AiFeatureParams params) {
 		Gemini gemini = new Gemini.Builder(this)
-				.model(model)
+				.model(params.model)
 				.showThinking(true)
-				.systemInstruction(systemInstruction)
+				.systemInstruction(params.systemInstruction)
 				.build();
 
-		gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+		gemini.sendPrompt(params.prompt, new Gemini.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
 				runOnUiThread(() -> {
-					if (viewHolder != null) {
-						viewHolder.stopShimmer();
+					if (params.viewHolder != null) {
+						params.viewHolder.stopShimmer();
 					}
-					ContentDisplayBottomSheetDialogFragment bottomSheet = ContentDisplayBottomSheetDialogFragment.newInstance(response, bottomSheetTitle);
+					ContentDisplayBottomSheetDialogFragment bottomSheet = ContentDisplayBottomSheetDialogFragment.newInstance(response, params.bottomSheetTitle);
 					bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
 				});
 			}
@@ -2770,19 +2769,19 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onError(String error) {
 				runOnUiThread(() -> {
-					if (viewHolder != null) {
-						viewHolder.stopShimmer();
+					if (params.viewHolder != null) {
+						params.viewHolder.stopShimmer();
 					}
-					Log.e(TAG, logTag + " Error: " + error);
-					Toast.makeText(getApplicationContext(), errorMessage + error, Toast.LENGTH_SHORT).show();
+					Log.e(TAG, params.logTag + " Error: " + error);
+					Toast.makeText(getApplicationContext(), params.errorMessage + error, Toast.LENGTH_SHORT).show();
 				});
 			}
 
 			@Override
 			public void onThinking() {
 				runOnUiThread(() -> {
-					if (viewHolder != null) {
-						viewHolder.startShimmer();
+					if (params.viewHolder != null) {
+						params.viewHolder.startShimmer();
 					}
 				});
 			}
@@ -2829,10 +2828,36 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void appendMessageToContext(StringBuilder contextBuilder, HashMap<String, Object> message) {
+		Object messageTextObj = message.get(MESSAGE_TEXT_KEY);
+		String messageText = (messageTextObj != null) ? messageTextObj.toString() : "";
 		contextBuilder.append(getSenderNameForMessage(message))
 				.append(": ")
-				.append(message.get(MESSAGE_TEXT_KEY).toString())
+				.append(messageText)
 				.append("\n");
+	}
+
+	private String buildExplanationPrompt(int position, String messageText, HashMap<String, Object> messageData) {
+		// Build context strings
+		StringBuilder beforeContext = new StringBuilder();
+		int startIndex = Math.max(0, position - EXPLAIN_CONTEXT_MESSAGES_BEFORE);
+		for (int i = startIndex; i < position; i++) {
+			appendMessageToContext(beforeContext, ChatMessagesList.get(i));
+		}
+
+		StringBuilder afterContext = new StringBuilder();
+		int endIndex = Math.min(ChatMessagesList.size(), position + EXPLAIN_CONTEXT_MESSAGES_AFTER + 1);
+		for (int i = position + 1; i < endIndex; i++) {
+			appendMessageToContext(afterContext, ChatMessagesList.get(i));
+		}
+
+		String senderOfMessageToExplain = getSenderNameForMessage(messageData);
+
+		return getString(R.string.gemini_explanation_prompt,
+				SecondUserName,
+				beforeContext.toString(),
+				senderOfMessageToExplain,
+				messageText,
+				afterContext.toString());
 	}
 
 	private void updateUserProfile(DataSnapshot dataSnapshot) {
