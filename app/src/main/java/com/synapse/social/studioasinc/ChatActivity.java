@@ -175,7 +175,6 @@ public class ChatActivity extends AppCompatActivity {
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
 
-	private LinearLayout parent;
 	private RelativeLayout relativelayout1;
 	private ImageView ivBGimage;
 	private LinearLayout body;
@@ -257,7 +256,6 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void initialize(Bundle _savedInstanceState) {
-		parent = findViewById(R.id.parent);
 		relativelayout1 = findViewById(R.id.relativelayout1);
 		ivBGimage = findViewById(R.id.ivBGimage);
 		body = findViewById(R.id.body);
