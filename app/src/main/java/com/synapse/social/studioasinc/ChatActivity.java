@@ -951,6 +951,7 @@ public class ChatActivity extends AppCompatActivity {
 		LinearLayout editLayout = popupView.findViewById(R.id.edit);
 		LinearLayout replyLayout = popupView.findViewById(R.id.reply);
 		LinearLayout summaryLayout = popupView.findViewById(R.id.summary);
+		LinearLayout explainLayout = popupView.findViewById(R.id.explain);
 		LinearLayout copyLayout = popupView.findViewById(R.id.copy);
 		LinearLayout deleteLayout = popupView.findViewById(R.id.delete);
 
@@ -1021,6 +1022,15 @@ public class ChatActivity extends AppCompatActivity {
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
+			}
+			popupWindow.dismiss();
+		});
+
+		explainLayout.setOnClickListener(v -> {
+			String prompt = "Explain the following text in a clear and detailed manner, using Markdown for formatting (headings, bold, etc.):\n\n" + messageText;
+			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
+			if (vh instanceof BaseMessageViewHolder) {
+				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
 			}
 			popupWindow.dismiss();
 		});
@@ -2703,7 +2713,7 @@ public class ChatActivity extends AppCompatActivity {
 					if (viewHolder != null) {
 						viewHolder.stopShimmer();
 					}
-					SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response);
+					SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response, "Summary");
 					bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
 				});
 			}
@@ -2716,6 +2726,48 @@ public class ChatActivity extends AppCompatActivity {
 					}
 					Log.e("GeminiSummary", "Error: " + error);
 					Toast.makeText(getApplicationContext(), "Error getting summary: " + error, Toast.LENGTH_SHORT).show();
+				});
+			}
+
+			@Override
+			public void onThinking() {
+				runOnUiThread(() -> {
+					if (viewHolder != null) {
+						viewHolder.startShimmer();
+					}
+				});
+			}
+		});
+	}
+
+	private void callGeminiForExplanation(String prompt, final BaseMessageViewHolder viewHolder) {
+		Gemini explanationGemini = new Gemini.Builder(this)
+				.model("gemini-2.5-flash")
+				.tone("neutral")
+				.showThinking(true)
+				.systemInstruction("You are a helpful assistant. Explain the following text in a clear and detailed manner, using Markdown for formatting (headings, bold, etc.).")
+				.build();
+
+		explanationGemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+			@Override
+			public void onSuccess(String response) {
+				runOnUiThread(() -> {
+					if (viewHolder != null) {
+						viewHolder.stopShimmer();
+					}
+					SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response, "Explanation");
+					bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
+				});
+			}
+
+			@Override
+			public void onError(String error) {
+				runOnUiThread(() -> {
+					if (viewHolder != null) {
+						viewHolder.stopShimmer();
+					}
+					Log.e("GeminiExplanation", "Error: " + error);
+					Toast.makeText(getApplicationContext(), "Error getting explanation: " + error, Toast.LENGTH_SHORT).show();
 				});
 			}
 

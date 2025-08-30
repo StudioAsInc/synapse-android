@@ -4,21 +4,25 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.synapse.social.studioasinc.animations.textview.TVeffects;
+import com.synapse.social.studioasinc.styling.MarkdownRenderer;
 
 public class SummaryBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
-    private static final String ARG_SUMMARY_TEXT = "summary_text";
+    private static final String ARG_TEXT = "text";
+    private static final String ARG_TITLE = "title";
 
-    public static SummaryBottomSheetDialogFragment newInstance(String summaryText) {
+    public static SummaryBottomSheetDialogFragment newInstance(String text, String title) {
         SummaryBottomSheetDialogFragment fragment = new SummaryBottomSheetDialogFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_SUMMARY_TEXT, summaryText);
+        args.putString(ARG_TEXT, text);
+        args.putString(ARG_TITLE, title);
         fragment.setArguments(args);
         return fragment;
     }
@@ -33,13 +37,20 @@ public class SummaryBottomSheetDialogFragment extends BottomSheetDialogFragment 
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        TVeffects summaryTextView = view.findViewById(R.id.summary_text);
-        if (getArguments() != null) {
-            String summaryText = getArguments().getString(ARG_SUMMARY_TEXT);
-            if (summaryText != null) {
-                summaryTextView.setCharDelay(20);
+        TextView titleTextView = view.findViewById(R.id.summary_title);
+        TVeffects contentTextView = view.findViewById(R.id.summary_text);
 
-                summaryTextView.startTyping(summaryText);
+        if (getArguments() != null) {
+            String title = getArguments().getString(ARG_TITLE);
+            String text = getArguments().getString(ARG_TEXT);
+
+            if (title != null) {
+                titleTextView.setText(title);
+            }
+
+            if (text != null) {
+                // Use MarkdownRenderer for consistent styling
+                MarkdownRenderer.get(requireContext()).render(contentTextView, text);
             }
         }
     }
