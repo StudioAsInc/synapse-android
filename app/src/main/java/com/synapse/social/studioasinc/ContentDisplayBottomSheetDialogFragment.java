@@ -54,10 +54,32 @@ public class ContentDisplayBottomSheetDialogFragment extends BottomSheetDialogFr
             }
         }
 
-        view.findViewById(R.id.scroll_view).setOnTouchListener((v, event) -> {
-            // Prevent the bottom sheet from being dragged down when the scroll view is scrolled.
-            v.getParent().requestDisallowInterceptTouchEvent(true);
-            return false;
+        android.widget.ScrollView scrollView = view.findViewById(R.id.scroll_view);
+        scrollView.setOnTouchListener(new View.OnTouchListener() {
+            private float startY;
+
+            @Override
+            public boolean onTouch(View v, android.view.MotionEvent event) {
+                switch (event.getAction()) {
+                    case android.view.MotionEvent.ACTION_DOWN:
+                        startY = event.getY();
+                        break;
+                    case android.view.MotionEvent.ACTION_MOVE:
+                        float y = event.getY();
+                        float dy = y - startY;
+
+                        // Scrolling up
+                        if (dy < 0 && scrollView.canScrollVertically(1)) {
+                            v.getParent().requestDisallowInterceptTouchEvent(true);
+                        }
+                        // Scrolling down
+                        else if (dy > 0 && scrollView.canScrollVertically(-1)) {
+                            v.getParent().requestDisallowInterceptTouchEvent(true);
+                        }
+                        break;
+                }
+                return false;
+            }
         });
     }
 }

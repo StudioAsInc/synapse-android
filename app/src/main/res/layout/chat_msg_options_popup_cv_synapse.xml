@@ -110,7 +110,7 @@
 					android:focusable="false"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:text="@string/explain_button_text"
+					android:text="@string/gemini_summary_title"
 					android:textSize="16sp"
 					android:textColor="#000000" />
 			</LinearLayout>

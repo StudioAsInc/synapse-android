@@ -1037,18 +1037,16 @@ public class ChatActivity extends AppCompatActivity {
 			StringBuilder beforeContext = new StringBuilder();
 			int startIndex = Math.max(0, position - EXPLAIN_CONTEXT_MESSAGES_BEFORE);
 			for (int i = startIndex; i < position; i++) {
-				String senderName = ChatMessagesList.get(i).get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? FirstUserName : SecondUserName;
-				beforeContext.append(senderName).append(": ").append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
+				beforeContext.append(getSenderNameForMessage(ChatMessagesList.get(i))).append(": ").append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
 			}
 
 			StringBuilder afterContext = new StringBuilder();
 			int endIndex = Math.min(ChatMessagesList.size(), position + EXPLAIN_CONTEXT_MESSAGES_AFTER + 1);
 			for (int i = position + 1; i < endIndex; i++) {
-				String senderName = ChatMessagesList.get(i).get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? FirstUserName : SecondUserName;
-				afterContext.append(senderName).append(": ").append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
+				afterContext.append(getSenderNameForMessage(ChatMessagesList.get(i))).append(": ").append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
 			}
 
-			String senderOfMessageToExplain = messageData.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? FirstUserName : SecondUserName;
+			String senderOfMessageToExplain = getSenderNameForMessage(messageData);
 
 			String prompt = getString(R.string.gemini_explanation_prompt,
 					SecondUserName,
@@ -2743,7 +2741,7 @@ public class ChatActivity extends AppCompatActivity {
 		callGeminiForAiFeature(
 				prompt,
 				getString(R.string.gemini_system_instruction_explanation),
-				"gemini-2.5-flash",
+				GEMINI_EXPLANATION_MODEL,
 				getString(R.string.gemini_explanation_title),
 				"GeminiExplanation",
 				getString(R.string.gemini_error_explanation),
@@ -2795,6 +2793,14 @@ public class ChatActivity extends AppCompatActivity {
 	private void handleBlocklistUpdate(DataSnapshot dataSnapshot) {
 		GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 		final String _childKey = dataSnapshot.getKey();
+	}
+
+	private String getSenderNameForMessage(HashMap<String, Object> message) {
+		if (message == null || message.get(UID_KEY) == null || auth.getCurrentUser() == null) {
+			return "Unknown";
+		}
+		boolean isMyMessage = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid());
+		return isMyMessage ? FirstUserName : SecondUserName;
 		final HashMap<String, Object> _childValue = dataSnapshot.getValue(_ind);
 
 		if (_childValue == null) return;
