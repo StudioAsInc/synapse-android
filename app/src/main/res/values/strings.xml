@@ -239,4 +239,34 @@
     <string name="ph_message">I\'m also good, man.</string>
     <string name="age_agreement">I confirm that I\'m at least 12 years of age.</string>
     <string name="ph_replied_message">I\'m good, you?</string>
+
+    <!-- Chat Settings -->
+    <string name="chat_settings_e2e_encrypted">End-to-end encrypted</string>
+    <string name="chat_settings_section_conversation">Conversation</string>
+    <string name="chat_settings_theme">Theme</string>
+    <string name="chat_settings_theme_default">Default</string>
+    <string name="chat_settings_nickname">Nickname</string>
+    <string name="chat_settings_word_effect">Word effect</string>
+    <string name="chat_settings_word_effect_none">No word effect</string>
+    <string name="chat_settings_quick_reaction">Quick reaction</string>
+    <string name="chat_settings_section_more_actions">More actions</string>
+    <string name="chat_settings_read_receipts">Read receipts</string>
+    <string name="chat_settings_read_receipts_default">Default</string>
+    <string name="chat_settings_disappearing_message">Disappearing message</string>
+    <string name="chat_settings_disappearing_message_24_hours">24 hours</string>
+    <string name="chat_settings_save_photos_videos">Save photos and videos</string>
+    <string name="chat_settings_save_photos_videos_subtitle">Automatically save photos and videos</string>
+    <string name="chat_settings_pinned_message">Pinned message</string>
+    <string name="chat_settings_pinned_message_subtitle">View pinned message</string>
+    <string name="chat_settings_search_conversation">Search conversation</string>
+    <string name="chat_settings_search_conversation_subtitle">Find specific conversations</string>
+    <string name="chat_settings_section_privacy_support">Privacy and support</string>
+    <string name="chat_settings_verify_encryption">Verify encryption</string>
+    <string name="chat_settings_verify_encryption_subtitle">Verify end-to-end and encryption</string>
+    <string name="chat_settings_share_contact">Share contact</string>
+    <string name="chat_settings_share_contact_subtitle">Share the link of profile</string>
+    <string name="chat_settings_block">Block</string>
+    <string name="chat_settings_block_subtitle">They won't be able to call or message.</string>
+    <string name="chat_settings_report">Report</string>
+    <string name="chat_settings_report_subtitle">Give feedbacks and report conversation</string>
 </resources>

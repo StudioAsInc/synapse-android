@@ -30,13 +30,16 @@ class ChatSettingsViewModel(
 
     private val _uiState = MutableStateFlow(ChatSettingsUiState())
     val uiState: StateFlow<ChatSettingsUiState> = _uiState.asStateFlow()
+    private var currentUserId: String? = null
 
     fun loadUserSettings(userId: String) {
+        currentUserId = userId
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val user = repository.getUser(userId)
                 val isBlocked = repository.isUserBlocked(userId)
+                val settings = repository.getChatSettings(userId)
 
                 _uiState.update {
                     it.copy(
@@ -44,7 +47,10 @@ class ChatSettingsViewModel(
                         username = user?.username ?: "",
                         nickname = if (user?.nickname != "null" && user?.nickname?.isNotEmpty() == true) user.nickname else "@${user?.username}",
                         userAvatarUrl = if (user?.avatar != "null") user?.avatar else null,
-                        isBlocked = isBlocked
+                        isBlocked = isBlocked,
+                        readReceiptsEnabled = settings?.readReceiptsEnabled ?: true,
+                        disappearingMessagesEnabled = settings?.disappearingMessagesEnabled ?: false,
+                        autoSaveMediaEnabled = settings?.autoSaveMediaEnabled ?: false
                     )
                 }
             } catch (e: Exception) {
@@ -73,16 +79,28 @@ class ChatSettingsViewModel(
 
     fun onReadReceiptsChanged(isEnabled: Boolean) {
         _uiState.update { it.copy(readReceiptsEnabled = isEnabled) }
-        // In a real app, this would be saved to the repository
+        viewModelScope.launch {
+            currentUserId?.let {
+                repository.saveReadReceiptsSetting(it, isEnabled)
+            }
+        }
     }
 
     fun onDisappearingMessagesChanged(isEnabled: Boolean) {
         _uiState.update { it.copy(disappearingMessagesEnabled = isEnabled) }
-        // In a real app, this would be saved to the repository
+        viewModelScope.launch {
+            currentUserId?.let {
+                repository.saveDisappearingMessagesSetting(it, isEnabled)
+            }
+        }
     }
 
     fun onAutoSaveMediaChanged(isEnabled: Boolean) {
         _uiState.update { it.copy(autoSaveMediaEnabled = isEnabled) }
-        // In a real app, this would be saved to the repository
+        viewModelScope.launch {
+            currentUserId?.let {
+                repository.saveAutoSaveMediaSetting(it, isEnabled)
+            }
+        }
     }
 }

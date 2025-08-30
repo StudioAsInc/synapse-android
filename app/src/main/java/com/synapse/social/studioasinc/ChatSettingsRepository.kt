@@ -22,6 +22,7 @@ class ChatSettingsRepository {
     private val database = FirebaseDatabase.getInstance().getReference("skyline")
     private val usersRef = database.child("users")
     private val blocklistRef = database.child("blocklist")
+    private val chatsRef = database.child("chats")
     private val auth = FirebaseAuth.getInstance()
 
     suspend fun getUser(userId: String): User? {
@@ -102,4 +103,52 @@ class ChatSettingsRepository {
                 }
         }
     }
+    suspend fun getChatSettings(otherUserId: String): ChatSettings? {
+        val currentUserUid = auth.currentUser?.uid ?: return null
+        return suspendCancellableCoroutine { continuation ->
+            val listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (continuation.isActive) {
+                        val settings = snapshot.getValue(ChatSettings::class.java)
+                        continuation.resume(settings)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    if (continuation.isActive) {
+                        continuation.resumeWithException(error.toException())
+                    }
+                }
+            }
+            val ref = chatsRef.child(currentUserUid).child(otherUserId).child("settings")
+            ref.addListenerForSingleValueEvent(listener)
+            continuation.invokeOnCancellation {
+                ref.removeEventListener(listener)
+            }
+        }
+    }
+
+    suspend fun saveReadReceiptsSetting(otherUserId: String, isEnabled: Boolean) {
+        val currentUserUid = auth.currentUser?.uid ?: return
+        chatsRef.child(currentUserUid).child(otherUserId).child("settings").child("readReceiptsEnabled").setValue(isEnabled)
+        chatsRef.child(otherUserId).child(currentUserUid).child("settings").child("readReceiptsEnabled").setValue(isEnabled)
+    }
+
+    suspend fun saveDisappearingMessagesSetting(otherUserId: String, isEnabled: Boolean) {
+        val currentUserUid = auth.currentUser?.uid ?: return
+        chatsRef.child(currentUserUid).child(otherUserId).child("settings").child("disappearingMessagesEnabled").setValue(isEnabled)
+        chatsRef.child(otherUserId).child(currentUserUid).child("settings").child("disappearingMessagesEnabled").setValue(isEnabled)
+    }
+
+    suspend fun saveAutoSaveMediaSetting(otherUserId: String, isEnabled: Boolean) {
+        val currentUserUid = auth.currentUser?.uid ?: return
+        chatsRef.child(currentUserUid).child(otherUserId).child("settings").child("autoSaveMediaEnabled").setValue(isEnabled)
+        chatsRef.child(otherUserId).child(currentUserUid).child("settings").child("autoSaveMediaEnabled").setValue(isEnabled)
+    }
 }
+
+data class ChatSettings(
+    val readReceiptsEnabled: Boolean = true,
+    val disappearingMessagesEnabled: Boolean = false,
+    val autoSaveMediaEnabled: Boolean = false
+)

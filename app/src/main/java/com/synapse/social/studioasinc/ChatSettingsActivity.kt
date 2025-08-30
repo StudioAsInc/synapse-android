@@ -96,6 +96,39 @@ class ChatSettingsActivity : AppCompatActivity() {
 
                 if (state.isBlocked) {
                     // Update UI to show user is blocked
+                    binding.themeMainOption.isEnabled = false
+                    binding.nicknameMainOption.isEnabled = false
+                    binding.wordEffectMainOption.isEnabled = false
+                    binding.quickReactionOption.isEnabled = false
+                    binding.readReceiptsMainSwitch.isEnabled = false
+                    binding.switchReadReceipt.isEnabled = false
+                    binding.disappearingMainSwitch.isEnabled = false
+                    binding.switchDisappearingMessages.isEnabled = false
+                    binding.savePhotoVideoMainSwitch.isEnabled = false
+                    binding.switchAutoSaveMedia.isEnabled = false
+                    binding.pinnedMessagesMainOption.isEnabled = false
+                    binding.searchMessagesMainOption.isEnabled = false
+                    binding.e2eVerificationMainOption.isEnabled = false
+                    binding.sharedContactsMainOption.isEnabled = false
+                    binding.reportMainOption.isEnabled = false
+                    binding.blockMainOption.isEnabled = false
+                } else {
+                    binding.themeMainOption.isEnabled = true
+                    binding.nicknameMainOption.isEnabled = true
+                    binding.wordEffectMainOption.isEnabled = true
+                    binding.quickReactionOption.isEnabled = true
+                    binding.readReceiptsMainSwitch.isEnabled = true
+                    binding.switchReadReceipt.isEnabled = true
+                    binding.disappearingMainSwitch.isEnabled = true
+                    binding.switchDisappearingMessages.isEnabled = true
+                    binding.savePhotoVideoMainSwitch.isEnabled = true
+                    binding.switchAutoSaveMedia.isEnabled = true
+                    binding.pinnedMessagesMainOption.isEnabled = true
+                    binding.searchMessagesMainOption.isEnabled = true
+                    binding.e2eVerificationMainOption.isEnabled = true
+                    binding.sharedContactsMainOption.isEnabled = true
+                    binding.reportMainOption.isEnabled = true
+                    binding.blockMainOption.isEnabled = true
                 }
             }
         }
@@ -107,7 +140,7 @@ class ChatSettingsActivity : AppCompatActivity() {
             // We can add more subtle animations here if needed.
             // For example, we can fade the username text as it collapses.
             val percentage = Math.abs(verticalOffset).toFloat() / appBarLayout.totalScrollRange
-            binding.username.alpha = 1.0f - percentage * 2 // Fade out faster
+            binding.username.alpha = (1.0f - percentage * 2).coerceIn(0f, 1f) // Fade out faster and clamp value
         })
     }
 }
