@@ -138,7 +138,6 @@ public class ChatActivity extends AppCompatActivity {
 
 	private static final String GEMINI_MODEL = "gemini-2.5-flash-lite";
 	private static final String GEMINI_EXPLANATION_MODEL = "gemini-2.5-flash";
-	private static final String GEMINI_TONE = "normal";
 	private static final int EXPLAIN_CONTEXT_MESSAGES_BEFORE = 5;
 	private static final int EXPLAIN_CONTEXT_MESSAGES_AFTER = 2;
 	private static final String TAG = "ChatActivity";
@@ -1037,13 +1036,13 @@ public class ChatActivity extends AppCompatActivity {
 			StringBuilder beforeContext = new StringBuilder();
 			int startIndex = Math.max(0, position - EXPLAIN_CONTEXT_MESSAGES_BEFORE);
 			for (int i = startIndex; i < position; i++) {
-				beforeContext.append(getSenderNameForMessage(ChatMessagesList.get(i))).append(": ").append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
+				appendMessageToContext(beforeContext, ChatMessagesList.get(i));
 			}
 
 			StringBuilder afterContext = new StringBuilder();
 			int endIndex = Math.min(ChatMessagesList.size(), position + EXPLAIN_CONTEXT_MESSAGES_AFTER + 1);
 			for (int i = position + 1; i < endIndex; i++) {
-				afterContext.append(getSenderNameForMessage(ChatMessagesList.get(i))).append(": ").append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
+				appendMessageToContext(afterContext, ChatMessagesList.get(i));
 			}
 
 			String senderOfMessageToExplain = getSenderNameForMessage(messageData);
@@ -2795,7 +2794,9 @@ public class ChatActivity extends AppCompatActivity {
 		final String _childKey = dataSnapshot.getKey();
 		final HashMap<String, Object> _childValue = dataSnapshot.getValue(_ind);
 
-		if (_childValue == null) return;
+		if (_childValue == null) {
+			return;
+		}
 
 		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		String otherUid = getIntent().getStringExtra(UID_KEY);
@@ -2825,6 +2826,13 @@ public class ChatActivity extends AppCompatActivity {
 		}
 		boolean isMyMessage = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid());
 		return isMyMessage ? FirstUserName : SecondUserName;
+	}
+
+	private void appendMessageToContext(StringBuilder contextBuilder, HashMap<String, Object> message) {
+		contextBuilder.append(getSenderNameForMessage(message))
+				.append(": ")
+				.append(message.get(MESSAGE_TEXT_KEY).toString())
+				.append("\n");
 	}
 
 	private void updateUserProfile(DataSnapshot dataSnapshot) {
