@@ -15,6 +15,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.FirebaseApp;
@@ -37,6 +38,8 @@ public class HomeActivity extends AppCompatActivity {
     private ImageView nav_profile_ic;
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
+    private AppBarLayout app_bar_layout;
+    private View topBar;
 
     @Override
     protected void onCreate(Bundle _savedInstanceState) {
@@ -71,6 +74,8 @@ public class HomeActivity extends AppCompatActivity {
         nav_search_ic = findViewById(R.id.nav_search_ic);
         nav_inbox_ic = findViewById(R.id.nav_inbox_ic);
         nav_profile_ic = findViewById(R.id.nav_profile_ic);
+        app_bar_layout = findViewById(R.id.app_bar_layout);
+        topBar = findViewById(R.id.topBar);
     }
 
     private void initializeLogic() {
@@ -89,6 +94,31 @@ public class HomeActivity extends AppCompatActivity {
                     break;
             }
         }).attach();
+
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                AppBarLayout.LayoutParams toolbarLayoutParams = (AppBarLayout.LayoutParams) topBar.getLayoutParams();
+                AppBarLayout.LayoutParams tabLayoutParams = (AppBarLayout.LayoutParams) tabLayout.getLayoutParams();
+                if (tab.getPosition() == 1) {
+                    toolbarLayoutParams.setScrollFlags(0);
+                    tabLayoutParams.setScrollFlags(0);
+                } else {
+                    toolbarLayoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
+                    tabLayoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
+                }
+                topBar.setLayoutParams(toolbarLayoutParams);
+                tabLayout.setLayoutParams(tabLayoutParams);
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
 
         nav_search_ic.setOnClickListener(_view -> {
             Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
