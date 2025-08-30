@@ -137,7 +137,10 @@ public class ChatActivity extends AppCompatActivity {
 	private static final String ATTACHMENT_MESSAGE_TYPE = "ATTACHMENT_MESSAGE";
 
 	private static final String GEMINI_MODEL = "gemini-2.5-flash-lite";
-	private static final String GEMINI_TONE = "normal";
+	private static final String GEMINI_EXPLANATION_MODEL = "gemini-2.5-flash";
+	private static final int EXPLAIN_CONTEXT_MESSAGES_BEFORE = 5;
+	private static final int EXPLAIN_CONTEXT_MESSAGES_AFTER = 2;
+	private static final String TAG = "ChatActivity";
 
 	private Timer _timer = new Timer();
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
@@ -951,6 +954,7 @@ public class ChatActivity extends AppCompatActivity {
 		LinearLayout editLayout = popupView.findViewById(R.id.edit);
 		LinearLayout replyLayout = popupView.findViewById(R.id.reply);
 		LinearLayout summaryLayout = popupView.findViewById(R.id.summary);
+		LinearLayout explainLayout = popupView.findViewById(R.id.explain);
 		LinearLayout copyLayout = popupView.findViewById(R.id.copy);
 		LinearLayout deleteLayout = popupView.findViewById(R.id.delete);
 
@@ -1021,6 +1025,38 @@ public class ChatActivity extends AppCompatActivity {
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
+			}
+			popupWindow.dismiss();
+		});
+
+		explainLayout.setOnClickListener(v -> {
+			int position = (int)_position;
+
+			// Build context strings
+			StringBuilder beforeContext = new StringBuilder();
+			int startIndex = Math.max(0, position - EXPLAIN_CONTEXT_MESSAGES_BEFORE);
+			for (int i = startIndex; i < position; i++) {
+				appendMessageToContext(beforeContext, ChatMessagesList.get(i));
+			}
+
+			StringBuilder afterContext = new StringBuilder();
+			int endIndex = Math.min(ChatMessagesList.size(), position + EXPLAIN_CONTEXT_MESSAGES_AFTER + 1);
+			for (int i = position + 1; i < endIndex; i++) {
+				appendMessageToContext(afterContext, ChatMessagesList.get(i));
+			}
+
+			String senderOfMessageToExplain = getSenderNameForMessage(messageData);
+
+			String prompt = getString(R.string.gemini_explanation_prompt,
+					SecondUserName,
+					beforeContext.toString(),
+					senderOfMessageToExplain,
+					messageText,
+					afterContext.toString());
+
+			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
+			if (vh instanceof BaseMessageViewHolder) {
+				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
 			}
 			popupWindow.dismiss();
 		});
@@ -2689,21 +2725,44 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void callGeminiForSummary(String prompt, final BaseMessageViewHolder viewHolder) {
-		Gemini summaryGemini = new Gemini.Builder(this)
-				.model(GEMINI_MODEL)
-				.tone(GEMINI_TONE)
+		callGeminiForAiFeature(
+				prompt,
+				getString(R.string.gemini_system_instruction_summary),
+				GEMINI_MODEL,
+				getString(R.string.gemini_summary_title),
+				"GeminiSummary",
+				getString(R.string.gemini_error_summary),
+				viewHolder
+		);
+	}
+
+	private void callGeminiForExplanation(String prompt, final BaseMessageViewHolder viewHolder) {
+		callGeminiForAiFeature(
+				prompt,
+				getString(R.string.gemini_system_instruction_explanation),
+				GEMINI_EXPLANATION_MODEL,
+				getString(R.string.gemini_explanation_title),
+				"GeminiExplanation",
+				getString(R.string.gemini_error_explanation),
+				viewHolder
+		);
+	}
+
+	private void callGeminiForAiFeature(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, final BaseMessageViewHolder viewHolder) {
+		Gemini gemini = new Gemini.Builder(this)
+				.model(model)
 				.showThinking(true)
-				.systemInstruction("You are a text summarizer. Provide a concise summary of the given text.")
+				.systemInstruction(systemInstruction)
 				.build();
 
-		summaryGemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+		gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
 				runOnUiThread(() -> {
 					if (viewHolder != null) {
 						viewHolder.stopShimmer();
 					}
-					SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response);
+					ContentDisplayBottomSheetDialogFragment bottomSheet = ContentDisplayBottomSheetDialogFragment.newInstance(response, bottomSheetTitle);
 					bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
 				});
 			}
@@ -2714,8 +2773,8 @@ public class ChatActivity extends AppCompatActivity {
 					if (viewHolder != null) {
 						viewHolder.stopShimmer();
 					}
-					Log.e("GeminiSummary", "Error: " + error);
-					Toast.makeText(getApplicationContext(), "Error getting summary: " + error, Toast.LENGTH_SHORT).show();
+					Log.e(TAG, logTag + " Error: " + error);
+					Toast.makeText(getApplicationContext(), errorMessage + error, Toast.LENGTH_SHORT).show();
 				});
 			}
 
@@ -2735,7 +2794,9 @@ public class ChatActivity extends AppCompatActivity {
 		final String _childKey = dataSnapshot.getKey();
 		final HashMap<String, Object> _childValue = dataSnapshot.getValue(_ind);
 
-		if (_childValue == null) return;
+		if (_childValue == null) {
+			return;
+		}
 
 		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		String otherUid = getIntent().getStringExtra(UID_KEY);
@@ -2757,6 +2818,21 @@ public class ChatActivity extends AppCompatActivity {
 				message_input_overall_container.setVisibility(View.VISIBLE);
 			}
 		}
+	}
+
+	private String getSenderNameForMessage(HashMap<String, Object> message) {
+		if (message == null || message.get(UID_KEY) == null || auth.getCurrentUser() == null) {
+			return "Unknown";
+		}
+		boolean isMyMessage = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid());
+		return isMyMessage ? FirstUserName : SecondUserName;
+	}
+
+	private void appendMessageToContext(StringBuilder contextBuilder, HashMap<String, Object> message) {
+		contextBuilder.append(getSenderNameForMessage(message))
+				.append(": ")
+				.append(message.get(MESSAGE_TEXT_KEY).toString())
+				.append("\n");
 	}
 
 	private void updateUserProfile(DataSnapshot dataSnapshot) {
