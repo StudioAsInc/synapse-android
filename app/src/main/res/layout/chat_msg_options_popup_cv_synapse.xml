@@ -48,7 +48,7 @@
 					android:focusable="false"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:textSize="14sp"
+					android:textSize="16sp"
 					android:textColor="#000000"
 					tools:replace="android:text"
 					android:text="@string/m_edit" />
@@ -79,7 +79,7 @@
 					android:focusable="false"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:textSize="14sp"
+					android:textSize="16sp"
 					android:textColor="#000000"
 					tools:replace="android:text"
 					android:text="@string/m_reply" />
@@ -110,8 +110,8 @@
 					android:focusable="false"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:text="Summary"
-					android:textSize="14sp"
+					android:text="@string/explain_button_text"
+					android:textSize="16sp"
 					android:textColor="#000000" />
 			</LinearLayout>
 			<LinearLayout
@@ -137,8 +137,8 @@
 					android:focusable="false"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:text="Explain"
-					android:textSize="14sp"
+					android:text="@string/explain_button_text"
+					android:textSize="16sp"
 					android:textColor="#000000" />
 			</LinearLayout>
 
@@ -167,7 +167,7 @@
 					android:focusable="false"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:textSize="14sp"
+					android:textSize="16sp"
 					android:textColor="#000000"
 					tools:replace="android:text"
 					android:text="@string/m_copy" />
@@ -198,7 +198,7 @@
 					android:focusable="false"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:textSize="14sp"
+					android:textSize="16sp"
 					android:textColor="#000000"
 					tools:replace="android:text"
 					android:text="@string/m_delete" />

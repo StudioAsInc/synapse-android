@@ -137,7 +137,11 @@ public class ChatActivity extends AppCompatActivity {
 	private static final String ATTACHMENT_MESSAGE_TYPE = "ATTACHMENT_MESSAGE";
 
 	private static final String GEMINI_MODEL = "gemini-2.5-flash-lite";
+	private static final String GEMINI_EXPLANATION_MODEL = "gemini-2.5-flash";
 	private static final String GEMINI_TONE = "normal";
+	private static final int EXPLAIN_CONTEXT_MESSAGES_BEFORE = 5;
+	private static final int EXPLAIN_CONTEXT_MESSAGES_AFTER = 2;
+	private static final String TAG = "ChatActivity";
 
 	private Timer _timer = new Timer();
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
@@ -1028,26 +1032,31 @@ public class ChatActivity extends AppCompatActivity {
 
 		explainLayout.setOnClickListener(v -> {
 			int position = (int)_position;
-			StringBuilder contextBuilder = new StringBuilder();
-			contextBuilder.append("Here is a part of a chat conversation:\n---\n");
 
-			int startIndex = Math.max(0, position - 5);
+			// Build context strings
+			StringBuilder beforeContext = new StringBuilder();
+			int startIndex = Math.max(0, position - EXPLAIN_CONTEXT_MESSAGES_BEFORE);
 			for (int i = startIndex; i < position; i++) {
-				contextBuilder.append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
+				String senderName = ChatMessagesList.get(i).get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? FirstUserName : SecondUserName;
+				beforeContext.append(senderName).append(": ").append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
 			}
 
-			contextBuilder.append("---\n");
-			contextBuilder.append("Please explain the following message in detail, considering the context of the conversation:\n");
-			contextBuilder.append(messageText).append("\n");
-			contextBuilder.append("---\n");
-
-			int endIndex = Math.min(ChatMessagesList.size(), position + 3);
+			StringBuilder afterContext = new StringBuilder();
+			int endIndex = Math.min(ChatMessagesList.size(), position + EXPLAIN_CONTEXT_MESSAGES_AFTER + 1);
 			for (int i = position + 1; i < endIndex; i++) {
-				contextBuilder.append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
+				String senderName = ChatMessagesList.get(i).get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? FirstUserName : SecondUserName;
+				afterContext.append(senderName).append(": ").append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
 			}
-			contextBuilder.append("---\n");
 
-			String prompt = contextBuilder.toString();
+			String senderOfMessageToExplain = messageData.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? FirstUserName : SecondUserName;
+
+			String prompt = getString(R.string.gemini_explanation_prompt,
+					SecondUserName,
+					beforeContext.toString(),
+					senderOfMessageToExplain,
+					messageText,
+					afterContext.toString());
+
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
@@ -2719,63 +2728,44 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void callGeminiForSummary(String prompt, final BaseMessageViewHolder viewHolder) {
-		Gemini summaryGemini = new Gemini.Builder(this)
-				.model(GEMINI_MODEL)
-				.tone(GEMINI_TONE)
-				.showThinking(true)
-				.systemInstruction("You are a text summarizer. Provide a concise summary of the given text.")
-				.build();
-
-		summaryGemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
-			@Override
-			public void onSuccess(String response) {
-				runOnUiThread(() -> {
-					if (viewHolder != null) {
-						viewHolder.stopShimmer();
-					}
-					SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response, "Summary");
-					bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
-				});
-			}
-
-			@Override
-			public void onError(String error) {
-				runOnUiThread(() -> {
-					if (viewHolder != null) {
-						viewHolder.stopShimmer();
-					}
-					Log.e("GeminiSummary", "Error: " + error);
-					Toast.makeText(getApplicationContext(), "Error getting summary: " + error, Toast.LENGTH_SHORT).show();
-				});
-			}
-
-			@Override
-			public void onThinking() {
-				runOnUiThread(() -> {
-					if (viewHolder != null) {
-						viewHolder.startShimmer();
-					}
-				});
-			}
-		});
+		callGeminiForAiFeature(
+				prompt,
+				getString(R.string.gemini_system_instruction_summary),
+				GEMINI_MODEL,
+				getString(R.string.gemini_summary_title),
+				"GeminiSummary",
+				getString(R.string.gemini_error_summary),
+				viewHolder
+		);
 	}
 
 	private void callGeminiForExplanation(String prompt, final BaseMessageViewHolder viewHolder) {
-		Gemini explanationGemini = new Gemini.Builder(this)
-				.model("gemini-2.5-flash")
-				.tone("neutral")
+		callGeminiForAiFeature(
+				prompt,
+				getString(R.string.gemini_system_instruction_explanation),
+				"gemini-2.5-flash",
+				getString(R.string.gemini_explanation_title),
+				"GeminiExplanation",
+				getString(R.string.gemini_error_explanation),
+				viewHolder
+		);
+	}
+
+	private void callGeminiForAiFeature(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, final BaseMessageViewHolder viewHolder) {
+		Gemini gemini = new Gemini.Builder(this)
+				.model(model)
 				.showThinking(true)
-				.systemInstruction("You are a helpful assistant. Explain the following text in a clear and detailed manner, using Markdown for formatting (headings, bold, etc.).")
+				.systemInstruction(systemInstruction)
 				.build();
 
-		explanationGemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+		gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
 				runOnUiThread(() -> {
 					if (viewHolder != null) {
 						viewHolder.stopShimmer();
 					}
-					SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response, "Explanation");
+					ContentDisplayBottomSheetDialogFragment bottomSheet = ContentDisplayBottomSheetDialogFragment.newInstance(response, bottomSheetTitle);
 					bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
 				});
 			}
@@ -2786,8 +2776,8 @@ public class ChatActivity extends AppCompatActivity {
 					if (viewHolder != null) {
 						viewHolder.stopShimmer();
 					}
-					Log.e("GeminiExplanation", "Error: " + error);
-					Toast.makeText(getApplicationContext(), "Error getting explanation: " + error, Toast.LENGTH_SHORT).show();
+					Log.e(TAG, logTag + " Error: " + error);
+					Toast.makeText(getApplicationContext(), errorMessage + error, Toast.LENGTH_SHORT).show();
 				});
 			}
 
