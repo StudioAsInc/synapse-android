@@ -266,7 +266,7 @@
     <string name="chat_settings_share_contact">Share contact</string>
     <string name="chat_settings_share_contact_subtitle">Share the link of profile</string>
     <string name="chat_settings_block">Block</string>
-    <string name="chat_settings_block_subtitle">They won&apos;t be able to call or message.</string>
+    <string name="chat_settings_block_subtitle">They will not be able to call or message.</string>
     <string name="chat_settings_report">Report</string>
     <string name="chat_settings_report_subtitle">Give feedbacks and report conversation</string>
 </resources>
