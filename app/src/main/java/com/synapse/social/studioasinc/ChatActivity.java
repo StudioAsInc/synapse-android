@@ -2709,7 +2709,8 @@ public class ChatActivity extends AppCompatActivity {
 				getString(R.string.gemini_summary_title),
 				"GeminiSummary",
 				getString(R.string.gemini_error_summary),
-				viewHolder
+				viewHolder,
+				null
 		);
 		callGeminiForAiFeature(params);
 	}
@@ -2722,7 +2723,8 @@ public class ChatActivity extends AppCompatActivity {
 				getString(R.string.gemini_explanation_title),
 				"GeminiExplanation",
 				getString(R.string.gemini_error_explanation),
-				viewHolder
+				viewHolder,
+				1000
 		);
 		callGeminiForAiFeature(params);
 	}
@@ -2735,8 +2737,9 @@ public class ChatActivity extends AppCompatActivity {
 		String logTag;
 		String errorMessage;
 		BaseMessageViewHolder viewHolder;
+		Integer maxTokens;
 
-		AiFeatureParams(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, BaseMessageViewHolder viewHolder) {
+		AiFeatureParams(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, BaseMessageViewHolder viewHolder, Integer maxTokens) {
 			this.prompt = prompt;
 			this.systemInstruction = systemInstruction;
 			this.model = model;
@@ -2744,15 +2747,21 @@ public class ChatActivity extends AppCompatActivity {
 			this.logTag = logTag;
 			this.errorMessage = errorMessage;
 			this.viewHolder = viewHolder;
+			this.maxTokens = maxTokens;
 		}
 	}
 
 	private void callGeminiForAiFeature(AiFeatureParams params) {
-		Gemini gemini = new Gemini.Builder(this)
+		Gemini.Builder builder = new Gemini.Builder(this)
 				.model(params.model)
 				.showThinking(true)
-				.systemInstruction(params.systemInstruction)
-				.build();
+				.systemInstruction(params.systemInstruction);
+
+		if (params.maxTokens != null) {
+			builder.maxTokens(params.maxTokens);
+		}
+
+		Gemini gemini = builder.build();
 
 		gemini.sendPrompt(params.prompt, new Gemini.GeminiCallback() {
 			@Override
