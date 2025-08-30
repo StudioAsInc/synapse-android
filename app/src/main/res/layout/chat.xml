@@ -179,6 +179,8 @@
 						android:layout_height="match_parent"
 						android:background="@android:color/transparent"
 						android:listSelector="@drawable/no_highlight"
+						android:clipToPadding="false"
+						android:paddingBottom="80dp"
 						tools:listitem="@layout/chat_msg_cv_synapse" />
 				</LinearLayout>
 				<TextView
