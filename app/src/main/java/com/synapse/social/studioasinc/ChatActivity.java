@@ -1027,8 +1027,28 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 		explainLayout.setOnClickListener(v -> {
-			String prompt = "Explain the following text in a clear and detailed manner, using Markdown for formatting (headings, bold, etc.):\n\n" + messageText;
-			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
+			int position = (int)_position;
+			StringBuilder contextBuilder = new StringBuilder();
+			contextBuilder.append("Here is a part of a chat conversation:\n---\n");
+
+			int startIndex = Math.max(0, position - 5);
+			for (int i = startIndex; i < position; i++) {
+				contextBuilder.append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
+			}
+
+			contextBuilder.append("---\n");
+			contextBuilder.append("Please explain the following message in detail, considering the context of the conversation:\n");
+			contextBuilder.append(messageText).append("\n");
+			contextBuilder.append("---\n");
+
+			int endIndex = Math.min(ChatMessagesList.size(), position + 3);
+			for (int i = position + 1; i < endIndex; i++) {
+				contextBuilder.append(ChatMessagesList.get(i).get(MESSAGE_TEXT_KEY).toString()).append("\n");
+			}
+			contextBuilder.append("---\n");
+
+			String prompt = contextBuilder.toString();
+			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
 			}

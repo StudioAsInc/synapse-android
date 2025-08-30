@@ -53,5 +53,11 @@ public class SummaryBottomSheetDialogFragment extends BottomSheetDialogFragment 
                 MarkdownRenderer.get(requireContext()).render(contentTextView, text);
             }
         }
+
+        view.findViewById(R.id.scroll_view).setOnTouchListener((v, event) -> {
+            // Prevent the bottom sheet from being dragged down when the scroll view is scrolled.
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            return false;
+        });
     }
 }
