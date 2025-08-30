@@ -2793,14 +2793,6 @@ public class ChatActivity extends AppCompatActivity {
 	private void handleBlocklistUpdate(DataSnapshot dataSnapshot) {
 		GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 		final String _childKey = dataSnapshot.getKey();
-	}
-
-	private String getSenderNameForMessage(HashMap<String, Object> message) {
-		if (message == null || message.get(UID_KEY) == null || auth.getCurrentUser() == null) {
-			return "Unknown";
-		}
-		boolean isMyMessage = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid());
-		return isMyMessage ? FirstUserName : SecondUserName;
 		final HashMap<String, Object> _childValue = dataSnapshot.getValue(_ind);
 
 		if (_childValue == null) return;
@@ -2825,6 +2817,14 @@ public class ChatActivity extends AppCompatActivity {
 				message_input_overall_container.setVisibility(View.VISIBLE);
 			}
 		}
+	}
+
+	private String getSenderNameForMessage(HashMap<String, Object> message) {
+		if (message == null || message.get(UID_KEY) == null || auth.getCurrentUser() == null) {
+			return "Unknown";
+		}
+		boolean isMyMessage = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid());
+		return isMyMessage ? FirstUserName : SecondUserName;
 	}
 
 	private void updateUserProfile(DataSnapshot dataSnapshot) {
