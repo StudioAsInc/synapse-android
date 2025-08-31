@@ -16,7 +16,7 @@
 **Synapse** is a revolutionary open-source social platform combining speed, privacy, and customization:  
 - **Real-time communication**: Chat, video calls (coming soon), and microblogs  
 - **Zero ads, non-profit model**: Prioritizing users over profits  
-- **25GB+ free storage**: For media, posts, and communities  
+- **35GB+ free storage**: For media, posts, and communities  
 - **Lightweight & optimized**: Runs smoothly on any device  
 
 > 🔧 *Under active development – expect frequent updates!*  
