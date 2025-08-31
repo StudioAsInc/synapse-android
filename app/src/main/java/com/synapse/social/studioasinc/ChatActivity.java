@@ -49,6 +49,9 @@ import android.widget.RelativeLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ImageButton;
+import android.widget.Button;
+import android.widget.Chronometer;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -1664,6 +1667,9 @@ public class ChatActivity extends AppCompatActivity {
 		ImageButton cancelButton = bottomSheetView.findViewById(R.id.cancel_button);
 		ImageButton stopButton = bottomSheetView.findViewById(R.id.stop_button);
 		ImageButton pauseResumeButton = bottomSheetView.findViewById(R.id.pause_resume_button);
+		
+		// Declare audioVisualization at a broader scope
+		final com.cleveroad.audiovisualization.GLAudioVisualizationView[] audioVisualizationRef = new com.cleveroad.audiovisualization.GLAudioVisualizationView[1];
 
 		_AudioRecorderStart();
 		recordingTimer.setBase(android.os.SystemClock.elapsedRealtime());
@@ -1689,16 +1695,15 @@ public class ChatActivity extends AppCompatActivity {
 			com.google.android.material.slider.RangeSlider trimSlider = bottomSheetView.findViewById(R.id.trim_slider);
 			ImageButton deleteButton = bottomSheetView.findViewById(R.id.delete_button);
 			Button sendButton = bottomSheetView.findViewById(R.id.send_button);
-			final com.cleveroad.audiovisualization.GLAudioVisualizationView audioVisualization = bottomSheetView.findViewById(R.id.waveform_view);
+			audioVisualizationRef[0] = bottomSheetView.findViewById(R.id.waveform_view);
 
 			final android.media.MediaPlayer mediaPlayer = new android.media.MediaPlayer();
-			final com.cleveroad.audiovisualization.VisualizerDbmHandler vizHandler = com.cleveroad.audiovisualization.DbmHandler.Factory.newVisualizerHandler(ChatActivity.this, 0);
-			audioVisualization.linkTo(vizHandler);
+			final com.cleveroad.audiovisualization.VisualizerDbmHandler vizHandler = com.cleveroad.audiovisualization.DbmHandler.Factory.newVisualizerHandler(0);
+			audioVisualizationRef[0].linkTo(vizHandler);
 
 			try {
 				mediaPlayer.setDataSource(currentRecordingFilePath);
 				mediaPlayer.prepare();
-				vizHandler.linkTo(mediaPlayer);
 			} catch (IOException e) {
 				e.printStackTrace();
 				Toast.makeText(this, "Failed to load audio for preview.", Toast.LENGTH_SHORT).show();
@@ -1736,25 +1741,25 @@ public class ChatActivity extends AppCompatActivity {
 					mediaPlayer.pause();
 					previewPlayPauseButton.setImageResource(R.drawable.ic_play_arrow_24px);
 					progressHandler.removeCallbacks(progressRunnable);
-					audioVisualization.onPause();
+					if (audioVisualizationRef[0] != null) audioVisualizationRef[0].onPause();
 				} else {
 					mediaPlayer.start();
 					previewPlayPauseButton.setImageResource(R.drawable.ic_pause_24px);
 					progressHandler.post(progressRunnable);
-					audioVisualization.onResume();
+					if (audioVisualizationRef[0] != null) audioVisualizationRef[0].onResume();
 				}
 			});
 
 			deleteButton.setOnClickListener(view -> {
 				mediaPlayer.release();
-				audioVisualization.release();
+				if (audioVisualizationRef[0] != null) audioVisualizationRef[0].release();
 				deleteCurrentRecording();
 				bottomSheetDialog.dismiss();
 			});
 
 			sendButton.setOnClickListener(view -> {
 				mediaPlayer.release();
-				audioVisualization.release();
+				if (audioVisualizationRef[0] != null) audioVisualizationRef[0].release();
 				
 				float startMs = trimSlider.getValues().get(0);
 				float endMs = trimSlider.getValues().get(1);
@@ -1801,7 +1806,7 @@ public class ChatActivity extends AppCompatActivity {
 				_AudioRecorderStop();
 				deleteCurrentRecording();
 			}
-			audioVisualization.release();
+			if (audioVisualizationRef[0] != null) audioVisualizationRef[0].release();
 		});
 
 		bottomSheetDialog.show();
@@ -3330,7 +3335,7 @@ public class ChatActivity extends AppCompatActivity {
 			String audioUrl = (String) attachments.get(0).get("url");
 
 			final android.media.MediaPlayer mediaPlayer = new android.media.MediaPlayer();
-			final com.cleveroad.audiovisualization.VisualizerDbmHandler vizHandler = com.cleveroad.audiovisualization.DbmHandler.Factory.newVisualizerHandler(ChatActivity.this, 0);
+			final com.cleveroad.audiovisualization.VisualizerDbmHandler vizHandler = com.cleveroad.audiovisualization.DbmHandler.Factory.newVisualizerHandler(0);
 			holder.waveformView.linkTo(vizHandler);
 			
 			holder.itemView.setTag(R.id.tag_media_player, mediaPlayer);
@@ -3346,7 +3351,6 @@ public class ChatActivity extends AppCompatActivity {
 			mediaPlayer.setOnPreparedListener(mp -> {
 				holder.durationText.setText(_getDurationString(mp.getDuration()));
 				holder.seekBar.setMax(mp.getDuration());
-				vizHandler.linkTo(mediaPlayer);
 			});
 			
 			final Handler progressHandler = new Handler();
@@ -3411,15 +3415,6 @@ public class ChatActivity extends AppCompatActivity {
 		@Override
 		public int getItemCount() {
 			return _data.size();
-		}
-
-		@Override
-		public void onViewRecycled(@NonNull ViewHolder holder) {
-			super.onViewRecycled(holder);
-			Object mpTag = holder.itemView.getTag(R.id.tag_media_player);
-			if (mpTag instanceof android.media.MediaPlayer) {
-				((android.media.MediaPlayer) mpTag).release();
-			}
 		}
 
 		public class ViewHolder extends RecyclerView.ViewHolder {
