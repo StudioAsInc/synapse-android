@@ -239,4 +239,23 @@
     <string name="ph_message">I\'m also good, man.</string>
     <string name="age_agreement">I confirm that I\'m at least 12 years of age.</string>
     <string name="ph_replied_message">I\'m good, you?</string>
+
+    <!-- Gemini AI Feature Strings -->
+    <string name="gemini_summary_title">Summary</string>
+    <string name="gemini_explanation_title">Explanation</string>
+    <string name="gemini_error_summary">Error getting summary: </string>
+    <string name="gemini_error_explanation">Error getting explanation: </string>
+    <string name="gemini_system_instruction_summary">You are a text summarizer. Provide a concise summary of the given text.</string>
+    <string name="gemini_system_instruction_explanation">You are a helpful assistant. Explain the following text in a clear and detailed manner, using Markdown for formatting (headings, bold, etc.).</string>
+    <string name="explain_button_text">Explain</string>
+    <string name="gemini_explanation_prompt">Here is a part of a chat conversation between Me and %1$s:
+---
+%2$s
+---
+Please explain the following message from %3$s in detail, considering the context of the conversation:
+%4$s
+---
+%5$s
+---
+</string>
 </resources>
