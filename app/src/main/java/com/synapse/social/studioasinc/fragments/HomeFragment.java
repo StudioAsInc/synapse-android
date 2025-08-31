@@ -81,6 +81,7 @@ import android.os.Looper;
 
 public class HomeFragment extends Fragment {
 
+    private static final int SHIMMER_ITEM_COUNT = 5;
     private FirebaseDatabase _firebase;
     private DatabaseReference udb;
     private DatabaseReference postsRef;
@@ -253,7 +254,7 @@ public class HomeFragment extends Fragment {
             shimmer_container.removeAllViews();
             shimmer_container.setVisibility(View.VISIBLE);
             LayoutInflater inflater = LayoutInflater.from(getContext());
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < SHIMMER_ITEM_COUNT; i++) {
                 View shimmerView = inflater.inflate(R.layout.post_placeholder_layout, shimmer_container, false);
                 shimmer_container.addView(shimmerView);
             }
@@ -263,7 +264,6 @@ public class HomeFragment extends Fragment {
     private void _hideShimmer() {
         if (shimmer_container != null) {
             shimmer_container.setVisibility(View.GONE);
-            shimmer_container.removeAllViews();
         }
     }
 
