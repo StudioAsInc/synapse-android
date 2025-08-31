@@ -103,9 +103,11 @@ public class HomeActivity extends AppCompatActivity {
                 if (tab.getPosition() == 1) {
                     toolbarLayoutParams.setScrollFlags(0);
                     tabLayoutParams.setScrollFlags(0);
+                    topBar.setVisibility(View.GONE); // Hide the top bar
                 } else {
                     toolbarLayoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
                     tabLayoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
+                    topBar.setVisibility(View.VISIBLE); // Show the top bar
                 }
                 topBar.setLayoutParams(toolbarLayoutParams);
                 tabLayout.setLayoutParams(tabLayoutParams);
