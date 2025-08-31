@@ -32,15 +32,6 @@
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
 					tools:listitem="@layout/synapse_post_cv" />
-				<TextView
-					android:id="@+id/PublicPostsListNotFound"
-					android:layout_width="match_parent"
-					android:layout_height="350dp"
-					android:padding="8dp"
-					android:gravity="center_horizontal|center_vertical"
-					android:text="There are no public posts available \nat the moment."
-					android:textSize="16sp"
-					android:textColor="?attr/colorOnSurfaceVariant" />
 			</LinearLayout>
 		</LinearLayout>
 	</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

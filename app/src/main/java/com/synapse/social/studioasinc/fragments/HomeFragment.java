@@ -90,7 +90,6 @@ public class HomeFragment extends Fragment {
     private HashMap<String, Object> postLikeCountCache = new HashMap<>();
     private HashMap<String, Object> UserInfoCacheMap = new HashMap<>();
     private HashMap<String, Object> postFavoriteCountCache = new HashMap<>();
-    private String currentPostFilter = "PUBLIC";
 
     private ArrayList<HashMap<String, Object>> storiesList = new ArrayList<>();
     private ArrayList<HashMap<String, Object>> PostsList = new ArrayList<>();
@@ -98,7 +97,6 @@ public class HomeFragment extends Fragment {
     private LinearLayout loadingBody;
     private SwipeRefreshLayout swipeLayout;
     private RecyclerView PublicPostsList;
-    private TextView PublicPostsListNotFound;
 	private ProgressBar loading_bar;
     private LinearLayout shimmer_container;
 
@@ -132,7 +130,6 @@ public class HomeFragment extends Fragment {
         loadingBody = view.findViewById(R.id.loadingBody);
         swipeLayout = view.findViewById(R.id.swipeLayout);
         PublicPostsList = view.findViewById(R.id.PublicPostsList);
-        PublicPostsListNotFound = view.findViewById(R.id.PublicPostsListNotFound);
         loading_bar = view.findViewById(R.id.loading_bar);
         shimmer_container = view.findViewById(R.id.shimmer_container);
 
@@ -140,12 +137,12 @@ public class HomeFragment extends Fragment {
         auth = FirebaseAuth.getInstance();
 
         swipeLayout.setOnRefreshListener(() -> {
-            _loadPosts(currentPostFilter);
+            _loadPosts();
         });
     }
 
     private void initializeLogic() {
-        _loadPosts(currentPostFilter);
+        _loadPosts();
 
 
         PublicPostsList.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -209,168 +206,12 @@ public class HomeFragment extends Fragment {
                 });
     }
 
-    public void _loadPosts(final String filterType) {
+    public void _loadPosts() {
         _showShimmer();
         swipeLayout.setRefreshing(true);
-        Query query = null;
+        Query query = postsRef.orderByChild("publish_date");
         String notFoundMessage = "There are no public posts available at the moment.";
-
-        switch (filterType) {
-            case "PUBLIC":
-                query = postsRef.orderByChild("publish_date");
-                notFoundMessage = "There are no public posts available at the moment.";
-                _fetchAndDisplayPosts(query, notFoundMessage);
-                break;
-            case "LOCAL":
-                udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists() && dataSnapshot.child("user_region").exists()) {
-                            String userRegion = dataSnapshot.child("user_region").getValue(String.class);
-                            Query localPostsQuery = postsRef.orderByChild("post_region").equalTo(userRegion);
-                            _fetchAndDisplayPosts(localPostsQuery, "No regional posts found for your area.");
-                        } else {
-                            _finalizePostDisplay("No regional posts found or your region is not set.", false);
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Toast.makeText(getContext(), "Error fetching user region, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                        _finalizePostDisplay("Error loading regional posts (showing cached if available).", false);
-                    }
-                });
-                break;
-            case "FOLLOWED":
-                _firebase.getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        PostsList.clear();
-                        if (dataSnapshot.exists()) {
-                            final List<String> followedUids = new ArrayList<>();
-                            for (DataSnapshot followSnap : dataSnapshot.getChildren()) {
-                                followedUids.add(followSnap.getKey());
-                            }
-
-                            if (followedUids.isEmpty()) {
-                                _finalizePostDisplay("You are not following any users yet. Follow users to see their posts here.", false);
-                                return;
-                            }
-
-                            final int[] completedQueries = {0};
-                            final int totalQueries = followedUids.size();
-                            ExecutorService fetchExecutor = Executors.newFixedThreadPool(Math.min(followedUids.size(), 5));
-                            Handler mainHandler = new Handler(Looper.getMainLooper());
-
-                            for (String uid : followedUids) {
-                                fetchExecutor.execute(() -> {
-                                    postsRef.orderByChild("uid").equalTo(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot userPostsSnapshot) {
-                                            mainHandler.post(() -> {
-                                                for (DataSnapshot postSnap : userPostsSnapshot.getChildren()) {
-                                                    GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-                                                    HashMap<String, Object> _map = postSnap.getValue(_ind);
-                                                    if (_map != null) {
-                                                        PostsList.add(_map);
-                                                    }
-                                                }
-                                                completedQueries[0]++;
-                                                if (completedQueries[0] == totalQueries) {
-                                                    _finalizePostDisplay("No posts from followed users found.", true);
-                                                }
-                                            });
-                                        }
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                                            mainHandler.post(() -> {
-                                                completedQueries[0]++;
-                                                Toast.makeText(getContext(), "Error loading followed users' posts, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                                                if (completedQueries[0] == totalQueries) {
-                                                    _finalizePostDisplay("Error loading followed users' posts (showing cached if available).", true);
-                                                }
-                                            });
-                                        }
-                                    });
-                                });
-                            }
-                        } else {
-                            _finalizePostDisplay("You are not following any users yet. Follow users to see their posts here.", false);
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Toast.makeText(getContext(), "Error fetching followed users keys, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                        _finalizePostDisplay("Error loading followed users' posts (showing cached if available).", false);
-                    }
-                });
-                break;
-            case "FAVORITE":
-                _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        PostsList.clear();
-                        if (dataSnapshot.exists()) {
-                            final List<String> favoritePostKeys = new ArrayList<>();
-                            for (DataSnapshot favSnap : dataSnapshot.getChildren()) {
-                                favoritePostKeys.add(favSnap.getKey());
-                            }
-
-                            if (favoritePostKeys.isEmpty()) {
-                                _finalizePostDisplay("You have no saved posts yet.", false);
-                                return;
-                            }
-
-                            final int[] completedQueries = {0};
-                            final int totalQueries = favoritePostKeys.size();
-
-                            ExecutorService fetchExecutor = Executors.newFixedThreadPool(Math.min(favoritePostKeys.size(), 5));
-                            Handler mainHandler = new Handler(Looper.getMainLooper());
-
-                            for (String key : favoritePostKeys) {
-                                fetchExecutor.execute(() -> {
-                                    postsRef.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot postSnapshot) {
-                                            mainHandler.post(() -> {
-                                                GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-                                                HashMap<String, Object> _map = postSnapshot.getValue(_ind);
-                                                if (_map != null) {
-                                                    PostsList.add(_map);
-                                                }
-                                                completedQueries[0]++;
-                                                if (completedQueries[0] == totalQueries) {
-                                                    _finalizePostDisplay("You have no saved posts yet.", true);
-                                                }
-                                            });
-                                        }
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                                            mainHandler.post(() -> {
-                                                completedQueries[0]++;
-                                                Toast.makeText(getContext(), "Error loading saved posts, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                                                if (completedQueries[0] == totalQueries) {
-                                                    _finalizePostDisplay("Error loading saved posts (showing cached if available).", true);
-                                                }
-                                            });
-                                        }
-                                    });
-                                });
-                            }
-                        } else {
-                            _finalizePostDisplay("You have no saved posts yet.", false);
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Toast.makeText(getContext(), "Error fetching favorite posts keys, showing cached data if available: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                        _finalizePostDisplay("Error loading saved posts (showing cached if available).", false);
-                    }
-                });
-                break;
-        }
+        _fetchAndDisplayPosts(query, notFoundMessage);
     }
 
     private void _fetchAndDisplayPosts(Query query, final String notFoundMessage) {
@@ -455,11 +296,9 @@ public class HomeFragment extends Fragment {
             // If there are no posts, we keep the shimmer effect visible as a placeholder.
             // The shimmer is started when _loadPosts is called.
             PublicPostsList.setVisibility(View.GONE);
-            PublicPostsListNotFound.setVisibility(View.GONE);
         } else {
             _hideShimmer();
             PublicPostsList.setVisibility(View.VISIBLE);
-            PublicPostsListNotFound.setVisibility(View.GONE);
         }
         loadingBody.setVisibility(View.GONE);
         swipeLayout.setRefreshing(false);
@@ -557,10 +396,6 @@ public class HomeFragment extends Fragment {
             final ImageView miniPostLayoutTextPost;
             final ImageView miniPostLayoutMoreButton;
             final TextView miniPostLayoutTextPostPublish;
-            final TextView miniPostLayoutFiltersScrollBodyFilterLOCAL;
-            final TextView miniPostLayoutFiltersScrollBodyFilterPUBLIC;
-            final TextView miniPostLayoutFiltersScrollBodyFilterFOLLOWED;
-            final TextView miniPostLayoutFiltersScrollBodyFilterFAVORITE;
 
             ValueEventListener profileListener;
             DatabaseReference profileRef;
@@ -576,10 +411,6 @@ public class HomeFragment extends Fragment {
                 miniPostLayoutTextPost = view.findViewById(R.id.miniPostLayoutTextPost);
                 miniPostLayoutMoreButton = view.findViewById(R.id.miniPostLayoutMoreButton);
                 miniPostLayoutTextPostPublish = view.findViewById(R.id.miniPostLayoutTextPostPublish);
-                miniPostLayoutFiltersScrollBodyFilterLOCAL = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterLOCAL);
-                miniPostLayoutFiltersScrollBodyFilterPUBLIC = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterPUBLIC);
-                miniPostLayoutFiltersScrollBodyFilterFOLLOWED = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFOLLOWED);
-                miniPostLayoutFiltersScrollBodyFilterFAVORITE = view.findViewById(R.id.miniPostLayoutFiltersScrollBodyFilterFAVORITE);
             }
         }
 
@@ -619,15 +450,7 @@ public class HomeFragment extends Fragment {
 	        };
             holder.profileRef.addValueEventListener(holder.profileListener);
 
-	        _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-	        _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-	        _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-	        _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-	        holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-	        holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
-	        holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
 	        holder.miniPostLayoutTextPostPublish.setVisibility(View.GONE);
-	        holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
 	        _ImageColor(holder.miniPostLayoutImagePost, 0xFF445E91);
 	        _ImageColor(holder.miniPostLayoutVideoPost, 0xFF445E91);
 	        _ImageColor(holder.miniPostLayoutTextPost, 0xFF445E91);
@@ -689,8 +512,7 @@ public class HomeFragment extends Fragment {
                         FirebaseDatabase.getInstance().getReference("skyline/posts").child(uniqueKey).updateChildren(createPostMap, (databaseError, databaseReference) -> {
                             if (databaseError == null) {
                                 Toast.makeText(getContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
-                                currentPostFilter = "PUBLIC";
-                                _loadPosts(currentPostFilter);
+                                _loadPosts();
                             } else {
                                 Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                             }
@@ -699,58 +521,6 @@ public class HomeFragment extends Fragment {
                     }
                 }
                 vbr.vibrate((long)(48));
-            });
-
-            holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setOnClickListener(v -> {
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFFFFFFFF);
-                holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-                holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-                holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-                currentPostFilter = "LOCAL";
-                _loadPosts(currentPostFilter);
-            });
-
-            holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setOnClickListener(v -> {
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, getResources().getColor(R.color.colorPrimary), 0xFF1A237E, 300, 0, Color.TRANSPARENT);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-                holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFFFFFFFF);
-                holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-                holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-                currentPostFilter = "PUBLIC";
-                _loadPosts(currentPostFilter);
-            });
-
-            holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setOnClickListener(v -> {
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, getResources().getColor(R.color.colorPrimary), 0xFF616161, 300, 0, Color.TRANSPARENT);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-                holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-                holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFFFFFFFF);
-                holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFF616161);
-                currentPostFilter = "FOLLOWED";
-                _loadPosts(currentPostFilter);
-            });
-
-            holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setOnClickListener(v -> {
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterLOCAL, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-                _viewGraphics(holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE, getResources().getColor(R.color.colorPrimary), 0xFF9FA8DA, 300, 0, Color.TRANSPARENT);
-                holder.miniPostLayoutFiltersScrollBodyFilterLOCAL.setTextColor(0xFF616161);
-                holder.miniPostLayoutFiltersScrollBodyFilterPUBLIC.setTextColor(0xFF616161);
-                holder.miniPostLayoutFiltersScrollBodyFilterFOLLOWED.setTextColor(0xFF616161);
-                holder.miniPostLayoutFiltersScrollBodyFilterFAVORITE.setTextColor(0xFFFFFFFF);
-                currentPostFilter = "FAVORITE";
-                _loadPosts(currentPostFilter);
             });
         }
 
