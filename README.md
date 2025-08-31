@@ -8,7 +8,7 @@
   [Website](https://dl-synapse.pages.dev) • [Docs](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues/new?template=bug_report.md) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues/new?template=feature_request.md)
 </div>
 
-> **Note**: External badges and images have been removed to ensure offline compatibility and reduce dependency on third-party services. For current build status and releases, please check the GitHub repository directly.
+> **Note**: This project is no longer maintained by Humans, it's automated using agents
 
 ---
 
