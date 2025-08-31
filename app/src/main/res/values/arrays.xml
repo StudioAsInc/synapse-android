@@ -4,4 +4,8 @@
     <item>10.0</item>
     <item>50.0</item>
   </array>
+  <array name="initial_range_slider_values">
+    <item>0.0</item>
+    <item>100.0</item>
+  </array>
 </resources>

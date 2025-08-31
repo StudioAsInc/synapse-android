@@ -258,4 +258,10 @@ Please explain the following message from %3$s in detail, considering the contex
 %5$s
 ---
 </string>
+    <string name="cancel_recording">Cancel recording</string>
+    <string name="stop_recording">Stop recording</string>
+    <string name="pause_recording">Pause recording</string>
+    <string name="play_preview">Play preview</string>
+    <string name="delete_recording">Delete recording</string>
+    <string name="play_voice_message">Play voice message</string>
 </resources>
