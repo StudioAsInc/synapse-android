@@ -91,7 +91,7 @@ synapse-android/
 - **`PostCommentsBottomSheetDialog.java`** - Comment interface
 - **`PostMoreBottomSheetDialog.java`** - Post action menu
 - **`UserProfileMoreBottomSheet.java`** - Profile action menu
-- **`SummaryBottomSheetDialogFragment.java`** - Content summary display
+- **`ContentDisplayBottomSheetDialogFragment.java`** - Content summary display
 
 #### Utility Classes
 - **`FileUtil.java`** - File operations and management

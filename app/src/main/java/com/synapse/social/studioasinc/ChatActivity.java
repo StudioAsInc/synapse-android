@@ -137,7 +137,10 @@ public class ChatActivity extends AppCompatActivity {
 	private static final String ATTACHMENT_MESSAGE_TYPE = "ATTACHMENT_MESSAGE";
 
 	private static final String GEMINI_MODEL = "gemini-2.5-flash-lite";
-	private static final String GEMINI_TONE = "normal";
+	private static final String GEMINI_EXPLANATION_MODEL = "gemini-2.5-flash";
+	private static final int EXPLAIN_CONTEXT_MESSAGES_BEFORE = 5;
+	private static final int EXPLAIN_CONTEXT_MESSAGES_AFTER = 2;
+	private static final String TAG = "ChatActivity";
 
 	private Timer _timer = new Timer();
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
@@ -951,6 +954,7 @@ public class ChatActivity extends AppCompatActivity {
 		LinearLayout editLayout = popupView.findViewById(R.id.edit);
 		LinearLayout replyLayout = popupView.findViewById(R.id.reply);
 		LinearLayout summaryLayout = popupView.findViewById(R.id.summary);
+		LinearLayout explainLayout = popupView.findViewById(R.id.explain);
 		LinearLayout copyLayout = popupView.findViewById(R.id.copy);
 		LinearLayout deleteLayout = popupView.findViewById(R.id.delete);
 
@@ -1021,6 +1025,16 @@ public class ChatActivity extends AppCompatActivity {
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
+			}
+			popupWindow.dismiss();
+		});
+
+		explainLayout.setOnClickListener(v -> {
+			int position = (int)_position;
+			String prompt = buildExplanationPrompt(position, messageText, messageData);
+			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
+			if (vh instanceof BaseMessageViewHolder) {
+				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
 			}
 			popupWindow.dismiss();
 		});
@@ -2661,7 +2675,6 @@ public class ChatActivity extends AppCompatActivity {
 
 	private void callGemini(String prompt, boolean showThinking) {
 		gemini.setModel(GEMINI_MODEL);
-		gemini.setTone(GEMINI_TONE);
 		gemini.setShowThinking(showThinking);
 		gemini.setSystemInstruction(
 		"You are a concise text assistant. Always return ONLY the transformed text (no explanation, no labels). " +
@@ -2689,21 +2702,75 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void callGeminiForSummary(String prompt, final BaseMessageViewHolder viewHolder) {
-		Gemini summaryGemini = new Gemini.Builder(this)
-				.model(GEMINI_MODEL)
-				.tone(GEMINI_TONE)
-				.showThinking(true)
-				.systemInstruction("You are a text summarizer. Provide a concise summary of the given text.")
-				.build();
+		AiFeatureParams params = new AiFeatureParams(
+				prompt,
+				getString(R.string.gemini_system_instruction_summary),
+				GEMINI_MODEL,
+				getString(R.string.gemini_summary_title),
+				"GeminiSummary",
+				getString(R.string.gemini_error_summary),
+				viewHolder,
+				null
+		);
+		callGeminiForAiFeature(params);
+	}
 
-		summaryGemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
+	private void callGeminiForExplanation(String prompt, final BaseMessageViewHolder viewHolder) {
+		AiFeatureParams params = new AiFeatureParams(
+				prompt,
+				getString(R.string.gemini_system_instruction_explanation),
+				GEMINI_EXPLANATION_MODEL,
+				getString(R.string.gemini_explanation_title),
+				"GeminiExplanation",
+				getString(R.string.gemini_error_explanation),
+				viewHolder,
+				1000
+		);
+		callGeminiForAiFeature(params);
+	}
+
+	private static class AiFeatureParams {
+		String prompt;
+		String systemInstruction;
+		String model;
+		String bottomSheetTitle;
+		String logTag;
+		String errorMessage;
+		BaseMessageViewHolder viewHolder;
+		Integer maxTokens;
+
+		AiFeatureParams(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, BaseMessageViewHolder viewHolder, Integer maxTokens) {
+			this.prompt = prompt;
+			this.systemInstruction = systemInstruction;
+			this.model = model;
+			this.bottomSheetTitle = bottomSheetTitle;
+			this.logTag = logTag;
+			this.errorMessage = errorMessage;
+			this.viewHolder = viewHolder;
+			this.maxTokens = maxTokens;
+		}
+	}
+
+	private void callGeminiForAiFeature(AiFeatureParams params) {
+		Gemini.Builder builder = new Gemini.Builder(this)
+				.model(params.model)
+				.showThinking(true)
+				.systemInstruction(params.systemInstruction);
+
+		if (params.maxTokens != null) {
+			builder.maxTokens(params.maxTokens);
+		}
+
+		Gemini gemini = builder.build();
+
+		gemini.sendPrompt(params.prompt, new Gemini.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
 				runOnUiThread(() -> {
-					if (viewHolder != null) {
-						viewHolder.stopShimmer();
+					if (params.viewHolder != null) {
+						params.viewHolder.stopShimmer();
 					}
-					SummaryBottomSheetDialogFragment bottomSheet = SummaryBottomSheetDialogFragment.newInstance(response);
+					ContentDisplayBottomSheetDialogFragment bottomSheet = ContentDisplayBottomSheetDialogFragment.newInstance(response, params.bottomSheetTitle);
 					bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
 				});
 			}
@@ -2711,19 +2778,19 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onError(String error) {
 				runOnUiThread(() -> {
-					if (viewHolder != null) {
-						viewHolder.stopShimmer();
+					if (params.viewHolder != null) {
+						params.viewHolder.stopShimmer();
 					}
-					Log.e("GeminiSummary", "Error: " + error);
-					Toast.makeText(getApplicationContext(), "Error getting summary: " + error, Toast.LENGTH_SHORT).show();
+					Log.e(TAG, params.logTag + " Error: " + error);
+					Toast.makeText(getApplicationContext(), params.errorMessage + error, Toast.LENGTH_SHORT).show();
 				});
 			}
 
 			@Override
 			public void onThinking() {
 				runOnUiThread(() -> {
-					if (viewHolder != null) {
-						viewHolder.startShimmer();
+					if (params.viewHolder != null) {
+						params.viewHolder.startShimmer();
 					}
 				});
 			}
@@ -2735,7 +2802,9 @@ public class ChatActivity extends AppCompatActivity {
 		final String _childKey = dataSnapshot.getKey();
 		final HashMap<String, Object> _childValue = dataSnapshot.getValue(_ind);
 
-		if (_childValue == null) return;
+		if (_childValue == null) {
+			return;
+		}
 
 		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		String otherUid = getIntent().getStringExtra(UID_KEY);
@@ -2757,6 +2826,47 @@ public class ChatActivity extends AppCompatActivity {
 				message_input_overall_container.setVisibility(View.VISIBLE);
 			}
 		}
+	}
+
+	private String getSenderNameForMessage(HashMap<String, Object> message) {
+		if (message == null || message.get(UID_KEY) == null || auth.getCurrentUser() == null) {
+			return "Unknown";
+		}
+		boolean isMyMessage = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid());
+		return isMyMessage ? FirstUserName : SecondUserName;
+	}
+
+	private void appendMessageToContext(StringBuilder contextBuilder, HashMap<String, Object> message) {
+		Object messageTextObj = message.get(MESSAGE_TEXT_KEY);
+		String messageText = (messageTextObj != null) ? messageTextObj.toString() : "";
+		contextBuilder.append(getSenderNameForMessage(message))
+				.append(": ")
+				.append(messageText)
+				.append("\n");
+	}
+
+	private String buildExplanationPrompt(int position, String messageText, HashMap<String, Object> messageData) {
+		// Build context strings
+		StringBuilder beforeContext = new StringBuilder();
+		int startIndex = Math.max(0, position - EXPLAIN_CONTEXT_MESSAGES_BEFORE);
+		for (int i = startIndex; i < position; i++) {
+			appendMessageToContext(beforeContext, ChatMessagesList.get(i));
+		}
+
+		StringBuilder afterContext = new StringBuilder();
+		int endIndex = Math.min(ChatMessagesList.size(), position + EXPLAIN_CONTEXT_MESSAGES_AFTER + 1);
+		for (int i = position + 1; i < endIndex; i++) {
+			appendMessageToContext(afterContext, ChatMessagesList.get(i));
+		}
+
+		String senderOfMessageToExplain = getSenderNameForMessage(messageData);
+
+		return getString(R.string.gemini_explanation_prompt,
+				SecondUserName,
+				beforeContext.toString(),
+				senderOfMessageToExplain,
+				messageText,
+				afterContext.toString());
 	}
 
 	private void updateUserProfile(DataSnapshot dataSnapshot) {
