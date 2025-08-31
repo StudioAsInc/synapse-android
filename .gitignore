@@ -1,3 +1,7 @@
 # Keystores & credentials
 *.keystore
 keystore.properties
+
+# Android SDK (large binary files, should be downloaded by setup script)
+/opt/android-sdk/
+android-sdk/
