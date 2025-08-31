@@ -206,6 +206,32 @@ public class CreatePostActivity extends AppCompatActivity {
 			}
 		});
 		
+		postImageView.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				final CharSequence[] items = { "Change Image", "Remove Image", "Cancel" };
+				AlertDialog.Builder builder = new AlertDialog.Builder(CreatePostActivity.this);
+				builder.setTitle("Image Options");
+				builder.setItems(items, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int item) {
+						if (items[item].equals("Change Image")) {
+							_openImagePicker();
+						} else if (items[item].equals("Remove Image")) {
+							hasImage = false;
+							selectedImagePath = "";
+							postImageView.setVisibility(View.GONE);
+							imagePlaceholder.setVisibility(View.VISIBLE);
+							postImageView.setImageDrawable(null);
+						} else if (items[item].equals("Cancel")) {
+							dialog.dismiss();
+						}
+					}
+				});
+				builder.show();
+			}
+		});
+
 		settingsButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {

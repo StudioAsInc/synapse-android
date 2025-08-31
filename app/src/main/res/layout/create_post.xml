@@ -74,7 +74,7 @@
 				android:text="Post"
 				android:textSize="16sp"
 				android:textColor="@color/colorSurface"
-				style="@style/Widget.Material3.Button" />
+				style="@style/Widget.Material3Expressive.Button" />
 		</LinearLayout>
 		<LinearLayout
 			android:id="@+id/topSpace"
@@ -129,7 +129,7 @@
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
 							android:src="@drawable/default_image"
-							android:scaleType="centerCrop"
+							android:scaleType="fitCenter"
 							android:visibility="gone" />
 					</androidx.cardview.widget.CardView>
 					<com.synapse.social.studioasinc.FadeEditText
