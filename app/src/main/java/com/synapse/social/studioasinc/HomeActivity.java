@@ -29,6 +29,7 @@ import com.synapse.social.studioasinc.adapter.ViewPagerAdapter;
 
 public class HomeActivity extends AppCompatActivity {
 
+    private static final int REELS_TAB_POSITION = 1;
     private FirebaseAuth auth;
     private FirebaseDatabase _firebase;
     private DatabaseReference udb;
@@ -100,12 +101,14 @@ public class HomeActivity extends AppCompatActivity {
             public void onTabSelected(TabLayout.Tab tab) {
                 AppBarLayout.LayoutParams toolbarLayoutParams = (AppBarLayout.LayoutParams) topBar.getLayoutParams();
                 AppBarLayout.LayoutParams tabLayoutParams = (AppBarLayout.LayoutParams) tabLayout.getLayoutParams();
-                if (tab.getPosition() == 1) {
+                if (tab.getPosition() == REELS_TAB_POSITION) {
                     toolbarLayoutParams.setScrollFlags(0);
                     tabLayoutParams.setScrollFlags(0);
+                    topBar.setVisibility(View.GONE); // Hide the top bar
                 } else {
                     toolbarLayoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
                     tabLayoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
+                    topBar.setVisibility(View.VISIBLE); // Show the top bar
                 }
                 topBar.setLayoutParams(toolbarLayoutParams);
                 tabLayout.setLayoutParams(tabLayoutParams);
