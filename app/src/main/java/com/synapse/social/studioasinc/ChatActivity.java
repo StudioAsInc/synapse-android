@@ -216,11 +216,12 @@ public class ChatActivity extends AppCompatActivity {
 	private MaterialButton btn_sendMessage;
 	private FadeEditText message_et;
 	private LinearLayout toolContainer;
-	private ImageView expand_send_type_btn;
+	private ImageView micIconButton;
 	private ImageView close_attachments_btn;
 	private LinearLayout devider_mic_camera;
 	private ImageView galleryBtn;
 
+	private String currentRecordingFilePath;
 	private Intent intent = new Intent();
 	private DatabaseReference main = _firebase.getReference(SKYLINE_REF);
 	private FirebaseAuth auth;
@@ -243,9 +244,11 @@ public class ChatActivity extends AppCompatActivity {
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
 
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED
+		|| ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
 		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);} else {
+			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+		} else {
 			initializeLogic();
 		}
 	}
@@ -297,7 +300,7 @@ public class ChatActivity extends AppCompatActivity {
 		btn_sendMessage = findViewById(R.id.btn_sendMessage);
 		message_et = findViewById(R.id.message_et);
 		toolContainer = findViewById(R.id.toolContainer);
-		expand_send_type_btn = findViewById(R.id.expand_send_type_btn);
+		micIconButton = findViewById(R.id.micIconButton);
 		devider_mic_camera = findViewById(R.id.devider_mic_camera);
 		galleryBtn = findViewById(R.id.galleryBtn);
 		close_attachments_btn = findViewById(R.id.close_attachments_btn);
@@ -462,6 +465,17 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View _view) {
 				StorageUtil.pickMultipleFiles(ChatActivity.this, "*/*", REQ_CD_IMAGE_PICKER);
+			}
+		});
+
+		micIconButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+					showRecordingBottomSheet();
+				} else {
+					ActivityCompat.requestPermissions(ChatActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, 2000);
+				}
 			}
 		});
 
@@ -1569,7 +1583,7 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 
-	public void _AudioRecorderStart() {
+	public String _AudioRecorderStart() {
 		cc = Calendar.getInstance();
 		recordMs = 0;
 		AudioMessageRecorder = new MediaRecorder();
@@ -1580,6 +1594,7 @@ public class ChatActivity extends AppCompatActivity {
 		getCacheFolder.mkdirs();
 		File getRecordFile = new File(getCacheFolder, cc.getTimeInMillis() + ".mp3");
 		String recordFilePath = getRecordFile.getAbsolutePath();
+		currentRecordingFilePath = recordFilePath;
 
 		AudioMessageRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
 		AudioMessageRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
@@ -1608,18 +1623,238 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		};
 		_timer.scheduleAtFixedRate(timer, (int)(0), (int)(500));
-
+		return recordFilePath;
 	}
 
 
 	public void _AudioRecorderStop() {
 		if (AudioMessageRecorder != null) {
-			AudioMessageRecorder.stop();
-			AudioMessageRecorder.release();
+			try {
+				AudioMessageRecorder.stop();
+				AudioMessageRecorder.release();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			AudioMessageRecorder = null;
 		}
 		vbr.vibrate((long)(48));
-		timer.cancel();
+		if (timer != null) {
+			timer.cancel();
+		}
+	}
+
+	private void deleteCurrentRecording() {
+		if (currentRecordingFilePath != null && !currentRecordingFilePath.isEmpty()) {
+			File file = new File(currentRecordingFilePath);
+			if (file.exists()) {
+				file.delete();
+			}
+			currentRecordingFilePath = null;
+		}
+	}
+
+	private void showRecordingBottomSheet() {
+		final BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+		View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_voice_recorder, null);
+		bottomSheetDialog.setContentView(bottomSheetView);
+
+		LinearLayout recordingView = bottomSheetView.findViewById(R.id.recording_view);
+		LinearLayout previewView = bottomSheetView.findViewById(R.id.preview_view);
+		Chronometer recordingTimer = bottomSheetView.findViewById(R.id.recording_timer);
+		ImageButton cancelButton = bottomSheetView.findViewById(R.id.cancel_button);
+		ImageButton stopButton = bottomSheetView.findViewById(R.id.stop_button);
+		ImageButton pauseResumeButton = bottomSheetView.findViewById(R.id.pause_resume_button);
+
+		_AudioRecorderStart();
+		recordingTimer.setBase(android.os.SystemClock.elapsedRealtime());
+		recordingTimer.start();
+
+		final Handler maxDurationHandler = new Handler();
+		maxDurationHandler.postDelayed(() -> {
+			if (AudioMessageRecorder != null && bottomSheetDialog.isShowing()) {
+				stopButton.performClick();
+				Toast.makeText(this, "Maximum recording duration of 5 minutes reached.", Toast.LENGTH_SHORT).show();
+			}
+		}, 5 * 60 * 1000);
+
+		stopButton.setOnClickListener(v -> {
+			_AudioRecorderStop();
+			recordingTimer.stop();
+			recordingView.setVisibility(View.GONE);
+			previewView.setVisibility(View.VISIBLE);
+			
+			// Preview and Trimming Logic
+			ImageButton previewPlayPauseButton = bottomSheetView.findViewById(R.id.preview_play_pause_button);
+			TextView previewDuration = bottomSheetView.findViewById(R.id.preview_duration);
+			com.google.android.material.slider.RangeSlider trimSlider = bottomSheetView.findViewById(R.id.trim_slider);
+			ImageButton deleteButton = bottomSheetView.findViewById(R.id.delete_button);
+			Button sendButton = bottomSheetView.findViewById(R.id.send_button);
+			final com.cleveroad.audiovisualization.GLAudioVisualizationView audioVisualization = bottomSheetView.findViewById(R.id.waveform_view);
+
+			final android.media.MediaPlayer mediaPlayer = new android.media.MediaPlayer();
+			final com.cleveroad.audiovisualization.VisualizerDbmHandler vizHandler = com.cleveroad.audiovisualization.DbmHandler.Factory.newVisualizerHandler(ChatActivity.this, 0);
+			audioVisualization.linkTo(vizHandler);
+
+			try {
+				mediaPlayer.setDataSource(currentRecordingFilePath);
+				mediaPlayer.prepare();
+				vizHandler.linkTo(mediaPlayer);
+			} catch (IOException e) {
+				e.printStackTrace();
+				Toast.makeText(this, "Failed to load audio for preview.", Toast.LENGTH_SHORT).show();
+				bottomSheetDialog.dismiss();
+				return;
+			}
+
+			final int durationMs = mediaPlayer.getDuration();
+			previewDuration.setText(_getDurationString(durationMs));
+			trimSlider.setValueFrom(0);
+			trimSlider.setValueTo(durationMs);
+			trimSlider.setValues((float)0, (float)durationMs);
+
+			final Handler progressHandler = new Handler();
+			final Runnable progressRunnable = new Runnable() {
+				@Override
+				public void run() {
+					if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+						trimSlider.setValues((float)mediaPlayer.getCurrentPosition(), trimSlider.getValues().get(1));
+						progressHandler.postDelayed(this, 100);
+					}
+				}
+			};
+
+			mediaPlayer.setOnCompletionListener(mp -> {
+				previewPlayPauseButton.setImageResource(R.drawable.ic_play_arrow_24px);
+				mediaPlayer.seekTo((int)(float)trimSlider.getValues().get(0));
+				trimSlider.setValues(trimSlider.getValues().get(0), trimSlider.getValues().get(1));
+				// Auto-replay
+				previewPlayPauseButton.performClick();
+			});
+
+			previewPlayPauseButton.setOnClickListener(view -> {
+				if (mediaPlayer.isPlaying()) {
+					mediaPlayer.pause();
+					previewPlayPauseButton.setImageResource(R.drawable.ic_play_arrow_24px);
+					progressHandler.removeCallbacks(progressRunnable);
+					audioVisualization.onPause();
+				} else {
+					mediaPlayer.start();
+					previewPlayPauseButton.setImageResource(R.drawable.ic_pause_24px);
+					progressHandler.post(progressRunnable);
+					audioVisualization.onResume();
+				}
+			});
+
+			deleteButton.setOnClickListener(view -> {
+				mediaPlayer.release();
+				audioVisualization.release();
+				deleteCurrentRecording();
+				bottomSheetDialog.dismiss();
+			});
+
+			sendButton.setOnClickListener(view -> {
+				mediaPlayer.release();
+				audioVisualization.release();
+				
+				float startMs = trimSlider.getValues().get(0);
+				float endMs = trimSlider.getValues().get(1);
+
+				if (startMs == 0 && endMs == durationMs) {
+					// No trimming needed, just use the original file
+					addRecordingToAttachmentList(currentRecordingFilePath);
+				} else {
+					// Trim the file
+					trimAudio(currentRecordingFilePath, startMs / 1000.0, endMs / 1000.0);
+				}
+				bottomSheetDialog.dismiss();
+			});
+		});
+
+		cancelButton.setOnClickListener(v -> {
+			_AudioRecorderStop();
+			deleteCurrentRecording();
+			bottomSheetDialog.dismiss();
+		});
+
+		final boolean[] isPaused = {false};
+		pauseResumeButton.setOnClickListener(v -> {
+			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+				if (isPaused[0]) {
+					AudioMessageRecorder.resume();
+					recordingTimer.start();
+					((ImageButton)v).setImageResource(R.drawable.ic_pause_24px);
+					isPaused[0] = false;
+				} else {
+					AudioMessageRecorder.pause();
+					recordingTimer.stop();
+					((ImageButton)v).setImageResource(R.drawable.ic_play_arrow_24px);
+					isPaused[0] = true;
+				}
+			} else {
+				Toast.makeText(this, "Pause/Resume is not supported on this Android version.", Toast.LENGTH_SHORT).show();
+			}
+		});
+
+		bottomSheetDialog.setOnDismissListener(dialog -> {
+			maxDurationHandler.removeCallbacksAndMessages(null);
+			if (AudioMessageRecorder != null) {
+				_AudioRecorderStop();
+				deleteCurrentRecording();
+			}
+			audioVisualization.release();
+		});
+
+		bottomSheetDialog.show();
+	}
+
+	private void addRecordingToAttachmentList(String filePath) {
+		attachmentLayoutListHolder.setVisibility(View.VISIBLE);
+		int startingPosition = attactmentmap.size();
+
+		HashMap<String, Object> itemMap = new HashMap<>();
+		itemMap.put("localPath", filePath);
+		itemMap.put("uploadState", "pending");
+		itemMap.put("type", "audio");
+		itemMap.put("width", 100);
+		itemMap.put("height", 100);
+
+		attactmentmap.add(itemMap);
+
+		if (rv_attacmentList.getAdapter() != null) {
+			rv_attacmentList.getAdapter().notifyItemRangeInserted(startingPosition, 1);
+		}
+		_startUploadForItem(startingPosition);
+	}
+
+	private void trimAudio(String inPath, double startSeconds, double endSeconds) {
+		File inFile = new File(inPath);
+		String outPath = "";
+		try {
+			File getCacheDir = getExternalCacheDir();
+			String getCacheDirName = "audio_records";
+			File getCacheFolder = new File(getCacheDir, getCacheDirName);
+			getCacheFolder.mkdirs();
+			File outFile = new File(getCacheFolder, "trimmed_" + System.currentTimeMillis() + ".mp3");
+			outPath = outFile.getAbsolutePath();
+
+			com.synapse.social.studioasinc.audiocutter.CheapSoundFile cheapSoundFile = com.synapse.social.studioasinc.audiocutter.CheapSoundFile.create(inPath, null);
+			if (cheapSoundFile == null) {
+				Toast.makeText(this, "Unsupported audio file format for trimming.", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			int sampleRate = cheapSoundFile.getSampleRate();
+			int samplesPerFrame = cheapSoundFile.getSamplesPerFrame();
+			int startFrame = (int)(startSeconds * sampleRate / samplesPerFrame);
+			int endFrame = (int)(endSeconds * sampleRate / samplesPerFrame);
+			int numFrames = endFrame - startFrame;
+
+			cheapSoundFile.WriteFile(outFile, startFrame, numFrames);
+			addRecordingToAttachmentList(outPath);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			Toast.makeText(this, "Failed to trim audio.", Toast.LENGTH_SHORT).show();
+		}
 	}
 
 
@@ -3009,7 +3244,12 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
-	public class ChatMessagesListRecyclerAdapter extends RecyclerView.Adapter<ChatMessagesListRecyclerAdapter.ViewHolder> {
+	private static final int VIEW_TYPE_TEXT_SENT = 1;
+	private static final int VIEW_TYPE_TEXT_RECEIVED = 2;
+	private static final int VIEW_TYPE_AUDIO_SENT = 3;
+	private static final int VIEW_TYPE_AUDIO_RECEIVED = 4;
+
+	public class ChatMessagesListRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
 		ArrayList<HashMap<String, Object>> _data;
 
@@ -3018,36 +3258,154 @@ public class ChatActivity extends AppCompatActivity {
 		}
 
 		@Override
-		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-			LayoutInflater _inflater = getLayoutInflater();
-			View _v = _inflater.inflate(R.layout.chat_msg_cv_synapse, null);
-			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-			_v.setLayoutParams(_lp);
-			return new ViewHolder(_v);
+		public int getItemViewType(int position) {
+			HashMap<String, Object> message = _data.get(position);
+			String senderUid = (String) message.get(UID_KEY);
+			boolean isSent = senderUid != null && senderUid.equals(auth.getCurrentUser().getUid());
+
+			boolean isAudio = false;
+			if (message.containsKey(ATTACHMENTS_KEY)) {
+				Object attachmentsObj = message.get(ATTACHMENTS_KEY);
+				if (attachmentsObj instanceof ArrayList) {
+					ArrayList<HashMap<String,Object>> attachments = (ArrayList<HashMap<String,Object>>) attachmentsObj;
+					if (!attachments.isEmpty()) {
+						HashMap<String, Object> firstAttachment = attachments.get(0);
+						if ("audio".equals(firstAttachment.get("type"))) {
+							isAudio = true;
+						}
+					}
+				}
+			}
+			
+			if (isAudio) {
+				return isSent ? VIEW_TYPE_AUDIO_SENT : VIEW_TYPE_AUDIO_RECEIVED;
+			} else {
+				return isSent ? VIEW_TYPE_TEXT_SENT : VIEW_TYPE_TEXT_RECEIVED;
+			}
 		}
 
 		@Override
-		public void onBindViewHolder(ViewHolder _holder, final int _position) {
-			View _view = _holder.itemView;
+		public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+			LayoutInflater _inflater = getLayoutInflater();
+			View _v;
+			switch (viewType) {
+				case VIEW_TYPE_AUDIO_SENT:
+				case VIEW_TYPE_AUDIO_RECEIVED:
+					_v = _inflater.inflate(R.layout.chat_bubble_audio, parent, false);
+					return new AudioMessageViewHolder(_v);
+				case VIEW_TYPE_TEXT_SENT:
+				case VIEW_TYPE_TEXT_RECEIVED:
+				default:
+					_v = _inflater.inflate(R.layout.chat_msg_cv_synapse, parent, false);
+					return new ViewHolder(_v);
+			}
+		}
 
-			final LinearLayout body = _view.findViewById(R.id.body);
-			final androidx.cardview.widget.CardView mProfileCard = _view.findViewById(R.id.mProfileCard);
-			final LinearLayout message_layout = _view.findViewById(R.id.message_layout);
-			final ImageView mProfileImage = _view.findViewById(R.id.mProfileImage);
-			final LinearLayout menuView_d = _view.findViewById(R.id.menuView_d);
-			final LinearLayout messageBG = _view.findViewById(R.id.messageBG);
-			final LinearLayout my_message_info = _view.findViewById(R.id.my_message_info);
-			final com.google.android.material.card.MaterialCardView mRepliedMessageLayout = _view.findViewById(R.id.mRepliedMessageLayout);
-			final androidx.cardview.widget.CardView mMessageImageBody = _view.findViewById(R.id.mMessageImageBody);
-			final com.airbnb.lottie.LottieAnimationView lottie1 = _view.findViewById(R.id.lottie1);
-			final TextView message_text = _view.findViewById(R.id.message_text);
-			final LinearLayout mRepliedMessageLayoutLeftBar = _view.findViewById(R.id.mRepliedMessageLayoutLeftBar);
-			final LinearLayout mRepliedMessageLayoutRightBody = _view.findViewById(R.id.mRepliedMessageLayoutRightBody);
-			final TextView mRepliedMessageLayoutUsername = _view.findViewById(R.id.mRepliedMessageLayoutUsername);
-			final TextView mRepliedMessageLayoutMessage = _view.findViewById(R.id.mRepliedMessageLayoutMessage);
-			final ImageView mMessageImageView = _view.findViewById(R.id.mMessageImageView);
-			final TextView date = _view.findViewById(R.id.date);
-			final ImageView message_state = _view.findViewById(R.id.message_state);
+		@Override
+		public void onBindViewHolder(RecyclerView.ViewHolder _holder, final int _position) {
+			switch (_holder.getItemViewType()) {
+				case VIEW_TYPE_AUDIO_SENT:
+				case VIEW_TYPE_AUDIO_RECEIVED:
+					AudioMessageViewHolder audioHolder = (AudioMessageViewHolder) _holder;
+					bindAudioMessage(audioHolder, _position);
+					break;
+				case VIEW_TYPE_TEXT_SENT:
+				case VIEW_TYPE_TEXT_RECEIVED:
+				default:
+					ViewHolder textHolder = (ViewHolder) _holder;
+					// This is where the original onBindViewHolder logic would go.
+					// For now, I'll leave it empty as the original was also empty.
+					// A proper implementation would bind text, date, etc. here.
+					break;
+			}
+		}
+
+		private void bindAudioMessage(final AudioMessageViewHolder holder, final int position) {
+			// Logic to bind data to the audio message bubble
+			// This is a simplified version. A real implementation would be more complex.
+			
+			// Get the audio URL from the message
+			HashMap<String, Object> message = _data.get(position);
+			ArrayList<HashMap<String,Object>> attachments = (ArrayList<HashMap<String,Object>>) message.get(ATTACHMENTS_KEY);
+			String audioUrl = (String) attachments.get(0).get("url");
+
+			final android.media.MediaPlayer mediaPlayer = new android.media.MediaPlayer();
+			final com.cleveroad.audiovisualization.VisualizerDbmHandler vizHandler = com.cleveroad.audiovisualization.DbmHandler.Factory.newVisualizerHandler(ChatActivity.this, 0);
+			holder.waveformView.linkTo(vizHandler);
+			
+			holder.itemView.setTag(R.id.tag_media_player, mediaPlayer);
+			holder.itemView.setTag(R.id.tag_visualizer_handler, vizHandler);
+
+			try {
+				mediaPlayer.setDataSource(audioUrl);
+				mediaPlayer.prepareAsync();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			mediaPlayer.setOnPreparedListener(mp -> {
+				holder.durationText.setText(_getDurationString(mp.getDuration()));
+				holder.seekBar.setMax(mp.getDuration());
+				vizHandler.linkTo(mediaPlayer);
+			});
+			
+			final Handler progressHandler = new Handler();
+			final Runnable progressRunnable = new Runnable() {
+				@Override
+				public void run() {
+					if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+						holder.seekBar.setProgress(mediaPlayer.getCurrentPosition());
+						progressHandler.postDelayed(this, 100);
+					}
+				}
+			};
+
+			mediaPlayer.setOnCompletionListener(mp -> {
+				holder.playPauseButton.setImageResource(R.drawable.ic_play_arrow_24px);
+				holder.seekBar.setProgress(0);
+				mediaPlayer.seekTo(0);
+				// Auto-replay
+				holder.playPauseButton.performClick();
+			});
+
+			holder.playPauseButton.setOnClickListener(v -> {
+				if (mediaPlayer.isPlaying()) {
+					mediaPlayer.pause();
+					holder.playPauseButton.setImageResource(R.drawable.ic_play_arrow_24px);
+					holder.waveformView.onPause();
+				} else {
+					mediaPlayer.start();
+					holder.playPauseButton.setImageResource(R.drawable.ic_pause_24px);
+					holder.waveformView.onResume();
+					progressHandler.post(progressRunnable);
+				}
+			});
+
+			holder.seekBar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+				@Override
+				public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+					if (fromUser) {
+						mediaPlayer.seekTo(progress);
+					}
+				}
+				@Override public void onStartTrackingTouch(android.widget.SeekBar seekBar) {}
+				@Override public void onStopTrackingTouch(android.widget.SeekBar seekBar) {}
+			});
+		}
+
+		@Override
+		public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
+			super.onViewRecycled(holder);
+			if (holder instanceof AudioMessageViewHolder) {
+				Object mpTag = holder.itemView.getTag(R.id.tag_media_player);
+				if (mpTag instanceof android.media.MediaPlayer) {
+					((android.media.MediaPlayer) mpTag).release();
+				}
+				Object vizTag = holder.itemView.getTag(R.id.tag_visualizer_handler);
+				if (vizTag instanceof com.cleveroad.audiovisualization.VisualizerDbmHandler) {
+					((com.cleveroad.audiovisualization.VisualizerDbmHandler) vizTag).release();
+				}
+			}
 		}
 
 		@Override
@@ -3055,9 +3413,37 @@ public class ChatActivity extends AppCompatActivity {
 			return _data.size();
 		}
 
+		@Override
+		public void onViewRecycled(@NonNull ViewHolder holder) {
+			super.onViewRecycled(holder);
+			Object mpTag = holder.itemView.getTag(R.id.tag_media_player);
+			if (mpTag instanceof android.media.MediaPlayer) {
+				((android.media.MediaPlayer) mpTag).release();
+			}
+		}
+
 		public class ViewHolder extends RecyclerView.ViewHolder {
 			public ViewHolder(View v) {
 				super(v);
+			}
+		}
+
+		public class AudioMessageViewHolder extends RecyclerView.ViewHolder {
+			ImageButton playPauseButton;
+			com.cleveroad.audiovisualization.GLAudioVisualizationView waveformView;
+			android.widget.SeekBar seekBar;
+			TextView durationText;
+			TextView date;
+			ImageView messageState;
+
+			public AudioMessageViewHolder(View v) {
+				super(v);
+				playPauseButton = v.findViewById(R.id.play_pause_button);
+				waveformView = v.findViewById(R.id.waveform_view);
+				seekBar = v.findViewById(R.id.seek_bar);
+				durationText = v.findViewById(R.id.duration_text);
+				date = v.findViewById(R.id.date);
+				messageState = v.findViewById(R.id.message_state);
 			}
 		}
 	}
@@ -3120,18 +3506,60 @@ public class ChatActivity extends AppCompatActivity {
 			_view.setLayoutParams(new RecyclerView.LayoutParams(dpToPx(100), dpToPx(100)));
 			// --- END: ROBUSTNESS FIX ---
 
-			// Set the image preview with error handling
-			String localPath = itemData.get("localPath").toString();
-			try {
-				// Clear previous image to prevent recycling issues
-				previewIV.setImageDrawable(null);
+			// Get the new audio preview views
+			final LinearLayout audioPreviewLayout = _view.findViewById(R.id.audio_preview_layout);
+			final ImageButton audioPlayPauseButton = _view.findViewById(R.id.audio_play_pause_button);
+			final TextView audioDurationText = _view.findViewById(R.id.audio_duration_text);
+
+			String type = (String) itemData.getOrDefault("type", "image");
+
+			if ("audio".equals(type)) {
+				audioPreviewLayout.setVisibility(View.VISIBLE);
+				previewIV.setImageResource(R.drawable.ic_music_note);
+				previewIV.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
+				final android.media.MediaPlayer mediaPlayer = new android.media.MediaPlayer();
+				try {
+					mediaPlayer.setDataSource(itemData.get("localPath").toString());
+					mediaPlayer.prepare();
+					audioDurationText.setText(_getDurationString(mediaPlayer.getDuration()));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 				
-				// Load new image
-				previewIV.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(localPath, 1024, 1024));
-			} catch (Exception e) {
-				Log.e("ChatActivity", "Error loading image preview: " + e.getMessage());
-				// Set a placeholder image on error
-				previewIV.setImageResource(R.drawable.ph_imgbluredsqure);
+				_view.setTag(R.id.tag_media_player, mediaPlayer);
+
+				audioPlayPauseButton.setOnClickListener(v -> {
+					if (mediaPlayer.isPlaying()) {
+						mediaPlayer.pause();
+						audioPlayPauseButton.setImageResource(R.drawable.ic_play_arrow_24px);
+					} else {
+						mediaPlayer.start();
+						audioPlayPauseButton.setImageResource(R.drawable.ic_pause_24px);
+					}
+				});
+
+				mediaPlayer.setOnCompletionListener(mp -> {
+					audioPlayPauseButton.setImageResource(R.drawable.ic_play_arrow_24px);
+					mp.seekTo(0);
+				});
+
+			} else {
+				audioPreviewLayout.setVisibility(View.GONE);
+				previewIV.setScaleType(ImageView.ScaleType.CENTER_CROP);
+				// Set the image preview with error handling
+				String localPath = itemData.get("localPath").toString();
+				try {
+					// Clear previous image to prevent recycling issues
+					previewIV.setImageDrawable(null);
+					
+					// Load new image
+					previewIV.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(localPath, 1024, 1024));
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error loading image preview: " + e.getMessage());
+					// Set a placeholder image on error
+					previewIV.setImageResource(R.drawable.ph_imgbluredsqure);
+				}
 			}
 
 			// Get the upload state and progress.
