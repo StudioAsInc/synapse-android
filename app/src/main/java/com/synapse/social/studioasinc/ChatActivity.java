@@ -432,7 +432,7 @@ public class ChatActivity extends AppCompatActivity {
 					message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
 
 					_TransitionManager(message_input_overall_container, 125);
-					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
+					message_input_outlined_round.setBackgroundResource(R.drawable.bg_message_input);
 				} else {
 					typingSnd = new HashMap<>();
 					typingSnd.put(UID_KEY, auth.getCurrentUser().getUid());
@@ -441,7 +441,7 @@ public class ChatActivity extends AppCompatActivity {
 					_TransitionManager(message_input_overall_container, 125);
 					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
 
-					message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)60, (int)2, 0xFFC7C7C7, 0xFFFFFFFF));
+					message_input_outlined_round.setBackgroundResource(R.drawable.bg_message_input_expanded);
 				}
 			}
 
@@ -579,10 +579,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		// --- END: Critical Initialization ---
 		_getUserReference();
-		toolContainer.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, 0xFFF0F3F8));
-		message_input_outlined_round.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)95, (int)3, 0xFFC7C7C7, 0xFFFFFFFF));
 		message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-		_ImgRound(topProfileLayoutProfileImage, 100);
 		if (message_et.getText().toString().trim().equals("")) {
 			_TransitionManager(message_input_overall_container, 250);
 			message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
