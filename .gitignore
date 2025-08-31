@@ -1,3 +1,6 @@
 # Keystores & credentials
 *.keystore
 keystore.properties
+
+# Gradle
+.gradle/
