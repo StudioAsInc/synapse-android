@@ -21,6 +21,32 @@
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
             android:src="@drawable/ph_imgbluredsqure" />
+            
+        <LinearLayout
+            android:id="@+id/audio_preview_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            android:background="#80000000">
+
+            <ImageButton
+                android:id="@+id/audio_play_pause_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_play_arrow_24px"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="@android:color/white"/>
+
+            <TextView
+                android:id="@+id/audio_duration_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:text="0:00"/>
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/overlayLL"

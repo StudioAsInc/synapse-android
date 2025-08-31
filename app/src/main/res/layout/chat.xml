@@ -344,10 +344,10 @@
 					android:orientation="horizontal"
 					android:elevation="1dp">
 					<ImageView
-						android:id="@+id/expand_send_type_btn"
+						android:id="@+id/micIconButton"
 						android:layout_width="20dp"
 						android:layout_height="match_parent"
-						android:src="@drawable/iconss_1"
+						android:src="@drawable/ic_mic_24px"
 						android:scaleType="fitCenter" />
 					<LinearLayout
 						android:id="@+id/devider_mic_camera"
