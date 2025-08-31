@@ -1,3 +1,5 @@
+[![Repository Size](https://img.shields.io/github/repo-size/StudioAsInc/synapse-android)](https://github.com/StudioAsInc/synapse-android)
+
 <div align="center">
   
   # Synapse
