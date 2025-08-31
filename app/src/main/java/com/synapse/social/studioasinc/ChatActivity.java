@@ -433,6 +433,7 @@ public class ChatActivity extends AppCompatActivity {
 
 					_TransitionManager(message_input_overall_container, 125);
 					message_input_outlined_round.setBackgroundResource(R.drawable.bg_message_input);
+					message_input_outlined_round.invalidate();
 				} else {
 					typingSnd = new HashMap<>();
 					typingSnd.put(UID_KEY, auth.getCurrentUser().getUid());
@@ -442,6 +443,7 @@ public class ChatActivity extends AppCompatActivity {
 					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
 
 					message_input_outlined_round.setBackgroundResource(R.drawable.bg_message_input_expanded);
+					message_input_outlined_round.invalidate();
 				}
 			}
 
