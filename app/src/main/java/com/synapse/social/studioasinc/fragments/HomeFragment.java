@@ -172,6 +172,9 @@ public class HomeFragment extends Fragment {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (!isAdded()) {
+                            return;
+                        }
                         storiesList.clear();
                         HashMap<String, Object> myStoryPlaceholder = new HashMap<>();
                         myStoryPlaceholder.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
@@ -197,6 +200,9 @@ public class HomeFragment extends Fragment {
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
+                        if (!isAdded()) {
+                            return;
+                        }
                         Toast.makeText(getContext(), "Error loading stories: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                         if (storiesView != null && storiesView.getAdapter() != null) {
                             storiesView.getAdapter().notifyDataSetChanged();
@@ -224,6 +230,9 @@ public class HomeFragment extends Fragment {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot _dataSnapshot) {
+                if (!isAdded()) {
+                    return;
+                }
                 PostsList.clear();
                 if (_dataSnapshot.exists()) {
                     try {
@@ -243,6 +252,9 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError _databaseError) {
+                if (!isAdded()) {
+                    return;
+                }
                 Toast.makeText(getContext(), "Failed to fetch latest posts, showing cached data. Error: " + _databaseError.getMessage(), Toast.LENGTH_LONG).show();
                 _finalizePostDisplay(notFoundMessage, false);
             }
@@ -250,7 +262,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void _showShimmer() {
-        if (shimmer_container != null) {
+        if (isAdded() && shimmer_container != null) {
             shimmer_container.removeAllViews();
             shimmer_container.setVisibility(View.VISIBLE);
             LayoutInflater inflater = LayoutInflater.from(getContext());
