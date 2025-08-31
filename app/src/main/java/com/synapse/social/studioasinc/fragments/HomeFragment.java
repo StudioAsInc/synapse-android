@@ -100,6 +100,7 @@ public class HomeFragment extends Fragment {
     private RecyclerView PublicPostsList;
     private TextView PublicPostsListNotFound;
 	private ProgressBar loading_bar;
+    private LinearLayout shimmer_container;
 
     private Intent intent = new Intent();
     private Vibrator vbr;
@@ -133,6 +134,7 @@ public class HomeFragment extends Fragment {
         PublicPostsList = view.findViewById(R.id.PublicPostsList);
         PublicPostsListNotFound = view.findViewById(R.id.PublicPostsListNotFound);
         loading_bar = view.findViewById(R.id.loading_bar);
+        shimmer_container = view.findViewById(R.id.shimmer_container);
 
         vbr = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
         auth = FirebaseAuth.getInstance();
@@ -208,6 +210,7 @@ public class HomeFragment extends Fragment {
     }
 
     public void _loadPosts(final String filterType) {
+        _showShimmer();
         swipeLayout.setRefreshing(true);
         Query query = null;
         String notFoundMessage = "There are no public posts available at the moment.";
@@ -404,6 +407,25 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    private void _showShimmer() {
+        if (shimmer_container != null) {
+            shimmer_container.removeAllViews();
+            shimmer_container.setVisibility(View.VISIBLE);
+            LayoutInflater inflater = LayoutInflater.from(getContext());
+            for (int i = 0; i < 5; i++) {
+                View shimmerView = inflater.inflate(R.layout.post_placeholder_layout, shimmer_container, false);
+                shimmer_container.addView(shimmerView);
+            }
+        }
+    }
+
+    private void _hideShimmer() {
+        if (shimmer_container != null) {
+            shimmer_container.setVisibility(View.GONE);
+            shimmer_container.removeAllViews();
+        }
+    }
+
     private void _finalizePostDisplay(String notFoundMessage, boolean sortAndNotify) {
         if (sortAndNotify) {
             Collections.sort(PostsList, (o1, o2) -> {
@@ -430,10 +452,12 @@ public class HomeFragment extends Fragment {
         }
 
         if (PostsList.isEmpty()) {
+            // If there are no posts, we keep the shimmer effect visible as a placeholder.
+            // The shimmer is started when _loadPosts is called.
             PublicPostsList.setVisibility(View.GONE);
-            PublicPostsListNotFound.setText(notFoundMessage);
-            PublicPostsListNotFound.setVisibility(View.VISIBLE);
+            PublicPostsListNotFound.setVisibility(View.GONE);
         } else {
+            _hideShimmer();
             PublicPostsList.setVisibility(View.VISIBLE);
             PublicPostsListNotFound.setVisibility(View.GONE);
         }
