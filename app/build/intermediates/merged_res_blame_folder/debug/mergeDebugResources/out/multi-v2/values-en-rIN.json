@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-92:/values-en-rIN/values-en-rIN.xml",
+            "outputFile": "com.synapse.social.studioasinc.app-mergeDebugResources-93:/values-en-rIN/values-en-rIN.xml",
             "map": [
                 {
                     "source": "/home/ubuntu/.gradle/caches/8.13/transforms/a80f1658fcc7ab7619f5632e579d9b6f/transformed/appcompat-1.7.1/res/values-en-rIN/values-en-rIN.xml",
