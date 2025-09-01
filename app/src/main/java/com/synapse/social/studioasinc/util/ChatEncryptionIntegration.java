@@ -69,7 +69,7 @@ public class ChatEncryptionIntegration {
             repliedMessageId,
             new ChatEncryptionManager.MessageCallback() {
                 @Override
-                public void onSuccess(String messageId, Object encryptedMessage) {
+                public void onSuccess(String messageId, EncryptedMessageModel encryptedMessage) {
                     Log.d(TAG, "Encrypted message sent successfully: " + messageId);
                     // Update UI or handle success
                 }

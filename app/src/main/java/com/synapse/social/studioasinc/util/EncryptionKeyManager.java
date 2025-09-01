@@ -6,6 +6,8 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -28,8 +30,20 @@ public class EncryptionKeyManager {
     
     public EncryptionKeyManager(Context context) {
         this.context = context;
-        this.prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         try {
+            // Use EncryptedSharedPreferences for secure storage of sensitive data
+            MasterKey masterKey = new MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build();
+            
+            this.prefs = EncryptedSharedPreferences.create(
+                context,
+                PREFS_NAME,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+            
             this.keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER);
             this.keyStore.load(null);
         } catch (Exception e) {

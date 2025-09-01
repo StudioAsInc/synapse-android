@@ -42,6 +42,11 @@ public class ChatEncryptionManager {
      * Initializes encryption for the current user
      */
     public void initializeCurrentUserEncryption(EncryptionCallback callback) {
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            callback.onError("User not authenticated");
+            return;
+        }
+        
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         if (currentUserId == null) {
             callback.onError("User not authenticated");
@@ -70,6 +75,11 @@ public class ChatEncryptionManager {
                                    Map<String, Object> attachments, String repliedMessageId,
                                    MessageCallback callback) {
         try {
+            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+                callback.onError("User not authenticated");
+                return;
+            }
+            
             String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             if (currentUserId == null) {
                 callback.onError("User not authenticated");
@@ -179,6 +189,11 @@ public class ChatEncryptionManager {
      */
     public void decryptReceivedMessage(EncryptedMessageModel encryptedMsg, DecryptCallback callback) {
         try {
+            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+                callback.onError("User not authenticated");
+                return;
+            }
+            
             String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             if (currentUserId == null) {
                 callback.onError("User not authenticated");

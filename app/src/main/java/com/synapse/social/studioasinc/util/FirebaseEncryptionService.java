@@ -222,8 +222,8 @@ public class FirebaseEncryptionService {
     private String decryptMessage(MessageEncryption.EncryptedMessage encryptedMessage, String userId, String chatId) {
         try {
             if ("AES_SESSION".equals(encryptedMessage.encryptionType)) {
-                // Try to get session key
-                String[] chatUsers = getChatUsersFromChatId(encryptedMessage.chatId);
+                // Try to get session key using the chatId parameter
+                String[] chatUsers = getChatUsersFromChatId(chatId);
                 if (chatUsers != null && chatUsers.length == 2) {
                     SecretKey sessionKey = keyManager.getSessionKey(chatUsers[0], chatUsers[1]);
                     if (sessionKey != null) {

@@ -18,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class MessageEncryption {
     private static final String TAG = "MessageEncryption";
-    private static final String RSA_ALGORITHM = "RSA/ECB/PKCS1Padding";
+    private static final String RSA_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
     private static final String AES_ALGORITHM = "AES/GCM/NoPadding";
     private static final int AES_KEY_SIZE = 256;
     private static final int GCM_IV_LENGTH = 12;

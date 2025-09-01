@@ -27,6 +27,7 @@ public class EncryptedMessageModel {
                                String repliedMessageId) {
         this.messageId = messageId;
         this.senderUid = senderUid;
+        this.recipientUid = recipientUid;
         this.encryptedAesKey = encryptedAesKey;
         this.encryptedMessage = encryptedMessage;
         this.encryptionType = encryptionType;

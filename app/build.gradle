@@ -193,6 +193,9 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
     implementation 'com.google.crypto.tink:tink-android:1.7.0'
+    
+    // Security library for encrypted shared preferences
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
 }
 
 // Apply Google Services plugin only if credentials file exists
