@@ -1187,42 +1187,53 @@ public class ChatActivity extends AppCompatActivity {
 						// We clear the list and keyset here before the initial load
 						ChatMessagesList.clear();
 						messageKeys.clear();
-						ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
 						
+						final ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
+						final java.util.concurrent.atomic.AtomicInteger counter = new java.util.concurrent.atomic.AtomicInteger(0);
+						final int totalMessages = (int) dataSnapshot.getChildrenCount();
+
+						if (totalMessages == 0) {
+							updateChatUI(initialMessages);
+							return;
+						}
+
 						for (DataSnapshot _data : dataSnapshot.getChildren()) {
 							try {
 								HashMap<String, Object> messageData = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
-									initialMessages.add(messageData);
+									encryptionIntegration.decryptMessage(messageData, new ChatEncryptionIntegration.DecryptCallback() {
+										@Override
+										public void onSuccess(Map<String, Object> decryptedMessage) {
+											initialMessages.add((HashMap<String, Object>) decryptedMessage);
+											if (counter.incrementAndGet() == totalMessages) {
+												// All messages processed, update UI
+												updateChatUI(initialMessages);
+											}
+										}
+
+										@Override
+										public void onError(String error) {
+											Log.e(TAG, "Failed to decrypt historical message: " + error);
+											// Add the original message so it's not lost
+											initialMessages.add(messageData);
+											if (counter.incrementAndGet() == totalMessages) {
+												updateChatUI(initialMessages);
+											}
+										}
+									});
 									messageKeys.add(messageData.get(KEY_KEY).toString());
 								} else {
 									Log.w("ChatActivity", "Skipping initial message without valid key: " + _data.getKey());
+									if (counter.incrementAndGet() == totalMessages) {
+										updateChatUI(initialMessages);
+									}
 								}
 							} catch (Exception e) {
 								Log.e("ChatActivity", "Error processing initial message data: " + e.getMessage());
+								if (counter.incrementAndGet() == totalMessages) {
+									updateChatUI(initialMessages);
+								}
 							}
-						}
-
-						if (!initialMessages.isEmpty()) {
-							// CRITICAL FIX: Sort initial messages by timestamp to ensure proper order
-							initialMessages.sort((msg1, msg2) -> {
-								long time1 = _getMessageTimestamp(msg1);
-								long time2 = _getMessageTimestamp(msg2);
-								return Long.compare(time1, time2);
-							});
-							
-							// Safely get the oldest message key
-							HashMap<String, Object> oldestMessage = initialMessages.get(0);
-							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
-								oldestMessageKey = oldestMessage.get(KEY_KEY).toString();
-							}
-
-							ChatMessagesList.addAll(initialMessages);
-							if (chatAdapter != null) {
-								chatAdapter.notifyDataSetChanged();
-							}
-							ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
-							_fetchRepliedMessages(initialMessages);
 						}
 					} else {
 						ChatMessagesListRecycler.setVisibility(View.GONE);
@@ -1242,6 +1253,32 @@ public class ChatActivity extends AppCompatActivity {
 				noChatText.setVisibility(View.VISIBLE);
 			}
 		});
+	}
+
+	private void updateChatUI(ArrayList<HashMap<String, Object>> messages) {
+		// CRITICAL FIX: Sort initial messages by timestamp to ensure proper order
+		messages.sort((msg1, msg2) -> {
+			long time1 = _getMessageTimestamp(msg1);
+			long time2 = _getMessageTimestamp(msg2);
+			return Long.compare(time1, time2);
+		});
+
+		if (!messages.isEmpty()) {
+			// Safely get the oldest message key
+			HashMap<String, Object> oldestMessage = messages.get(0);
+			if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
+				oldestMessageKey = oldestMessage.get(KEY_KEY).toString();
+			}
+		}
+
+		ChatMessagesList.addAll(messages);
+		if (chatAdapter != null) {
+			chatAdapter.notifyDataSetChanged();
+		}
+		if (!ChatMessagesList.isEmpty()) {
+			ChatMessagesListRecycler.scrollToPosition(ChatMessagesList.size() - 1);
+		}
+		_fetchRepliedMessages(messages);
 	}
 
 	private void _attachChatListener() {

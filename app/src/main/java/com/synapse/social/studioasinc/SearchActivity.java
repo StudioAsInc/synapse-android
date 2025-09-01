@@ -331,7 +331,8 @@ public class SearchActivity extends AppCompatActivity {
 							searchedUsersList.clear();
 							
 							for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-								HashMap<String, Object> searchMap = new HashMap<String, Object>((Map<String, Object>) dataSnapshot.getValue());
+								GenericTypeIndicator<HashMap<String, Object>> ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+								HashMap<String, Object> searchMap = dataSnapshot.getValue(ind);
 								searchedUsersList.add(searchMap);
 							}
 							
@@ -643,7 +644,8 @@ public class SearchActivity extends AppCompatActivity {
 					searchedUsersList.clear();
 					
 					for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-						HashMap<String, Object> searchMap = new HashMap<String, Object>((Map<String, Object>) dataSnapshot.getValue());
+						GenericTypeIndicator<HashMap<String, Object>> ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+						HashMap<String, Object> searchMap = dataSnapshot.getValue(ind);
 						searchedUsersList.add(searchMap);
 					}
 					SearchUserLayoutRecyclerView.getAdapter().notifyDataSetChanged();

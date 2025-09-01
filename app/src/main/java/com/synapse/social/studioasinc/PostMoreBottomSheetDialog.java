@@ -318,7 +318,8 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
 			@Override
 			public void onDataChange(DataSnapshot dataSnapshot) {
 				if (dataSnapshot.exists()) {
-					HashMap<String, Object> postData = (HashMap<String, Object>) dataSnapshot.getValue();
+					GenericTypeIndicator<HashMap<String, Object>> ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
+					HashMap<String, Object> postData = dataSnapshot.getValue(ind);
 					
 					Intent editIntent = new Intent(getActivity(), EditPostActivity.class);
 					editIntent.putExtra("postKey", postKey);

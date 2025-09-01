@@ -9,6 +9,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.KeyFactory;
 import java.security.SecureRandom;
+import java.nio.charset.StandardCharsets;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -18,6 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class MessageEncryption {
     private static final String TAG = "MessageEncryption";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String RSA_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
     private static final String AES_ALGORITHM = "AES/GCM/NoPadding";
     private static final int AES_KEY_SIZE = 256;
@@ -139,13 +141,12 @@ public class MessageEncryption {
         
         // Generate random IV
         byte[] iv = new byte[GCM_IV_LENGTH];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
+        SECURE_RANDOM.nextBytes(iv);
         
         GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, iv);
         cipher.init(Cipher.ENCRYPT_MODE, key, spec);
         
-        byte[] encrypted = cipher.doFinal(message.getBytes("UTF-8"));
+        byte[] encrypted = cipher.doFinal(message.getBytes(StandardCharsets.UTF_8));
         
         // Combine IV and encrypted data
         byte[] result = new byte[iv.length + encrypted.length];
@@ -169,7 +170,7 @@ public class MessageEncryption {
         cipher.init(Cipher.DECRYPT_MODE, key, spec);
         
         byte[] decrypted = cipher.doFinal(encrypted);
-        return new String(decrypted, "UTF-8");
+        return new String(decrypted, StandardCharsets.UTF_8);
     }
     
     private static PublicKey stringToPublicKey(String publicKeyString) throws Exception {

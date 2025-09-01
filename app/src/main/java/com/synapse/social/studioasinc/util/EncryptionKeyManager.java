@@ -19,6 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class EncryptionKeyManager {
     private static final String TAG = "EncryptionKeyManager";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String KEYSTORE_PROVIDER = "AndroidKeyStore";
     private static final String KEY_ALIAS_PREFIX = "synapse_e2e_";
     private static final String PREFS_NAME = "encryption_keys";
@@ -77,7 +78,7 @@ public class EncryptionKeyManager {
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
             
             String publicKeyBase64 = Base64.encodeToString(keyPair.getPublic().getEncoded(), Base64.DEFAULT);
-            prefs.edit().putString("public_key_" + userId, publicKeyBase64).apply();
+            prefs.edit().putString("public_key_" + userId, publicKeyBase64).commit();
             
             Log.d(TAG, "Generated new RSA key pair for user: " + userId);
             return true;
@@ -111,14 +112,13 @@ public class EncryptionKeyManager {
     public SecretKey generateSessionKey(String userId1, String userId2) {
         try {
             byte[] sessionKeyBytes = new byte[32];
-            SecureRandom secureRandom = new SecureRandom();
-            secureRandom.nextBytes(sessionKeyBytes);
+            SECURE_RANDOM.nextBytes(sessionKeyBytes);
             
             SecretKey sessionKey = new SecretKeySpec(sessionKeyBytes, "AES");
             
             String sessionKeyId = getSessionKeyId(userId1, userId2);
             String sessionKeyBase64 = Base64.encodeToString(sessionKeyBytes, Base64.DEFAULT);
-            prefs.edit().putString(SESSION_KEYS_PREFIX + sessionKeyId, sessionKeyBase64).apply();
+            prefs.edit().putString(SESSION_KEYS_PREFIX + sessionKeyId, sessionKeyBase64).commit();
             
             Log.d(TAG, "Generated new session key for users: " + userId1 + " and " + userId2);
             return sessionKey;

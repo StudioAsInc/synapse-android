@@ -86,7 +86,8 @@ public class ChatEncryptionIntegration {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
                 if (dataSnapshot.exists()) {
-                    Map<String, Object> messageData = (Map<String, Object>) dataSnapshot.getValue();
+                    GenericTypeIndicator<Map<String, Object>> t = new GenericTypeIndicator<Map<String, Object>>() {};
+                    Map<String, Object> messageData = dataSnapshot.getValue(t);
                     if (messageData != null) {
                         handleEncryptedMessage(messageData, currentUserId, "added", callback);
                     }
@@ -96,7 +97,8 @@ public class ChatEncryptionIntegration {
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String previousChildName) {
                 if (dataSnapshot.exists()) {
-                    Map<String, Object> messageData = (Map<String, Object>) dataSnapshot.getValue();
+                    GenericTypeIndicator<Map<String, Object>> t = new GenericTypeIndicator<Map<String, Object>>() {};
+                    Map<String, Object> messageData = dataSnapshot.getValue(t);
                     if (messageData != null) {
                         handleEncryptedMessage(messageData, currentUserId, "changed", callback);
                     }
@@ -219,5 +221,83 @@ public class ChatEncryptionIntegration {
         void onMessageChanged(Map<String, Object> decryptedMessage);
         void onMessageRemoved(String messageId);
         void onDecryptionError(String messageId, String error);
+    }
+
+    public void decryptMessage(Map<String, Object> messageData, DecryptCallback callback) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        try {
+            // Safely extract message details with type checking
+            Object keyObj = messageData.get("KEY");
+            String messageId = keyObj instanceof String ? (String) keyObj : null;
+
+            Object uidObj = messageData.get("uid");
+            String senderUid = uidObj instanceof String ? (String) uidObj : null;
+
+            Object aesKeyObj = messageData.get("encrypted_aes_key");
+            String encryptedAesKey = aesKeyObj instanceof String ? (String) aesKeyObj : null;
+
+            Object encMsgObj = messageData.get("encrypted_message");
+            String encryptedMessage = encMsgObj instanceof String ? (String) encMsgObj : null;
+
+            Object encTypeObj = messageData.get("encryption_type");
+            String encryptionType = encTypeObj instanceof String ? (String) encTypeObj : null;
+
+            Object timestampObj = messageData.get("push_date");
+            Long timestamp = (timestampObj instanceof Long) ? (Long) timestampObj : null;
+
+            Object typeObj = messageData.get("TYPE");
+            String messageType = typeObj instanceof String ? (String) typeObj : null;
+
+            Object repliedIdObj = messageData.get("replied_message_id");
+            String repliedMessageId = repliedIdObj instanceof String ? (String) repliedIdObj : null;
+
+            // Validate essential fields
+            if (messageId == null || senderUid == null || encryptedMessage == null) {
+                Log.e(TAG, "Malformed encrypted message received. Missing critical fields.");
+                callback.onError("Malformed message data");
+                return;
+            }
+
+            // Create encrypted message model
+            EncryptedMessageModel encryptedMsg = new EncryptedMessageModel();
+            encryptedMsg.setMessageId(messageId);
+            encryptedMsg.setSenderUid(senderUid);
+            encryptedMsg.setRecipientUid(currentUserId);
+            encryptedMsg.setEncryptedAesKey(encryptedAesKey);
+            encryptedMsg.setEncryptedMessage(encryptedMessage);
+            encryptedMsg.setEncryptionType(encryptionType);
+            encryptedMsg.setTimestamp(timestamp != null ? timestamp : System.currentTimeMillis());
+            encryptedMsg.setMessageType(messageType);
+            encryptedMsg.setRepliedMessageId(repliedMessageId);
+
+            // Decrypt the message
+            encryptionManager.decryptReceivedMessage(encryptedMsg, new ChatEncryptionManager.DecryptCallback() {
+                @Override
+                public void onSuccess(String decryptedMessage) {
+                    Log.d(TAG, "Message decrypted successfully");
+
+                    // Create message map for existing chat system
+                    Map<String, Object> decryptedMessageMap = new HashMap<>(messageData);
+                    decryptedMessageMap.put("message_text", decryptedMessage);
+
+                    callback.onSuccess(decryptedMessageMap);
+                }
+
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Failed to decrypt message: " + error);
+                    callback.onError(error);
+                }
+            });
+
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to handle encrypted message", e);
+            callback.onError(e.getMessage());
+        }
+    }
+
+    public interface DecryptCallback {
+        void onSuccess(Map<String, Object> decryptedMessage);
+        void onError(String error);
     }
 }

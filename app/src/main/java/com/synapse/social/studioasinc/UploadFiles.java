@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -552,7 +553,7 @@ public class UploadFiles {
 
 	private static String sha256Hex(String s) throws Exception {
 		java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
-		byte[] d = md.digest(s.getBytes("UTF-8"));
+		byte[] d = md.digest(s.getBytes(StandardCharsets.UTF_8));
 		StringBuilder sb = new StringBuilder();
 		for (byte b : d) sb.append(String.format("%02x", b));
 		return sb.toString();
@@ -562,11 +563,11 @@ public class UploadFiles {
 		javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
 		javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(key, "HmacSHA256");
 		mac.init(keySpec);
-		return mac.doFinal(data.getBytes("UTF-8"));
+		return mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
 	}
 
 	private static byte[] getSignatureKey(String key, String dateStamp, String regionName, String serviceName) throws Exception {
-		byte[] kSecret = ("AWS4" + key).getBytes("UTF-8");
+		byte[] kSecret = ("AWS4" + key).getBytes(StandardCharsets.UTF_8);
 		byte[] kDate = hmacSHA256(kSecret, dateStamp);
 		byte[] kRegion = hmacSHA256(kDate, regionName);
 		byte[] kService = hmacSHA256(kRegion, serviceName);
@@ -723,7 +724,7 @@ public class UploadFiles {
 
 	private static String sha1Hex(String s) throws Exception {
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
-		byte[] d = md.digest(s.getBytes("UTF-8"));
+		byte[] d = md.digest(s.getBytes(StandardCharsets.UTF_8));
 		StringBuilder sb = new StringBuilder();
 		for (byte b : d) sb.append(String.format("%02x", b));
 		return sb.toString();
