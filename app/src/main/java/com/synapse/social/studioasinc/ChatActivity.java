@@ -90,6 +90,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
+import com.synapse.social.studioasinc.crypto.E2EEHelper;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
@@ -235,6 +236,7 @@ public class ChatActivity extends AppCompatActivity {
 	private Intent i = new Intent();
 	private SharedPreferences appSettings;
 	private Gemini gemini;
+	private E2EEHelper e2eeHelper;
 
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -242,6 +244,7 @@ public class ChatActivity extends AppCompatActivity {
 		setContentView(R.layout.chat);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
+		e2eeHelper = new E2EEHelper(this);
 
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
 		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
@@ -524,6 +527,7 @@ public class ChatActivity extends AppCompatActivity {
 		chatAdapter = new ChatAdapter(ChatMessagesList, repliedMessagesCache);
 		chatAdapter.setHasStableIds(true);
 		chatAdapter.setChatActivity(this);
+		chatAdapter.setE2EEHelper(e2eeHelper);
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
 		
 		// CRITICAL FIX: Ensure RecyclerView is properly configured for smooth updates
@@ -1127,6 +1131,44 @@ public class ChatActivity extends AppCompatActivity {
 	public void _getUserReference() {
 		// The user profile data is now fetched via a persistent listener attached in onStart,
 		// so the addListenerForSingleValueEvent call is no longer needed here.
+		e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
+			@Override
+			public void onKeysInitialized() {
+				Log.d("ChatActivity", "E2EE keys initialized successfully.");
+				String otherUserUid = getIntent().getStringExtra("uid");
+				e2eeHelper.getPublicKey(otherUserUid, new E2EEHelper.PublicKeyListener() {
+					@Override
+					public void onPublicKeyReceived(byte[] publicKey) {
+						e2eeHelper.establishSession(otherUserUid, publicKey, new E2EEHelper.SessionEstablishmentListener() {
+							@Override
+							public void onSessionEstablished() {
+								Log.d("ChatActivity", "E2EE session established successfully.");
+								// You can now enable the message sending UI
+							}
+
+							@Override
+							public void onSessionEstablishmentFailed(Exception e) {
+								Log.e("ChatActivity", "E2EE session establishment failed", e);
+								Toast.makeText(ChatActivity.this, "Failed to establish secure session.", Toast.LENGTH_SHORT).show();
+							}
+						});
+					}
+
+					@Override
+					public void onPublicKeyFailed(Exception e) {
+						Log.e("ChatActivity", "Failed to get other user's public key", e);
+						Toast.makeText(ChatActivity.this, "Could not get user's public key.", Toast.LENGTH_SHORT).show();
+					}
+				});
+			}
+
+			@Override
+			public void onKeyInitializationFailed(Exception e) {
+				Log.e("ChatActivity", "E2EE key initialization failed", e);
+				// Handle the error, maybe show a toast to the user
+				Toast.makeText(ChatActivity.this, "Failed to initialize secure session.", Toast.LENGTH_SHORT).show();
+			}
+		});
 
 		DatabaseReference getFirstUserName = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 		getFirstUserName.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -2111,21 +2153,28 @@ public class ChatActivity extends AppCompatActivity {
 			}
 
 		} else if (!messageText.isEmpty()) {
-			Log.d("ChatActivity", "Processing text-only message");
-			// Logic for sending text-only messages
-			String uniqueMessageKey = main.push().getKey();
-			Log.d("ChatActivity", "Generated text message key: " + uniqueMessageKey);
-			
-			ChatSendMap = new HashMap<>();
-			ChatSendMap.put(UID_KEY, senderUid);
-			ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-			ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
-			ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-			if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-			ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
+			try {
+				String encryptedMessage = e2eeHelper.encrypt(recipientUid, messageText);
+				Log.d("ChatActivity", "Processing encrypted text-only message");
+				String uniqueMessageKey = main.push().getKey();
+				Log.d("ChatActivity", "Generated text message key: " + uniqueMessageKey);
 
-			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
+				ChatSendMap = new HashMap<>();
+				ChatSendMap.put(UID_KEY, senderUid);
+				ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
+				ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessage);
+				ChatSendMap.put("isEncrypted", true);
+				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
+				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
+				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
+				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
+
+				Log.d("ChatActivity", "Sending encrypted text message to Firebase with key: " + uniqueMessageKey);
+			} catch (Exception e) {
+				Log.e("ChatActivity", "Failed to encrypt and send message", e);
+				Toast.makeText(this, "Error: Could not send secure message.", Toast.LENGTH_SHORT).show();
+				return; // Don't proceed if encryption fails
+			}
 			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
 			
 			// Send to both chat nodes using setValue for proper real-time updates
@@ -2149,11 +2198,10 @@ public class ChatActivity extends AppCompatActivity {
 			// Enhanced Smart Notification Check with chat ID for deep linking
 			String chatId = senderUid + "_" + recipientUid;
 			String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-			String notificationPreview = messageText;
-			String notificationMessage = senderDisplayName + ": " + notificationPreview;
+			String notificationMessage = senderDisplayName + ": " + "Encrypted Message";
 			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, notificationMessage, chatId);
 
-			_updateInbox(messageText);
+			_updateInbox("Encrypted Message");
 
 			// Clear UI
 			message_et.setText("");
