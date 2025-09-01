@@ -197,6 +197,7 @@ public class ChatEncryptionManager {
             if ("AES_SESSION".equals(encryptedMsg.getEncryptionType())) {
                 SecretKey sessionKey = keyManager.getSessionKey(
                     encryptedMsg.getSenderUid(), encryptedMsg.getRecipientUid());
+                Log.d(TAG, "DEBUG: Attempting to decrypt with session key. Key found: " + (sessionKey != null));
                 
                 if (sessionKey != null) {
                     // Create encrypted message object for decryption
@@ -224,6 +225,7 @@ public class ChatEncryptionManager {
                 encrypted.timestamp = encryptedMsg.getTimestamp();
                 
                 PrivateKey privateKey = keyManager.getPrivateKey(currentUserId);
+                Log.d(TAG, "DEBUG: Attempting to decrypt with RSA. Private key found: " + (privateKey != null));
                 if (privateKey != null) {
                     String decryptedText = MessageEncryption.decryptMessage(encrypted, privateKey);
                     if (decryptedText != null) {

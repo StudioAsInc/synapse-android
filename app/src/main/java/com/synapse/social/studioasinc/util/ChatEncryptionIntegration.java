@@ -226,6 +226,7 @@ public class ChatEncryptionIntegration {
 
     public void decryptMessage(Map<String, Object> messageData, DecryptCallback callback) {
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        Log.d(TAG, "DEBUG: decryptMessage called for message: " + messageData.get("messageId"));
         try {
             // Safely extract message details with type checking
             Object keyObj = messageData.get("messageId");

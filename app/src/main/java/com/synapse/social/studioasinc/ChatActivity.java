@@ -1179,11 +1179,13 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _getChatMessagesRef() {
+		Log.d(TAG, "DEBUG: _getChatMessagesRef called.");
 		// Initial load
 		Query getChatsMessages = chatMessagesRef.limitToLast(CHAT_PAGE_SIZE);
 		getChatsMessages.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				Log.d(TAG, "DEBUG: onDataChange called. Snapshot exists: " + dataSnapshot.exists());
 				try {
 					if(dataSnapshot.exists()) {
 						ChatMessagesListRecycler.setVisibility(View.VISIBLE);
@@ -1193,27 +1195,64 @@ public class ChatActivity extends AppCompatActivity {
 						messageKeys.clear();
 						
 						final ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
+						final java.util.concurrent.atomic.AtomicInteger counter = new java.util.concurrent.atomic.AtomicInteger(0);
+						final int totalMessages = (int) dataSnapshot.getChildrenCount();
+						Log.d(TAG, "DEBUG: Total messages to process: " + totalMessages);
+
+						if (totalMessages == 0) {
+							updateChatUI(initialMessages);
+							return;
+						}
+
 						for (DataSnapshot _data : dataSnapshot.getChildren()) {
 							try {
 								HashMap<String, Object> messageData = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
-									// Bypassing decryption for debugging
-									initialMessages.add(messageData);
-									messageKeys.add(messageData.get(KEY_KEY).toString());
+									final String messageId = messageData.get(KEY_KEY).toString();
+									Log.d(TAG, "DEBUG: Processing message " + messageId);
+									encryptionIntegration.decryptMessage(messageData, new ChatEncryptionIntegration.DecryptCallback() {
+										@Override
+										public void onSuccess(Map<String, Object> decryptedMessage) {
+											Log.d(TAG, "DEBUG: Decryption success for message " + messageId);
+											initialMessages.add((HashMap<String, Object>) decryptedMessage);
+											if (counter.incrementAndGet() == totalMessages) {
+												Log.d(TAG, "DEBUG: All messages processed. Calling updateChatUI.");
+												updateChatUI(initialMessages);
+											}
+										}
+
+										@Override
+										public void onError(String error) {
+											Log.e(TAG, "DEBUG: Decryption failed for message " + messageId + ": " + error);
+											// Add the original message so it's not lost
+											initialMessages.add(messageData);
+											if (counter.incrementAndGet() == totalMessages) {
+												Log.d(TAG, "DEBUG: All messages processed (with errors). Calling updateChatUI.");
+												updateChatUI(initialMessages);
+											}
+										}
+									});
+									messageKeys.add(messageId);
 								} else {
-									Log.w("ChatActivity", "Skipping initial message without valid key: " + _data.getKey());
+									Log.w(TAG, "DEBUG: Skipping initial message without valid key: " + _data.getKey());
+									if (counter.incrementAndGet() == totalMessages) {
+										updateChatUI(initialMessages);
+									}
 								}
 							} catch (Exception e) {
-								Log.e("ChatActivity", "Error processing initial message data: " + e.getMessage());
+								Log.e(TAG, "DEBUG: Error processing initial message data: " + e.getMessage());
+								if (counter.incrementAndGet() == totalMessages) {
+									updateChatUI(initialMessages);
+								}
 							}
 						}
-						updateChatUI(initialMessages);
 					} else {
+						Log.d(TAG, "DEBUG: Snapshot does not exist.");
 						ChatMessagesListRecycler.setVisibility(View.GONE);
 						noChatText.setVisibility(View.VISIBLE);
 					}
 				} catch (Exception e) {
-					Log.e("ChatActivity", "Error processing initial chat messages: " + e.getMessage());
+					Log.e(TAG, "DEBUG: Error processing initial chat messages: " + e.getMessage());
 					ChatMessagesListRecycler.setVisibility(View.GONE);
 					noChatText.setVisibility(View.VISIBLE);
 				}
@@ -1221,7 +1260,7 @@ public class ChatActivity extends AppCompatActivity {
 			
 			@Override 
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				Log.e("ChatActivity", "Initial message load failed: " + databaseError.getMessage());
+				Log.e(TAG, "DEBUG: Initial message load failed: " + databaseError.getMessage());
 				ChatMessagesListRecycler.setVisibility(View.GONE);
 				noChatText.setVisibility(View.VISIBLE);
 			}
@@ -1229,6 +1268,7 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void updateChatUI(ArrayList<HashMap<String, Object>> messages) {
+		Log.d(TAG, "DEBUG: updateChatUI called with " + messages.size() + " messages.");
 		// CRITICAL FIX: Sort initial messages by timestamp to ensure proper order
 		messages.sort((msg1, msg2) -> {
 			long time1 = _getMessageTimestamp(msg1);
@@ -1246,6 +1286,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		ChatMessagesList.addAll(messages);
 		if (chatAdapter != null) {
+			Log.d(TAG, "DEBUG: Notifying adapter of data set change.");
 			chatAdapter.notifyDataSetChanged();
 		}
 		if (!ChatMessagesList.isEmpty()) {

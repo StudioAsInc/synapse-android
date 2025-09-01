@@ -117,6 +117,7 @@ public class EncryptionKeyManager {
             SecretKey sessionKey = new SecretKeySpec(sessionKeyBytes, "AES");
             
             String sessionKeyId = getSessionKeyId(userId1, userId2);
+            Log.d(TAG, "DEBUG: Generating session key with ID: " + sessionKeyId);
             String sessionKeyBase64 = Base64.encodeToString(sessionKeyBytes, Base64.DEFAULT);
             prefs.edit().putString(SESSION_KEYS_PREFIX + sessionKeyId, sessionKeyBase64).commit();
             
@@ -132,12 +133,15 @@ public class EncryptionKeyManager {
     public SecretKey getSessionKey(String userId1, String userId2) {
         try {
             String sessionKeyId = getSessionKeyId(userId1, userId2);
+            Log.d(TAG, "DEBUG: Getting session key with ID: " + sessionKeyId);
             String sessionKeyBase64 = prefs.getString(SESSION_KEYS_PREFIX + sessionKeyId, null);
             
             if (sessionKeyBase64 == null) {
+                Log.d(TAG, "DEBUG: Session key not found for ID: " + sessionKeyId);
                 return null;
             }
             
+            Log.d(TAG, "DEBUG: Session key found for ID: " + sessionKeyId);
             byte[] sessionKeyBytes = Base64.decode(sessionKeyBase64, Base64.DEFAULT);
             return new SecretKeySpec(sessionKeyBytes, "AES");
             
