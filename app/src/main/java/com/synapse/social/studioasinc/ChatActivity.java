@@ -1193,52 +1193,21 @@ public class ChatActivity extends AppCompatActivity {
 						messageKeys.clear();
 						
 						final ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
-						final java.util.concurrent.atomic.AtomicInteger counter = new java.util.concurrent.atomic.AtomicInteger(0);
-						final int totalMessages = (int) dataSnapshot.getChildrenCount();
-
-						if (totalMessages == 0) {
-							updateChatUI(initialMessages);
-							return;
-						}
-
 						for (DataSnapshot _data : dataSnapshot.getChildren()) {
 							try {
 								HashMap<String, Object> messageData = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
 								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
-									encryptionIntegration.decryptMessage(messageData, new ChatEncryptionIntegration.DecryptCallback() {
-										@Override
-										public void onSuccess(Map<String, Object> decryptedMessage) {
-											initialMessages.add((HashMap<String, Object>) decryptedMessage);
-											if (counter.incrementAndGet() == totalMessages) {
-												// All messages processed, update UI
-												updateChatUI(initialMessages);
-											}
-										}
-
-										@Override
-										public void onError(String error) {
-											Log.e(TAG, "Failed to decrypt historical message: " + error);
-											// Add the original message so it's not lost
-											initialMessages.add(messageData);
-											if (counter.incrementAndGet() == totalMessages) {
-												updateChatUI(initialMessages);
-											}
-										}
-									});
+									// Bypassing decryption for debugging
+									initialMessages.add(messageData);
 									messageKeys.add(messageData.get(KEY_KEY).toString());
 								} else {
 									Log.w("ChatActivity", "Skipping initial message without valid key: " + _data.getKey());
-									if (counter.incrementAndGet() == totalMessages) {
-										updateChatUI(initialMessages);
-									}
 								}
 							} catch (Exception e) {
 								Log.e("ChatActivity", "Error processing initial message data: " + e.getMessage());
-								if (counter.incrementAndGet() == totalMessages) {
-									updateChatUI(initialMessages);
-								}
 							}
 						}
+						updateChatUI(initialMessages);
 					} else {
 						ChatMessagesListRecycler.setVisibility(View.GONE);
 						noChatText.setVisibility(View.VISIBLE);
