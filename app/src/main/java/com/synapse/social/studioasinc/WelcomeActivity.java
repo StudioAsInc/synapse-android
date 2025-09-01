@@ -59,7 +59,7 @@ import java.util.TimerTask;
 import com.synapse.social.studioasinc.permissionreq.AskPermission;
 
 
-public class CheckpermissionActivity extends AppCompatActivity {
+public class WelcomeActivity extends AppCompatActivity {
 
 	private AskPermission askPermission;
 
@@ -68,7 +68,7 @@ public class CheckpermissionActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
-		setContentView(R.layout.checkpermission);
+		setContentView(R.layout.activity_welcome);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
 		initializeLogic();

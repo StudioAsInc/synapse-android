@@ -157,7 +157,7 @@
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
-			android:name=".CheckpermissionActivity"
+			android:name=".WelcomeActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
