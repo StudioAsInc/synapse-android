@@ -725,6 +725,9 @@ public class ChatActivity extends AppCompatActivity {
 		// Reload user data and initial messages
 		_getUserReference();
 
+		// Load existing messages from Firebase when returning to the activity
+		_loadExistingMessages();
+
 		// Reattach chat listener to ensure we receive real-time messages
 		// This fixes the issue where messages sent while screen is off don't appear
 		// Check each listener independently to avoid one blocking the other
@@ -1731,6 +1734,98 @@ public class ChatActivity extends AppCompatActivity {
 				isLoading = false;
 				// CRITICAL FIX: Don't reset oldestMessageKey on error to allow retry
 				Log.e("ChatActivity", "Error processing old messages: " + databaseError.getMessage());
+			}
+		});
+	}
+
+	/**
+	 * Load existing messages from Firebase when returning to the ChatActivity
+	 * This fixes the issue where encrypted messages are not displayed after leaving and returning
+	 */
+	private void _loadExistingMessages() {
+		if (chatMessagesRef == null || ChatMessagesList == null || chatAdapter == null) {
+			Log.w("ChatActivity", "Cannot load existing messages - missing dependencies");
+			return;
+		}
+
+		// Only load if we don't already have messages
+		if (!ChatMessagesList.isEmpty()) {
+			Log.d("ChatActivity", "Messages already loaded, skipping initial load");
+			return;
+		}
+
+		Log.d("ChatActivity", "Loading existing messages from Firebase...");
+		
+		// Query for existing messages, ordered by timestamp
+		Query existingMessagesQuery = chatMessagesRef
+			.orderByChild("timestamp")
+			.limitToLast(CHAT_PAGE_SIZE);
+
+		existingMessagesQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				try {
+					if (dataSnapshot.exists()) {
+						ArrayList<HashMap<String, Object>> existingMessages = new ArrayList<>();
+						
+						for (DataSnapshot messageSnapshot : dataSnapshot.getChildren()) {
+							try {
+								HashMap<String, Object> messageData = messageSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
+									String messageKey = messageData.get(KEY_KEY).toString();
+									
+									// Check if message already exists
+									if (!messageKeys.contains(messageKey)) {
+										existingMessages.add(messageData);
+										messageKeys.add(messageKey);
+									}
+								}
+							} catch (Exception e) {
+								Log.e("ChatActivity", "Error processing existing message: " + e.getMessage());
+							}
+						}
+
+						if (!existingMessages.isEmpty()) {
+							// Sort messages by timestamp
+							existingMessages.sort((msg1, msg2) -> {
+								long time1 = _getMessageTimestamp(msg1);
+								long time2 = _getMessageTimestamp(msg2);
+								return Long.compare(time1, time2);
+							});
+
+							// Update oldest message key for pagination
+							HashMap<String, Object> oldestMessage = existingMessages.get(0);
+							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY)) {
+								oldestMessageKey = oldestMessage.get(KEY_KEY).toString();
+							}
+
+							// Add messages to the list
+							ChatMessagesList.addAll(existingMessages);
+							
+							// Update RecyclerView
+							if (chatAdapter != null) {
+								chatAdapter.notifyDataSetChanged();
+							}
+
+							// Scroll to bottom to show latest messages
+							scrollToBottom();
+
+							// Fetch replied messages for existing messages
+							_fetchRepliedMessages(existingMessages);
+
+							Log.d("ChatActivity", "Loaded " + existingMessages.size() + " existing messages");
+						} else {
+							Log.d("ChatActivity", "No existing messages found");
+						}
+					}
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Error loading existing messages: " + e.getMessage());
+				}
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
+				Log.e("ChatActivity", "Error loading existing messages: " + databaseError.getMessage());
 			}
 		});
 	}
