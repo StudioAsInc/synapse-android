@@ -1248,8 +1248,32 @@ public class ChatActivity extends AppCompatActivity {
 		encryptionIntegration.setupEncryptedMessageListener(chatId, currentUserUid, new com.synapse.social.studioasinc.util.ChatEncryptionIntegration.MessageReceivedCallback() {
 			@Override
 			public void onMessageReceived(java.util.Map<String, Object> decryptedMessage) {
-				// This is where you'd handle the decrypted message and update your UI
-				// For example, add it to your ChatMessagesList and notify the adapter
+				if (decryptedMessage != null && decryptedMessage.get(KEY_KEY) != null) {
+					String messageKey = decryptedMessage.get(KEY_KEY).toString();
+					if (!messageKeys.contains(messageKey)) {
+						messageKeys.add(messageKey);
+						_safeUpdateRecyclerView();
+
+						int insertPosition = _findCorrectInsertPosition((HashMap)decryptedMessage);
+						ChatMessagesList.add(insertPosition, (HashMap)decryptedMessage);
+
+						if (chatAdapter != null) {
+							chatAdapter.notifyItemInserted(insertPosition);
+							if (insertPosition > 0) chatAdapter.notifyItemChanged(insertPosition - 1);
+							if (insertPosition < ChatMessagesList.size() - 1) chatAdapter.notifyItemChanged(insertPosition + 1);
+						}
+
+						if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
+							ChatMessagesListRecycler.post(() -> scrollToBottom());
+						}
+
+						if (decryptedMessage.containsKey("replied_message_id")) {
+							ArrayList<HashMap<String, Object>> singleMessageList = new ArrayList<>();
+							singleMessageList.add((HashMap)decryptedMessage);
+							_fetchRepliedMessages(singleMessageList);
+						}
+					}
+				}
 			}
 
 			@Override

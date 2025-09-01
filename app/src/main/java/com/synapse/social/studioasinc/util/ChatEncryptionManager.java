@@ -147,6 +147,7 @@ public class ChatEncryptionManager {
                                                String senderUid, String recipientUid,
                                                Map<String, Object> attachments, String repliedMessageId,
                                                MessageCallback callback) {
+        Log.d(TAG, "Storing encrypted message in Firebase...");
         try {
             // Generate unique message ID
             String messageId = database.getReference(SKYLINE_REF).child(CHATS_REF).push().getKey();
