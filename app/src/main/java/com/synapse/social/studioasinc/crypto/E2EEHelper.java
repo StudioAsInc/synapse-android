@@ -1,15 +1,11 @@
 package com.synapse.social.studioasinc.crypto;
 
 import android.content.Context;
-import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -20,19 +16,12 @@ import com.google.firebase.database.ValueEventListener;
 import org.whispersystems.libsignal.IdentityKeyPair;
 import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.ecc.Curve;
-import org.whispersystems.libsignal.ecc.ECKeyPair;
 import org.whispersystems.libsignal.ecc.ECPrivateKey;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
-import org.whispersystems.libsignal.state.SignalProtocolStore;
-import org.whispersystems.libsignal.state.impl.InMemorySignalProtocolStore;
 import org.whispersystems.libsignal.util.KeyHelper;
 
-import java.io.IOException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
 import java.util.HashMap;
 
 import javax.crypto.Cipher;
@@ -43,21 +32,29 @@ import javax.crypto.spec.SecretKeySpec;
 public class E2EEHelper {
 
     private static final String TAG = "E2EEHelper";
-    private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
     private static final String IDENTITY_KEY_ALIAS_PREFIX = "e2ee_identity_";
     private static final String E2EE_PUBLIC_KEYS_REF = "skyline/e2ee_public_keys";
 
     private Context context;
-    private SignalProtocolStore signalProtocolStore;
     private String uid;
 
     public E2EEHelper(Context context) {
         this.context = context;
-        this.uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        this.signalProtocolStore = new InMemorySignalProtocolStore(); // This will be replaced with a persistent store
+        // Ensure user is authenticated before using this helper
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            this.uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        } else {
+            // Handle the case where user is null, maybe throw an exception
+            // or ensure this helper is only instantiated for authenticated users.
+            Log.e(TAG, "E2EEHelper initialized without an authenticated user.");
+        }
     }
 
     public void initializeKeys(final KeysInitializationListener listener) {
+        if (uid == null) {
+            listener.onKeyInitializationFailed(new IllegalStateException("User is not authenticated."));
+            return;
+        }
         if (!identityKeyExists()) {
             Log.d(TAG, "Identity key does not exist. Generating new keys.");
             generateAndStoreIdentityKeyPair(listener);
@@ -70,23 +67,13 @@ public class E2EEHelper {
     }
 
     private boolean identityKeyExists() {
-        try {
-            KeyStore keyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
-            keyStore.load(null);
-            return keyStore.containsAlias(getIdentityKeyAlias());
-        } catch (Exception e) {
-            Log.e(TAG, "Error checking Keystore for identity key", e);
-            return false;
-        }
+        return context.getSharedPreferences("e2ee", Context.MODE_PRIVATE)
+                .contains(getIdentityKeyAlias());
     }
 
     private void generateAndStoreIdentityKeyPair(final KeysInitializationListener listener) {
         try {
             IdentityKeyPair identityKeyPair = KeyHelper.generateIdentityKeyPair();
-            // In a real implementation, the private key would be stored in the Android Keystore.
-            // For this implementation, we will store it in SharedPreferences for simplicity,
-            // as requested by the user to keep the scope limited for now.
-            // This is NOT secure for a production app.
 
             String privateKeyBase64 = Base64.encodeToString(identityKeyPair.getPrivateKey().serialize(), Base64.NO_WRAP);
             context.getSharedPreferences("e2ee", Context.MODE_PRIVATE)
@@ -102,79 +89,9 @@ public class E2EEHelper {
                 listener.onKeyInitializationFailed(e);
             }
         }
-
-    public String encrypt(String otherUserUid, String plaintext) throws Exception {
-        String sessionKeyBase64 = context.getSharedPreferences("e2ee_sessions", Context.MODE_PRIVATE)
-                .getString(otherUserUid, null);
-
-        if (sessionKeyBase64 == null) {
-            throw new Exception("Session not established with user: " + otherUserUid);
-        }
-
-        byte[] sessionKeyBytes = Base64.decode(sessionKeyBase64, Base64.NO_WRAP);
-        // We must use a KDF in a real app, but for now, we'll truncate/pad to 32 bytes for AES-256
-        byte[] keyBytes = new byte[32];
-        System.arraycopy(sessionKeyBytes, 0, keyBytes, 0, Math.min(sessionKeyBytes.length, 32));
-        SecretKey sessionKey = new SecretKeySpec(keyBytes, "AES");
-
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        byte[] iv = new byte[12]; // GCM recommended IV size is 12 bytes
-        new SecureRandom().nextBytes(iv);
-        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, iv); // 128 bit auth tag length
-
-        cipher.init(Cipher.ENCRYPT_MODE, sessionKey, gcmParameterSpec);
-
-        byte[] ciphertext = cipher.doFinal(plaintext.getBytes("UTF-8"));
-
-        // Prepend IV to ciphertext
-        byte[] ivAndCiphertext = new byte[iv.length + ciphertext.length];
-        System.arraycopy(iv, 0, ivAndCiphertext, 0, iv.length);
-        System.arraycopy(ciphertext, 0, ivAndCiphertext, iv.length, ciphertext.length);
-
-        return Base64.encodeToString(ivAndCiphertext, Base64.NO_WRAP);
-    }
-
-    public String decrypt(String senderUid, String ciphertextAndIv) throws Exception {
-        String sessionKeyBase64 = context.getSharedPreferences("e2ee_sessions", Context.MODE_PRIVATE)
-                .getString(senderUid, null);
-
-        if (sessionKeyBase64 == null) {
-            throw new Exception("Session not established with user: " + senderUid);
-        }
-
-        byte[] sessionKeyBytes = Base64.decode(sessionKeyBase64, Base64.NO_WRAP);
-        byte[] keyBytes = new byte[32];
-        System.arraycopy(sessionKeyBytes, 0, keyBytes, 0, Math.min(sessionKeyBytes.length, 32));
-        SecretKey sessionKey = new SecretKeySpec(keyBytes, "AES");
-
-        byte[] ivAndCiphertext = Base64.decode(ciphertextAndIv, Base64.NO_WRAP);
-
-        byte[] iv = new byte[12];
-        System.arraycopy(ivAndCiphertext, 0, iv, 0, 12);
-
-        byte[] ciphertext = new byte[ivAndCiphertext.length - 12];
-        System.arraycopy(ivAndCiphertext, 12, ciphertext, 0, ciphertext.length);
-
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, iv);
-
-        cipher.init(Cipher.DECRYPT_MODE, sessionKey, gcmParameterSpec);
-
-        byte[] plaintext = cipher.doFinal(ciphertext);
-
-        return new String(plaintext, "UTF-8");
-    }
     }
 
     private void publishIdentityPublicKey(byte[] publicKeyBytes, final KeysInitializationListener listener) {
-        if (uid == null) {
-            Log.e(TAG, "Cannot publish public key, user is not logged in.");
-            if (listener != null) {
-                listener.onKeyInitializationFailed(new IllegalStateException("User not logged in."));
-            }
-            return;
-        }
-
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(E2EE_PUBLIC_KEYS_REF).child(uid);
         String publicKeyBase64 = Base64.encodeToString(publicKeyBytes, Base64.NO_WRAP);
 
@@ -197,27 +114,8 @@ public class E2EEHelper {
         });
     }
 
-    private String getIdentityKeyAlias() {
-        return IDENTITY_KEY_ALIAS_PREFIX + uid;
-    }
-
-    public interface KeysInitializationListener {
-        void onKeysInitialized();
-        void onKeyInitializationFailed(Exception e);
-    }
-
-    public interface PublicKeyListener {
-        void onPublicKeyReceived(byte[] publicKey);
-        void onPublicKeyFailed(Exception e);
-    }
-
-    public interface SessionEstablishmentListener {
-        void onSessionEstablished();
-        void onSessionEstablishmentFailed(Exception e);
-    }
-
-    public void getPublicKey(String uid, final PublicKeyListener listener) {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(E2EE_PUBLIC_KEYS_REF).child(uid);
+    public void getPublicKey(String otherUserUid, final PublicKeyListener listener) {
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(E2EE_PUBLIC_KEYS_REF).child(otherUserUid);
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -230,7 +128,7 @@ public class E2EEHelper {
                         listener.onPublicKeyFailed(new Exception("Public key is null in database."));
                     }
                 } else {
-                    listener.onPublicKeyFailed(new Exception("Public key not found for user: " + uid));
+                    listener.onPublicKeyFailed(new Exception("Public key not found for user: " + otherUserUid));
                 }
             }
 
@@ -241,17 +139,12 @@ public class E2EEHelper {
         });
     }
 
-    private ECPrivateKey loadPrivateKey() {
+    private ECPrivateKey loadPrivateKey() throws InvalidKeyException {
         String privateKeyBase64 = context.getSharedPreferences("e2ee", Context.MODE_PRIVATE)
                 .getString(getIdentityKeyAlias(), null);
         if (privateKeyBase64 != null) {
             byte[] privateKeyBytes = Base64.decode(privateKeyBase64, Base64.NO_WRAP);
-            try {
-                return Curve.decodePrivatePoint(privateKeyBytes);
-            } catch (InvalidKeyException e) {
-                Log.e(TAG, "Failed to decode private key", e);
-                return null;
-            }
+            return Curve.decodePrivatePoint(privateKeyBytes);
         }
         return null;
     }
@@ -292,25 +185,73 @@ public class E2EEHelper {
         }
 
         byte[] sessionKeyBytes = Base64.decode(sessionKeyBase64, Base64.NO_WRAP);
-        // We must use a KDF in a real app, but for now, we'll truncate/pad to 32 bytes for AES-256
         byte[] keyBytes = new byte[32];
         System.arraycopy(sessionKeyBytes, 0, keyBytes, 0, Math.min(sessionKeyBytes.length, 32));
         SecretKey sessionKey = new SecretKeySpec(keyBytes, "AES");
 
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        byte[] iv = new byte[12]; // GCM recommended IV size is 12 bytes
+        byte[] iv = new byte[12];
         new SecureRandom().nextBytes(iv);
-        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, iv); // 128 bit auth tag length
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, iv);
 
         cipher.init(Cipher.ENCRYPT_MODE, sessionKey, gcmParameterSpec);
 
         byte[] ciphertext = cipher.doFinal(plaintext.getBytes("UTF-8"));
 
-        // Prepend IV to ciphertext
         byte[] ivAndCiphertext = new byte[iv.length + ciphertext.length];
         System.arraycopy(iv, 0, ivAndCiphertext, 0, iv.length);
         System.arraycopy(ciphertext, 0, ivAndCiphertext, iv.length, ciphertext.length);
 
         return Base64.encodeToString(ivAndCiphertext, Base64.NO_WRAP);
+    }
+
+    public String decrypt(String senderUid, String ciphertextAndIv) throws Exception {
+        String sessionKeyBase64 = context.getSharedPreferences("e2ee_sessions", Context.MODE_PRIVATE)
+                .getString(senderUid, null);
+
+        if (sessionKeyBase64 == null) {
+            throw new Exception("Session not established with user: " + senderUid);
+        }
+
+        byte[] sessionKeyBytes = Base64.decode(sessionKeyBase64, Base64.NO_WRAP);
+        byte[] keyBytes = new byte[32];
+        System.arraycopy(sessionKeyBytes, 0, keyBytes, 0, Math.min(sessionKeyBytes.length, 32));
+        SecretKey sessionKey = new SecretKeySpec(keyBytes, "AES");
+
+        byte[] ivAndCiphertext = Base64.decode(ciphertextAndIv, Base64.NO_WRAP);
+
+        byte[] iv = new byte[12];
+        System.arraycopy(ivAndCiphertext, 0, iv, 0, 12);
+
+        byte[] ciphertext = new byte[ivAndCiphertext.length - 12];
+        System.arraycopy(ivAndCiphertext, 12, ciphertext, 0, ciphertext.length);
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, iv);
+
+        cipher.init(Cipher.DECRYPT_MODE, sessionKey, gcmParameterSpec);
+
+        byte[] plaintext = cipher.doFinal(ciphertext);
+
+        return new String(plaintext, "UTF-8");
+    }
+
+    private String getIdentityKeyAlias() {
+        return IDENTITY_KEY_ALIAS_PREFIX + uid;
+    }
+
+    public interface KeysInitializationListener {
+        void onKeysInitialized();
+        void onKeyInitializationFailed(Exception e);
+    }
+
+    public interface PublicKeyListener {
+        void onPublicKeyReceived(byte[] publicKey);
+        void onPublicKeyFailed(Exception e);
+    }
+
+    public interface SessionEstablishmentListener {
+        void onSessionEstablished();
+        void onSessionEstablishmentFailed(Exception e);
     }
 }
