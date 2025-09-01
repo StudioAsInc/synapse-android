@@ -135,28 +135,28 @@ public class ChatEncryptionIntegration {
                                       MessageListenerCallback callback) {
         try {
             // Safely extract message details with type checking
-            Object keyObj = messageData.get("KEY");
+            Object keyObj = messageData.get("messageId");
             String messageId = keyObj instanceof String ? (String) keyObj : null;
 
-            Object uidObj = messageData.get("uid");
+            Object uidObj = messageData.get("senderUid");
             String senderUid = uidObj instanceof String ? (String) uidObj : null;
 
-            Object aesKeyObj = messageData.get("encrypted_aes_key");
+            Object aesKeyObj = messageData.get("encryptedAesKey");
             String encryptedAesKey = aesKeyObj instanceof String ? (String) aesKeyObj : null;
 
-            Object encMsgObj = messageData.get("encrypted_message");
+            Object encMsgObj = messageData.get("encryptedMessage");
             String encryptedMessage = encMsgObj instanceof String ? (String) encMsgObj : null;
 
-            Object encTypeObj = messageData.get("encryption_type");
+            Object encTypeObj = messageData.get("encryptionType");
             String encryptionType = encTypeObj instanceof String ? (String) encTypeObj : null;
 
-            Object timestampObj = messageData.get("push_date");
+            Object timestampObj = messageData.get("timestamp");
             Long timestamp = (timestampObj instanceof Long) ? (Long) timestampObj : null;
 
-            Object typeObj = messageData.get("TYPE");
+            Object typeObj = messageData.get("messageType");
             String messageType = typeObj instanceof String ? (String) typeObj : null;
 
-            Object repliedIdObj = messageData.get("replied_message_id");
+            Object repliedIdObj = messageData.get("repliedMessageId");
             String repliedMessageId = repliedIdObj instanceof String ? (String) repliedIdObj : null;
 
             // Validate essential fields
@@ -228,28 +228,28 @@ public class ChatEncryptionIntegration {
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         try {
             // Safely extract message details with type checking
-            Object keyObj = messageData.get("KEY");
+            Object keyObj = messageData.get("messageId");
             String messageId = keyObj instanceof String ? (String) keyObj : null;
 
-            Object uidObj = messageData.get("uid");
+            Object uidObj = messageData.get("senderUid");
             String senderUid = uidObj instanceof String ? (String) uidObj : null;
 
-            Object aesKeyObj = messageData.get("encrypted_aes_key");
+            Object aesKeyObj = messageData.get("encryptedAesKey");
             String encryptedAesKey = aesKeyObj instanceof String ? (String) aesKeyObj : null;
 
-            Object encMsgObj = messageData.get("encrypted_message");
+            Object encMsgObj = messageData.get("encryptedMessage");
             String encryptedMessage = encMsgObj instanceof String ? (String) encMsgObj : null;
 
-            Object encTypeObj = messageData.get("encryption_type");
+            Object encTypeObj = messageData.get("encryptionType");
             String encryptionType = encTypeObj instanceof String ? (String) encTypeObj : null;
 
-            Object timestampObj = messageData.get("push_date");
+            Object timestampObj = messageData.get("timestamp");
             Long timestamp = (timestampObj instanceof Long) ? (Long) timestampObj : null;
 
-            Object typeObj = messageData.get("TYPE");
+            Object typeObj = messageData.get("messageType");
             String messageType = typeObj instanceof String ? (String) typeObj : null;
 
-            Object repliedIdObj = messageData.get("replied_message_id");
+            Object repliedIdObj = messageData.get("repliedMessageId");
             String repliedMessageId = repliedIdObj instanceof String ? (String) repliedIdObj : null;
 
             // Validate essential fields
