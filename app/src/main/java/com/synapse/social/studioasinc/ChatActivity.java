@@ -1950,7 +1950,8 @@ public class ChatActivity extends AppCompatActivity {
 			return; // Nothing to send
 		}
 
-		encryptionIntegration.sendEncryptedMessage(messageText, recipientUid, attachmentsMap, repliedMessageId, new ChatEncryptionManager.MessageCallback() {
+		final Map<String, Object> finalAttachmentsMap = attachmentsMap;
+		encryptionIntegration.sendEncryptedMessage(messageText, recipientUid, finalAttachmentsMap, repliedMessageId, new ChatEncryptionManager.MessageCallback() {
 			@Override
 			public void onSuccess(String messageId, EncryptedMessageModel encryptedMessage) {
 				runOnUiThread(() -> {
@@ -1962,7 +1963,7 @@ public class ChatActivity extends AppCompatActivity {
 					localMessage.put(MESSAGE_STATE_KEY, "sended"); // Or a "sending" state
 					localMessage.put("isLocalMessage", true);
 					if (!"null".equals(repliedMessageId)) localMessage.put(REPLIED_MESSAGE_ID_KEY, repliedMessageId);
-					if (attachmentsMap != null) localMessage.put(ATTACHMENTS_KEY, attachmentsMap);
+					if (finalAttachmentsMap != null) localMessage.put(ATTACHMENTS_KEY, finalAttachmentsMap);
 
 					messageKeys.add(messageId);
 					ChatMessagesList.add(localMessage);
@@ -1973,12 +1974,12 @@ public class ChatActivity extends AppCompatActivity {
 					message_et.setText("");
 					ReplyMessageID = "null";
 					mMessageReplyLayout.setVisibility(View.GONE);
-					if (attachmentsMap != null) {
+					if (finalAttachmentsMap != null) {
 						resetAttachmentState();
 					}
 
 					// Update inbox and send notification
-					String lastMessage = messageText.isEmpty() ? (attachmentsMap != null ? attachmentsMap.size() + " attachment(s)" : "") : messageText;
+					String lastMessage = messageText.isEmpty() ? (finalAttachmentsMap != null ? finalAttachmentsMap.size() + " attachment(s)" : "") : messageText;
 					_updateInbox(lastMessage);
 
 					// Fetch recipient's OneSignal ID for notification
