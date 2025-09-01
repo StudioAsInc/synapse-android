@@ -80,7 +80,7 @@ class AskPermission(private val activity: Activity) {
         }
     }
 
-    private fun areAllPermissionsGranted(): Boolean {
+    fun areAllPermissionsGranted(): Boolean {
         return getNeededPermissions().isEmpty()
     }
 
