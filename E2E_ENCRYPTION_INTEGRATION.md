@@ -46,7 +46,7 @@ encryptionIntegration.sendEncryptedMessage(
     messageText,
     recipientUid,
     attachments,
-    ReplyMessageID
+    repliedMessageId
 );
 ```
 

@@ -132,15 +132,21 @@ public class ChatEncryptionIntegration {
     private void handleEncryptedMessage(Map<String, Object> messageData, String currentUserId,
                                       MessageReceivedCallback callback) {
         try {
-            // Extract message details
-            String messageId = (String) messageData.get("KEY");
-            String senderUid = (String) messageData.get("uid");
-            String encryptedAesKey = (String) messageData.get("encrypted_aes_key");
-            String encryptedMessage = (String) messageData.get("encrypted_message");
-            String encryptionType = (String) messageData.get("encryption_type");
-            Long timestamp = (Long) messageData.get("push_date");
-            String messageType = (String) messageData.get("TYPE");
-            String repliedMessageId = (String) messageData.get("replied_message_id");
+            // Safely extract and validate message details
+            String messageId = getOrDefault(messageData, "KEY", String.class, null);
+            String senderUid = getOrDefault(messageData, "uid", String.class, null);
+
+            if (messageId == null || senderUid == null) {
+                Log.e(TAG, "Essential message data (KEY or uid) is missing or invalid");
+                return;
+            }
+
+            String encryptedAesKey = getOrDefault(messageData, "encrypted_aes_key", String.class, null);
+            String encryptedMessage = getOrDefault(messageData, "encrypted_message", String.class, null);
+            String encryptionType = getOrDefault(messageData, "encryption_type", String.class, "unknown");
+            Long timestamp = getOrDefault(messageData, "push_date", Long.class, System.currentTimeMillis());
+            String messageType = getOrDefault(messageData, "TYPE", String.class, "MESSAGE");
+            String repliedMessageId = getOrDefault(messageData, "replied_message_id", String.class, null);
             
             // Create encrypted message model
             EncryptedMessageModel encryptedMsg = new EncryptedMessageModel();
@@ -150,7 +156,7 @@ public class ChatEncryptionIntegration {
             encryptedMsg.setEncryptedAesKey(encryptedAesKey);
             encryptedMsg.setEncryptedMessage(encryptedMessage);
             encryptedMsg.setEncryptionType(encryptionType);
-            encryptedMsg.setTimestamp(timestamp != null ? timestamp : System.currentTimeMillis());
+            encryptedMsg.setTimestamp(timestamp);
             encryptedMsg.setMessageType(messageType);
             encryptedMsg.setRepliedMessageId(repliedMessageId);
             
@@ -190,8 +196,18 @@ public class ChatEncryptionIntegration {
      * Check if encryption is available
      */
     public boolean isEncryptionAvailable() {
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        return currentUserId != null && encryptionManager != null;
+        return FirebaseAuth.getInstance().getCurrentUser() != null && encryptionManager != null;
+    }
+
+    /**
+     * Safely gets a value from a map, with a default value if the key is missing or the type is wrong.
+     */
+    private <T> T getOrDefault(Map<String, Object> map, String key, Class<T> type, T defaultValue) {
+        Object value = map.get(key);
+        if (type.isInstance(value)) {
+            return type.cast(value);
+        }
+        return defaultValue;
     }
     
     /**

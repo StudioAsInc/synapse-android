@@ -42,16 +42,13 @@ public class ChatEncryptionManager {
      * Initializes encryption for the current user
      */
     public void initializeCurrentUserEncryption(EncryptionCallback callback) {
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
             callback.onError("User not authenticated");
             return;
         }
         
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        if (currentUserId == null) {
-            callback.onError("User not authenticated");
-            return;
-        }
+        String currentUserId = currentUser.getUid();
         
         firebaseService.initializeUserEncryption(currentUserId, new FirebaseEncryptionService.EncryptionCallback() {
             @Override
@@ -75,16 +72,13 @@ public class ChatEncryptionManager {
                                    Map<String, Object> attachments, String repliedMessageId,
                                    MessageCallback callback) {
         try {
-            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser == null) {
                 callback.onError("User not authenticated");
                 return;
             }
             
-            String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            if (currentUserId == null) {
-                callback.onError("User not authenticated");
-                return;
-            }
+            String currentUserId = currentUser.getUid();
             
             // Check if we have a session key for faster encryption
             SecretKey sessionKey = keyManager.getSessionKey(currentUserId, recipientUid);
@@ -156,25 +150,18 @@ public class ChatEncryptionManager {
                 "MESSAGE", attachments, repliedMessageId
             );
             
-            // Store in both chat nodes for real-time updates
-            database.getReference(SKYLINE_REF).child(CHATS_REF)
-                .child(senderUid).child(recipientUid).child(messageId)
-                .setValue(encryptedMsg)
+            // Store in both chat nodes for real-time updates atomically
+            Map<String, Object> fanOut = new HashMap<>();
+            fanOut.put("/" + SKYLINE_REF + "/" + CHATS_REF + "/" + senderUid + "/" + recipientUid + "/" + messageId, encryptedMsg);
+            fanOut.put("/" + SKYLINE_REF + "/" + CHATS_REF + "/" + recipientUid + "/" + senderUid + "/" + messageId, encryptedMsg);
+
+            database.getReference().updateChildren(fanOut)
                 .addOnSuccessListener(aVoid -> {
-                    database.getReference(SKYLINE_REF).child(CHATS_REF)
-                        .child(recipientUid).child(senderUid).child(messageId)
-                        .setValue(encryptedMsg)
-                        .addOnSuccessListener(aVoid2 -> {
-                            Log.d(TAG, "Encrypted message stored successfully");
-                            callback.onSuccess(messageId, encryptedMsg);
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e(TAG, "Failed to store in recipient chat node", e);
-                            callback.onError("Failed to store message: " + e.getMessage());
-                        });
+                    Log.d(TAG, "Encrypted message stored successfully");
+                    callback.onSuccess(messageId, encryptedMsg);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to store in sender chat node", e);
+                    Log.e(TAG, "Failed to store encrypted message", e);
                     callback.onError("Failed to store message: " + e.getMessage());
                 });
                 
@@ -189,16 +176,13 @@ public class ChatEncryptionManager {
      */
     public void decryptReceivedMessage(EncryptedMessageModel encryptedMsg, DecryptCallback callback) {
         try {
-            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser == null) {
                 callback.onError("User not authenticated");
                 return;
             }
             
-            String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            if (currentUserId == null) {
-                callback.onError("User not authenticated");
-                return;
-            }
+            String currentUserId = currentUser.getUid();
             
             // Check if this is a session key encrypted message
             if ("AES_SESSION".equals(encryptedMsg.getEncryptionType())) {
