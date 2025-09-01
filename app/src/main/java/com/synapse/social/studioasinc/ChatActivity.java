@@ -719,7 +719,11 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
+		_getUserReference();
 		blocklist.addChildEventListener(_blocklist_child_listener);
+
+		// Reload user data and initial messages
+		_getUserReference();
 
 		// Reattach chat listener to ensure we receive real-time messages
 		// This fixes the issue where messages sent while screen is off don't appear
