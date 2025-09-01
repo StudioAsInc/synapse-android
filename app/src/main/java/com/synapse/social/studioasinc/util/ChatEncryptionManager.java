@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.security.PrivateKey;
@@ -28,13 +29,11 @@ public class ChatEncryptionManager {
     
     private final Context context;
     private final EncryptionKeyManager keyManager;
-    private final FirebaseEncryptionService firebaseService;
     private final FirebaseDatabase database;
     
     public ChatEncryptionManager(Context context) {
         this.context = context;
         this.keyManager = new EncryptionKeyManager(context);
-        this.firebaseService = new FirebaseEncryptionService(context);
         this.database = FirebaseDatabase.getInstance();
     }
     
@@ -50,19 +49,28 @@ public class ChatEncryptionManager {
         
         String currentUserId = currentUser.getUid();
         
-        firebaseService.initializeUserEncryption(currentUserId, new FirebaseEncryptionService.EncryptionCallback() {
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "User encryption initialized successfully");
-                callback.onSuccess();
+        try {
+            // Generate key pair if it doesn't exist
+            if (!keyManager.hasKeys(currentUserId)) {
+                boolean success = keyManager.generateUserKeyPair(currentUserId);
+                if (!success) {
+                    callback.onError("Failed to generate encryption keys");
+                    return;
+                }
             }
             
-            @Override
-            public void onError(String error) {
-                Log.e(TAG, "Failed to initialize user encryption: " + error);
-                callback.onError(error);
+            // Upload public key to Firebase
+            String publicKey = keyManager.getPublicKey(currentUserId);
+            if (publicKey != null) {
+                uploadPublicKey(currentUserId, publicKey, callback);
+            } else {
+                callback.onError("Failed to retrieve public key");
             }
-        });
+
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to initialize user encryption", e);
+            callback.onError("Encryption initialization failed: " + e.getMessage());
+        }
     }
     
     /**
@@ -90,7 +98,7 @@ public class ChatEncryptionManager {
                 Log.d(TAG, "Using session key for encryption");
             } else {
                 // Get recipient's public key and use RSA hybrid encryption
-                firebaseService.getPublicKey(recipientUid, new FirebaseEncryptionService.PublicKeyCallback() {
+                getPublicKey(recipientUid, new PublicKeyCallback() {
                     @Override
                     public void onSuccess(String publicKey) {
                         // Encrypt with RSA hybrid
@@ -249,5 +257,55 @@ public class ChatEncryptionManager {
     public interface DecryptCallback {
         void onSuccess(String decryptedMessage);
         void onError(String error);
+    }
+
+    public interface PublicKeyCallback {
+        void onSuccess(String publicKey);
+        void onError(String error);
+    }
+
+    private void uploadPublicKey(String userId, String publicKey, EncryptionCallback callback) {
+        DatabaseReference publicKeyRef = database.getReference(USERS_REF).child(userId).child(PUBLIC_KEYS_REF);
+
+        Map<String, Object> keyData = new HashMap<>();
+        keyData.put("public_key", publicKey);
+        keyData.put("timestamp", System.currentTimeMillis());
+        keyData.put("algorithm", "RSA_2048");
+
+        publicKeyRef.setValue(keyData)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Public key uploaded successfully for user: " + userId);
+                callback.onSuccess();
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Failed to upload public key", e);
+                callback.onError("Failed to upload public key: " + e.getMessage());
+            });
+    }
+
+    public void getPublicKey(String userId, PublicKeyCallback callback) {
+        DatabaseReference publicKeyRef = database.getReference(USERS_REF).child(userId).child(PUBLIC_KEYS_REF).child("public_key");
+
+        publicKeyRef.addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+            @Override
+            public void onDataChange(com.google.firebase.database.DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    String publicKey = dataSnapshot.getValue(String.class);
+                    if (publicKey != null) {
+                        callback.onSuccess(publicKey);
+                    } else {
+                        callback.onError("Public key is null");
+                    }
+                } else {
+                    callback.onError("Public key not found for user: " + userId);
+                }
+            }
+
+            @Override
+            public void onCancelled(com.google.firebase.database.DatabaseError databaseError) {
+                Log.e(TAG, "Failed to retrieve public key", databaseError.toException());
+                callback.onError("Failed to retrieve public key: " + databaseError.getMessage());
+            }
+        });
     }
 }
