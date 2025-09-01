@@ -7,7 +7,6 @@ This guide explains how to integrate the E2E encryption system into your existin
 ### 1. Core Encryption Classes
 - **`EncryptionKeyManager.java`** - Manages RSA key pairs and session keys
 - **`MessageEncryption.java`** - Handles message encryption/decryption
-- **`FirebaseEncryptionService.java`** - Integrates with Firebase
 - **`ChatEncryptionManager.java`** - Main encryption coordinator
 - **`ChatEncryptionIntegration.java`** - Example integration with existing chat
 

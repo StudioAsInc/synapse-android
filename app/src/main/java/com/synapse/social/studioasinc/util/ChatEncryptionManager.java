@@ -4,7 +4,12 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.security.PrivateKey;
 import java.util.HashMap;
@@ -45,20 +50,79 @@ public class ChatEncryptionManager {
             callback.onError("User not authenticated");
             return;
         }
+        String userId = currentUser.getUid();
+
+        try {
+            // Generate key pair if it doesn't exist
+            if (!keyManager.hasKeys(userId)) {
+                boolean success = keyManager.generateUserKeyPair(userId);
+                if (!success) {
+                    callback.onError("Failed to generate encryption keys");
+                    return;
+                }
+            }
+
+            // Upload public key to Firebase
+            String publicKey = keyManager.getPublicKey(userId);
+            if (publicKey != null) {
+                uploadPublicKey(userId, publicKey, callback);
+            } else {
+                callback.onError("Failed to retrieve public key");
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to initialize user encryption", e);
+            callback.onError("Encryption initialization failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Uploads a user's public key to Firebase
+     */
+    private void uploadPublicKey(String userId, String publicKey, EncryptionCallback callback) {
+        DatabaseReference publicKeyRef = database.getReference(USERS_REF).child(userId).child(PUBLIC_KEYS_REF);
         
-        String currentUserId = currentUser.getUid();
-        
-        firebaseService.initializeUserEncryption(currentUserId, new FirebaseEncryptionService.EncryptionCallback() {
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "User encryption initialized successfully");
+        Map<String, Object> keyData = new HashMap<>();
+        keyData.put("public_key", publicKey);
+        keyData.put("timestamp", System.currentTimeMillis());
+        keyData.put("algorithm", "RSA_2048");
+
+        publicKeyRef.setValue(keyData)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Public key uploaded successfully for user: " + userId);
                 callback.onSuccess();
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Failed to upload public key", e);
+                callback.onError("Failed to upload public key: " + e.getMessage());
+            });
+    }
+
+    /**
+     * Retrieves a user's public key from Firebase
+     */
+    public void getPublicKey(String userId, PublicKeyCallback callback) {
+        DatabaseReference publicKeyRef = database.getReference(USERS_REF).child(userId).child(PUBLIC_KEYS_REF).child("public_key");
+
+        publicKeyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    String publicKey = dataSnapshot.getValue(String.class);
+                    if (publicKey != null) {
+                        callback.onSuccess(publicKey);
+                    } else {
+                        callback.onError("Public key is null");
+                    }
+                } else {
+                    callback.onError("Public key not found for user: " + userId);
+                }
             }
             
             @Override
-            public void onError(String error) {
-                Log.e(TAG, "Failed to initialize user encryption: " + error);
-                callback.onError(error);
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, "Failed to retrieve public key", databaseError.toException());
+                callback.onError("Failed to retrieve public key: " + databaseError.getMessage());
             }
         });
     }
@@ -80,15 +144,20 @@ public class ChatEncryptionManager {
             
             // Check if we have a session key for faster encryption
             SecretKey sessionKey = keyManager.getSessionKey(currentUserId, recipientUid);
-            MessageEncryption.EncryptedMessage encryptedMessage;
             
             if (sessionKey != null) {
                 // Use session key for faster encryption
-                encryptedMessage = MessageEncryption.encryptWithSessionKey(messageText, sessionKey);
+                MessageEncryption.EncryptedMessage encryptedMessage = MessageEncryption.encryptWithSessionKey(messageText, sessionKey);
                 Log.d(TAG, "Using session key for encryption");
+                 if (encryptedMessage != null) {
+                    storeEncryptedMessageInFirebase(encryptedMessage, currentUserId, recipientUid,
+                                                 attachments, repliedMessageId, callback);
+                } else {
+                    callback.onError("Failed to encrypt message with session key");
+                }
             } else {
                 // Get recipient's public key and use RSA hybrid encryption
-                firebaseService.getPublicKey(recipientUid, new FirebaseEncryptionService.PublicKeyCallback() {
+                getPublicKey(recipientUid, new PublicKeyCallback() {
                     @Override
                     public void onSuccess(String publicKey) {
                         // Encrypt with RSA hybrid
@@ -112,15 +181,6 @@ public class ChatEncryptionManager {
                         callback.onError("Failed to get recipient public key: " + error);
                     }
                 });
-                return;
-            }
-            
-            if (encryptedMessage != null) {
-                // Store encrypted message in Firebase
-                storeEncryptedMessageInFirebase(encryptedMessage, currentUserId, recipientUid, 
-                                             attachments, repliedMessageId, callback);
-            } else {
-                callback.onError("Failed to encrypt message");
             }
             
         } catch (Exception e) {
@@ -246,6 +306,11 @@ public class ChatEncryptionManager {
     
     public interface DecryptCallback {
         void onSuccess(String decryptedMessage);
+        void onError(String error);
+    }
+
+    public interface PublicKeyCallback {
+        void onSuccess(String publicKey);
         void onError(String error);
     }
 }

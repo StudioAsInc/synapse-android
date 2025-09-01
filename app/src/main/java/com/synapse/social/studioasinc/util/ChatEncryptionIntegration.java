@@ -56,30 +56,20 @@ public class ChatEncryptionIntegration {
      * Replace the existing _send_btn() in ChatActivity with this
      */
     public void sendEncryptedMessage(String messageText, String recipientUid, 
-                                   Map<String, Object> attachments, String repliedMessageId) {
-        if (messageText == null || messageText.trim().isEmpty()) {
+                                   Map<String, Object> attachments, String repliedMessageId,
+                                   ChatEncryptionManager.MessageCallback callback) {
+        if ((messageText == null || messageText.trim().isEmpty()) && (attachments == null || attachments.isEmpty())) {
             Log.w(TAG, "Cannot send empty message");
+            callback.onError("Cannot send an empty message without attachments.");
             return;
         }
         
         encryptionManager.sendEncryptedMessage(
-            messageText.trim(),
+            messageText != null ? messageText.trim() : "",
             recipientUid,
             attachments,
             repliedMessageId,
-            new ChatEncryptionManager.MessageCallback() {
-                @Override
-                public void onSuccess(String messageId, EncryptedMessageModel encryptedMessage) {
-                    Log.d(TAG, "Encrypted message sent successfully: " + messageId);
-                    // Update UI or handle success
-                }
-                
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "Failed to send encrypted message: " + error);
-                    // Handle error in UI
-                }
-            }
+            callback
         );
     }
     
@@ -88,7 +78,7 @@ public class ChatEncryptionIntegration {
      * Replace the existing Firebase listener in ChatActivity
      */
     public void setupEncryptedMessageListener(String chatId, String currentUserId, 
-                                           MessageReceivedCallback callback) {
+                                           MessageListenerCallback callback) {
         DatabaseReference chatRef = database.getReference(SKYLINE_REF)
             .child(CHATS_REF).child(currentUserId).child(chatId);
         
@@ -96,22 +86,31 @@ public class ChatEncryptionIntegration {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
                 if (dataSnapshot.exists()) {
-                    // Parse the encrypted message
                     Map<String, Object> messageData = (Map<String, Object>) dataSnapshot.getValue();
                     if (messageData != null) {
-                        handleEncryptedMessage(messageData, currentUserId, callback);
+                        handleEncryptedMessage(messageData, currentUserId, "added", callback);
                     }
                 }
             }
             
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String previousChildName) {
-                // Handle message updates if needed
+                if (dataSnapshot.exists()) {
+                    Map<String, Object> messageData = (Map<String, Object>) dataSnapshot.getValue();
+                    if (messageData != null) {
+                        handleEncryptedMessage(messageData, currentUserId, "changed", callback);
+                    }
+                }
             }
             
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                // Handle message deletion if needed
+                 if (dataSnapshot.exists()) {
+                    String messageId = dataSnapshot.getKey();
+                    if (messageId != null) {
+                        callback.onMessageRemoved(messageId);
+                    }
+                }
             }
             
             @Override
@@ -129,25 +128,41 @@ public class ChatEncryptionIntegration {
     /**
      * Handle incoming encrypted messages
      */
-    private void handleEncryptedMessage(Map<String, Object> messageData, String currentUserId,
-                                      MessageReceivedCallback callback) {
+    private void handleEncryptedMessage(Map<String, Object> messageData, String currentUserId, String eventType,
+                                      MessageListenerCallback callback) {
         try {
-            // Safely extract and validate message details
-            String messageId = getOrDefault(messageData, "KEY", String.class, null);
-            String senderUid = getOrDefault(messageData, "uid", String.class, null);
+            // Safely extract message details with type checking
+            Object keyObj = messageData.get("KEY");
+            String messageId = keyObj instanceof String ? (String) keyObj : null;
 
-            if (messageId == null || senderUid == null) {
-                Log.e(TAG, "Essential message data (KEY or uid) is missing or invalid");
+            Object uidObj = messageData.get("uid");
+            String senderUid = uidObj instanceof String ? (String) uidObj : null;
+
+            Object aesKeyObj = messageData.get("encrypted_aes_key");
+            String encryptedAesKey = aesKeyObj instanceof String ? (String) aesKeyObj : null;
+
+            Object encMsgObj = messageData.get("encrypted_message");
+            String encryptedMessage = encMsgObj instanceof String ? (String) encMsgObj : null;
+
+            Object encTypeObj = messageData.get("encryption_type");
+            String encryptionType = encTypeObj instanceof String ? (String) encTypeObj : null;
+
+            Object timestampObj = messageData.get("push_date");
+            Long timestamp = (timestampObj instanceof Long) ? (Long) timestampObj : null;
+
+            Object typeObj = messageData.get("TYPE");
+            String messageType = typeObj instanceof String ? (String) typeObj : null;
+
+            Object repliedIdObj = messageData.get("replied_message_id");
+            String repliedMessageId = repliedIdObj instanceof String ? (String) repliedIdObj : null;
+
+            // Validate essential fields
+            if (messageId == null || senderUid == null || encryptedMessage == null) {
+                Log.e(TAG, "Malformed encrypted message received. Missing critical fields.");
+                callback.onDecryptionError(messageId, "Malformed message data");
                 return;
             }
 
-            String encryptedAesKey = getOrDefault(messageData, "encrypted_aes_key", String.class, null);
-            String encryptedMessage = getOrDefault(messageData, "encrypted_message", String.class, null);
-            String encryptionType = getOrDefault(messageData, "encryption_type", String.class, "unknown");
-            Long timestamp = getOrDefault(messageData, "push_date", Long.class, System.currentTimeMillis());
-            String messageType = getOrDefault(messageData, "TYPE", String.class, "MESSAGE");
-            String repliedMessageId = getOrDefault(messageData, "replied_message_id", String.class, null);
-            
             // Create encrypted message model
             EncryptedMessageModel encryptedMsg = new EncryptedMessageModel();
             encryptedMsg.setMessageId(messageId);
@@ -156,7 +171,7 @@ public class ChatEncryptionIntegration {
             encryptedMsg.setEncryptedAesKey(encryptedAesKey);
             encryptedMsg.setEncryptedMessage(encryptedMessage);
             encryptedMsg.setEncryptionType(encryptionType);
-            encryptedMsg.setTimestamp(timestamp);
+            encryptedMsg.setTimestamp(timestamp != null ? timestamp : System.currentTimeMillis());
             encryptedMsg.setMessageType(messageType);
             encryptedMsg.setRepliedMessageId(repliedMessageId);
             
@@ -167,22 +182,19 @@ public class ChatEncryptionIntegration {
                     Log.d(TAG, "Message decrypted successfully");
                     
                     // Create message map for existing chat system
-                    Map<String, Object> decryptedMessageMap = new HashMap<>();
-                    decryptedMessageMap.put("KEY", messageId);
-                    decryptedMessageMap.put("uid", senderUid);
+                    Map<String, Object> decryptedMessageMap = new HashMap<>(messageData);
                     decryptedMessageMap.put("message_text", decryptedMessage);
-                    decryptedMessageMap.put("TYPE", messageType);
-                    decryptedMessageMap.put("push_date", timestamp);
-                    decryptedMessageMap.put("replied_message_id", repliedMessageId);
                     
-                    // Call the callback with decrypted message
-                    callback.onMessageReceived(decryptedMessageMap);
+                    if ("added".equals(eventType)) {
+                        callback.onMessageAdded(decryptedMessageMap);
+                    } else {
+                        callback.onMessageChanged(decryptedMessageMap);
+                    }
                 }
                 
                 @Override
                 public void onError(String error) {
                     Log.e(TAG, "Failed to decrypt message: " + error);
-                    // Handle decryption error - maybe show encrypted message indicator
                     callback.onDecryptionError(messageId, error);
                 }
             });
@@ -198,23 +210,14 @@ public class ChatEncryptionIntegration {
     public boolean isEncryptionAvailable() {
         return FirebaseAuth.getInstance().getCurrentUser() != null && encryptionManager != null;
     }
-
-    /**
-     * Safely gets a value from a map, with a default value if the key is missing or the type is wrong.
-     */
-    private <T> T getOrDefault(Map<String, Object> map, String key, Class<T> type, T defaultValue) {
-        Object value = map.get(key);
-        if (type.isInstance(value)) {
-            return type.cast(value);
-        }
-        return defaultValue;
-    }
     
     /**
      * Callback interface for received messages
      */
-    public interface MessageReceivedCallback {
-        void onMessageReceived(Map<String, Object> decryptedMessage);
+    public interface MessageListenerCallback {
+        void onMessageAdded(Map<String, Object> decryptedMessage);
+        void onMessageChanged(Map<String, Object> decryptedMessage);
+        void onMessageRemoved(String messageId);
         void onDecryptionError(String messageId, String error);
     }
 }

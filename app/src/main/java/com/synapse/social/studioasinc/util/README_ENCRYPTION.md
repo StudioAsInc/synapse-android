@@ -24,12 +24,7 @@ The E2E encryption system provides secure messaging by ensuring that:
 - Supports both RSA hybrid and session key modes
 - Uses AES-GCM for authenticated encryption
 
-### 3. Firebase Integration (`FirebaseEncryptionService`)
-- Manages public key storage and retrieval
-- Handles encrypted message storage
-- Coordinates with Firebase Realtime Database
-
-### 4. Chat Integration (`ChatEncryptionManager`)
+### 3. Chat Integration (`ChatEncryptionManager`)
 - Main interface for the chat system
 - Coordinates encryption/decryption workflow
 - Manages message lifecycle

@@ -96,12 +96,17 @@ import com.synapse.social.studioasinc.SketchwareUtil;
 import com.synapse.social.studioasinc.StorageUtil;
 import com.synapse.social.studioasinc.UploadFiles;
 import com.synapse.social.studioasinc.AsyncUploadService;
+import com.synapse.social.studioasinc.model.EncryptedMessageModel;
+import com.synapse.social.studioasinc.util.ChatEncryptionIntegration;
+import com.synapse.social.studioasinc.util.ChatEncryptionManager;
+
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.animation.Animator;
@@ -145,6 +150,8 @@ public class ChatActivity extends AppCompatActivity {
 	private Timer _timer = new Timer();
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
 	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
+    private ChatEncryptionIntegration encryptionIntegration;
+
 
 	private ProgressDialog SynapseLoadingDialog;
 	private MediaRecorder AudioMessageRecorder;
@@ -232,7 +239,6 @@ public class ChatActivity extends AppCompatActivity {
 	private ChildEventListener _blocklist_child_listener;
 	private SharedPreferences blocked;
 	private SharedPreferences theme;
-	private Intent i = new Intent();
 	private SharedPreferences appSettings;
 	private Gemini gemini;
 
@@ -240,6 +246,7 @@ public class ChatActivity extends AppCompatActivity {
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
 		setContentView(R.layout.chat);
+        encryptionIntegration = new ChatEncryptionIntegration(this);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
 
@@ -499,6 +506,7 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void initializeLogic() {
+        encryptionIntegration.initializeEncryption();
 		// Load and apply chat background
 		SharedPreferences themePrefs = getSharedPreferences("theme", MODE_PRIVATE);
 		String backgroundUrl = themePrefs.getString("chat_background_url", null);
@@ -1237,154 +1245,96 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _attachChatListener() {
-		// Extra safety: ensure all required dependencies are available
-		if (chatMessagesRef == null || ChatMessagesList == null || chatAdapter == null) {
-			Log.w("ChatActivity", "Cannot attach chat listener - missing dependencies");
-			return;
-		}
+        if (chatMessagesRef == null || ChatMessagesList == null || chatAdapter == null || encryptionIntegration == null) {
+            Log.w("ChatActivity", "Cannot attach chat listener - missing dependencies");
+            return;
+        }
 
-		// Ensure idempotency: remove existing listener if it exists but isn't null
-		if (_chat_child_listener != null) {
-			try {
-				chatMessagesRef.removeEventListener(_chat_child_listener);
-			} catch (Exception e) {
-				Log.w("ChatActivity", "Error removing existing chat listener: " + e.getMessage());
-			}
-			_chat_child_listener = null;
-		}
+        String currentUserId = auth.getCurrentUser().getUid();
+        String recipientUid = getIntent().getStringExtra(UID_KEY);
 
-		_chat_child_listener = new ChildEventListener() {
-				@Override
-				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
-					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
-					Log.d("ChatActivity", "Snapshot key: " + dataSnapshot.getKey() + ", Previous child: " + previousChildName);
+        encryptionIntegration.setupEncryptedMessageListener(recipientUid, currentUserId, new ChatEncryptionIntegration.MessageListenerCallback() {
+            @Override
+            public void onMessageAdded(Map<String, Object> decryptedMessage) {
+                runOnUiThread(() -> {
+                    if (decryptedMessage != null && decryptedMessage.get(KEY_KEY) != null) {
+                        String messageKey = decryptedMessage.get(KEY_KEY).toString();
+                        if (!messageKeys.contains(messageKey)) {
+                            messageKeys.add(messageKey);
+                            _safeUpdateRecyclerView();
 
-					if (dataSnapshot.exists()) {
-						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
+                            int insertPosition = _findCorrectInsertPosition(new HashMap<>(decryptedMessage));
+                            ChatMessagesList.add(insertPosition, new HashMap<>(decryptedMessage));
 
-						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-							String messageKey = newMessage.get(KEY_KEY).toString();
-							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
-							Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + messageKey);
+                            if (chatAdapter != null) {
+                                chatAdapter.notifyItemInserted(insertPosition);
+                                if (insertPosition > 0) chatAdapter.notifyItemChanged(insertPosition - 1);
+                                if (insertPosition < ChatMessagesList.size() - 1) chatAdapter.notifyItemChanged(insertPosition + 1);
+                            }
 
-							if (!messageKeys.contains(messageKey)) {
-								// This is a truly new message from Firebase. Add it.
-								messageKeys.add(messageKey);
-								_safeUpdateRecyclerView();
+                            if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
+                                ChatMessagesListRecycler.post(() -> scrollToBottom());
+                            }
 
-								int insertPosition = _findCorrectInsertPosition(newMessage);
-								ChatMessagesList.add(insertPosition, newMessage);
+                            if (decryptedMessage.containsKey("replied_message_id")) {
+                                ArrayList<HashMap<String, Object>> singleMessageList = new ArrayList<>();
+                                singleMessageList.add(new HashMap<>(decryptedMessage));
+                                _fetchRepliedMessages(singleMessageList);
+                            }
+                        }
+                    }
+                });
+            }
 
-								Log.d("ChatActivity", "Added new Firebase message to list at position " + insertPosition + ", key: " + messageKey);
+            @Override
+            public void onMessageChanged(Map<String, Object> decryptedMessage) {
+                runOnUiThread(() -> {
+                    if (decryptedMessage != null && decryptedMessage.get(KEY_KEY) != null) {
+                        String key = decryptedMessage.get(KEY_KEY).toString();
+                        for (int i = 0; i < ChatMessagesList.size(); i++) {
+                            if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
+                                ChatMessagesList.set(i, new HashMap<>(decryptedMessage));
+                                if (chatAdapter != null) {
+                                    chatAdapter.notifyItemChanged(i);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
 
-								if (chatAdapter != null) {
-									chatAdapter.notifyItemInserted(insertPosition);
-									if (insertPosition > 0) chatAdapter.notifyItemChanged(insertPosition - 1);
-									if (insertPosition < ChatMessagesList.size() - 1) chatAdapter.notifyItemChanged(insertPosition + 1);
-								}
+            @Override
+            public void onMessageRemoved(String messageId) {
+                runOnUiThread(() -> {
+                    if (messageId != null) {
+                        for (int i = 0; i < ChatMessagesList.size(); i++) {
+                            if (ChatMessagesList.get(i).get(KEY_KEY) != null && ChatMessagesList.get(i).get(KEY_KEY).toString().equals(messageId)) {
+                                ChatMessagesList.remove(i);
+                                messageKeys.remove(messageId);
+                                if (chatAdapter != null) {
+                                    chatAdapter.notifyItemRemoved(i);
+                                    if (!ChatMessagesList.isEmpty() && i < ChatMessagesList.size()) {
+                                        chatAdapter.notifyItemChanged(Math.min(i, ChatMessagesList.size() - 1));
+                                    }
+                                }
+                                if (ChatMessagesList.isEmpty()) {
+                                    _safeUpdateRecyclerView();
+                                }
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
 
-								if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
-									ChatMessagesListRecycler.post(() -> scrollToBottom());
-								}
-
-								if (newMessage.containsKey("replied_message_id")) {
-									ArrayList<HashMap<String, Object>> singleMessageList = new ArrayList<>();
-									singleMessageList.add(newMessage);
-									_fetchRepliedMessages(singleMessageList);
-								}
-							} else {
-								// The message key already exists. This means it was a local message that has now been confirmed by the server.
-								// We need to find it and update it to remove the 'isLocalMessage' flag and get the server timestamp.
-								for (int i = 0; i < ChatMessagesList.size(); i++) {
-									if (messageKey.equals(ChatMessagesList.get(i).get(KEY_KEY))) {
-										Log.d("ChatActivity", "Updating local message with server data at position " + i);
-										newMessage.remove("isLocalMessage"); // Ensure local flag is removed
-										ChatMessagesList.set(i, newMessage);
-										if (chatAdapter != null) {
-											chatAdapter.notifyItemChanged(i);
-										}
-										break;
-									}
-								}
-							}
-						} else {
-							Log.w("ChatActivity", "New message is null or missing key");
-						}
-					} else {
-						Log.w("ChatActivity", "DataSnapshot does not exist");
-					}
-					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded END ===");
-				}
-
-				@Override
-				public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-					if (snapshot.exists()) {
-						HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
-							String key = updatedMessage.get(KEY_KEY).toString();
-
-							// Find the exact position of the message to update
-							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null &&
-									ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
-
-									// Update the message in the list
-									ChatMessagesList.set(i, updatedMessage);
-
-									// Notify adapter of the specific item change
-									if (chatAdapter != null) {
-										chatAdapter.notifyItemChanged(i);
-									}
-									break;
-								}
-							}
-						}
-					}
-				}
-
-				@Override
-				public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-					if (snapshot.exists()) {
-						String removedKey = snapshot.getKey();
-						if (removedKey != null) {
-							// Find and remove the message by key (not by position)
-							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null &&
-									ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
-
-									// Remove the message from the list
-									ChatMessagesList.remove(i);
-									messageKeys.remove(removedKey);
-
-									// Notify adapter of the removal
-									if (chatAdapter != null) {
-										chatAdapter.notifyItemRemoved(i);
-
-										// Update the last item's timestamp if needed
-										if (!ChatMessagesList.isEmpty() && i < ChatMessagesList.size()) {
-											chatAdapter.notifyItemChanged(Math.min(i, ChatMessagesList.size() - 1));
-										}
-									}
-
-									// Check if list is empty
-									if (ChatMessagesList.isEmpty()) {
-										_safeUpdateRecyclerView();
-									}
-									break;
-								}
-							}
-						}
-					}
-				}
-
-				@Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-				@Override public void onCancelled(@NonNull DatabaseError error) {
-					Log.e("ChatActivity", "Chat listener cancelled: " + error.getMessage());
-				}
-			};
-		chatMessagesRef.addChildEventListener(_chat_child_listener);
-	}
+            @Override
+            public void onDecryptionError(String messageId, String error) {
+                Log.e(TAG, "Decryption failed for message " + messageId + ": " + error);
+                // Optionally show an error message in the UI
+            }
+        });
+    }
 
 	/**
 	 * CRITICAL FIX: Find the correct position to insert a new message based on timestamp
@@ -1958,62 +1908,19 @@ public class ChatActivity extends AppCompatActivity {
 
 	public void _send_btn() {
 		final String messageText = message_et.getText().toString().trim();
-		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-		final String recipientUid = getIntent().getStringExtra("uid");
+		final String senderUid = auth.getCurrentUser().getUid();
+		final String recipientUid = getIntent().getStringExtra(UID_KEY);
+		final String repliedMessageId = ReplyMessageID;
 
-		// The message sending logic is now wrapped inside a Realtime Database query.
-		// First, we fetch the recipient's OneSignal Player ID from the 'users' node.
-		_firebase.getReference(SKYLINE_REF).child(USERS_REF).child(recipientUid)
-			.addListenerForSingleValueEvent(new ValueEventListener() {
-				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-					String recipientOneSignalPlayerId = "missing_id"; // Default value
-
-					if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
-						String fetchedId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
-						if (fetchedId != null && !fetchedId.isEmpty()) {
-							recipientOneSignalPlayerId = fetchedId;
-						} else {
-							Log.e("ChatActivity", "Recipient's OneSignal Player ID is null or empty in the database.");
-						}
-					} else {
-						Log.e("ChatActivity", "Recipient's user node or oneSignalPlayerId not found in Realtime Database.");
-					}
-
-					// After fetching the ID (or failing), proceed with sending the message.
-					proceedWithMessageSending(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
-				}
-
-				@Override
-				public void onCancelled(@NonNull DatabaseError databaseError) {
-					Log.e("ChatActivity", "Failed to fetch recipient's data from RTDB. Sending message without notification.", databaseError.toException());
-					// Still send the message, just without the notification.
-					proceedWithMessageSending(messageText, senderUid, recipientUid, "missing_id");
-				}
-			});
-	}
-
-	/**
-	 * This helper method contains the original logic for sending a message.
-	 * It's now called after the recipient's OneSignal ID has been fetched.
-	 */
-	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
 		if (auth.getCurrentUser() != null) {
 			PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
 		}
-		Log.d("ChatActivity", "=== MESSAGE SENDING START ===");
-		Log.d("ChatActivity", "Message text: '" + messageText + "'");
-		Log.d("ChatActivity", "Sender: " + senderUid + ", Recipient: " + recipientUid);
-		Log.d("ChatActivity", "Attachment map size: " + attactmentmap.size());
-		Log.d("ChatActivity", "Attachment map content: " + attactmentmap.toString());
 
+		Map<String, Object> attachmentsMap = null;
 		if (!attactmentmap.isEmpty()) {
-			Log.d("ChatActivity", "Processing message with " + attactmentmap.size() + " attachments");
-			// Logic for sending messages with attachments
 			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
 			boolean allUploadsSuccessful = true;
 			for (HashMap<String, Object> item : attactmentmap) {
-				Log.d("ChatActivity", "Checking attachment: " + item.toString());
 				if ("success".equals(item.get("uploadState"))) {
 					HashMap<String, Object> attachmentData = new HashMap<>();
 					attachmentData.put("url", item.get("cloudinaryUrl"));
@@ -2021,149 +1928,86 @@ public class ChatActivity extends AppCompatActivity {
 					attachmentData.put("width", item.get("width"));
 					attachmentData.put("height", item.get("height"));
 					successfulAttachments.add(attachmentData);
-					Log.d("ChatActivity", "Added successful attachment: " + attachmentData.toString());
 				} else {
-					Log.w("ChatActivity", "Attachment not ready: " + item.toString());
 					allUploadsSuccessful = false;
 				}
 			}
 
-			Log.d("ChatActivity", "All uploads successful: " + allUploadsSuccessful + ", Successful attachments: " + successfulAttachments.size());
-
-			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
-				String uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated message key: " + uniqueMessageKey);
-
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
-				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-
-				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
-				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
-
-				// Send to both chat nodes using setValue for proper real-time updates
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
-				_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
-
-				// CRITICAL FIX: Immediately add the message to local list for instant feedback
-				ChatSendMap.put("isLocalMessage", true); // Mark as local message
-				messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-				// Add to the end since this is a new message being sent
-				ChatMessagesList.add(ChatSendMap);
-				int newPosition = ChatMessagesList.size() - 1;
-				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-				// Use more granular insertion notification for smooth updates
-				chatAdapter.notifyItemInserted(newPosition);
-
-				// Scroll to the new message immediately
-				ChatMessagesListRecycler.post(() -> {
-					scrollToBottom();
-				});
-
-				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
-
-				// Enhanced Smart Notification Check with chat ID for deep linking
-				String chatId = senderUid + "_" + recipientUid;
-				String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-				String notificationPreview;
+			if (allUploadsSuccessful) {
 				if (!successfulAttachments.isEmpty()) {
-					if (TextUtils.isEmpty(messageText)) {
-						notificationPreview = "Sent an attachment";
-					} else {
-						notificationPreview = messageText + " + Sent an attachment";
+					attachmentsMap = new HashMap<>();
+					for (int i = 0; i < successfulAttachments.size(); i++) {
+						attachmentsMap.put(String.valueOf(i), successfulAttachments.get(i));
 					}
-				} else {
-					notificationPreview = messageText;
 				}
-				String notificationMessage = senderDisplayName + ": " + notificationPreview;
-				HashMap<String, String> data = new HashMap<>();
-				data.put("chatId", chatId);
-				NotificationHelper.sendNotification(
-					recipientUid,
-					senderUid,
-					notificationMessage,
-					"chat_message",
-					data
-				);
-
-				_updateInbox(lastMessage);
-
-				// Clear UI
-				Log.d("ChatActivity", "Clearing attachment map and UI");
-				message_et.setText("");
-				ReplyMessageID = "null";
-				mMessageReplyLayout.setVisibility(View.GONE);
-
-				// CRITICAL FIX: Reset attachment state completely
-				resetAttachmentState();
-
-				Log.d("ChatActivity", "=== ATTACHMENT MESSAGE SENT SUCCESSFULLY ===");
-
 			} else {
-				Log.w("ChatActivity", "Cannot send message - All uploads successful: " + allUploadsSuccessful + ", Message text empty: " + messageText.isEmpty() + ", Attachments empty: " + successfulAttachments.isEmpty());
 				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
+				return;
+			}
+		}
+
+		if (messageText.isEmpty() && (attachmentsMap == null || attachmentsMap.isEmpty())) {
+			return; // Nothing to send
+		}
+
+		encryptionIntegration.sendEncryptedMessage(messageText, recipientUid, attachmentsMap, repliedMessageId, new ChatEncryptionManager.MessageCallback() {
+			@Override
+			public void onSuccess(String messageId, EncryptedMessageModel encryptedMessage) {
+				runOnUiThread(() -> {
+					// Add a temporary local message to the UI for instant feedback
+					HashMap<String, Object> localMessage = new HashMap<>();
+					localMessage.put(KEY_KEY, messageId);
+					localMessage.put(UID_KEY, senderUid);
+					localMessage.put(MESSAGE_TEXT_KEY, messageText);
+					localMessage.put(MESSAGE_STATE_KEY, "sended"); // Or a "sending" state
+					localMessage.put("isLocalMessage", true);
+					if (!"null".equals(repliedMessageId)) localMessage.put(REPLIED_MESSAGE_ID_KEY, repliedMessageId);
+					if (attachmentsMap != null) localMessage.put(ATTACHMENTS_KEY, attachmentsMap);
+
+					messageKeys.add(messageId);
+					ChatMessagesList.add(localMessage);
+					chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+					scrollToBottom();
+
+					// Clear UI
+					message_et.setText("");
+					ReplyMessageID = "null";
+					mMessageReplyLayout.setVisibility(View.GONE);
+					if (attachmentsMap != null) {
+						resetAttachmentState();
+					}
+
+					// Update inbox and send notification
+					String lastMessage = messageText.isEmpty() ? (attachmentsMap != null ? attachmentsMap.size() + " attachment(s)" : "") : messageText;
+					_updateInbox(lastMessage);
+
+					// Fetch recipient's OneSignal ID for notification
+					_firebase.getReference(SKYLINE_REF).child(USERS_REF).child(recipientUid)
+						.addListenerForSingleValueEvent(new ValueEventListener() {
+							@Override
+							public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+								String recipientOneSignalPlayerId = "missing_id";
+								if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
+									recipientOneSignalPlayerId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
+								}
+								String chatId = senderUid + "_" + recipientUid;
+								String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
+								String notificationMessage = senderDisplayName + ": " + lastMessage;
+								NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, notificationMessage, chatId);
+							}
+							@Override
+							public void onCancelled(@NonNull DatabaseError databaseError) {}
+						});
+				});
 			}
 
-		} else if (!messageText.isEmpty()) {
-			Log.d("ChatActivity", "Processing text-only message");
-			// Logic for sending text-only messages
-			String uniqueMessageKey = main.push().getKey();
-			Log.d("ChatActivity", "Generated text message key: " + uniqueMessageKey);
-
-			ChatSendMap = new HashMap<>();
-			ChatSendMap.put(UID_KEY, senderUid);
-			ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-			ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
-			ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-			if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-			ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-
-			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
-			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
-
-			// Send to both chat nodes using setValue for proper real-time updates
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(senderUid).child(recipientUid).child(uniqueMessageKey).setValue(ChatSendMap);
-			_firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(recipientUid).child(senderUid).child(uniqueMessageKey).setValue(ChatSendMap);
-
-			// CRITICAL FIX: Immediately add the message to local list for instant feedback
-			ChatSendMap.put("isLocalMessage", true); // Mark as local message
-			messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-			// Add to the end since this is a new message being sent
-			ChatMessagesList.add(ChatSendMap);
-			int newPosition = ChatMessagesList.size() - 1;
-			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			chatAdapter.notifyItemInserted(newPosition);
-
-			// Scroll to the new message immediately
-			ChatMessagesListRecycler.post(() -> {
-				scrollToBottom();
-			});
-
-			// Enhanced Smart Notification Check with chat ID for deep linking
-			String chatId = senderUid + "_" + recipientUid;
-			String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-			String notificationPreview = messageText;
-			String notificationMessage = senderDisplayName + ": " + notificationPreview;
-			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, notificationMessage, chatId);
-
-			_updateInbox(messageText);
-
-			// Clear UI
-			message_et.setText("");
-			ReplyMessageID = "null";
-			mMessageReplyLayout.setVisibility(View.GONE);
-
-			Log.d("ChatActivity", "=== TEXT MESSAGE SENT SUCCESSFULLY ===");
-		} else {
-			Log.w("ChatActivity", "No message text and no attachments - nothing to send");
-		}
+			@Override
+			public void onError(String error) {
+				runOnUiThread(() -> {
+					Toast.makeText(ChatActivity.this, "Failed to send message: " + error, Toast.LENGTH_SHORT).show();
+				});
+			}
+		});
 	}
 
 
