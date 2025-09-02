@@ -97,6 +97,7 @@ import com.synapse.social.studioasinc.SketchwareUtil;
 import com.synapse.social.studioasinc.StorageUtil;
 import com.synapse.social.studioasinc.UploadFiles;
 import com.synapse.social.studioasinc.AsyncUploadService;
+import com.synapse.social.studioasinc.model.ChatMessage;
 
 import java.io.File;
 import java.io.IOException;
@@ -174,9 +175,9 @@ public class ChatActivity extends AppCompatActivity {
 	private ValueEventListener _userStatusListener;
 	private DatabaseReference userRef;
 
-	private HashMap<String, HashMap<String, Object>> repliedMessagesCache = new HashMap<>();
+	private HashMap<String, ChatMessage> repliedMessagesCache = new HashMap<>();
 	private java.util.Set<String> messageKeys = new java.util.HashSet<>();
-	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
+	private ArrayList<ChatMessage> ChatMessagesList = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
 
 	private RelativeLayout relativelayout1;
@@ -857,14 +858,11 @@ public class ChatActivity extends AppCompatActivity {
 		finish();
 	}
 
-	private void _fetchRepliedMessages(ArrayList<HashMap<String, Object>> messages) {
+	private void _fetchRepliedMessages(ArrayList<ChatMessage> messages) {
 		java.util.HashSet<String> repliedIdsToFetch = new java.util.HashSet<>();
-		for (HashMap<String, Object> message : messages) {
-			if (message.containsKey("replied_message_id")) {
-                String repliedId = String.valueOf(message.get("replied_message_id"));
-				if (repliedId != null && !repliedId.equals("null") && !repliedMessagesCache.containsKey(repliedId)) {
-					repliedIdsToFetch.add(repliedId);
-				}
+		for (ChatMessage message : messages) {
+			if (message.replied_message_id != null && !message.replied_message_id.equals("null") && !repliedMessagesCache.containsKey(message.replied_message_id)) {
+				repliedIdsToFetch.add(message.replied_message_id);
 			}
 		}
 
@@ -877,13 +875,13 @@ public class ChatActivity extends AppCompatActivity {
 		DatabaseReference chatRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(theirUid);
 
 		for (String messageKey : repliedIdsToFetch) {
-			repliedMessagesCache.put(messageKey, new HashMap<>());
+			repliedMessagesCache.put(messageKey, new ChatMessage());
 
 			chatRef.child(messageKey).addListenerForSingleValueEvent(new ValueEventListener() {
 				@Override
 				public void onDataChange(@NonNull DataSnapshot snapshot) {
 					if (snapshot.exists()) {
-						HashMap<String, Object> repliedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						ChatMessage repliedMessage = snapshot.getValue(ChatMessage.class);
 						if (repliedMessage != null) {
 							repliedMessagesCache.put(messageKey, repliedMessage);
 							_updateMessageInRecyclerView(messageKey);
@@ -902,8 +900,8 @@ public class ChatActivity extends AppCompatActivity {
 	private void _updateMessageInRecyclerView(String repliedMessageKey) {
 		if (chatAdapter == null || isFinishing() || isDestroyed()) return;
 		for (int i = 0; i < ChatMessagesList.size(); i++) {
-			HashMap<String, Object> message = ChatMessagesList.get(i);
-			if (message != null && message.containsKey("replied_message_id") && repliedMessageKey.equals(message.get("replied_message_id").toString())) {
+			ChatMessage message = ChatMessagesList.get(i);
+			if (message != null && message.replied_message_id != null && repliedMessageKey.equals(message.replied_message_id)) {
 				final int positionToUpdate = i;
 				runOnUiThread(() -> {
 					if (chatAdapter != null && positionToUpdate < chatAdapter.getItemCount()) {
@@ -935,17 +933,17 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 
-	public void _messageOverviewPopup(final View _view, final double _position, final ArrayList<HashMap<String, Object>> _data) {
+	public void _messageOverviewPopup(final View _view, final double _position, final ArrayList<ChatMessage> _data) {
 		if (_data == null || (int)_position >= _data.size() || (int)_position < 0) {
 			return;
 		}
 
-		final HashMap<String, Object> messageData = _data.get((int)_position);
+		final ChatMessage messageData = _data.get((int)_position);
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-		String senderUid = messageData.get(UID_KEY) != null ? String.valueOf(messageData.get(UID_KEY)) : null;
+		String senderUid = messageData.uid;
 		final boolean isMine = currentUser != null && senderUid != null && senderUid.equals(currentUser.getUid());
-		final String originalMessageText = messageData.get(MESSAGE_TEXT_KEY) != null ? messageData.get(MESSAGE_TEXT_KEY).toString() : "";
-		final boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
+		final String originalMessageText = messageData.message_text;
+		final boolean isEncrypted = messageData.isEncrypted;
 
 		String decryptedMessageText;
 		if (isEncrypted) {
@@ -985,7 +983,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		// Set click listeners
 		replyLayout.setOnClickListener(v -> {
-			ReplyMessageID = messageData.get(KEY_KEY).toString();
+			ReplyMessageID = messageData.key;
 			mMessageReplyLayoutBodyRightUsername.setText(isMine ? FirstUserName : SecondUserName);
 			mMessageReplyLayoutBodyRightMessage.setText(messageText);
 			mMessageReplyLayout.setVisibility(View.VISIBLE);
@@ -1000,7 +998,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 		deleteLayout.setOnClickListener(v -> {
-			_DeleteMessageDialog(_data, _position);
+			_DeleteMessageDialog(new ArrayList<>(_data), _position);
 			popupWindow.dismiss();
 		});
 
@@ -1019,7 +1017,7 @@ public class ChatActivity extends AppCompatActivity {
 					return;
 				}
 				String otherUid = getIntent().getStringExtra("uid");
-				String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
+				String msgKey = messageData.key;
 				if (otherUid == null || msgKey == null) {
 					return;
 				}
@@ -1236,14 +1234,14 @@ public class ChatActivity extends AppCompatActivity {
 						// We clear the list and keyset here before the initial load
 						ChatMessagesList.clear();
 						messageKeys.clear();
-						ArrayList<HashMap<String, Object>> initialMessages = new ArrayList<>();
+						ArrayList<ChatMessage> initialMessages = new ArrayList<>();
 						
 						for (DataSnapshot _data : dataSnapshot.getChildren()) {
 							try {
-								HashMap<String, Object> messageData = _data.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-								if (messageData != null && messageData.containsKey(KEY_KEY) && messageData.get(KEY_KEY) != null) {
-									initialMessages.add(messageData);
-									messageKeys.add(messageData.get(KEY_KEY).toString());
+								ChatMessage message = _data.getValue(ChatMessage.class);
+								if (message != null && message.key != null) {
+									initialMessages.add(message);
+									messageKeys.add(message.key);
 								} else {
 									Log.w("ChatActivity", "Skipping initial message without valid key: " + _data.getKey());
 								}
@@ -1255,15 +1253,15 @@ public class ChatActivity extends AppCompatActivity {
 						if (!initialMessages.isEmpty()) {
 							// CRITICAL FIX: Sort initial messages by timestamp to ensure proper order
 							initialMessages.sort((msg1, msg2) -> {
-								long time1 = _getMessageTimestamp(msg1);
-								long time2 = _getMessageTimestamp(msg2);
+								long time1 = msg1.push_date;
+								long time2 = msg2.push_date;
 								return Long.compare(time1, time2);
 							});
 							
 							// Safely get the oldest message key
-							HashMap<String, Object> oldestMessage = initialMessages.get(0);
-							if (oldestMessage != null && oldestMessage.containsKey(KEY_KEY) && oldestMessage.get(KEY_KEY) != null) {
-								oldestMessageKey = oldestMessage.get(KEY_KEY).toString();
+							ChatMessage oldestMessage = initialMessages.get(0);
+							if (oldestMessage != null && oldestMessage.key != null) {
+								oldestMessageKey = oldestMessage.key;
 							}
 
 							ChatMessagesList.addAll(initialMessages);
@@ -1317,12 +1315,12 @@ public class ChatActivity extends AppCompatActivity {
 					Log.d("ChatActivity", "Snapshot key: " + dataSnapshot.getKey() + ", Previous child: " + previousChildName);
 					
 					if (dataSnapshot.exists()) {
-						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+						ChatMessage newMessage = dataSnapshot.getValue(ChatMessage.class);
 						Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
 						
-						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-							String messageKey = newMessage.get(KEY_KEY).toString();
-							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
+						if (newMessage != null && newMessage.key != null) {
+							String messageKey = newMessage.key;
+							String messageType = newMessage.TYPE;
 							Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + messageKey);
 							
 							if (!messageKeys.contains(messageKey)) {
@@ -1345,8 +1343,8 @@ public class ChatActivity extends AppCompatActivity {
 									ChatMessagesListRecycler.post(() -> scrollToBottom());
 								}
 								
-								if (newMessage.containsKey("replied_message_id")) {
-									ArrayList<HashMap<String, Object>> singleMessageList = new ArrayList<>();
+								if (newMessage.replied_message_id != null) {
+									ArrayList<ChatMessage> singleMessageList = new ArrayList<>();
 									singleMessageList.add(newMessage);
 									_fetchRepliedMessages(singleMessageList);
 								}
@@ -1354,9 +1352,8 @@ public class ChatActivity extends AppCompatActivity {
 								// The message key already exists. This means it was a local message that has now been confirmed by the server.
 								// We need to find it and update it to remove the 'isLocalMessage' flag and get the server timestamp.
 								for (int i = 0; i < ChatMessagesList.size(); i++) {
-									if (messageKey.equals(ChatMessagesList.get(i).get(KEY_KEY))) {
+									if (messageKey.equals(ChatMessagesList.get(i).key)) {
 										Log.d("ChatActivity", "Updating local message with server data at position " + i);
-										newMessage.remove("isLocalMessage"); // Ensure local flag is removed
 										ChatMessagesList.set(i, newMessage);
 										if (chatAdapter != null) {
 											chatAdapter.notifyItemChanged(i);
@@ -1377,14 +1374,14 @@ public class ChatActivity extends AppCompatActivity {
 				@Override
 				public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 					if (snapshot.exists()) {
-						HashMap<String, Object> updatedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						if (updatedMessage != null && updatedMessage.get(KEY_KEY) != null) {
-							String key = updatedMessage.get(KEY_KEY).toString();
+						ChatMessage updatedMessage = snapshot.getValue(ChatMessage.class);
+						if (updatedMessage != null && updatedMessage.key != null) {
+							String key = updatedMessage.key;
 							
 							// Find the exact position of the message to update
 							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null && 
-									ChatMessagesList.get(i).get(KEY_KEY).toString().equals(key)) {
+								if (ChatMessagesList.get(i).key != null &&
+									ChatMessagesList.get(i).key.equals(key)) {
 									
 									// Update the message in the list
 									ChatMessagesList.set(i, updatedMessage);
@@ -1407,8 +1404,8 @@ public class ChatActivity extends AppCompatActivity {
 						if (removedKey != null) {
 							// Find and remove the message by key (not by position)
 							for (int i = 0; i < ChatMessagesList.size(); i++) {
-								if (ChatMessagesList.get(i).get(KEY_KEY) != null && 
-									ChatMessagesList.get(i).get(KEY_KEY).toString().equals(removedKey)) {
+								if (ChatMessagesList.get(i).key != null &&
+									ChatMessagesList.get(i).key.equals(removedKey)) {
 									
 									// Remove the message from the list
 									ChatMessagesList.remove(i);
@@ -1447,17 +1444,17 @@ public class ChatActivity extends AppCompatActivity {
 	 * CRITICAL FIX: Find the correct position to insert a new message based on timestamp
 	 * This ensures messages are always in chronological order
 	 */
-	private int _findCorrectInsertPosition(HashMap<String, Object> newMessage) {
+	private int _findCorrectInsertPosition(ChatMessage newMessage) {
 		if (ChatMessagesList.isEmpty()) {
 			return 0;
 		}
 		
 		// Get the timestamp of the new message
-		long newMessageTime = _getMessageTimestamp(newMessage);
+		long newMessageTime = newMessage.push_date;
 		
 		// Find the correct position by comparing timestamps
 		for (int i = 0; i < ChatMessagesList.size(); i++) {
-			long existingMessageTime = _getMessageTimestamp(ChatMessagesList.get(i));
+			long existingMessageTime = ChatMessagesList.get(i).push_date;
 			
 			// If new message is older than or equal to existing message, insert before it
 			if (newMessageTime <= existingMessageTime) {
@@ -1472,20 +1469,8 @@ public class ChatActivity extends AppCompatActivity {
 	/**
 	 * Helper method to extract timestamp from message
 	 */
-	private long _getMessageTimestamp(HashMap<String, Object> message) {
-		try {
-			Object pushDateObj = message.get("push_date");
-			if (pushDateObj instanceof Long) {
-				return (Long) pushDateObj;
-			} else if (pushDateObj instanceof Double) {
-				return ((Double) pushDateObj).longValue();
-			} else if (pushDateObj instanceof String) {
-				return Long.parseLong((String) pushDateObj);
-			}
-		} catch (Exception e) {
-			Log.w("ChatActivity", "Error parsing message timestamp: " + e.getMessage());
-		}
-		return System.currentTimeMillis();
+	private long _getMessageTimestamp(ChatMessage message) {
+		return message.push_date;
 	}
 	
 	/**
@@ -2106,6 +2091,11 @@ public class ChatActivity extends AppCompatActivity {
 					String encryptedAttachments = e2eeHelper.encrypt(recipientUid, attachmentsJson);
 					ChatSendMap.put(ATTACHMENTS_KEY, encryptedAttachments);
 					ChatSendMap.put("isEncrypted", true);
+					if (successfulAttachments.size() == 1 && String.valueOf(successfulAttachments.get(0).getOrDefault("publicId", "")).contains("|video")) {
+						ChatSendMap.put("attachmentViewType", "video");
+					} else {
+						ChatSendMap.put("attachmentViewType", "grid");
+					}
 				} catch (Exception e) {
 					Log.e(TAG, "Failed to encrypt attachments", e);
 					Toast.makeText(this, "Error: Could not encrypt attachments.", Toast.LENGTH_SHORT).show();
@@ -2523,15 +2513,15 @@ public class ChatActivity extends AppCompatActivity {
 
 	public void _showReplyUI(final double _position) {
 		// This is where you trigger your reply UI.
-		HashMap<String, Object> messageData = ChatMessagesList.get((int)_position);
-		ReplyMessageID = messageData.get(KEY_KEY).toString();
+		ChatMessage messageData = ChatMessagesList.get((int)_position);
+		ReplyMessageID = messageData.key;
 
-		if (messageData.get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+		if (messageData.uid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 			mMessageReplyLayoutBodyRightUsername.setText(FirstUserName);
 		} else {
 			mMessageReplyLayoutBodyRightUsername.setText(SecondUserName);
 		}
-		mMessageReplyLayoutBodyRightMessage.setText(messageData.get(MESSAGE_TEXT_KEY).toString());
+		mMessageReplyLayoutBodyRightMessage.setText(messageData.message_text);
 		mMessageReplyLayout.setVisibility(View.VISIBLE);
 		vbr.vibrate((long)(48));
 	}
@@ -2553,8 +2543,8 @@ public class ChatActivity extends AppCompatActivity {
 				}
 
 				// Get the item and check if it's a real message with a key.
-				HashMap<String, Object> messageData = ChatMessagesList.get(position);
-				if (messageData == null || !messageData.containsKey("key") || messageData.get("key") == null) {
+				ChatMessage messageData = ChatMessagesList.get(position);
+				if (messageData == null || messageData.key == null) {
 					// This is not a real message (e.g., typing indicator, loading view).
 					// We just notify the adapter to redraw the item back to its original state.
 					chatAdapter.notifyItemChanged(position);
@@ -2676,7 +2666,7 @@ public class ChatActivity extends AppCompatActivity {
 	// CRITICAL FIX: Helper method to find message position
 	private int _findMessagePosition(String messageKey) {
 		for (int i = 0; i < ChatMessagesList.size(); i++) {
-			if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(messageKey)) {
+			if (ChatMessagesList.get(i).key.equals(messageKey)) {
 				return i;
 			}
 		}
@@ -2903,16 +2893,16 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
-	private String getSenderNameForMessage(HashMap<String, Object> message) {
-		if (message == null || message.get(UID_KEY) == null || auth.getCurrentUser() == null) {
+	private String getSenderNameForMessage(ChatMessage message) {
+		if (message == null || message.uid == null || auth.getCurrentUser() == null) {
 			return "Unknown";
 		}
-		boolean isMyMessage = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid());
+		boolean isMyMessage = message.uid.equals(auth.getCurrentUser().getUid());
 		return isMyMessage ? FirstUserName : SecondUserName;
 	}
 
-	private void appendMessageToContext(StringBuilder contextBuilder, HashMap<String, Object> message) {
-		Object messageTextObj = message.get(MESSAGE_TEXT_KEY);
+	private void appendMessageToContext(StringBuilder contextBuilder, ChatMessage message) {
+		Object messageTextObj = message.message_text;
 		String messageText = (messageTextObj != null) ? messageTextObj.toString() : "";
 		contextBuilder.append(getSenderNameForMessage(message))
 				.append(": ")
@@ -2920,7 +2910,7 @@ public class ChatActivity extends AppCompatActivity {
 				.append("\n");
 	}
 
-	private String buildExplanationPrompt(int position, String messageText, HashMap<String, Object> messageData) {
+	private String buildExplanationPrompt(int position, String messageText, ChatMessage messageData) {
 		// Build context strings
 		StringBuilder beforeContext = new StringBuilder();
 		int startIndex = Math.max(0, position - EXPLAIN_CONTEXT_MESSAGES_BEFORE);
