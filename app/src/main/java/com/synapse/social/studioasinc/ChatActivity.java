@@ -947,19 +947,20 @@ public class ChatActivity extends AppCompatActivity {
 		final String originalMessageText = messageData.get(MESSAGE_TEXT_KEY) != null ? messageData.get(MESSAGE_TEXT_KEY).toString() : "";
 		final boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
 
-		final String messageText;
+		String decryptedMessageText;
 		if (isEncrypted) {
 			try {
 				String otherUserUid = getIntent().getStringExtra("uid");
-				messageText = e2eeHelper.decrypt(otherUserUid, originalMessageText);
+				decryptedMessageText = e2eeHelper.decrypt(otherUserUid, originalMessageText);
 			} catch (Exception e) {
 				Log.e(TAG, "Failed to decrypt message for popup", e);
 				Toast.makeText(ChatActivity.this, "⚠️ Decryption failed", Toast.LENGTH_SHORT).show();
-				messageText = originalMessageText; // Fallback to encrypted text
+				decryptedMessageText = originalMessageText; // Fallback to encrypted text
 			}
 		} else {
-			messageText = originalMessageText;
+			decryptedMessageText = originalMessageText;
 		}
+		final String messageText = decryptedMessageText;
 
 		// Inflate the custom popup layout
 		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
