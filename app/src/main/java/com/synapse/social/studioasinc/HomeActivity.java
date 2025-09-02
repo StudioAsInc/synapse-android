@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -121,6 +122,40 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
             }
+        });
+
+        viewPager.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        viewPager.setCurrentItem(viewPager.getCurrentItem() - 1, true);
+                        return true;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        viewPager.setCurrentItem(viewPager.getCurrentItem() + 1, true);
+                        return true;
+                }
+            }
+            return false;
+        });
+
+        tabLayout.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        TabLayout.Tab tab = tabLayout.getTabAt(tabLayout.getSelectedTabPosition() - 1);
+                        if (tab != null) {
+                            tab.select();
+                        }
+                        return true;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        TabLayout.Tab tab2 = tabLayout.getTabAt(tabLayout.getSelectedTabPosition() + 1);
+                        if (tab2 != null) {
+                            tab2.select();
+                        }
+                        return true;
+                }
+            }
+            return false;
         });
 
         nav_search_ic.setOnClickListener(_view -> {

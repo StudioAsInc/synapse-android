@@ -11,6 +11,12 @@
 	<uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 	<uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 	<uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
+	<uses-feature
+		android:name="android.software.leanback"
+		android:required="true" />
+	<uses-feature
+		android:name="android.hardware.touchscreen"
+		android:required="false" />
 	<application
 		android:allowBackup="true"
 		android:icon="@mipmap/ic_launcher"
@@ -19,7 +25,8 @@
 		android:requestLegacyExternalStorage="true"
 		android:usesCleartextTraffic="true"
 		android:theme="@style/AppTheme"
-		android:roundIcon="@mipmap/ic_launcher_round">
+		android:roundIcon="@mipmap/ic_launcher_round"
+		android:banner="@drawable/app_icon">
 		<activity
 			android:name=".MainActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -32,7 +39,13 @@
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
-			android:windowSoftInputMode="stateHidden" />
+			android:screenOrientation="landscape"
+			android:windowSoftInputMode="stateHidden" >
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+			</intent-filter>
+		</activity>
 		<activity
 			android:name=".SearchActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
