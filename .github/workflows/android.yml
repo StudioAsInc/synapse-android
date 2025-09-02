@@ -15,9 +15,16 @@ on:
     branches-ignore:
       - 'wip/**'
   workflow_dispatch:
+    inputs:
+      send_notification:
+        description: 'Send a notification to Telegram when the build starts'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   notifyTelegram:
+    if: github.event.inputs.send_notification == true
     name: Notify Telegram
     runs-on: ${{ vars.IS_USING_HOSTED_RUNNERS == 'true' && 'self-hosted' || 'ubuntu-latest' }}
     steps:
