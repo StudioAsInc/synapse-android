@@ -77,6 +77,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void setSecondUserAvatar(String url) { this.secondUserAvatarUrl = url; }
     public void setFirstUserName(String name) { this.firstUserName = name; }
     public void setSecondUserName(String name) { this.secondUserName = name; }
+    private String secondUserUid;
+    public void setSecondUserUid(String uid) { this.secondUserUid = uid; }
 
     @Override
     public int getItemViewType(int position) {
@@ -438,8 +440,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (isEncrypted) {
             try {
-                String senderUid = (String) messageData.get("uid");
-                String decryptedText = e2eeHelper.decrypt(senderUid, messageContent);
+                String decryptedText = e2eeHelper.decrypt(secondUserUid, messageContent);
                 holder.message_text.setText(decryptedText);
             } catch (Exception e) {
                 Log.e(TAG, "Failed to decrypt message", e);

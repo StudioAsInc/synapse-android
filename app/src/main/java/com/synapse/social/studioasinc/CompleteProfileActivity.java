@@ -81,6 +81,7 @@ import java.util.regex.*;
 import org.json.*;
 import com.google.firebase.database.Query;
 import com.synapse.social.studioasinc.ImageUploader;
+import com.synapse.social.studioasinc.crypto.E2EEHelper;
 
 public class CompleteProfileActivity extends AppCompatActivity {
 	

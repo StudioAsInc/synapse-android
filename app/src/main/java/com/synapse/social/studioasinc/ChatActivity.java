@@ -528,6 +528,7 @@ public class ChatActivity extends AppCompatActivity {
 		chatAdapter.setHasStableIds(true);
 		chatAdapter.setChatActivity(this);
 		chatAdapter.setE2EEHelper(e2eeHelper);
+		chatAdapter.setSecondUserUid(getIntent().getStringExtra("uid"));
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
 		
 		// CRITICAL FIX: Ensure RecyclerView is properly configured for smooth updates
@@ -1131,42 +1132,28 @@ public class ChatActivity extends AppCompatActivity {
 	public void _getUserReference() {
 		// The user profile data is now fetched via a persistent listener attached in onStart,
 		// so the addListenerForSingleValueEvent call is no longer needed here.
-		e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
+		String otherUserUid = getIntent().getStringExtra("uid");
+		e2eeHelper.getPublicKey(otherUserUid, new E2EEHelper.PublicKeyListener() {
 			@Override
-			public void onKeysInitialized() {
-				Log.d("ChatActivity", "E2EE keys initialized successfully.");
-				String otherUserUid = getIntent().getStringExtra("uid");
-				e2eeHelper.getPublicKey(otherUserUid, new E2EEHelper.PublicKeyListener() {
+			public void onPublicKeyReceived(byte[] publicKey) {
+				e2eeHelper.establishSession(otherUserUid, publicKey, new E2EEHelper.SessionEstablishmentListener() {
 					@Override
-					public void onPublicKeyReceived(byte[] publicKey) {
-						e2eeHelper.establishSession(otherUserUid, publicKey, new E2EEHelper.SessionEstablishmentListener() {
-							@Override
-							public void onSessionEstablished() {
-								Log.d("ChatActivity", "E2EE session established successfully.");
-								// You can now enable the message sending UI
-							}
-
-							@Override
-							public void onSessionEstablishmentFailed(Exception e) {
-								Log.e("ChatActivity", "E2EE session establishment failed", e);
-								Toast.makeText(ChatActivity.this, "Failed to establish secure session.", Toast.LENGTH_SHORT).show();
-							}
-						});
+					public void onSessionEstablished() {
+						Log.d("ChatActivity", "E2EE session established successfully.");
 					}
 
 					@Override
-					public void onPublicKeyFailed(Exception e) {
-						Log.e("ChatActivity", "Failed to get other user's public key", e);
-						Toast.makeText(ChatActivity.this, "Could not get user's public key.", Toast.LENGTH_SHORT).show();
+					public void onSessionEstablishmentFailed(Exception e) {
+						Log.e("ChatActivity", "E2EE session establishment failed", e);
+						Toast.makeText(ChatActivity.this, "Failed to establish secure session.", Toast.LENGTH_SHORT).show();
 					}
 				});
 			}
 
 			@Override
-			public void onKeyInitializationFailed(Exception e) {
-				Log.e("ChatActivity", "E2EE key initialization failed", e);
-				// Handle the error, maybe show a toast to the user
-				Toast.makeText(ChatActivity.this, "Failed to initialize secure session.", Toast.LENGTH_SHORT).show();
+			public void onPublicKeyFailed(Exception e) {
+				Log.e("ChatActivity", "Failed to get other user's public key", e);
+				Toast.makeText(ChatActivity.this, "Could not get user's public key.", Toast.LENGTH_SHORT).show();
 			}
 		});
 
