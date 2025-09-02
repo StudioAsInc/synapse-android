@@ -49,6 +49,7 @@ Docs/
 
 - If you are implementing new classes or activities consider using .kt (Kotlin) for them. (Only for new files/old files no necessarily needed to be Kotlin)
 - If you are creating a layout or a new activity check the resource file(s) you used that available in the project or not. Try to use existing resources.
+- Never push temporarily files into repository. if you found any try to delete them
 
 ---
 
