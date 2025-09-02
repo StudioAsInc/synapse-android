@@ -469,7 +469,20 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
 
-        ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
+        ArrayList<HashMap<String, Object>> attachments = new ArrayList<>();
+		if (data.containsKey("isEncrypted") && (boolean) data.get("isEncrypted")) {
+			try {
+				String encryptedAttachments = (String) data.get("attachments");
+				String decryptedAttachmentsJson = e2eeHelper.decrypt(secondUserUid, encryptedAttachments);
+				com.google.gson.Gson gson = new com.google.gson.Gson();
+				attachments = gson.fromJson(decryptedAttachmentsJson, new com.google.gson.reflect.TypeToken<ArrayList<HashMap<String, Object>>>() {}.getType());
+			} catch (Exception e) {
+				Log.e(TAG, "Failed to decrypt attachments", e);
+			}
+		} else {
+			attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
+		}
+
         Log.d(TAG, "Attachments found: " + (attachments != null ? attachments.size() : 0));
         
         // CRITICAL FIX: Always ensure at least one layout is visible

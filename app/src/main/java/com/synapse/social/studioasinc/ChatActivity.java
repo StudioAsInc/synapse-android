@@ -944,7 +944,22 @@ public class ChatActivity extends AppCompatActivity {
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		String senderUid = messageData.get(UID_KEY) != null ? String.valueOf(messageData.get(UID_KEY)) : null;
 		final boolean isMine = currentUser != null && senderUid != null && senderUid.equals(currentUser.getUid());
-		final String messageText = messageData.get(MESSAGE_TEXT_KEY) != null ? messageData.get(MESSAGE_TEXT_KEY).toString() : "";
+		final String originalMessageText = messageData.get(MESSAGE_TEXT_KEY) != null ? messageData.get(MESSAGE_TEXT_KEY).toString() : "";
+		final boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
+
+		String messageText;
+		if (isEncrypted) {
+			try {
+				String otherUserUid = getIntent().getStringExtra("uid");
+				messageText = e2eeHelper.decrypt(otherUserUid, originalMessageText);
+			} catch (Exception e) {
+				Log.e(TAG, "Failed to decrypt message for popup", e);
+				Toast.makeText(ChatActivity.this, "⚠️ Decryption failed", Toast.LENGTH_SHORT).show();
+				messageText = originalMessageText; // Fallback to encrypted text
+			}
+		} else {
+			messageText = originalMessageText;
+		}
 
 		// Inflate the custom popup layout
 		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -1007,10 +1022,22 @@ public class ChatActivity extends AppCompatActivity {
 				if (otherUid == null || msgKey == null) {
 					return;
 				}
+
+				String textToSend = newText;
+				if (isEncrypted) {
+					try {
+						textToSend = e2eeHelper.encrypt(otherUid, newText);
+					} catch (Exception e) {
+						Log.e(TAG, "Failed to re-encrypt edited message", e);
+						Toast.makeText(ChatActivity.this, "⚠️ Encryption failed", Toast.LENGTH_SHORT).show();
+						return;
+					}
+				}
+
 				DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
 				DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
-				msgRef1.child(MESSAGE_TEXT_KEY).setValue(newText);
-				msgRef2.child(MESSAGE_TEXT_KEY).setValue(newText);
+				msgRef1.child(MESSAGE_TEXT_KEY).setValue(textToSend);
+				msgRef2.child(MESSAGE_TEXT_KEY).setValue(textToSend);
 			});
 			dialog.setNegativeButton("Cancel", null);
 			AlertDialog shownDialog = dialog.show();
@@ -2067,11 +2094,22 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap.put(UID_KEY, senderUid);
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
 				ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
-				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
 				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
+
+				try {
+					com.google.gson.Gson gson = new com.google.gson.Gson();
+					String attachmentsJson = gson.toJson(successfulAttachments);
+					String encryptedAttachments = e2eeHelper.encrypt(recipientUid, attachmentsJson);
+					ChatSendMap.put(ATTACHMENTS_KEY, encryptedAttachments);
+					ChatSendMap.put("isEncrypted", true);
+				} catch (Exception e) {
+					Log.e(TAG, "Failed to encrypt attachments", e);
+					Toast.makeText(this, "Error: Could not encrypt attachments.", Toast.LENGTH_SHORT).show();
+					return;
+				}
 
 				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
 				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
