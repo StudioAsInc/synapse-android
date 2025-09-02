@@ -29,12 +29,13 @@ import androidx.lifecycle.LifecycleOwner;
 import com.synapse.social.studioasinc.util.UpdateManager;
 import android.os.Bundle;
 import android.app.Activity;
+import java.lang.ref.WeakReference;
 
-public class SynapseApp extends Application implements Application.ActivityLifecycleCallbacks {
+public class SynapseApp extends Application implements Application.ActivityLifecycleCallbacks, DefaultLifecycleObserver {
     
     private static Context mContext;
     private Thread.UncaughtExceptionHandler mExceptionHandler;
-    private Activity currentActivity;
+    private WeakReference<Activity> currentActivity;
     
     public static FirebaseAuth mAuth;
     
@@ -100,6 +101,7 @@ public class SynapseApp extends Application implements Application.ActivityLifec
                 }
             }
         });
+        ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
         registerActivityLifecycleCallbacks(this);
     }
 
@@ -109,26 +111,17 @@ public class SynapseApp extends Application implements Application.ActivityLifec
 
     @Override
     public void onActivityStarted(Activity activity) {
-        currentActivity = activity;
+        currentActivity = new WeakReference<>(activity);
     }
 
     @Override
     public void onActivityResumed(Activity activity) {
-        currentActivity = activity;
-        if (activity instanceof MainActivity) {
-            UpdateManager updateManager = new UpdateManager(activity, new Runnable() {
-                @Override
-                public void run() {
-                    ((MainActivity) activity).proceedToAuthCheck();
-                }
-            });
-            updateManager.checkForUpdate();
-        }
+        currentActivity = new WeakReference<>(activity);
     }
 
     @Override
     public void onActivityPaused(Activity activity) {
-        currentActivity = null;
+        currentActivity.clear();
     }
 
     @Override
@@ -141,6 +134,30 @@ public class SynapseApp extends Application implements Application.ActivityLifec
 
     @Override
     public void onActivityDestroyed(Activity activity) {
+    }
+
+    @Override
+    public void onStart(@NonNull LifecycleOwner owner) {
+        if (mAuth.getCurrentUser() != null) {
+            PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
+        }
+        Activity activity = currentActivity.get();
+        if (activity instanceof MainActivity) {
+            UpdateManager updateManager = new UpdateManager(activity, new Runnable() {
+                @Override
+                public void run() {
+                    ((MainActivity) activity).proceedToAuthCheck();
+                }
+            });
+            updateManager.checkForUpdate();
+        }
+    }
+
+    @Override
+    public void onStop(@NonNull LifecycleOwner owner) {
+        if (mAuth.getCurrentUser() != null) {
+            PresenceManager.goOffline(mAuth.getCurrentUser().getUid());
+        }
     }
     
     private void createNotificationChannels() {
