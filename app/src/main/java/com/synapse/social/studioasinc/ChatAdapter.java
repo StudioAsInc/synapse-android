@@ -89,7 +89,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Log.d(TAG, "Message at position " + position + " has type: " + type);
         
         if ("ATTACHMENT_MESSAGE".equals(type)) {
-            ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) _data.get(position).get("attachments");
+            Object attachmentsObj = _data.get(position).get("attachments");
+            if (attachmentsObj instanceof String) {
+                return VIEW_TYPE_MEDIA_GRID;
+            }
+
+            ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) attachmentsObj;
             Log.d(TAG, "ATTACHMENT_MESSAGE detected with " + (attachments != null ? attachments.size() : 0) + " attachments");
             
             if (attachments != null && attachments.size() == 1 && String.valueOf(attachments.get(0).getOrDefault("publicId", "")).contains("|video")) {
@@ -139,6 +144,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        HashMap<String, Object> data = _data.get(position);
+        if (data.containsKey("isEncrypted") && (boolean) data.get("isEncrypted")) {
+            if (data.get("attachments") instanceof String) {
+                try {
+                    String encryptedAttachments = (String) data.get("attachments");
+                    String decryptedAttachmentsJson = e2eeHelper.decrypt(secondUserUid, encryptedAttachments);
+                    com.google.gson.Gson gson = new com.google.gson.Gson();
+                    ArrayList<HashMap<String, Object>> attachments = gson.fromJson(decryptedAttachmentsJson, new com.google.gson.reflect.TypeToken<ArrayList<HashMap<String, Object>>>() {}.getType());
+                    data.put("attachments", attachments);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to decrypt attachments", e);
+                }
+            }
+        }
+
         switch (holder.getItemViewType()) {
             case VIEW_TYPE_TEXT: bindTextViewHolder((TextViewHolder) holder, position); break;
             case VIEW_TYPE_MEDIA_GRID: bindMediaViewHolder((MediaViewHolder) holder, position); break;
