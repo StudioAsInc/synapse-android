@@ -9,9 +9,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.viewpager2.widget.ViewPager2;
@@ -40,10 +38,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
     private AppBarLayout app_bar_layout;
-    private Toolbar topBar;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
-    private ActionBarDrawerToggle drawerToggle;
+    private ImageView menuButton;
+    private ImageView addPostButton;
+    private ImageView navSearchIc;
+    private ImageView navInboxIc;
+    private View topBar;
 
     @Override
     protected void onCreate(Bundle _savedInstanceState) {
@@ -75,19 +76,34 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         tabLayout = findViewById(R.id.tab_layout);
         viewPager = findViewById(R.id.view_pager);
         app_bar_layout = findViewById(R.id.app_bar_layout);
-        topBar = findViewById(R.id.top_app_bar);
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.navigation_view);
+        menuButton = findViewById(R.id.menu_button);
+        addPostButton = findViewById(R.id.add_post_button);
+        navSearchIc = findViewById(R.id.nav_search_ic);
+        navInboxIc = findViewById(R.id.nav_inbox_ic);
+        topBar = findViewById(R.id.topBar);
     }
 
     private void initializeLogic() {
-        setSupportActionBar(topBar);
-
-        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, topBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.addDrawerListener(drawerToggle);
-        drawerToggle.syncState();
-
         navigationView.setNavigationItemSelectedListener(this);
+
+        menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.END));
+
+        addPostButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), CreatePostActivity.class);
+            startActivity(intent);
+        });
+
+        navSearchIc.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
+            startActivity(intent);
+        });
+
+        navInboxIc.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), InboxActivity.class);
+            startActivity(intent);
+        });
 
         viewPager.setAdapter(new ViewPagerAdapter(this));
 
@@ -130,23 +146,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
             }
-        });
-
-        topBar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.action_search) {
-                Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (item.getItemId() == R.id.action_inbox) {
-                Intent intent = new Intent(getApplicationContext(), InboxActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (item.getItemId() == R.id.action_add_post) {
-                Intent intent = new Intent(getApplicationContext(), CreatePostActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            return false;
         });
 
         // Setup drawer header
@@ -208,14 +207,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Toast.makeText(this, "This is a mock item", Toast.LENGTH_SHORT).show();
         }
 
-        drawerLayout.closeDrawer(GravityCompat.START);
+        drawerLayout.closeDrawer(GravityCompat.END);
         return true;
     }
 
     @Override
     public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
+        if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
+            drawerLayout.closeDrawer(GravityCompat.END);
         } else {
             new MaterialAlertDialogBuilder(HomeActivity.this)
                     .setTitle("Exit Synapse")
