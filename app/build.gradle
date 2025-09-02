@@ -150,6 +150,9 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:5.1.0'
     implementation 'com.google.code.gson:gson:2.13.1'
 
+    // E2EE - Signal Protocol
+    implementation 'org.whispersystems:signal-protocol-android:2.8.1'
+
     // UI Components (Non-AndroidX)
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'com.airbnb.android:lottie:6.6.0'

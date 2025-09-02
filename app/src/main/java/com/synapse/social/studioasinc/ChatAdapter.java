@@ -43,6 +43,7 @@ import android.app.Activity;
 import android.view.Gravity;
 import com.synapse.social.studioasinc.config.CloudinaryConfig;
 import com.synapse.social.studioasinc.model.Attachment;
+import com.synapse.social.studioasinc.crypto.E2EEHelper;
 import com.synapse.social.studioasinc.util.AttachmentUtils;
 import com.synapse.social.studioasinc.util.UIUtils;
 
@@ -65,15 +66,19 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private SharedPreferences appSettings;
     // private TextStylingUtil textStylingUtil;
     private ChatActivity chatActivity;
+    private E2EEHelper e2eeHelper;
 
     public ChatAdapter(ArrayList<HashMap<String, Object>> _arr, HashMap<String, HashMap<String, Object>> repliedCache) {
         _data = _arr;
         this.repliedMessagesCache = repliedCache;
     }
     public void setChatActivity(ChatActivity activity) { this.chatActivity = activity; }
+    public void setE2EEHelper(E2EEHelper helper) { this.e2eeHelper = helper; }
     public void setSecondUserAvatar(String url) { this.secondUserAvatarUrl = url; }
     public void setFirstUserName(String name) { this.firstUserName = name; }
     public void setSecondUserName(String name) { this.secondUserName = name; }
+    private String secondUserUid;
+    public void setSecondUserUid(String uid) { this.secondUserUid = uid; }
 
     @Override
     public int getItemViewType(int position) {
@@ -429,9 +434,25 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private void bindTextViewHolder(TextViewHolder holder, int position) {
         bindCommonMessageProperties(holder, position);
-        String text = String.valueOf(_data.get(position).getOrDefault("message_text", ""));
+        HashMap<String, Object> messageData = _data.get(position);
+        boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
+        String messageContent = String.valueOf(messageData.getOrDefault("message_text", ""));
+
+        if (isEncrypted) {
+            try {
+                String decryptedText = e2eeHelper.decrypt(secondUserUid, messageContent);
+                holder.message_text.setText(decryptedText);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to decrypt message", e);
+                holder.message_text.setText("⚠️ Could not decrypt message");
+            }
+        } else {
+            holder.message_text.setText(messageContent);
+        }
+
         holder.message_text.setVisibility(View.VISIBLE);
-        com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, text);
+        // The original markdown rendering can be applied here if needed, but for now, we'll just show the text.
+        // com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, holder.message_text.getText().toString());
     }
 
     private void bindMediaViewHolder(MediaViewHolder holder, int position) {
