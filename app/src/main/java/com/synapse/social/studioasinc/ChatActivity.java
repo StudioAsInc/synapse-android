@@ -947,7 +947,7 @@ public class ChatActivity extends AppCompatActivity {
 		final String originalMessageText = messageData.get(MESSAGE_TEXT_KEY) != null ? messageData.get(MESSAGE_TEXT_KEY).toString() : "";
 		final boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
 
-		String messageText;
+		final String messageText;
 		if (isEncrypted) {
 			try {
 				String otherUserUid = getIntent().getStringExtra("uid");
