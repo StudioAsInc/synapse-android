@@ -989,23 +989,28 @@ public class ChatActivity extends AppCompatActivity {
 			View dialogView = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
 			dialog.setView(dialogView);
 			final EditText editText = dialogView.findViewById(R.id.edittext1);
-			editText.setText(EncryptionUtil.INSTANCE.decrypt(messageText, getApplicationContext()));
+			editText.setText(EncryptionUtil.INSTANCE.decrypt(messageText));
 			dialog.setPositiveButton("Save", (d, w) -> {
 				String newText = editText.getText().toString();
-				FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
-				String myUid = cu != null ? cu.getUid() : null;
-				if (myUid == null) {
-					return;
+				String encryptedText = EncryptionUtil.INSTANCE.encrypt(newText);
+				if (encryptedText != null) {
+					FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
+					String myUid = cu != null ? cu.getUid() : null;
+					if (myUid == null) {
+						return;
+					}
+					String otherUid = getIntent().getStringExtra("uid");
+					String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
+					if (otherUid == null || msgKey == null) {
+						return;
+					}
+					DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
+					DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
+					msgRef1.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
+					msgRef2.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
+				} else {
+					Toast.makeText(ChatActivity.this, "Failed to save message", Toast.LENGTH_SHORT).show();
 				}
-				String otherUid = getIntent().getStringExtra("uid");
-				String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
-				if (otherUid == null || msgKey == null) {
-					return;
-				}
-				DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
-				DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
-				msgRef1.child(MESSAGE_TEXT_KEY).setValue(EncryptionUtil.INSTANCE.encrypt(newText, getApplicationContext()));
-				msgRef2.child(MESSAGE_TEXT_KEY).setValue(EncryptionUtil.INSTANCE.encrypt(newText, getApplicationContext()));
 			});
 			dialog.setNegativeButton("Cancel", null);
 			AlertDialog shownDialog = dialog.show();
@@ -1020,7 +1025,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 		
 		summaryLayout.setOnClickListener(v -> {
-			String prompt = "Summarize the following text in a few sentences:\n\n" + EncryptionUtil.INSTANCE.decrypt(messageText, getApplicationContext());
+			String prompt = "Summarize the following text in a few sentences:\n\n" + EncryptionUtil.INSTANCE.decrypt(messageText);
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
@@ -1030,7 +1035,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		explainLayout.setOnClickListener(v -> {
 			int position = (int)_position;
-			String prompt = buildExplanationPrompt(position, EncryptionUtil.INSTANCE.decrypt(messageText, getApplicationContext()), messageData);
+			String prompt = buildExplanationPrompt(position, EncryptionUtil.INSTANCE.decrypt(messageText), messageData);
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
@@ -2016,12 +2021,19 @@ public class ChatActivity extends AppCompatActivity {
 				Log.d("ChatActivity", "Checking attachment: " + item.toString());
 				if ("success".equals(item.get("uploadState"))) {
 					HashMap<String, Object> attachmentData = new HashMap<>();
-					attachmentData.put("url", EncryptionUtil.INSTANCE.encrypt(item.get("cloudinaryUrl").toString(), getApplicationContext()));
-					attachmentData.put("publicId", item.get("publicId"));
-					attachmentData.put("width", item.get("width"));
-					attachmentData.put("height", item.get("height"));
-					successfulAttachments.add(attachmentData);
-					Log.d("ChatActivity", "Added successful attachment: " + attachmentData.toString());
+                    String encryptedUrl = EncryptionUtil.INSTANCE.encrypt(item.get("cloudinaryUrl").toString());
+                    if (encryptedUrl != null) {
+					    attachmentData.put("url", encryptedUrl);
+					    attachmentData.put("publicId", item.get("publicId"));
+					    attachmentData.put("width", item.get("width"));
+					    attachmentData.put("height", item.get("height"));
+					    successfulAttachments.add(attachmentData);
+					    Log.d("ChatActivity", "Added successful attachment: " + attachmentData.toString());
+                    } else {
+                        allUploadsSuccessful = false;
+                        Toast.makeText(ChatActivity.this, "Failed to send attachment", Toast.LENGTH_SHORT).show();
+                        break;
+                    }
 				} else {
 					Log.w("ChatActivity", "Attachment not ready: " + item.toString());
 					allUploadsSuccessful = false;
@@ -2037,7 +2049,12 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, senderUid);
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, EncryptionUtil.INSTANCE.encrypt(messageText, getApplicationContext()));
+                String encryptedText = EncryptionUtil.INSTANCE.encrypt(messageText);
+                if (encryptedText == null && !messageText.isEmpty()) {
+                    Toast.makeText(ChatActivity.this, "Failed to send message", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+				ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedText);
 				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
@@ -2119,7 +2136,12 @@ public class ChatActivity extends AppCompatActivity {
 			ChatSendMap = new HashMap<>();
 			ChatSendMap.put(UID_KEY, senderUid);
 			ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-			ChatSendMap.put(MESSAGE_TEXT_KEY, EncryptionUtil.INSTANCE.encrypt(messageText, getApplicationContext()));
+            String encryptedText = EncryptionUtil.INSTANCE.encrypt(messageText);
+            if (encryptedText == null) {
+                Toast.makeText(ChatActivity.this, "Failed to send message", Toast.LENGTH_SHORT).show();
+                return;
+            }
+			ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedText);
 			ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 			if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 			ChatSendMap.put(KEY_KEY, uniqueMessageKey);

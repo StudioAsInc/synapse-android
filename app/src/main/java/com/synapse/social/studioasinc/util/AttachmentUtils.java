@@ -11,7 +11,6 @@
 
 package com.synapse.social.studioasinc.util;
 
-import android.content.Context;
 import com.synapse.social.studioasinc.EncryptionUtil;
 import com.synapse.social.studioasinc.model.Attachment;
 
@@ -30,7 +29,7 @@ public class AttachmentUtils {
      * @param attachmentMap The HashMap containing attachment data
      * @return Attachment object or null if conversion fails
      */
-    public static Attachment fromHashMap(HashMap<String, Object> attachmentMap, Context context) {
+    public static Attachment fromHashMap(HashMap<String, Object> attachmentMap) {
         if (attachmentMap == null) {
             return null;
         }
@@ -47,7 +46,7 @@ public class AttachmentUtils {
             // Extract URL
             Object urlObj = attachmentMap.get("url");
             if (urlObj != null) {
-                attachment.setUrl(EncryptionUtil.INSTANCE.decrypt(String.valueOf(urlObj), context));
+                attachment.setUrl(EncryptionUtil.INSTANCE.decrypt(String.valueOf(urlObj)));
             }
             
             // Extract dimensions
@@ -140,7 +139,7 @@ public class AttachmentUtils {
      * @param attachmentMaps List of HashMap representations
      * @return List of Attachment objects
      */
-    public static ArrayList<Attachment> fromHashMapList(ArrayList<HashMap<String, Object>> attachmentMaps, Context context) {
+    public static ArrayList<Attachment> fromHashMapList(ArrayList<HashMap<String, Object>> attachmentMaps) {
         if (attachmentMaps == null) {
             return new ArrayList<>();
         }
@@ -148,7 +147,7 @@ public class AttachmentUtils {
         ArrayList<Attachment> attachments = new ArrayList<>();
         
         for (HashMap<String, Object> map : attachmentMaps) {
-            Attachment attachment = fromHashMap(map, context);
+            Attachment attachment = fromHashMap(map);
             if (attachment != null) {
                 attachments.add(attachment);
             }
