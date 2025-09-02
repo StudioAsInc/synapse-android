@@ -34,7 +34,7 @@
 				android:id="@+id/app_logo"
 				android:layout_width="85dp"
 				android:layout_height="85dp"
-				android:src="@drawable/appicon"
+				android:src="@mipmap/ic_launcher"
 				android:scaleType="fitCenter"
 				android:translationY="40.0dp" />
 		</LinearLayout>

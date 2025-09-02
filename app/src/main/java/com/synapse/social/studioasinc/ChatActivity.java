@@ -245,24 +245,12 @@ public class ChatActivity extends AppCompatActivity {
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
 		e2eeHelper = new E2EEHelper(this);
-		e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
-			@Override
-			public void onKeysInitialized() {
-				if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-				|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-					ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-				} else {
-					initializeLogic();
-				}
-			}
 
-			@Override
-			public void onKeyInitializationFailed(Exception e) {
-				Toast.makeText(ChatActivity.this, "E2EE initialization failed.", Toast.LENGTH_SHORT).show();
-				Log.e("ChatActivity", "E2EE key initialization failed", e);
-				finish();
-			}
-		});
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);} else {
+			initializeLogic();
+		}
 	}
 
 	@Override
