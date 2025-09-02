@@ -4,10 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:shimmer_auto_start="true"
-    app:shimmer_base_alpha="1"
-    app:shimmer_base_color="#E0E0E0"
-    app:shimmer_highlight_alpha="0.5"
-    app:shimmer_highlight_color="#BDBDBD">
+    app:shimmer_color="#BDBDBD">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -24,7 +21,7 @@
             <View
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/rounded_corner_placeholder" />
+                android:background="@drawable/rounded_corner_placeholder_solid" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -36,13 +33,13 @@
                 <View
                     android:layout_width="120dp"
                     android:layout_height="16dp"
-                    android:background="@drawable/rounded_corner_placeholder" />
+                    android:background="@drawable/rounded_corner_placeholder_solid" />
 
                 <View
                     android:layout_width="80dp"
                     android:layout_height="12dp"
                     android:layout_marginTop="4dp"
-                    android:background="@drawable/rounded_corner_placeholder" />
+                    android:background="@drawable/rounded_corner_placeholder_solid" />
             </LinearLayout>
         </LinearLayout>
 
@@ -50,13 +47,13 @@
             android:layout_width="match_parent"
             android:layout_height="20dp"
             android:layout_marginTop="16dp"
-            android:background="@drawable/rounded_corner_placeholder" />
+            android:background="@drawable/rounded_corner_placeholder_solid" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_marginTop="8dp"
-            android:background="@drawable/rounded_corner_placeholder" />
+            android:background="@drawable/rounded_corner_placeholder_solid" />
     </LinearLayout>
 
 </com.synapse.social.studioasinc.animations.ShimmerFrameLayout>
