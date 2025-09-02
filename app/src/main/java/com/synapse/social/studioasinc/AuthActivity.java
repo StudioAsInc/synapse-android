@@ -49,7 +49,6 @@ public class AuthActivity extends AppCompatActivity {
     private LinearLayout section2Layout;
     private LinearLayout section3Layout;
     private LinearLayout nameLayout;
-    private LinearLayout animatorSupportLayout;
     private LinearLayout profileHolderLayout;
     private TextView nameFirstLetterTextView;
     private EditText usernameEditText;
@@ -80,6 +79,7 @@ public class AuthActivity extends AppCompatActivity {
     private FirebaseAuth fauth;
     private final OnCompleteListener<AuthResult> authCreateUserListener = createAuthCreateUserListener();
     private final OnCompleteListener<AuthResult> authSignInListener = createAuthSignInListener();
+    private android.view.ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +102,6 @@ public class AuthActivity extends AppCompatActivity {
         section2Layout = findViewById(R.id.section2Layout);
         section3Layout = findViewById(R.id.section3Layout);
         nameLayout = findViewById(R.id.nameLayout);
-        animatorSupportLayout = findViewById(R.id.animatorSupportLayout);
         profileHolderLayout = findViewById(R.id.profileHolderLayout);
         nameFirstLetterTextView = findViewById(R.id.nameFirstLetterTextView);
         usernameEditText = findViewById(R.id.usernameEditText);
@@ -175,16 +174,24 @@ public class AuthActivity extends AppCompatActivity {
             );
         }, 500);
 
-        mainHiddenLayout.postDelayed(() -> mainHiddenLayout.setVisibility(View.VISIBLE), 2000);
-
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        mainHiddenLayout.postDelayed(() -> {
+            mainHiddenLayout.setVisibility(View.VISIBLE);
             usernameEditText.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                imm.showSoftInput(usernameEditText, InputMethodManager.SHOW_IMPLICIT);
-            }
-            animatorSupportLayout.setVisibility(View.GONE);
-        }, 2500);
+            final View rootView = getWindow().getDecorView().getRootView();
+            mGlobalLayoutListener = new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    if (usernameEditText.isFocused()) {
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        if (imm != null) {
+                            imm.showSoftInput(usernameEditText, InputMethodManager.SHOW_IMPLICIT);
+                        }
+                    }
+                }
+            };
+            rootView.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalLayoutListener);
+        }, 2000);
     }
 
     private void handleContinueClick(View view) {
@@ -395,6 +402,9 @@ public class AuthActivity extends AppCompatActivity {
         if (sfx != null) {
             sfx.release();
             sfx = null;
+        }
+        if (mGlobalLayoutListener != null) {
+            getWindow().getDecorView().getRootView().getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalLayoutListener);
         }
     }
 }

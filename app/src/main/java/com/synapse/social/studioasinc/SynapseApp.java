@@ -26,11 +26,15 @@ import java.util.Calendar;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.lifecycle.LifecycleOwner;
+import com.synapse.social.studioasinc.util.UpdateManager;
+import android.os.Bundle;
+import android.app.Activity;
 
-public class SynapseApp extends Application implements DefaultLifecycleObserver {
+public class SynapseApp extends Application implements Application.ActivityLifecycleCallbacks {
     
     private static Context mContext;
     private Thread.UncaughtExceptionHandler mExceptionHandler;
+    private Activity currentActivity;
     
     public static FirebaseAuth mAuth;
     
@@ -78,8 +82,6 @@ public class SynapseApp extends Application implements DefaultLifecycleObserver 
                 }
             });
         
-        ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
-
         // Initialize OneSignal
         final String ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
         OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
@@ -98,20 +100,47 @@ public class SynapseApp extends Application implements DefaultLifecycleObserver 
                 }
             }
         });
+        registerActivityLifecycleCallbacks(this);
     }
 
     @Override
-    public void onStart(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null) {
-            PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
+    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+    }
+
+    @Override
+    public void onActivityStarted(Activity activity) {
+        currentActivity = activity;
+    }
+
+    @Override
+    public void onActivityResumed(Activity activity) {
+        currentActivity = activity;
+        if (activity instanceof MainActivity) {
+            UpdateManager updateManager = new UpdateManager(activity, new Runnable() {
+                @Override
+                public void run() {
+                    ((MainActivity) activity).proceedToAuthCheck();
+                }
+            });
+            updateManager.checkForUpdate();
         }
     }
 
     @Override
-    public void onStop(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null) {
-            PresenceManager.goOffline(mAuth.getCurrentUser().getUid());
-        }
+    public void onActivityPaused(Activity activity) {
+        currentActivity = null;
+    }
+
+    @Override
+    public void onActivityStopped(Activity activity) {
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+    }
+
+    @Override
+    public void onActivityDestroyed(Activity activity) {
     }
     
     private void createNotificationChannels() {
