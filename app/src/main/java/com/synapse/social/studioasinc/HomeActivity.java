@@ -188,30 +188,24 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
-        switch (id) {
-            case R.id.nav_my_profile:
-                Intent profileIntent = new Intent(getApplicationContext(), ProfileActivity.class);
-                profileIntent.putExtra("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                startActivity(profileIntent);
-                break;
-            case R.id.nav_settings:
-                Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
-                startActivity(settingsIntent);
-                break;
-            case R.id.nav_calls:
-                Intent callsIntent = new Intent(getApplicationContext(), CallActivity.class);
-                startActivity(callsIntent);
-                break;
-            case R.id.nav_logout:
-                FirebaseAuth.getInstance().signOut();
-                Intent logoutIntent = new Intent(HomeActivity.this, AuthActivity.class);
-                logoutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(logoutIntent);
-                finish();
-                break;
-            default:
-                Toast.makeText(this, "This is a mock item", Toast.LENGTH_SHORT).show();
-                break;
+        if (id == R.id.nav_my_profile) {
+            Intent profileIntent = new Intent(getApplicationContext(), ProfileActivity.class);
+            profileIntent.putExtra("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+            startActivity(profileIntent);
+        } else if (id == R.id.nav_settings) {
+            Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
+            startActivity(settingsIntent);
+        } else if (id == R.id.nav_calls) {
+            Intent callsIntent = new Intent(getApplicationContext(), CallActivity.class);
+            startActivity(callsIntent);
+        } else if (id == R.id.nav_logout) {
+            FirebaseAuth.getInstance().signOut();
+            Intent logoutIntent = new Intent(HomeActivity.this, AuthActivity.class);
+            logoutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(logoutIntent);
+            finish();
+        } else {
+            Toast.makeText(this, "This is a mock item", Toast.LENGTH_SHORT).show();
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);
