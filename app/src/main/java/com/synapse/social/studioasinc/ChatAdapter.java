@@ -533,7 +533,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         
         // Convert to typed attachments once and create adapter with click listener to open gallery
-        ArrayList<Attachment> typedAttachments = AttachmentUtils.fromHashMapList(attachments);
+        ArrayList<Attachment> typedAttachments = AttachmentUtils.fromHashMapList(attachments, _context);
         if (typedAttachments == null || typedAttachments.isEmpty()) {
             return;
         }
@@ -672,7 +672,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     
     private void openImageGallery(ArrayList<HashMap<String, Object>> attachments, int position) {
         if (_context != null && chatActivity != null) {
-            ArrayList<Attachment> typed = AttachmentUtils.fromHashMapList(attachments);
+            ArrayList<Attachment> typed = AttachmentUtils.fromHashMapList(attachments, _context);
             openImageGalleryTyped(typed, position);
         }
     }

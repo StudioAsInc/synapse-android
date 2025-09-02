@@ -28,7 +28,7 @@ public class AttachmentUtils {
      * @param attachmentMap The HashMap containing attachment data
      * @return Attachment object or null if conversion fails
      */
-    public static Attachment fromHashMap(HashMap<String, Object> attachmentMap) {
+    public static Attachment fromHashMap(HashMap<String, Object> attachmentMap, Context context) {
         if (attachmentMap == null) {
             return null;
         }
@@ -45,7 +45,7 @@ public class AttachmentUtils {
             // Extract URL
             Object urlObj = attachmentMap.get("url");
             if (urlObj != null) {
-                attachment.setUrl(String.valueOf(urlObj));
+                attachment.setUrl(EncryptionUtil.INSTANCE.decrypt(String.valueOf(urlObj), context));
             }
             
             // Extract dimensions
@@ -138,7 +138,7 @@ public class AttachmentUtils {
      * @param attachmentMaps List of HashMap representations
      * @return List of Attachment objects
      */
-    public static ArrayList<Attachment> fromHashMapList(ArrayList<HashMap<String, Object>> attachmentMaps) {
+    public static ArrayList<Attachment> fromHashMapList(ArrayList<HashMap<String, Object>> attachmentMaps, Context context) {
         if (attachmentMaps == null) {
             return new ArrayList<>();
         }
@@ -146,7 +146,7 @@ public class AttachmentUtils {
         ArrayList<Attachment> attachments = new ArrayList<>();
         
         for (HashMap<String, Object> map : attachmentMaps) {
-            Attachment attachment = fromHashMap(map);
+            Attachment attachment = fromHashMap(map, context);
             if (attachment != null) {
                 attachments.add(attachment);
             }

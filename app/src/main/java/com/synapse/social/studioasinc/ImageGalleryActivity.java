@@ -84,7 +84,7 @@ public class ImageGalleryActivity extends AppCompatActivity {
                 @SuppressWarnings("unchecked")
                 ArrayList<HashMap<String, Object>> hashMapAttachments = 
                     (ArrayList<HashMap<String, Object>>) intent.getSerializableExtra("attachments");
-                attachments = AttachmentUtils.fromHashMapList(hashMapAttachments);
+                attachments = AttachmentUtils.fromHashMapList(hashMapAttachments, this);
             }
         }
         
