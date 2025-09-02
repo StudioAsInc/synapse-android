@@ -1,6 +1,5 @@
 package com.synapse.social.studioasinc;
 
-import com.synapse.social.studioasinc.CheckpermissionActivity;
 import android.animation.*;
 import android.app.*;
 import android.app.AlertDialog;
