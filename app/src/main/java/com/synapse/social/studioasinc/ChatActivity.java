@@ -1020,7 +1020,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 		
 		summaryLayout.setOnClickListener(v -> {
-			String prompt = "Summarize the following text in a few sentences:\n\n" + messageText;
+			String prompt = "Summarize the following text in a few sentences:\n\n" + EncryptionUtil.INSTANCE.decrypt(messageText, getApplicationContext());
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
@@ -1030,7 +1030,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		explainLayout.setOnClickListener(v -> {
 			int position = (int)_position;
-			String prompt = buildExplanationPrompt(position, messageText, messageData);
+			String prompt = buildExplanationPrompt(position, EncryptionUtil.INSTANCE.decrypt(messageText, getApplicationContext()), messageData);
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
