@@ -15,8 +15,39 @@ on:
     branches-ignore:
       - 'wip/**'
   workflow_dispatch:
+    inputs:
+      send_notification:
+        description: 'Send a notification to Telegram when the build starts'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
+  notifyTelegram:
+    if: github.event.inputs.send_notification == true
+    name: Notify Telegram
+    runs-on: ${{ vars.IS_USING_HOSTED_RUNNERS == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests
+
+      - name: Send a message to Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TOPIC_ID: ${{ secrets.TELEGRAM_TOPIC_ID }}
+        run: |
+          python ./.github/workflows/notify_telegram.py
+        continue-on-error: true
+
   build:
     name: Build APKs
     runs-on: ${{ vars.IS_USING_HOSTED_RUNNERS == 'true' && 'self-hosted' || 'ubuntu-latest' }}
