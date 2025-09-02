@@ -7,7 +7,6 @@
     <string name="i_accept_terms_conditions">I accept terms and conditions</string>
     <string name="create_account">Create account</string>
     <string name="please_accept_terms_and_conditions">You must accept all terms and conditions!</string>
-    <string name="google_sign_not_available">Sign in with Google is not yet available.</string>
     <string name="welcome_again">Welcome back 👋🏻</string>
     <string name="login_your_account">Login to your Synapse account now.</string>
     <string name="email">E-Mail</string>
