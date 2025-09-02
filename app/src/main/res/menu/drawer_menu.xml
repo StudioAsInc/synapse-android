@@ -1,0 +1,72 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_add_account"
+            android:icon="@drawable/ic_person_add_48px"
+            android:title="Add account" />
+        <item
+            android:id="@+id/nav_my_profile"
+            android:icon="@drawable/ic_account_circle_48px"
+            android:title="My profile" />
+        <item
+            android:id="@+id/nav_ai_chat"
+            android:icon="@drawable/ic_chat_48px"
+            android:title="AI Chat" />
+
+        <item
+            android:id="@+id/nav_create"
+            android:title="Create">
+            <menu>
+                <item
+                    android:id="@+id/nav_new_group"
+                    android:icon="@drawable/ic_supervisor_account_48px"
+                    android:title="New Group" />
+                <item
+                    android:id="@+id/nav_new_channel"
+                    android:icon="@drawable/ic_rss_feed_48px"
+                    android:title="New Channel" />
+                <item
+                    android:id="@+id/nav_new_community"
+                    android:icon="@drawable/ic_people_48px"
+                    android:title="New Community" />
+                <item
+                    android:id="@+id/nav_secret_chat"
+                    android:icon="@drawable/ic_lock"
+                    android:title="Secret chat" />
+            </menu>
+        </item>
+
+        <item
+            android:id="@+id/nav_cloud"
+            android:icon="@drawable/ic_cloud_upload"
+            android:title="Cloud" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_settings_48px"
+            android:title="Settings" />
+        <item
+            android:id="@+id/nav_invite_friends"
+            android:icon="@drawable/ic_person_add_48px"
+            android:title="Invite friends" />
+        <item
+            android:id="@+id/nav_albums"
+            android:icon="@drawable/ic_image_multiple"
+            android:title="Album's" />
+        <item
+            android:id="@+id/nav_calls"
+            android:icon="@drawable/ic_call_48px"
+            android:title="Calls" />
+        <item
+            android:id="@+id/nav_contacts"
+            android:icon="@drawable/ic_contacts_48px"
+            android:title="Contacts" />
+        <item
+            android:id="@+id/nav_about_app"
+            android:icon="@drawable/ic_info_48px"
+            android:title="About app" />
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/baseline_logout_black_48dp"
+            android:title="Logout" />
+    </group>
+</menu>
