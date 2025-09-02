@@ -43,6 +43,7 @@ import android.app.Activity;
 import android.view.Gravity;
 import com.synapse.social.studioasinc.config.CloudinaryConfig;
 import com.synapse.social.studioasinc.model.Attachment;
+import com.synapse.social.studioasinc.crypto.E2EEHelper;
 import com.synapse.social.studioasinc.util.AttachmentUtils;
 import com.synapse.social.studioasinc.util.UIUtils;
 

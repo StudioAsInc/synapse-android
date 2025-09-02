@@ -2153,11 +2153,13 @@ public class ChatActivity extends AppCompatActivity {
 			}
 
 		} else if (!messageText.isEmpty()) {
+			Log.d("ChatActivity", "Processing text-only message");
+			// Logic for sending text-only messages
+			String uniqueMessageKey;
 			try {
 				String encryptedMessage = e2eeHelper.encrypt(recipientUid, messageText);
-				Log.d("ChatActivity", "Processing encrypted text-only message");
-				String uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated text message key: " + uniqueMessageKey);
+				uniqueMessageKey = main.push().getKey();
+				Log.d("ChatActivity", "Generated encrypted text message key: " + uniqueMessageKey);
 
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, senderUid);
@@ -2168,13 +2170,13 @@ public class ChatActivity extends AppCompatActivity {
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
 				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-
-				Log.d("ChatActivity", "Sending encrypted text message to Firebase with key: " + uniqueMessageKey);
 			} catch (Exception e) {
 				Log.e("ChatActivity", "Failed to encrypt and send message", e);
 				Toast.makeText(this, "Error: Could not send secure message.", Toast.LENGTH_SHORT).show();
 				return; // Don't proceed if encryption fails
 			}
+
+			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
 			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
 			
 			// Send to both chat nodes using setValue for proper real-time updates
