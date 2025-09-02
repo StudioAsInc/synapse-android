@@ -2,7 +2,7 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_add_account"
-            android:icon="@drawable/ic_person_add_48px"
+            android:icon="@drawable/ic_add_white"
             android:title="Add account" />
         <item
             android:id="@+id/nav_my_profile"
@@ -19,15 +19,15 @@
             <menu>
                 <item
                     android:id="@+id/nav_new_group"
-                    android:icon="@drawable/ic_supervisor_account_48px"
+                    android:icon="@drawable/icon_supervisor_account_round"
                     android:title="New Group" />
                 <item
                     android:id="@+id/nav_new_channel"
-                    android:icon="@drawable/ic_rss_feed_48px"
+                    android:icon="@drawable/icon_stream_round"
                     android:title="New Channel" />
                 <item
                     android:id="@+id/nav_new_community"
-                    android:icon="@drawable/ic_people_48px"
+                    android:icon="@drawable/icon_support_agent_round"
                     android:title="New Community" />
                 <item
                     android:id="@+id/nav_secret_chat"
@@ -38,15 +38,15 @@
 
         <item
             android:id="@+id/nav_cloud"
-            android:icon="@drawable/ic_cloud_upload"
+            android:icon="@drawable/ic_upload"
             android:title="Cloud" />
         <item
             android:id="@+id/nav_settings"
-            android:icon="@drawable/ic_settings_48px"
+            android:icon="@drawable/icon_settings_round"
             android:title="Settings" />
         <item
             android:id="@+id/nav_invite_friends"
-            android:icon="@drawable/ic_person_add_48px"
+            android:icon="@drawable/ic_add_white"
             android:title="Invite friends" />
         <item
             android:id="@+id/nav_albums"
@@ -58,7 +58,7 @@
             android:title="Calls" />
         <item
             android:id="@+id/nav_contacts"
-            android:icon="@drawable/ic_contacts_48px"
+            android:icon="@drawable/icon_phone_round"
             android:title="Contacts" />
         <item
             android:id="@+id/nav_about_app"
