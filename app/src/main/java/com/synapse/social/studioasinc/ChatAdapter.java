@@ -431,7 +431,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         bindCommonMessageProperties(holder, position);
         String text = String.valueOf(_data.get(position).getOrDefault("message_text", ""));
         holder.message_text.setVisibility(View.VISIBLE);
-        com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, text);
+        com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, EncryptionUtil.INSTANCE.decrypt(text, _context));
     }
 
     private void bindMediaViewHolder(MediaViewHolder holder, int position) {
@@ -444,7 +444,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder.message_text != null) {
             holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
             if (!msgText.isEmpty()) {
-                com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
+                com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, EncryptionUtil.INSTANCE.decrypt(msgText, _context));
             }
         }
 
@@ -697,7 +697,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (adjustBounds) {
             imageView.setAdjustViewBounds(true);
             imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            Glide.with(_context).load(url).into(imageView);
+            Glide.with(_context).load(EncryptionUtil.INSTANCE.decrypt(url, _context)).into(imageView);
         } else {
             int height;
             Object widthObj = attachment.get("width");
@@ -718,7 +718,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
 
             imageView.setLayoutParams(new ViewGroup.LayoutParams(width, height));
-            Glide.with(_context).load(url).override(width, height).into(imageView);
+            Glide.with(_context).load(EncryptionUtil.INSTANCE.decrypt(url, _context)).override(width, height).into(imageView);
         }
 
         // Enhanced click listener to open gallery
@@ -731,18 +731,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         HashMap<String, Object> data = _data.get(position);
         String msgText = data.getOrDefault("message_text", "").toString();
         holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
-        if (!msgText.isEmpty()) com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
+        if (!msgText.isEmpty()) com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, EncryptionUtil.INSTANCE.decrypt(msgText, _context));
         ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
         if (attachments != null && !attachments.isEmpty()) {
             String videoUrl = String.valueOf(attachments.get(0).get("url"));
-            if(holder.videoThumbnail != null) Glide.with(_context).load(videoUrl).into(holder.videoThumbnail);
+            if(holder.videoThumbnail != null) Glide.with(_context).load(EncryptionUtil.INSTANCE.decrypt(videoUrl, _context)).into(holder.videoThumbnail);
             
             // --- CRITICAL FIX: Attach click listener to videoContainerCard ---
             if(holder.videoContainerCard != null) {
-                holder.videoContainerCard.setOnClickListener(v -> chatActivity._OpenWebView(videoUrl));
+                holder.videoContainerCard.setOnClickListener(v -> chatActivity._OpenWebView(EncryptionUtil.INSTANCE.decrypt(videoUrl, _context)));
             } else {
                 // Fallback if card isn't found (though it should be)
-                holder.itemView.setOnClickListener(v -> chatActivity._OpenWebView(videoUrl));
+                holder.itemView.setOnClickListener(v -> chatActivity._OpenWebView(EncryptionUtil.INSTANCE.decrypt(videoUrl, _context)));
             }
         }
     }
@@ -769,9 +769,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         HashMap<String, Object> data = _data.get(position);
         String messageText = String.valueOf(data.getOrDefault("message_text", ""));
         holder.message_text.setVisibility(View.VISIBLE);
-        com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, messageText);
+        com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, EncryptionUtil.INSTANCE.decrypt(messageText, _context));
 
-        String urlToPreview = LinkPreviewUtil.extractUrl(messageText);
+        String urlToPreview = LinkPreviewUtil.extractUrl(EncryptionUtil.INSTANCE.decrypt(messageText, _context));
         if (urlToPreview != null) {
             // Check if link preview views exist before accessing them
             if (holder.linkPreviewImage != null) holder.linkPreviewImage.setVisibility(View.GONE);

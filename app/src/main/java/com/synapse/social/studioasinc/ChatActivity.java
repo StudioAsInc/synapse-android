@@ -989,7 +989,7 @@ public class ChatActivity extends AppCompatActivity {
 			View dialogView = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
 			dialog.setView(dialogView);
 			final EditText editText = dialogView.findViewById(R.id.edittext1);
-			editText.setText(messageText);
+			editText.setText(EncryptionUtil.INSTANCE.decrypt(messageText, getApplicationContext()));
 			dialog.setPositiveButton("Save", (d, w) -> {
 				String newText = editText.getText().toString();
 				FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
@@ -1004,8 +1004,8 @@ public class ChatActivity extends AppCompatActivity {
 				}
 				DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
 				DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
-				msgRef1.child(MESSAGE_TEXT_KEY).setValue(newText);
-				msgRef2.child(MESSAGE_TEXT_KEY).setValue(newText);
+				msgRef1.child(MESSAGE_TEXT_KEY).setValue(EncryptionUtil.INSTANCE.encrypt(newText, getApplicationContext()));
+				msgRef2.child(MESSAGE_TEXT_KEY).setValue(EncryptionUtil.INSTANCE.encrypt(newText, getApplicationContext()));
 			});
 			dialog.setNegativeButton("Cancel", null);
 			AlertDialog shownDialog = dialog.show();
@@ -2016,7 +2016,7 @@ public class ChatActivity extends AppCompatActivity {
 				Log.d("ChatActivity", "Checking attachment: " + item.toString());
 				if ("success".equals(item.get("uploadState"))) {
 					HashMap<String, Object> attachmentData = new HashMap<>();
-					attachmentData.put("url", item.get("cloudinaryUrl"));
+					attachmentData.put("url", EncryptionUtil.INSTANCE.encrypt(item.get("cloudinaryUrl").toString(), getApplicationContext()));
 					attachmentData.put("publicId", item.get("publicId"));
 					attachmentData.put("width", item.get("width"));
 					attachmentData.put("height", item.get("height"));
@@ -2037,7 +2037,7 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, senderUid);
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
+				ChatSendMap.put(MESSAGE_TEXT_KEY, EncryptionUtil.INSTANCE.encrypt(messageText, getApplicationContext()));
 				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
@@ -2119,7 +2119,7 @@ public class ChatActivity extends AppCompatActivity {
 			ChatSendMap = new HashMap<>();
 			ChatSendMap.put(UID_KEY, senderUid);
 			ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-			ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
+			ChatSendMap.put(MESSAGE_TEXT_KEY, EncryptionUtil.INSTANCE.encrypt(messageText, getApplicationContext()));
 			ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 			if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 			ChatSendMap.put(KEY_KEY, uniqueMessageKey);
