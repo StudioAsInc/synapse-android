@@ -40,6 +40,7 @@
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
 			android:screenOrientation="landscape"
+			android:exported="true"
 			android:windowSoftInputMode="stateHidden" >
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
