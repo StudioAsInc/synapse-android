@@ -11,6 +11,8 @@
 
 package com.synapse.social.studioasinc.util;
 
+import android.content.Context;
+import com.synapse.social.studioasinc.EncryptionUtil;
 import com.synapse.social.studioasinc.model.Attachment;
 
 import java.util.ArrayList;
