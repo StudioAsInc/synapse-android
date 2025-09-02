@@ -45,4 +45,11 @@ Docs/
 
 ---
 
+## Development Guidelines
+
+- If you are implementing new classes or activities consider using .kt (Kotlin) for them. (Only for new files/old files no necessarily needed to be Kotlin)
+- If you are creating a layout or a new activity check the resource file(s) you used that available in the project or not. Try to use existing resources.
+
+---
+
 **This project follows a standardized documentation structure. Please respect these guidelines to maintain consistency and organization.**
