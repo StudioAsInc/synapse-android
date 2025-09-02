@@ -26,11 +26,15 @@ import java.util.Calendar;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.lifecycle.LifecycleOwner;
+import com.synapse.social.studioasinc.util.UpdateManager;
+import android.os.Bundle;
+import android.app.Activity;
 
-public class SynapseApp extends Application implements DefaultLifecycleObserver {
+public class SynapseApp extends Application implements Application.ActivityLifecycleCallbacks {
     
     private static Context mContext;
     private Thread.UncaughtExceptionHandler mExceptionHandler;
+    private Activity currentActivity;
     
     public static FirebaseAuth mAuth;
     
@@ -98,6 +102,47 @@ public class SynapseApp extends Application implements DefaultLifecycleObserver 
                 }
             }
         });
+        registerActivityLifecycleCallbacks(this);
+    }
+
+    @Override
+    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+    }
+
+    @Override
+    public void onActivityStarted(Activity activity) {
+        currentActivity = activity;
+    }
+
+    @Override
+    public void onActivityResumed(Activity activity) {
+        currentActivity = activity;
+        if (activity instanceof MainActivity) {
+            UpdateManager updateManager = new UpdateManager(activity, new Runnable() {
+                @Override
+                public void run() {
+                    ((MainActivity) activity).proceedToAuthCheck();
+                }
+            });
+            updateManager.checkForUpdate();
+        }
+    }
+
+    @Override
+    public void onActivityPaused(Activity activity) {
+        currentActivity = null;
+    }
+
+    @Override
+    public void onActivityStopped(Activity activity) {
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+    }
+
+    @Override
+    public void onActivityDestroyed(Activity activity) {
     }
 
     @Override
