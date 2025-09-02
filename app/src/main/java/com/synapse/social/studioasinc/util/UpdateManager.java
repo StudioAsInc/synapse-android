@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
+import android.util.Log;
 import com.google.gson.reflect.TypeToken;
 import com.synapse.social.studioasinc.R;
 import com.synapse.social.studioasinc.RequestNetwork;
@@ -29,8 +31,26 @@ import java.util.HashMap;
 
 public class UpdateManager {
 
+    private static final String TAG = "UpdateManager";
+    private static final String UPDATE_URL = "https://pastebin.com/raw/sQuaciVv";
+
     private final Activity activity;
     private final Runnable onUpdateNotRequired;
+
+    private static class UpdateInfo {
+        @SerializedName("versionCode")
+        double versionCode;
+        @SerializedName("title")
+        String title;
+        @SerializedName("versionName")
+        String versionName;
+        @SerializedName("whatsNew")
+        String whatsNew;
+        @SerializedName("updateLink")
+        String updateLink;
+        @SerializedName("isCancelable")
+        boolean isCancelable;
+    }
 
     public UpdateManager(Activity activity, Runnable onUpdateNotRequired) {
         this.activity = activity;
@@ -47,8 +67,8 @@ public class UpdateManager {
         try {
             currentVersionCode = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
         } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG, "Version check failed", e);
             showErrorDialog("Version check failed: " + e.getMessage());
-            e.printStackTrace();
             onUpdateNotRequired.run();
             return;
         }
@@ -56,51 +76,31 @@ public class UpdateManager {
         RequestNetwork network = new RequestNetwork(activity);
         network.startRequestNetwork(
                 RequestNetworkController.GET,
-                "https://pastebin.com/raw/sQuaciVv",
+                UPDATE_URL,
                 "update",
                 new RequestNetwork.RequestListener() {
                     @Override
                     public void onResponse(String tag, String response, HashMap<String, Object> _responseHeaders) {
                         try {
-                            HashMap<String, Object> updateMap = new Gson().fromJson(
-                                    response,
-                                    new TypeToken<HashMap<String, Object>>() {
-                                    }.getType()
-                            );
+                            UpdateInfo updateInfo = new Gson().fromJson(response, UpdateInfo.class);
 
-                            double latestVersionCode = 0;
-                            if (updateMap.containsKey("versionCode")) {
-                                Object vc = updateMap.get("versionCode");
-                                if (vc instanceof Double) {
-                                    latestVersionCode = (Double) vc;
-                                } else if (vc instanceof String) {
-                                    latestVersionCode = Double.parseDouble((String) vc);
-                                } else if (vc instanceof Number) {
-                                    latestVersionCode = ((Number) vc).doubleValue();
-                                }
-                            }
+                            if (updateInfo != null && updateInfo.versionCode > currentVersionCode) {
+                                String title = updateInfo.title != null ? updateInfo.title : "Update Available";
+                                String versionName = updateInfo.versionName != null ? updateInfo.versionName : "";
+                                String changelog = updateInfo.whatsNew != null ? updateInfo.whatsNew.replace("\\n", "\n") : "";
+                                String updateLink = updateInfo.updateLink;
 
-                            if (latestVersionCode > currentVersionCode) {
-                                String title = updateMap.get("title").toString();
-                                String versionName = updateMap.get("versionName").toString();
-                                String changelog = updateMap.get("whatsNew").toString().replace("\\n", "\n");
-                                String updateLink = updateMap.get("updateLink").toString();
-                                boolean isCancelable = false;
-                                if (updateMap.containsKey("isCancelable")) {
-                                    Object ic = updateMap.get("isCancelable");
-                                    if (ic instanceof Boolean) {
-                                        isCancelable = (Boolean) ic;
-                                    } else if (ic instanceof String) {
-                                        isCancelable = Boolean.parseBoolean((String) ic);
-                                    }
+                                if (updateLink != null) {
+                                    showUpdateDialog(title, versionName, changelog, updateLink, updateInfo.isCancelable);
+                                } else {
+                                    onUpdateNotRequired.run();
                                 }
-                                showUpdateDialog(title, versionName, changelog, updateLink, isCancelable);
                             } else {
                                 onUpdateNotRequired.run();
                             }
                         } catch (Exception e) {
+                            Log.e(TAG, "Update parsing error", e);
                             showErrorDialog("Update parsing error: " + e.getMessage());
-                            e.printStackTrace();
                             onUpdateNotRequired.run();
                         }
                     }
