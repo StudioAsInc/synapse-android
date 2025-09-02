@@ -164,15 +164,12 @@ public class AuthActivity extends AppCompatActivity {
     private void startIntroAnimation() {
         aiNameTextView.setTotalDuration(450L);
         aiNameTextView.setFadeDuration(150L);
-        aiNameTextView.startTyping("Hello, I'm Synapse AI");
+        aiNameTextView.startTyping(getString(R.string.auth_hello));
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             aiResponseTextView_1.setTotalDuration(1000L);
             aiResponseTextView_1.setFadeDuration(150L);
-            aiResponseTextView_1.startTyping(
-                "I'm a next generation AI built to assist you in Synapse and to be safe, accurate and secure.\n\n" +
-                "I would love to get to know each other before we get started"
-            );
+            aiResponseTextView_1.startTyping(getString(R.string.auth_ai_intro));
         }, 500);
 
         mainHiddenLayout.postDelayed(() -> mainHiddenLayout.setVisibility(View.VISIBLE), 2000);
@@ -203,12 +200,12 @@ public class AuthActivity extends AppCompatActivity {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             aiResponseTextView_2.setTotalDuration(1300L);
             aiResponseTextView_2.setFadeDuration(150L);
-            aiResponseTextView_2.startTyping("Okay " + username + ", we're almost there, but before that one last final process. Please I kindly request you to look at Synapse terms and conditions before using their services");
+            aiResponseTextView_2.startTyping(getString(R.string.auth_almost_done, username));
             section2Layout.setVisibility(View.VISIBLE);
 
             ruleTextView1.setTotalDuration(3000L);
             ruleTextView1.setFadeDuration(150L);
-            ruleTextView1.startTyping("By using Synapse, you agree to follow our rules. You must be at least 13 years old to create an account. You are responsible for keeping your login information private and secure. Misuse of the platform may result in your account being restricted or removed.");
+            ruleTextView1.startTyping(getString(R.string.auth_terms_and_conditions));
         }, 1000);
 
         hideKeyboard();
@@ -232,11 +229,11 @@ public class AuthActivity extends AppCompatActivity {
 
         aiNameTextView.setTotalDuration(500L);
         aiNameTextView.setFadeDuration(150L);
-        aiNameTextView.startTyping("We are almost done!");
+        aiNameTextView.startTyping(getString(R.string.auth_we_are_almost_done));
 
         aiResponseTextView_1.setTotalDuration(1300L);
         aiResponseTextView_1.setFadeDuration(150L);
-        aiResponseTextView_1.startTyping("Okay brother, believe me... We are going to finish this boring process within a few seconds. Just like instant noodles. First, you have to...");
+        aiResponseTextView_1.startTyping(getString(R.string.auth_boring_process));
     }
 
     private void handleSignUpClick(View view) {
@@ -283,7 +280,7 @@ public class AuthActivity extends AppCompatActivity {
     private void handleSuccessfulRegistration() {
         aiNameTextView.setTotalDuration(300L);
         aiNameTextView.setFadeDuration(150L);
-        aiNameTextView.startTyping("Creating your account...");
+        aiNameTextView.startTyping(getString(R.string.auth_creating_account));
 
         Intent intent = new Intent(AuthActivity.this, CompleteProfileActivity.class);
         startActivity(intent);
@@ -294,7 +291,7 @@ public class AuthActivity extends AppCompatActivity {
         if (exception == null) return;
 
         String errorMessage = exception.getMessage();
-        if ("The email address is already in use by another account.".equals(errorMessage)) {
+        if (getString(R.string.auth_email_in_use).equals(errorMessage)) {
             handleExistingAccount();
         }
     }
@@ -302,7 +299,7 @@ public class AuthActivity extends AppCompatActivity {
     private void handleExistingAccount() {
         aiNameTextView.setTotalDuration(500L);
         aiNameTextView.setFadeDuration(150L);
-        aiNameTextView.startTyping("Hey, I know you!");
+        aiNameTextView.startTyping(getString(R.string.auth_hey_i_know_you));
 
         String email = email_et.getText().toString();
         String pass = pass_et.getText().toString();
@@ -332,16 +329,16 @@ public class AuthActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String username = dataSnapshot.getValue(String.class);
                 if (username != null) {
-                    showWelcomeMessage("You are @" + username + " right? No further steps, Let's go...");
+                    showWelcomeMessage(getString(R.string.auth_welcome_back_username, username));
                 } else {
-                    showWelcomeMessage("I recognize you! Let's go...");
+                    showWelcomeMessage(getString(R.string.auth_i_recognize_you));
                 }
                 navigateToHomeAfterDelay();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                showWelcomeMessage("I recognize you! Let's go...");
+                showWelcomeMessage(getString(R.string.auth_i_recognize_you));
                 navigateToHomeAfterDelay();
             }
         });
@@ -364,7 +361,7 @@ public class AuthActivity extends AppCompatActivity {
     private void showSignInError() {
         aiResponseTextView_1.setTotalDuration(1300L);
         aiResponseTextView_1.setFadeDuration(150L);
-        aiResponseTextView_1.startTyping("Hmm, that password doesn't match. Try again?");
+        aiResponseTextView_1.startTyping(getString(R.string.auth_password_mismatch));
     }
 
     private OnCompleteListener<AuthResult> createAuthSignInListener() {
