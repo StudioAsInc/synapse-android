@@ -79,7 +79,8 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:scaleType="centerInside"
-                    android:src="@drawable/ic_add_white" />
+                    android:src="@drawable/ic_add_white"
+                    android:tint="@android:color/black" />
 
                 <ImageView
                     android:id="@+id/menu_button"
