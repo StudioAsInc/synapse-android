@@ -45,6 +45,7 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle _savedInstanceState) {
         super.onCreate(_savedInstanceState);
+        FirebaseApp.initializeApp(this);
 
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Intent intent = new Intent(this, AuthActivity.class);
@@ -55,7 +56,6 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.home);
-        FirebaseApp.initializeApp(this);
         initialize();
         initializeLogic();
     }

@@ -79,6 +79,7 @@ public class AuthActivity extends AppCompatActivity {
     private FirebaseAuth fauth;
     private final OnCompleteListener<AuthResult> authCreateUserListener = createAuthCreateUserListener();
     private final OnCompleteListener<AuthResult> authSignInListener = createAuthSignInListener();
+    private android.view.ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,19 +178,19 @@ public class AuthActivity extends AppCompatActivity {
             mainHiddenLayout.setVisibility(View.VISIBLE);
             usernameEditText.requestFocus();
             final View rootView = getWindow().getDecorView().getRootView();
-            rootView.getViewTreeObserver().addOnGlobalLayoutListener(
-                new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        if (usernameEditText.isFocused()) {
-                            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                            if (imm != null) {
-                                imm.showSoftInput(usernameEditText, InputMethodManager.SHOW_IMPLICIT);
-                            }
-                            rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            mGlobalLayoutListener = new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    if (usernameEditText.isFocused()) {
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        if (imm != null) {
+                            imm.showSoftInput(usernameEditText, InputMethodManager.SHOW_IMPLICIT);
                         }
                     }
-                });
+                }
+            };
+            rootView.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalLayoutListener);
         }, 2000);
     }
 
@@ -401,6 +402,9 @@ public class AuthActivity extends AppCompatActivity {
         if (sfx != null) {
             sfx.release();
             sfx = null;
+        }
+        if (mGlobalLayoutListener != null) {
+            getWindow().getDecorView().getRootView().getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalLayoutListener);
         }
     }
 }
