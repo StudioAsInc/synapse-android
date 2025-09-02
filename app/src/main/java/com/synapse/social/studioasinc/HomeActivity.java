@@ -86,6 +86,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void initializeLogic() {
+        if (auth.getCurrentUser() == null) {
+            // User is not signed in, redirect to AuthActivity
+            Intent intent = new Intent(HomeActivity.this, AuthActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         navigationView.setNavigationItemSelectedListener(this);
 
         menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.END));
