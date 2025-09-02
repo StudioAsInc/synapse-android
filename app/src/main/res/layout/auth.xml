@@ -43,7 +43,7 @@
 			<LinearLayout
 				android:id="@+id/mainHiddenLayout"
 				android:layout_width="match_parent"
-				android:layout_height="300dp"
+				android:layout_height="wrap_content"
 				android:layout_marginTop="15dp"
 				android:gravity="center_horizontal"
 				android:orientation="vertical"
@@ -126,13 +126,6 @@
 						</LinearLayout>
 					</LinearLayout>
 				</LinearLayout>
-				<LinearLayout
-					android:id="@+id/animatorSupportLayout"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:padding="8dp"
-					android:orientation="vertical"
-					android:layout_weight="1" />
 				<LinearLayout
 					android:id="@+id/linear2"
 					android:layout_width="match_parent"
