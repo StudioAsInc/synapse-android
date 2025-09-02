@@ -82,8 +82,6 @@ public class SynapseApp extends Application implements Application.ActivityLifec
                 }
             });
         
-        ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
-
         // Initialize OneSignal
         final String ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
         OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
@@ -143,20 +141,6 @@ public class SynapseApp extends Application implements Application.ActivityLifec
 
     @Override
     public void onActivityDestroyed(Activity activity) {
-    }
-
-    @Override
-    public void onStart(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null) {
-            PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
-        }
-    }
-
-    @Override
-    public void onStop(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null) {
-            PresenceManager.goOffline(mAuth.getCurrentUser().getUid());
-        }
     }
     
     private void createNotificationChannels() {
