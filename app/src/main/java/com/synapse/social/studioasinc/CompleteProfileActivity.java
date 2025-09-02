@@ -80,7 +80,9 @@ import java.util.HashMap;
 import java.util.regex.*;
 import org.json.*;
 import com.google.firebase.database.Query;
-import com.synapse.social.studioasinc.ImageUploader;
+import com.synapse.social.studioasinc.ImageUploader;
+
+
 import com.synapse.social.studioasinc.crypto.E2EEHelper;
 
 public class CompleteProfileActivity extends AppCompatActivity {
@@ -411,107 +413,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 		email_verification_status_refresh.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				/*
-try{
-FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-FirebaseUser user = firebaseAuth.getCurrentUser();
-
-if (user != null) {
-	user.reload().addOnCompleteListener(new OnCompleteListener<Void>() {
-		@Override
-		public void onComplete(@NonNull Task<Void> task) {
-			if (task.isSuccessful()) {
-				if (user.isEmailVerified()) {
-                    email_verification_status_refresh.setVisibility(View.GONE);
-					email_verification_error_ic.setVisibility(View.GONE);
-					email_verification_verified_ic.setVisibility(View.VISIBLE);
-					email_verification_status.setTextColor(0xFF445E91);
-					email_verification_status.setText(getResources().getString(R.string.email_verified));
-					email_verification_send.setVisibility(View.GONE);
-                    
-                    //emailVerify = true;
-				} else {
-                    email_verification_status_refresh.setVisibility(View.VISIBLE);
-					email_verification_error_ic.setVisibility(View.VISIBLE);
-					email_verification_verified_ic.setVisibility(View.GONE);
-					email_verification_status.setTextColor(0xFFF44336);
-					email_verification_status.setText(getResources().getString(R.string.email_not_verified));
-					email_verification_send.setVisibility(View.VISIBLE);
-                    
-                    //emailVerify = false;
-				}
-			}
-		}
-	});
-}
-}catch(Exception e){
-SketchwareUtil.showMessage(getApplicationContext(), getResources().getString(R.string.something_went_wrong));
-}
-*/
-			}
-		});
-		
-		skip_button.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				SketchwareUtil.showMessage(getApplicationContext(), "Not possible");
-				/*
-if (emailVerify) {
-
-} else {
-SketchwareUtil.showMessage(getApplicationContext(), getResources().getString(R.string.email_not_verified));
-}
-if (userNameErr) {
-SketchwareUtil.showMessage(getApplicationContext(), getResources().getString(R.string.username_err_invalid));
-vbr.vibrate((long)(48));
-} else {
-
-}
-getJoinTime = Calendar.getInstance();
-createUserMap = new HashMap<>();
-createUserMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-createUserMap.put("email", FirebaseAuth.getInstance().getCurrentUser().getEmail());
-createUserMap.put("profile_cover_image", "null");
-if (getIntent().hasExtra("googleLoginName") && (getIntent().hasExtra("googleLoginEmail") && getIntent().hasExtra("googleLoginAvatarUri"))) {
-createUserMap.put("avatar", getIntent().getStringExtra("googleLoginAvatarUri"));
-} else {
-createUserMap.put("avatar", "null");
-}
-createUserMap.put("avatar_history_type", "local");
-createUserMap.put("username", username_input.getText().toString().trim());
-if (nickname_input.getText().toString().trim().equals("")) {
-createUserMap.put("nickname", "null");
-} else {
-createUserMap.put("nickname", nickname_input.getText().toString().trim());
-}
-if (biography_input.getText().toString().trim().equals("")) {
-createUserMap.put("biography", "null");
-} else {
-createUserMap.put("biography", biography_input.getText().toString().trim());
-}
-createUserMap.put("verify", "false");
-createUserMap.put("account_type", "user");
-createUserMap.put("account_premium", "false");
-createUserMap.put("banned", "false");
-createUserMap.put("gender", "hidden");
-createUserMap.put("status", "online");
-createUserMap.put("join_date", String.valueOf((long)(getJoinTime.getTimeInMillis())));
-main.child("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).updateChildren(createUserMap, new DatabaseReference.CompletionListener() {
-	@Override
-	public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-		if (databaseError == null) {
-			intent.setClass(getApplicationContext(), HomeActivity.class);
-			startActivity(intent);
-			finish();
-		} else {
-			SketchwareUtil.showMessage(getApplicationContext(), databaseError.getMessage());
-			username_input.setEnabled(true);
-		}
-	}
-});
-
-username_input.setEnabled(false);
-*/
+				
 			}
 		});
 		
@@ -1183,10 +1085,29 @@ username_input.setEnabled(false);
 					@Override
 					public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 						if (databaseError == null) {
-							intent.setClass(getApplicationContext(), HomeActivity.class);
-							startActivity(intent);
-							finish();
-						} else {
+    // Initialize E2EE keys after successful user creation
+    E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
+    e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
+        @Override
+        public void onKeysInitialized() {
+            Log.d("CompleteProfileActivity", "E2EE keys initialized successfully");
+            // Navigate to HomeActivity after E2EE initialization
+            intent.setClass(getApplicationContext(), HomeActivity.class);
+            startActivity(intent);
+            finish();
+        }
+
+        @Override
+        public void onKeyInitializationFailed(Exception e) {
+            Log.e("CompleteProfileActivity", "Failed to initialize E2EE keys", e);
+            // Still navigate to HomeActivity even if E2EE fails
+            // User can retry E2EE initialization later
+            intent.setClass(getApplicationContext(), HomeActivity.class);
+            startActivity(intent);
+            finish();
+        }
+    });
+} else {
 							if (databaseError.getMessage().equals("Permission denied")) {
 								complete_button_title.setVisibility(View.VISIBLE);
 								complete_button_loader_bar.setVisibility(View.GONE);
@@ -1249,10 +1170,29 @@ username_input.setEnabled(false);
 					@Override
 					public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 						if (databaseError == null) {
-							intent.setClass(getApplicationContext(), HomeActivity.class);
-							startActivity(intent);
-							finish();
-						} else {
+    // Initialize E2EE keys after successful user creation
+    E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
+    e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
+        @Override
+        public void onKeysInitialized() {
+            Log.d("CompleteProfileActivity", "E2EE keys initialized successfully");
+            // Navigate to HomeActivity after E2EE initialization
+            intent.setClass(getApplicationContext(), HomeActivity.class);
+            startActivity(intent);
+            finish();
+        }
+
+        @Override
+        public void onKeyInitializationFailed(Exception e) {
+            Log.e("CompleteProfileActivity", "Failed to initialize E2EE keys", e);
+            // Still navigate to HomeActivity even if E2EE fails
+            // User can retry E2EE initialization later
+            intent.setClass(getApplicationContext(), HomeActivity.class);
+            startActivity(intent);
+            finish();
+        }
+    });
+} else {
 							if (databaseError.getMessage().equals("Permission denied")) {
 								complete_button_title.setVisibility(View.VISIBLE);
 								complete_button_loader_bar.setVisibility(View.GONE);
@@ -1279,4 +1219,4 @@ username_input.setEnabled(false);
 		}
 	}
 	
-}
+}
