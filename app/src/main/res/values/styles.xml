@@ -1,3 +1,5 @@
 <resources>
- 
+    <style name="PlaceholderView">
+        <item name="android:background">@drawable/rounded_corner_placeholder_solid</item>
+    </style>
 </resources>
