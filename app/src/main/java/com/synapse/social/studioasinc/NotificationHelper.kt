@@ -54,67 +54,18 @@ object NotificationHelper {
                 return@addOnSuccessListener
             }
 
-            val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid/status")
-
-            recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
-                val recipientStatus = dataSnapshot.getValue(String::class.java)
-                val suppressStatus = "chatting_with_$senderUid"
-
-                if (NotificationConfig.ENABLE_SMART_SUPPRESSION) {
-                    if (suppressStatus == recipientStatus) {
-                        if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                            Log.i(TAG, "Recipient is actively chatting with sender. Suppressing notification.")
-                        }
-                        return@addOnSuccessListener
-                    }
-
-                    if (recipientStatus == "online") {
-                        if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                            Log.i(TAG, "Recipient is online. Suppressing notification for real-time message visibility.")
-                        }
-                        return@addOnSuccessListener
-                    }
-
-                    // Check for recent activity based on timestamp
-                    val lastSeen = recipientStatus?.toLongOrNull()
-                    if (lastSeen != null) {
-                        val now = System.currentTimeMillis()
-                        if (now - lastSeen < NotificationConfig.RECENT_ACTIVITY_THRESHOLD) {
-                            if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                                Log.i(TAG, "Recipient was recently active. Suppressing notification.")
-                            }
-                            return@addOnSuccessListener
-                        }
-                    }
-                }
-
-                if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                    sendClientSideNotification(
-                        recipientOneSignalPlayerId,
-                        message,
-                        senderUid,
-                        notificationType,
-                        data
-                    )
-                } else {
-                    sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
-                }
-                saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
-            }.addOnFailureListener { e ->
-                Log.e(TAG, "Status check failed. Defaulting to send notification.", e)
-                if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                     sendClientSideNotification(
-                        recipientOneSignalPlayerId,
-                        message,
-                        senderUid,
-                        notificationType,
-                        data
-                    )
-                } else {
-                    sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
-                }
-                saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+            if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
+                sendClientSideNotification(
+                    recipientOneSignalPlayerId,
+                    message,
+                    senderUid,
+                    notificationType,
+                    data
+                )
+            } else {
+                sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
             }
+            saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
         }.addOnFailureListener {
             Log.e(TAG, "Failed to get recipient's OneSignal Player ID.", it)
         }
