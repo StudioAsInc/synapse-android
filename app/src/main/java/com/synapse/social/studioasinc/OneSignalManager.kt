@@ -3,6 +3,8 @@ package com.synapse.social.studioasinc
 import android.util.Log
 import com.google.firebase.database.FirebaseDatabase
 
+import com.onesignal.OneSignal
+
 object OneSignalManager {
 
     private const val TAG = "OneSignalManager"
@@ -29,5 +31,14 @@ object OneSignalManager {
             .addOnFailureListener { e ->
                 Log.e(TAG, "Failed to save OneSignal Player ID to Realtime Database for user: $userUid", e)
             }
+    }
+
+    @JvmStatic
+    fun id(userUid: String?) {
+        if (userUid == null) return
+        val playerId = OneSignal.getUser().pushSubscription.id
+        if (playerId != null) {
+            savePlayerIdToRealtimeDatabase(userUid, playerId)
+        }
     }
 }

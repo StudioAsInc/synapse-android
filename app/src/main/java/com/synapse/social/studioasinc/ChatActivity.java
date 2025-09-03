@@ -2183,6 +2183,7 @@ public class ChatActivity extends AppCompatActivity {
 				HashMap<String, String> data = new HashMap<>();
 				data.put("chatId", chatId);
 				NotificationHelper.sendNotification(
+					getApplicationContext(),
 					recipientUid,
 					senderUid,
 					notificationMessage,
@@ -2260,6 +2261,7 @@ public class ChatActivity extends AppCompatActivity {
 			HashMap<String, String> data = new HashMap<>();
 			data.put("chatId", chatId);
 			NotificationHelper.sendNotification(
+				getApplicationContext(),
 				recipientUid,
 				senderUid,
 				notificationMessage,

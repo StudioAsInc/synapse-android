@@ -93,10 +93,8 @@ public class SynapseApp extends Application implements Application.ActivityLifec
             @Override
             public void onPushSubscriptionChange(@NonNull PushSubscriptionChangedState state) {
                 if (state.getCurrent().getOptedIn()) {
-                    String playerId = state.getCurrent().getId();
-                    if (mAuth.getCurrentUser() != null && playerId != null) {
-                        String userUid = mAuth.getCurrentUser().getUid();
-                        OneSignalManager.savePlayerIdToRealtimeDatabase(userUid, playerId);
+                    if (mAuth.getCurrentUser() != null) {
+                        OneSignalManager.id(mAuth.getCurrentUser().getUid());
                     }
                 }
             }
@@ -140,6 +138,7 @@ public class SynapseApp extends Application implements Application.ActivityLifec
     public void onStart(@NonNull LifecycleOwner owner) {
         if (mAuth.getCurrentUser() != null) {
             PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
+            OneSignalManager.id(mAuth.getCurrentUser().getUid());
         }
         Activity activity = currentActivity.get();
         if (activity instanceof MainActivity) {
