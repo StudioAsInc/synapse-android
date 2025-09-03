@@ -65,6 +65,15 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
             return;
         }
         Attachment attachment = attachments.get(position);
+
+        // Handle case where attachment is null to prevent crashes
+        if (attachment == null) {
+            holder.imageView.setImageResource(R.drawable.ph_imgbluredsqure);
+            holder.itemView.setOnClickListener(null);
+            holder.itemView.setOnTouchListener(null); // Disable touch feedback
+            return;
+        }
+
         String publicId = attachment.getPublicId();
         
         // Set consistent size for all carousel images
