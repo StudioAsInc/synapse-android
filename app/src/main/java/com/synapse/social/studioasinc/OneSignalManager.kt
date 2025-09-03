@@ -30,4 +30,15 @@ object OneSignalManager {
                 Log.e(TAG, "Failed to save OneSignal Player ID to Realtime Database for user: $userUid", e)
             }
     }
+
+    @JvmStatic
+    fun updatePlayerIdForCurrentUser() {
+        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            val playerId = com.onesignal.OneSignal.getUser().getPushSubscription().getId()
+            if (playerId != null) {
+                savePlayerIdToRealtimeDatabase(currentUser.uid, playerId)
+            }
+        }
+    }
 }

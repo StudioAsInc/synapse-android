@@ -321,6 +321,7 @@ public class AuthActivity extends AppCompatActivity {
     }
 
     private void fetchUsername(String uid) {
+        OneSignalManager.updatePlayerIdForCurrentUser();
         DatabaseReference usernameRef = FirebaseDatabase.getInstance().getReference()
                 .child("skyline")
                 .child("users")

@@ -795,6 +795,8 @@ public class CompleteProfileActivity extends AppCompatActivity {
 					usernameIndexMap.put("username", username_input.getText().toString().trim());
 					pushusername.child(username_input.getText().toString().trim()).updateChildren(usernameIndexMap);
 
+					OneSignalManager.updatePlayerIdForCurrentUser();
+
 					E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
 					e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
 						@Override
