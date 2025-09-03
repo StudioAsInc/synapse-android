@@ -972,7 +972,14 @@ public class ChatActivity extends AppCompatActivity {
 
 		// Set click listeners
 		replyLayout.setOnClickListener(v -> {
-			ReplyMessageID = messageData.get(KEY_KEY).toString();
+			String messageKey = messageData.get(KEY_KEY).toString();
+			ReplyMessageID = messageKey;
+
+			// Cache the message being replied to, so it's available when we send our own reply.
+			if (!repliedMessagesCache.containsKey(messageKey)) {
+				repliedMessagesCache.put(messageKey, messageData);
+			}
+
 			mMessageReplyLayoutBodyRightUsername.setText(isMine ? FirstUserName : SecondUserName);
 			mMessageReplyLayoutBodyRightMessage.setText(decryptedMessageText);
 			mMessageReplyLayout.setVisibility(View.VISIBLE);
@@ -2535,7 +2542,13 @@ public class ChatActivity extends AppCompatActivity {
 	public void _showReplyUI(final double _position) {
 		// This is where you trigger your reply UI.
 		HashMap<String, Object> messageData = ChatMessagesList.get((int)_position);
-		ReplyMessageID = messageData.get(KEY_KEY).toString();
+		String messageKey = messageData.get(KEY_KEY).toString();
+		ReplyMessageID = messageKey;
+
+		// Cache the message being replied to, so it's available when we send our own reply.
+		if (!repliedMessagesCache.containsKey(messageKey)) {
+			repliedMessagesCache.put(messageKey, messageData);
+		}
 
 		if (messageData.get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 			mMessageReplyLayoutBodyRightUsername.setText(FirstUserName);
