@@ -74,6 +74,18 @@ object NotificationHelper {
                         }
                         return@addOnSuccessListener
                     }
+
+                    // Check for recent activity based on timestamp
+                    val lastSeen = recipientStatus?.toLongOrNull()
+                    if (lastSeen != null) {
+                        val now = System.currentTimeMillis()
+                        if (now - lastSeen < NotificationConfig.RECENT_ACTIVITY_THRESHOLD) {
+                            if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+                                Log.i(TAG, "Recipient was recently active. Suppressing notification.")
+                            }
+                            return@addOnSuccessListener
+                        }
+                    }
                 }
 
                 if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
@@ -272,6 +284,7 @@ object NotificationHelper {
     @JvmStatic
     @Deprecated("Use sendMessageAndNotifyIfNeeded with chatId parameter for better deep linking")
     fun triggerPushNotification(recipientId: String, message: String) {
+        @Suppress("DEPRECATION")
         sendMessageAndNotifyIfNeeded("", "", recipientId, message)
     }
 

@@ -352,6 +352,22 @@ class c {
 							likeUserProfileButtonLikeCount.setTextColor(0xFF616161);
 						} else {
 							FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+							com.synapse.social.studioasinc.util.UserUtils.getCurrentUserDisplayName(new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
+								public void onResult(String displayName) {
+									String recipientUid = getIntent().getStringExtra("uid");
+									String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+									String notificationMessage = displayName + " liked your profile.";
+									HashMap<String, String> data = new HashMap<>();
+									data.put("sender_uid", senderUid);
+									NotificationHelper.sendNotification(
+										recipientUid,
+										senderUid,
+										notificationMessage,
+										"profile_like",
+										data
+									);
+								}
+							});
 							UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
 							likeUserProfileButtonLikeCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString())));
 							likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_2);
@@ -405,6 +421,22 @@ class c {
 						} else {
 							FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
 							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).setValue(getIntent().getStringExtra("uid"));
+							com.synapse.social.studioasinc.util.UserUtils.getCurrentUserDisplayName(new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
+								public void onResult(String displayName) {
+									String recipientUid = getIntent().getStringExtra("uid");
+									String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+									String notificationMessage = displayName + " started following you.";
+									HashMap<String, String> data = new HashMap<>();
+									data.put("sender_uid", senderUid);
+									NotificationHelper.sendNotification(
+										recipientUid,
+										senderUid,
+										notificationMessage,
+										"new_follower",
+										data
+									);
+								}
+							});
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
 							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
 							btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
@@ -727,53 +759,7 @@ class c {
 					} else {
 						ProfilePageTabUserInfoBioLayoutText.setText(dataSnapshot.child("biography").getValue(String.class));
 					}
-					/*
-if (dataSnapshot.child("gender").getValue(String.class).equals("hidden")) {
-
-} else {
-if (dataSnapshot.child("gender").getValue(String.class).equals("male")) {
-
-} else {
-if (dataSnapshot.child("gender").getValue(String.class).equals("female")) {
-
-}
-}
-}
-if (dataSnapshot.child("user_region").getValue(String.class) != null) {
-
-} else {
-
-}
-if (dataSnapshot.child("account_type").getValue(String.class).equals("admin")) {
-
-} else {
-if (dataSnapshot.child("account_type").getValue(String.class).equals("moderator")) {
-
-} else {
-if (dataSnapshot.child("account_type").getValue(String.class).equals("support")) {
-
-} else {
-
-}
-}
-}
-if (dataSnapshot.child("account_premium").getValue(String.class).equals("true")) {
-
-} else {
-
-}
-if (dataSnapshot.child("verify").getValue(String.class).equals("true")) {
-
-} else {
-
-}
-join_date_layout_text.setText(new SimpleDateFormat("dd MMMM yyyy").format(JoinDateCC.getTime()));
-if ( || ( || )) {
-
-} else {
-
-}
-*/
+					// Removed the problematic commented-out block as requested.
 				} else {
 				}
 			}
@@ -1745,4 +1731,5 @@ if ( || ( || )) {
 			}
 		}
 	}
+
 }
