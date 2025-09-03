@@ -16,10 +16,10 @@
 			android:id="@+id/parentLayout"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:paddingLeft="@dimen/auth_padding_left"
-			android:paddingTop="@dimen/auth_padding_top"
-			android:paddingRight="@dimen/auth_padding_right"
-			android:paddingBottom="@dimen/auth_padding_bottom"
+			android:paddingLeft="18dp"
+			android:paddingTop="46dp"
+			android:paddingRight="18dp"
+			android:paddingBottom="18dp"
 			android:background="@android:color/transparent"
 			android:orientation="vertical"
 			android:animateLayoutChanges="true">
@@ -27,8 +27,8 @@
 				android:id="@+id/aiNameTextView"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:text="@string/auth_hello"
-				android:textSize="@dimen/auth_title_text_size"
+				android:text="Hello, I'm Synapse AI"
+				android:textSize="30sp"
 				android:textStyle="bold"
 				android:textColor="@color/md_theme_onBackground"
 				android:fontFamily="@font/product_sans_bold" />
@@ -36,15 +36,15 @@
 				android:id="@+id/aiResponseTextView_1"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_marginTop="@dimen/auth_margin_top"
-				android:textSize="@dimen/auth_response_text_size"
-				android:textColor="@color/black"
+				android:layout_marginTop="15dp"
+				android:textSize="18sp"
+				android:textColor="#000000"
 				android:fontFamily="@font/product_sans" />
 			<LinearLayout
 				android:id="@+id/mainHiddenLayout"
 				android:layout_width="match_parent"
-				android:layout_height="@dimen/auth_hidden_layout_height"
-				android:layout_marginTop="@dimen/auth_margin_top"
+				android:layout_height="300dp"
+				android:layout_marginTop="15dp"
 				android:gravity="center_horizontal"
 				android:orientation="vertical"
 				android:visibility="gone"
@@ -53,7 +53,7 @@
 					android:id="@+id/nameLayout"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:padding="@dimen/auth_name_layout_padding"
+					android:padding="16dp"
 					android:orientation="vertical"
 					android:background="@drawable/white_rounded_stroke"
 					android:animateLayoutChanges="true">
@@ -67,15 +67,15 @@
 							android:id="@+id/profileHolderLayout"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
-							android:layout_marginRight="@dimen/auth_profile_margin_right"
+							android:layout_marginRight="10dp"
 							android:gravity="center_horizontal|center_vertical"
 							android:orientation="vertical"
 							android:visibility="gone"
 							android:animateLayoutChanges="true">
 							<LinearLayout
 								android:id="@+id/latterProfilePictureLayoutCircle"
-								android:layout_width="@dimen/auth_profile_picture_size"
-								android:layout_height="@dimen/auth_profile_picture_size"
+								android:layout_width="50dp"
+								android:layout_height="50dp"
 								android:gravity="center_horizontal|center_vertical"
 								android:orientation="vertical"
 								android:background="@drawable/circlelayout">
@@ -84,7 +84,7 @@
 									android:layout_width="wrap_content"
 									android:layout_height="wrap_content"
 									android:text="A"
-									android:textSize="@dimen/auth_name_letter_text_size"
+									android:textSize="20sp"
 									android:textStyle="bold"
 									android:textColor="?colorSurface" />
 							</LinearLayout>
@@ -98,28 +98,28 @@
 								android:id="@+id/userAutoResponseTextView_1"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/auth_nice_to_meet_you"
-								android:textSize="@dimen/auth_user_response_text_size"
-								android:textColor="@color/black"
+								android:text="Nice to meet you, I'm..."
+								android:textSize="16sp"
+								android:textColor="#000000"
 								android:fontFamily="@font/product_sans" />
 							<LinearLayout
 								android:id="@+id/EditTextContainerLayout"
 								android:layout_width="match_parent"
 								android:layout_height="wrap_content"
-								android:layout_marginTop="@dimen/auth_edit_text_margin_top"
+								android:layout_marginTop="5dp"
 								android:background="@android:color/transparent"
 								android:orientation="horizontal">
 								<EditText
 									android:id="@+id/usernameEditText"
 									android:layout_width="match_parent"
 									android:layout_height="match_parent"
-									android:padding="@dimen/auth_edit_text_padding"
+									android:padding="2dp"
 									android:background="@android:color/transparent"
 									android:gravity="center_vertical"
-									android:textSize="@dimen/auth_response_text_size"
-									android:textColor="@color/black"
-									android:hint="@string/auth_enter_your_name"
-									android:textColorHint="@color/gray"
+									android:textSize="18sp"
+									android:textColor="#000000"
+									android:hint="Enter your name"
+									android:textColorHint="#9E9E9E"
 									android:singleLine="true"
 									android:fontFamily="@font/product_sans" />
 							</LinearLayout>
@@ -130,15 +130,15 @@
 					android:id="@+id/animatorSupportLayout"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:padding="@dimen/auth_animator_support_padding"
+					android:padding="8dp"
 					android:orientation="vertical"
 					android:layout_weight="1" />
 				<LinearLayout
 					android:id="@+id/linear2"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:layout_marginTop="@dimen/auth_profile_margin_right"
-					android:padding="@dimen/auth_animator_support_padding"
+					android:layout_marginTop="10dp"
+					android:padding="8dp"
 					android:gravity="center_horizontal|center_vertical"
 					android:orientation="vertical">
 					<LinearLayout
@@ -151,12 +151,12 @@
 							android:id="@+id/confirmAgeCheckBox"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
-							android:layout_marginLeft="@dimen/auth_checkbox_margin_left"
-							android:layout_marginRight="@dimen/auth_checkbox_margin_right"
+							android:layout_marginLeft="12dp"
+							android:layout_marginRight="12dp"
 							android:background="@android:color/transparent"
 							android:gravity="center_vertical"
 							android:text="@string/age_agreement"
-							android:textSize="@dimen/auth_checkbox_text_size"
+							android:textSize="12sp"
 							android:textStyle="bold"
 							android:textColor="?colorOnSurface"
 							android:fontFamily="@font/product_sans" />
@@ -165,16 +165,16 @@
 						android:id="@+id/continueBtnHolderLayout"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:layout_marginTop="@dimen/auth_margin_top"
+						android:layout_marginTop="15dp"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="horizontal">
 						<Button
 							android:id="@+id/continueButton"
 							android:layout_width="match_parent"
-							android:layout_height="@dimen/auth_continue_button_height"
-							android:padding="@dimen/auth_animator_support_padding"
-							android:text="@string/auth_continue"
-							android:textSize="@dimen/auth_user_response_text_size"
+							android:layout_height="60dp"
+							android:padding="8dp"
+							android:text="Continue"
+							android:textSize="16sp"
 							android:textColor="?colorSurface"
 							style="@style/Widget.Material3.Button"
 							android:fontFamily="@font/product_sans_bold" />
@@ -183,10 +183,10 @@
 						android:id="@+id/infoTextView_1"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						android:layout_marginTop="@dimen/auth_margin_top"
+						android:layout_marginTop="15dp"
 						android:gravity="center_horizontal|center_vertical"
-						android:text="@string/auth_you_can_change_name_later"
-						android:textSize="@dimen/auth_info_text_size"
+						android:text="You can always change your name later"
+						android:textSize="12sp"
 						android:textColor="@color/md_theme_onBackground"
 						android:fontFamily="@font/product_sans" />
 				</LinearLayout>
@@ -202,17 +202,17 @@
 					android:id="@+id/aiResponseTextView_2"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:layout_marginTop="@dimen/auth_margin_top"
-					android:text="@string/auth_hello_user"
-					android:textSize="@dimen/auth_user_response_text_size"
-					android:textColor="@color/black"
+					android:layout_marginTop="15dp"
+					android:text="Hello"
+					android:textSize="16sp"
+					android:textColor="#000000"
 					android:fontFamily="@font/product_sans" />
 				<LinearLayout
 					android:id="@+id/linear4"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:layout_marginTop="@dimen/auth_margin_top"
-					android:padding="@dimen/auth_checkbox_margin_left"
+					android:layout_marginTop="15dp"
+					android:padding="12dp"
 					android:orientation="vertical"
 					android:background="@drawable/white_rounded_stroke"
 					android:visibility="gone">
@@ -225,12 +225,12 @@
 							android:id="@+id/linear6"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
-							android:padding="@dimen/auth_animator_support_padding"
+							android:padding="8dp"
 							android:orientation="vertical">
 							<ImageView
 								android:id="@+id/ic_rule_1"
-								android:layout_width="@dimen/auth_rule_icon_width"
-								android:layout_height="@dimen/auth_rule_icon_height"
+								android:layout_width="25dp"
+								android:layout_height="30dp"
 								android:src="@drawable/star_shine_24px"
 								android:scaleType="fitCenter" />
 						</LinearLayout>
@@ -244,9 +244,9 @@
 								android:id="@+id/ruleTextView1"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:padding="@dimen/auth_rule_text_padding"
-								android:textSize="@dimen/auth_user_response_text_size"
-								android:textColor="@color/black"
+								android:padding="4dp"
+								android:textSize="16sp"
+								android:textColor="#000000"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 					</LinearLayout>
@@ -254,18 +254,18 @@
 						android:id="@+id/ruleLayout2"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:layout_marginTop="@dimen/auth_profile_margin_right"
+						android:layout_marginTop="10dp"
 						android:orientation="horizontal">
 						<LinearLayout
 							android:id="@+id/linear9"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
-							android:padding="@dimen/auth_animator_support_padding"
+							android:padding="8dp"
 							android:orientation="vertical">
 							<ImageView
 								android:id="@+id/ic_rule_2"
-								android:layout_width="@dimen/auth_rule_icon_width"
-								android:layout_height="@dimen/auth_rule_icon_height"
+								android:layout_width="25dp"
+								android:layout_height="30dp"
 								android:src="@drawable/ic_docs_48px"
 								android:scaleType="fitCenter" />
 						</LinearLayout>
@@ -278,10 +278,10 @@
 								android:id="@+id/ruleTextView2"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:padding="@dimen/auth_rule_text_padding"
-								android:text="@string/auth_terms_of_service"
-								android:textSize="@dimen/auth_user_response_text_size"
-								android:textColor="@color/black"
+								android:padding="4dp"
+								android:text="You own the content you share, but you give Synapse permission to display and share it inside the app. Do not post anything illegal, offensive, or harmful. Spamming, impersonation, hate speech, or harassment of any kind is not allowed and may lead to account suspension."
+								android:textSize="16sp"
+								android:textColor="#000000"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 					</LinearLayout>
@@ -289,18 +289,18 @@
 						android:id="@+id/ruleLayout3"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:layout_marginTop="@dimen/auth_profile_margin_right"
+						android:layout_marginTop="10dp"
 						android:orientation="horizontal">
 						<LinearLayout
 							android:id="@+id/linear12"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
-							android:padding="@dimen/auth_animator_support_padding"
+							android:padding="8dp"
 							android:orientation="vertical">
 							<ImageView
 								android:id="@+id/ic_rule_3"
-								android:layout_width="@dimen/auth_rule_icon_width"
-								android:layout_height="@dimen/auth_rule_icon_height"
+								android:layout_width="25dp"
+								android:layout_height="30dp"
 								android:src="@drawable/ic_shield_lock"
 								android:scaleType="fitCenter" />
 						</LinearLayout>
@@ -313,10 +313,10 @@
 								android:id="@+id/ruleTextView3"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:padding="@dimen/auth_rule_text_padding"
-								android:text="@string/auth_privacy_policy"
-								android:textSize="@dimen/auth_user_response_text_size"
-								android:textColor="@color/black"
+								android:padding="4dp"
+								android:text="We respect your privacy. Synapse collects only the minimum data needed to run and improve the app. We do not sell your information. By continuing to use Synapse, you accept future updates to these terms. For questions, contact our support team."
+								android:textSize="16sp"
+								android:textColor="#000000"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 					</LinearLayout>
@@ -324,11 +324,11 @@
 				<Button
 					android:id="@+id/finishButton"
 					android:layout_width="match_parent"
-					android:layout_height="@dimen/auth_continue_button_height"
-					android:layout_marginTop="@dimen/auth_finish_button_margin_top"
-					android:padding="@dimen/auth_animator_support_padding"
-					android:text="@string/auth_i_agree"
-					android:textSize="@dimen/auth_user_response_text_size"
+					android:layout_height="60dp"
+					android:layout_marginTop="20dp"
+					android:padding="8dp"
+					android:text="I agree"
+					android:textSize="16sp"
 					android:textColor="?colorSurface"
 					style="@style/Widget.Material3.Button"
 					android:fontFamily="@font/product_sans_bold" />
@@ -337,7 +337,7 @@
 				android:id="@+id/section3Layout"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:layout_marginTop="@dimen/auth_margin_top"
+				android:layout_marginTop="15dp"
 				android:gravity="center_horizontal"
 				android:orientation="vertical"
 				android:visibility="gone"
@@ -346,7 +346,7 @@
 					android:id="@+id/emailLayout"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:padding="@dimen/auth_name_layout_padding"
+					android:padding="16dp"
 					android:orientation="vertical"
 					android:background="@drawable/white_rounded_stroke"
 					android:animateLayoutChanges="true">
@@ -360,15 +360,15 @@
 							android:id="@+id/linear19"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
-							android:layout_marginRight="@dimen/auth_profile_margin_right"
+							android:layout_marginRight="10dp"
 							android:gravity="center_horizontal|center_vertical"
 							android:orientation="vertical"
 							android:visibility="gone"
 							android:animateLayoutChanges="true">
 							<LinearLayout
 								android:id="@+id/linear21"
-								android:layout_width="@dimen/auth_profile_picture_size"
-								android:layout_height="@dimen/auth_profile_picture_size"
+								android:layout_width="50dp"
+								android:layout_height="50dp"
 								android:gravity="center_horizontal|center_vertical"
 								android:orientation="vertical"
 								android:background="@drawable/circlelayout">
@@ -377,7 +377,7 @@
 									android:layout_width="wrap_content"
 									android:layout_height="wrap_content"
 									android:text="@"
-									android:textSize="@dimen/auth_name_letter_text_size"
+									android:textSize="20sp"
 									android:textStyle="bold"
 									android:textColor="?colorSurface" />
 							</LinearLayout>
@@ -391,28 +391,28 @@
 								android:id="@+id/ask_for_email_tv"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/auth_give_email"
-								android:textSize="@dimen/auth_user_response_text_size"
-								android:textColor="@color/black"
+								android:text="Give me your email address"
+								android:textSize="16sp"
+								android:textColor="#000000"
 								android:fontFamily="@font/product_sans" />
 							<LinearLayout
 								android:id="@+id/linear22"
 								android:layout_width="match_parent"
 								android:layout_height="wrap_content"
-								android:layout_marginTop="@dimen/auth_edit_text_margin_top"
+								android:layout_marginTop="5dp"
 								android:background="@android:color/transparent"
 								android:orientation="horizontal">
 								<EditText
 									android:id="@+id/email_et"
 									android:layout_width="match_parent"
 									android:layout_height="match_parent"
-									android:padding="@dimen/auth_edit_text_padding"
+									android:padding="2dp"
 									android:background="@android:color/transparent"
 									android:gravity="center_vertical"
-									android:textSize="@dimen/auth_response_text_size"
-									android:textColor="@color/black"
-									android:hint="@string/auth_enter_email"
-									android:textColorHint="@color/gray"
+									android:textSize="18sp"
+									android:textColor="#000000"
+									android:hint="Enter your email"
+									android:textColorHint="#9E9E9E"
 									android:singleLine="true"
 									android:fontFamily="@font/product_sans" />
 							</LinearLayout>
@@ -423,15 +423,15 @@
 					android:id="@+id/linear17"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:layout_marginTop="@dimen/auth_profile_margin_right"
-					android:padding="@dimen/auth_animator_support_padding"
+					android:layout_marginTop="10dp"
+					android:padding="8dp"
 					android:gravity="center_horizontal|center_vertical"
 					android:orientation="vertical">
 					<LinearLayout
 						android:id="@+id/passLayout"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:padding="@dimen/auth_name_layout_padding"
+						android:padding="16dp"
 						android:orientation="vertical"
 						android:background="@drawable/white_rounded_stroke"
 						android:animateLayoutChanges="true">
@@ -445,15 +445,15 @@
 								android:id="@+id/linear57"
 								android:layout_width="wrap_content"
 								android:layout_height="match_parent"
-								android:layout_marginRight="@dimen/auth_profile_margin_right"
+								android:layout_marginRight="10dp"
 								android:gravity="center_horizontal|center_vertical"
 								android:orientation="vertical"
 								android:visibility="gone"
 								android:animateLayoutChanges="true">
 								<LinearLayout
 									android:id="@+id/linear59"
-									android:layout_width="@dimen/auth_profile_picture_size"
-									android:layout_height="@dimen/auth_profile_picture_size"
+									android:layout_width="50dp"
+									android:layout_height="50dp"
 									android:gravity="center_horizontal|center_vertical"
 									android:orientation="vertical"
 									android:background="@drawable/circlelayout">
@@ -462,7 +462,7 @@
 										android:layout_width="wrap_content"
 										android:layout_height="wrap_content"
 										android:text="A"
-										android:textSize="@dimen/auth_name_letter_text_size"
+										android:textSize="20sp"
 										android:textStyle="bold"
 										android:textColor="?colorSurface"
 										android:fontFamily="@font/product_sans" />
@@ -477,28 +477,28 @@
 									android:id="@+id/askForPassTV"
 									android:layout_width="wrap_content"
 									android:layout_height="wrap_content"
-									android:text="@string/auth_your_password"
-									android:textSize="@dimen/auth_user_response_text_size"
-									android:textColor="@color/black"
+									android:text="Now, your password"
+									android:textSize="16sp"
+									android:textColor="#000000"
 									android:fontFamily="@font/product_sans" />
 								<LinearLayout
 									android:id="@+id/linear60"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
-									android:layout_marginTop="@dimen/auth_edit_text_margin_top"
+									android:layout_marginTop="5dp"
 									android:background="@android:color/transparent"
 									android:orientation="horizontal">
 									<EditText
 										android:id="@+id/pass_et"
 										android:layout_width="match_parent"
 										android:layout_height="match_parent"
-										android:padding="@dimen/auth_edit_text_padding"
+										android:padding="2dp"
 										android:background="@android:color/transparent"
 										android:gravity="center_vertical"
-										android:textSize="@dimen/auth_response_text_size"
-										android:textColor="@color/black"
-										android:hint="@string/auth_enter_password"
-										android:textColorHint="@color/gray"
+										android:textSize="18sp"
+										android:textColor="#000000"
+										android:hint="Enter your password"
+										android:textColorHint="#9E9E9E"
 										android:singleLine="true"
 										android:fontFamily="@font/product_sans" />
 								</LinearLayout>
@@ -509,16 +509,16 @@
 						android:id="@+id/linear24"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:layout_marginTop="@dimen/auth_margin_top"
+						android:layout_marginTop="15dp"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="horizontal">
 						<Button
 							android:id="@+id/button1"
 							android:layout_width="match_parent"
-							android:layout_height="@dimen/auth_continue_button_height"
-							android:padding="@dimen/auth_animator_support_padding"
-							android:text="@string/auth_continue"
-							android:textSize="@dimen/auth_user_response_text_size"
+							android:layout_height="60dp"
+							android:padding="8dp"
+							android:text="Continue"
+							android:textSize="16sp"
 							android:textColor="?colorSurface"
 							style="@style/Widget.Material3.Button"
 							android:fontFamily="@font/product_sans_bold" />
