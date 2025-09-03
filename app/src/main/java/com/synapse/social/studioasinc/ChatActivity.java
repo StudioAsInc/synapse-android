@@ -2828,7 +2828,7 @@ public class ChatActivity extends AppCompatActivity {
 				"GeminiSummary",
 				getString(R.string.gemini_error_summary),
 				viewHolder,
-				null
+				-1
 		);
 		callGeminiForAiFeature(params);
 	}
@@ -2842,7 +2842,7 @@ public class ChatActivity extends AppCompatActivity {
 				"GeminiExplanation",
 				getString(R.string.gemini_error_explanation),
 				viewHolder,
-				1000
+				-1
 		);
 		callGeminiForAiFeature(params);
 	}
@@ -2855,9 +2855,9 @@ public class ChatActivity extends AppCompatActivity {
 		String logTag;
 		String errorMessage;
 		BaseMessageViewHolder viewHolder;
-		Integer maxTokens;
+		int maxTokens;
 
-		AiFeatureParams(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, BaseMessageViewHolder viewHolder, Integer maxTokens) {
+		AiFeatureParams(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, BaseMessageViewHolder viewHolder, int maxTokens) {
 			this.prompt = prompt;
 			this.systemInstruction = systemInstruction;
 			this.model = model;
@@ -2875,7 +2875,7 @@ public class ChatActivity extends AppCompatActivity {
 				.showThinking(true)
 				.systemInstruction(params.systemInstruction);
 
-		if (params.maxTokens != null) {
+		if (params.maxTokens > 0) {
 			builder.maxTokens(params.maxTokens);
 		}
 
