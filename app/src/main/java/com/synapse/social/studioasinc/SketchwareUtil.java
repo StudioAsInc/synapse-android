@@ -23,9 +23,9 @@ public class SketchwareUtil {
             public int compare(HashMap<String, Object> _compareMap1, HashMap<String, Object> _compareMap2) {
                 try {
                     if (isNumber) {
-                    double _count1 = Double.parseDouble(_compareMap1.get(key).toString());
-                    double _count2 = Double.parseDouble(_compareMap2.get(key).toString());
-                    return ascending ? Double.compare(_count1, _count2) : Double.compare(_count2, _count1);
+                        int _count1 = Integer.parseInt(_compareMap1.get(key).toString());
+                        int _count2 = Integer.parseInt(_compareMap2.get(key).toString());
+                        return ascending ? Integer.compare(_count1, _count2) : Integer.compare(_count2, _count1);
                     } else {
                         return ascending ? _compareMap1.get(key).toString().compareTo(_compareMap2.get(key).toString())
                                          : _compareMap2.get(key).toString().compareTo(_compareMap1.get(key).toString());
