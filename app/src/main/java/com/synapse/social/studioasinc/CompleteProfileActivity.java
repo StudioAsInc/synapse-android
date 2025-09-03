@@ -6,6 +6,7 @@ import android.app.*;
 import android.content.*;
 import android.content.ClipData;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.*;
@@ -795,7 +796,11 @@ public class CompleteProfileActivity extends AppCompatActivity {
 					usernameIndexMap.put("username", username_input.getText().toString().trim());
 					pushusername.child(username_input.getText().toString().trim()).updateChildren(usernameIndexMap);
 
-					OneSignalManager.updatePlayerIdForCurrentUser();
+					SharedPreferences prefs = getSharedPreferences("onesignal", Context.MODE_PRIVATE);
+					String playerId = prefs.getString("player_id", null);
+					if (playerId != null) {
+						OneSignalManager.savePlayerIdToRealtimeDatabase(currentUser.getUid(), playerId);
+					}
 
 					E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
 					e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {

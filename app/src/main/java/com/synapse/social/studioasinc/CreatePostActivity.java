@@ -441,21 +441,13 @@ public class CreatePostActivity extends AppCompatActivity {
 								String message = senderName + " has a new post";
 								HashMap<String, String> data = new HashMap<>();
 								data.put("postId", postKey);
-								DatabaseReference userDb = FirebaseDatabase.getInstance().getReference("skyline/users");
-								userDb.child(followerUid).child("oneSignalPlayerId").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
-									@Override
-									public void onSuccess(DataSnapshot dataSnapshot) {
-										String recipientOneSignalPlayerId = dataSnapshot.getValue(String.class);
-										NotificationHelper.sendNotification(
-											followerUid,
-											currentUid,
-											message,
-											NotificationConfig.NOTIFICATION_TYPE_NEW_POST,
-											recipientOneSignalPlayerId,
-											data
-										);
-									}
-								});
+								NotificationHelper.sendNotification(
+									followerUid,
+									currentUid,
+									message,
+									NotificationConfig.NOTIFICATION_TYPE_NEW_POST,
+									data
+								);
 							}
 						}
 					}
@@ -481,21 +473,13 @@ public class CreatePostActivity extends AppCompatActivity {
 									String message = senderName + " mentioned you in a post";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("postId", postKey);
-									DatabaseReference userDb = FirebaseDatabase.getInstance().getReference("skyline/users");
-									userDb.child(recipientUid).child("oneSignalPlayerId").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
-										@Override
-										public void onSuccess(DataSnapshot dataSnapshot) {
-											String recipientOneSignalPlayerId = dataSnapshot.getValue(String.class);
-											NotificationHelper.sendNotification(
-												recipientUid,
-												currentUid,
-												message,
-												"mention_post",
-												recipientOneSignalPlayerId,
-												data
-											);
-										}
-									});
+									NotificationHelper.sendNotification(
+										recipientUid,
+										currentUid,
+										message,
+										"mention_post",
+										data
+									);
 								}
 							}
 						}

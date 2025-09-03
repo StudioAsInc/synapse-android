@@ -2,6 +2,7 @@ package com.synapse.social.studioasinc;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Build;
@@ -321,7 +322,11 @@ public class AuthActivity extends AppCompatActivity {
     }
 
     private void fetchUsername(String uid) {
-        OneSignalManager.updatePlayerIdForCurrentUser();
+        SharedPreferences prefs = getSharedPreferences("onesignal", Context.MODE_PRIVATE);
+        String playerId = prefs.getString("player_id", null);
+        if (playerId != null) {
+            OneSignalManager.savePlayerIdToRealtimeDatabase(uid, playerId);
+        }
         DatabaseReference usernameRef = FirebaseDatabase.getInstance().getReference()
                 .child("skyline")
                 .child("users")

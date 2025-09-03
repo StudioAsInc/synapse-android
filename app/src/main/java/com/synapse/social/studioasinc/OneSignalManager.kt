@@ -2,10 +2,6 @@ package com.synapse.social.studioasinc
 
 import android.util.Log
 import com.google.firebase.database.FirebaseDatabase
-import com.onesignal.OneSignal
-import com.onesignal.debug.LogLevel
-import com.onesignal.user.subscriptions.IPushSubscriptionObserver
-import com.onesignal.user.subscriptions.PushSubscriptionChangedState
 
 object OneSignalManager {
 
@@ -33,16 +29,5 @@ object OneSignalManager {
             .addOnFailureListener { e ->
                 Log.e(TAG, "Failed to save OneSignal Player ID to Realtime Database for user: $userUid", e)
             }
-    }
-
-    @JvmStatic
-    fun updatePlayerIdForCurrentUser() {
-        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
-        if (currentUser != null) {
-            val playerId = OneSignal.getUser().getPushSubscription().getId()
-            if (playerId != null) {
-                savePlayerIdToRealtimeDatabase(currentUser.uid, playerId)
-            }
-        }
     }
 }
