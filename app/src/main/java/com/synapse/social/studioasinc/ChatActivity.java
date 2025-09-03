@@ -944,7 +944,7 @@ public class ChatActivity extends AppCompatActivity {
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		String senderUid = messageData.get(UID_KEY) != null ? String.valueOf(messageData.get(UID_KEY)) : null;
 		final boolean isMine = currentUser != null && senderUid != null && senderUid.equals(currentUser.getUid());
-		final String messageText = messageData.get(MESSAGE_TEXT_KEY) != null ? messageData.get(MESSAGE_TEXT_KEY).toString() : "";
+		final String decryptedMessageText = getDecryptedMessageContent(messageData);
 
 		// Inflate the custom popup layout
 		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -963,23 +963,27 @@ public class ChatActivity extends AppCompatActivity {
 		LinearLayout deleteLayout = popupView.findViewById(R.id.delete);
 
 		// Configure visibility based on message owner and content
-		editLayout.setVisibility(isMine ? View.VISIBLE : View.GONE);
+		editLayout.setVisibility(isMine && !decryptedMessageText.isEmpty() ? View.VISIBLE : View.GONE);
 		deleteLayout.setVisibility(isMine ? View.VISIBLE : View.GONE);
-		summaryLayout.setVisibility(messageText.length() > 200 ? View.VISIBLE : View.GONE);
+		summaryLayout.setVisibility(decryptedMessageText.length() > 200 ? View.VISIBLE : View.GONE);
+		explainLayout.setVisibility(!decryptedMessageText.isEmpty() ? View.VISIBLE : View.GONE);
+		copyLayout.setVisibility(!decryptedMessageText.isEmpty() ? View.VISIBLE : View.GONE);
+
 
 		// Set click listeners
 		replyLayout.setOnClickListener(v -> {
 			ReplyMessageID = messageData.get(KEY_KEY).toString();
 			mMessageReplyLayoutBodyRightUsername.setText(isMine ? FirstUserName : SecondUserName);
-			mMessageReplyLayoutBodyRightMessage.setText(messageText);
+			mMessageReplyLayoutBodyRightMessage.setText(decryptedMessageText);
 			mMessageReplyLayout.setVisibility(View.VISIBLE);
 			vbr.vibrate(48);
 			popupWindow.dismiss();
 		});
 
 		copyLayout.setOnClickListener(v -> {
-			((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", messageText));
+			((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", decryptedMessageText));
 			vbr.vibrate(48);
+			Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
 			popupWindow.dismiss();
 		});
 
@@ -994,28 +998,41 @@ public class ChatActivity extends AppCompatActivity {
 			View dialogView = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
 			dialog.setView(dialogView);
 			final EditText editText = dialogView.findViewById(R.id.edittext1);
-			editText.setText(messageText);
+			editText.setText(decryptedMessageText);
 			dialog.setPositiveButton("Save", (d, w) -> {
 				String newText = editText.getText().toString();
-				FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
-				String myUid = cu != null ? cu.getUid() : null;
-				if (myUid == null) {
+				if (newText.isEmpty()) {
+					Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
 					return;
 				}
-				String otherUid = getIntent().getStringExtra("uid");
-				String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
-				if (otherUid == null || msgKey == null) {
-					return;
+
+				try {
+					String encryptedText = e2eeHelper.encrypt(getIntent().getStringExtra("uid"), newText);
+
+					FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
+					String myUid = cu != null ? cu.getUid() : null;
+					if (myUid == null) return;
+
+					String otherUid = getIntent().getStringExtra("uid");
+					String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
+					if (otherUid == null || msgKey == null) return;
+
+					DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
+					DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
+
+					msgRef1.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
+					msgRef2.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
+					msgRef1.child("isEncrypted").setValue(true);
+					msgRef2.child("isEncrypted").setValue(true);
+
+				} catch (Exception e) {
+					Log.e(TAG, "Failed to encrypt and save edited message", e);
+					Toast.makeText(this, "Error saving message", Toast.LENGTH_SHORT).show();
 				}
-				DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
-				DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
-				msgRef1.child(MESSAGE_TEXT_KEY).setValue(newText);
-				msgRef2.child(MESSAGE_TEXT_KEY).setValue(newText);
 			});
 			dialog.setNegativeButton("Cancel", null);
 			AlertDialog shownDialog = dialog.show();
 
-			// Request focus and show keyboard
 			editText.requestFocus();
 			if (shownDialog.getWindow() != null) {
 				shownDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
@@ -1025,7 +1042,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 		
 		summaryLayout.setOnClickListener(v -> {
-			String prompt = "Summarize the following text in a few sentences:\n\n" + messageText;
+			String prompt = "Summarize the following text in a few sentences:\n\n" + decryptedMessageText;
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
@@ -1035,7 +1052,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		explainLayout.setOnClickListener(v -> {
 			int position = (int)_position;
-			String prompt = buildExplanationPrompt(position, messageText, messageData);
+			String prompt = buildExplanationPrompt(position, decryptedMessageText, messageData);
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
@@ -2066,8 +2083,34 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, senderUid);
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
-				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
+
+				try {
+					String encryptedMessageText = messageText.isEmpty() ? "" : e2eeHelper.encrypt(recipientUid, messageText);
+					ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessageText);
+
+					ArrayList<HashMap<String, Object>> encryptedAttachments = new ArrayList<>();
+					for (HashMap<String, Object> attachment : successfulAttachments) {
+						HashMap<String, Object> encryptedAttachment = new HashMap<>(attachment);
+						String url = (String) encryptedAttachment.get("url");
+						String publicId = (String) encryptedAttachment.get("publicId");
+
+						if (url != null) {
+							encryptedAttachment.put("url", e2eeHelper.encrypt(recipientUid, url));
+						}
+						if (publicId != null) {
+							encryptedAttachment.put("publicId", e2eeHelper.encrypt(recipientUid, publicId));
+						}
+						encryptedAttachments.add(encryptedAttachment);
+					}
+					ChatSendMap.put(ATTACHMENTS_KEY, encryptedAttachments);
+					ChatSendMap.put("isEncrypted", true);
+
+				} catch (Exception e) {
+					Log.e(TAG, "Failed to encrypt attachment message", e);
+					Toast.makeText(this, "Error: Could not send secure attachment message.", Toast.LENGTH_SHORT).show();
+					return;
+				}
+
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
@@ -2492,7 +2535,7 @@ public class ChatActivity extends AppCompatActivity {
 		} else {
 			mMessageReplyLayoutBodyRightUsername.setText(SecondUserName);
 		}
-		mMessageReplyLayoutBodyRightMessage.setText(messageData.get(MESSAGE_TEXT_KEY).toString());
+		mMessageReplyLayoutBodyRightMessage.setText(getDecryptedMessageContent(messageData));
 		mMessageReplyLayout.setVisibility(View.VISIBLE);
 		vbr.vibrate((long)(48));
 	}
@@ -3045,6 +3088,21 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}
 	}
+
+    private String getDecryptedMessageContent(HashMap<String, Object> messageData) {
+        String messageContent = messageData.getOrDefault("message_text", "").toString();
+        boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
+
+        if (isEncrypted) {
+            try {
+                return e2eeHelper.decrypt(getIntent().getStringExtra("uid"), messageContent);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to decrypt message for popup", e);
+                return "⚠️ Could not decrypt message";
+            }
+        }
+        return messageContent;
+    }
 
 	public class ChatMessagesListRecyclerAdapter extends RecyclerView.Adapter<ChatMessagesListRecyclerAdapter.ViewHolder> {
 
