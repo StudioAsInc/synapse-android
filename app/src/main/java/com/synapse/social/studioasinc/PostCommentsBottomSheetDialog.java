@@ -366,13 +366,21 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 							HashMap<String, String> data = new HashMap<>();
 							data.put("postId", postKey);
 							data.put("commentId", commentKey);
-							NotificationHelper.sendNotification(
-							originalCommenterUid,
-							currentUid,
-							message,
-							NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
-							data
-							);
+							DatabaseReference userDb = FirebaseDatabase.getInstance().getReference("skyline/users");
+							userDb.child(originalCommenterUid).child("oneSignalPlayerId").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+								@Override
+								public void onSuccess(DataSnapshot dataSnapshot) {
+									String recipientOneSignalPlayerId = dataSnapshot.getValue(String.class);
+									NotificationHelper.sendNotification(
+									originalCommenterUid,
+									currentUid,
+									message,
+									NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
+									recipientOneSignalPlayerId,
+									data
+									);
+								}
+							});
 						}
 					}
 				});
@@ -385,13 +393,21 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						HashMap<String, String> data = new HashMap<>();
 						data.put("postId", postKey);
 						data.put("commentId", commentKey);
-						NotificationHelper.sendNotification(
-						postPublisherUID,
-						currentUid,
-						message,
-						NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT,
-						data
-						);
+						DatabaseReference userDb = FirebaseDatabase.getInstance().getReference("skyline/users");
+						userDb.child(postPublisherUID).child("oneSignalPlayerId").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+							@Override
+							public void onSuccess(DataSnapshot dataSnapshot) {
+								String recipientOneSignalPlayerId = dataSnapshot.getValue(String.class);
+								NotificationHelper.sendNotification(
+								postPublisherUID,
+								currentUid,
+								message,
+								NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT,
+								recipientOneSignalPlayerId,
+								data
+								);
+							}
+						});
 					}
 				});
 			}
@@ -469,13 +485,21 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 					data.put("postId", postKey);
 					data.put("commentId", commentKey);
 
-					NotificationHelper.sendNotification(
-					commentAuthorUid,
-					currentUid,
-					message,
-					NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_COMMENT,
-					data
-					);
+					DatabaseReference userDb = FirebaseDatabase.getInstance().getReference("skyline/users");
+					userDb.child(commentAuthorUid).child("oneSignalPlayerId").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+						@Override
+						public void onSuccess(DataSnapshot dataSnapshot) {
+							String recipientOneSignalPlayerId = dataSnapshot.getValue(String.class);
+							NotificationHelper.sendNotification(
+							commentAuthorUid,
+							currentUid,
+							message,
+							NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_COMMENT,
+							recipientOneSignalPlayerId,
+							data
+							);
+						}
+					});
 				}
 			});
 		}

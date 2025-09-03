@@ -54,6 +54,21 @@ object NotificationHelper {
 
         val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid/status")
 
+        val sendAndSaveNotification: () -> Unit = {
+            if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
+                sendClientSideNotification(
+                    recipientOneSignalPlayerId,
+                    message,
+                    senderUid,
+                    notificationType,
+                    data
+                )
+            } else {
+                sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
+            }
+            saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+        }
+
         recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
             val recipientStatus = dataSnapshot.getValue(String::class.java)
             val suppressStatus = "chatting_with_$senderUid"
@@ -86,32 +101,10 @@ object NotificationHelper {
                 }
             }
 
-            if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                sendClientSideNotification(
-                    recipientOneSignalPlayerId,
-                    message,
-                    senderUid,
-                    notificationType,
-                    data
-                )
-            } else {
-                sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
-            }
-            saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+            sendAndSaveNotification()
         }.addOnFailureListener { e ->
             Log.e(TAG, "Status check failed. Defaulting to send notification.", e)
-            if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                 sendClientSideNotification(
-                    recipientOneSignalPlayerId,
-                    message,
-                    senderUid,
-                    notificationType,
-                    data
-                )
-            } else {
-                sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
-            }
-            saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+            sendAndSaveNotification()
         }
     }
 

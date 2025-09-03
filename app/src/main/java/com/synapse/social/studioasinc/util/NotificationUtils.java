@@ -32,13 +32,21 @@ public class NotificationUtils {
                 HashMap<String, String> data = new HashMap<>();
                 data.put("postId", postKey);
 
-                NotificationHelper.sendNotification(
-                    postAuthorUid,
-                    currentUid,
-                    message,
-                    NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_POST,
-                    data
-                );
+                DatabaseReference userDb = FirebaseDatabase.getInstance().getReference("skyline/users");
+                userDb.child(postAuthorUid).child("oneSignalPlayerId").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+                    @Override
+                    public void onSuccess(DataSnapshot dataSnapshot) {
+                        String recipientOneSignalPlayerId = dataSnapshot.getValue(String.class);
+                        NotificationHelper.sendNotification(
+                            postAuthorUid,
+                            currentUid,
+                            message,
+                            NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_POST,
+                            recipientOneSignalPlayerId,
+                            data
+                        );
+                    }
+                });
             }
 
             @Override

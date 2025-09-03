@@ -359,13 +359,22 @@ class c {
 									String notificationMessage = displayName + " liked your profile.";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("sender_uid", senderUid);
-									NotificationHelper.sendNotification(
-										recipientUid,
-										senderUid,
-										notificationMessage,
-										"profile_like",
-										data
-									);
+
+									DatabaseReference userDb = FirebaseDatabase.getInstance().getReference("skyline/users");
+									userDb.child(recipientUid).child("oneSignalPlayerId").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+										@Override
+										public void onSuccess(DataSnapshot dataSnapshot) {
+											String recipientOneSignalPlayerId = dataSnapshot.getValue(String.class);
+											NotificationHelper.sendNotification(
+												recipientUid,
+												senderUid,
+												notificationMessage,
+												"profile_like",
+												recipientOneSignalPlayerId,
+												data
+											);
+										}
+									});
 								}
 							});
 							UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
@@ -428,13 +437,22 @@ class c {
 									String notificationMessage = displayName + " started following you.";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("sender_uid", senderUid);
-									NotificationHelper.sendNotification(
-										recipientUid,
-										senderUid,
-										notificationMessage,
-										"new_follower",
-										data
-									);
+
+									DatabaseReference userDb = FirebaseDatabase.getInstance().getReference("skyline/users");
+									userDb.child(recipientUid).child("oneSignalPlayerId").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+										@Override
+										public void onSuccess(DataSnapshot dataSnapshot) {
+											String recipientOneSignalPlayerId = dataSnapshot.getValue(String.class);
+											NotificationHelper.sendNotification(
+												recipientUid,
+												senderUid,
+												notificationMessage,
+												"new_follower",
+												recipientOneSignalPlayerId,
+												data
+											);
+										}
+									});
 								}
 							});
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
