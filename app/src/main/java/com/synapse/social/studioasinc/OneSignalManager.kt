@@ -2,6 +2,7 @@ package com.synapse.social.studioasinc
 
 import android.util.Log
 import com.google.firebase.database.FirebaseDatabase
+import com.onesignal.OneSignal
 
 object OneSignalManager {
 
