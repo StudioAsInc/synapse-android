@@ -84,29 +84,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public int getItemViewType(int position) {
         if (_data.get(position).containsKey("isLoadingMore")) return VIEW_TYPE_LOADING_MORE;
         if (_data.get(position).containsKey("typingMessageStatus")) return VIEW_TYPE_TYPING;
-        
+
         String type = _data.get(position).getOrDefault("TYPE", "MESSAGE").toString();
-        Log.d(TAG, "Message at position " + position + " has type: " + type);
         
         if ("ATTACHMENT_MESSAGE".equals(type)) {
-            ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) _data.get(position).get("attachments");
-            Log.d(TAG, "ATTACHMENT_MESSAGE detected with " + (attachments != null ? attachments.size() : 0) + " attachments");
-            
+            ArrayList<HashMap<String, Object>> attachments = getAttachmentsFromMessage(_data.get(position));
             if (attachments != null && attachments.size() == 1 && String.valueOf(attachments.get(0).getOrDefault("publicId", "")).contains("|video")) {
-                Log.d(TAG, "Video message detected, returning VIEW_TYPE_VIDEO");
                 return VIEW_TYPE_VIDEO;
             }
-            Log.d(TAG, "Media message detected, returning VIEW_TYPE_MEDIA_GRID");
             return VIEW_TYPE_MEDIA_GRID;
         }
 
         String messageText = String.valueOf(_data.get(position).getOrDefault("message_text", ""));
         if (LinkPreviewUtil.extractUrl(messageText) != null) {
-            Log.d(TAG, "Link preview message detected, returning VIEW_TYPE_LINK_PREVIEW");
             return VIEW_TYPE_LINK_PREVIEW;
         }
         
-        Log.d(TAG, "Text message detected, returning VIEW_TYPE_TEXT");
         return VIEW_TYPE_TEXT;
     }
 
@@ -266,8 +259,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     Log.d(TAG, "Processing reply for message ID: " + repliedId);
                     
                     if (repliedMessagesCache != null && repliedMessagesCache.containsKey(repliedId)) {
+                        Log.d(TAG, "Reply cache HIT for ID: " + repliedId);
                         HashMap<String, Object> snapshot = repliedMessagesCache.get(repliedId);
                         if (snapshot != null && !snapshot.isEmpty()) {
+                            Log.d(TAG, "Reply snapshot is valid, showing layout for ID: " + repliedId);
                             holder.mRepliedMessageLayout.setVisibility(View.VISIBLE);
 
                             if (isMyMessage) {
@@ -277,11 +272,25 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             }
 
                             String repliedUid = snapshot.get("uid") instanceof String ? (String) snapshot.get("uid") : null;
-                            String repliedText = (String) snapshot.get("message_text");
+
+                            String repliedText = "";
+                            boolean isRepliedMsgEncrypted = Boolean.TRUE.equals(snapshot.get("isEncrypted"));
+                            String originalRepliedText = (String) snapshot.get("message_text");
+
+                            if (isRepliedMsgEncrypted) {
+                                try {
+                                    repliedText = e2eeHelper.decrypt(secondUserUid, originalRepliedText);
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Failed to decrypt replied message text", e);
+                                    repliedText = "⚠️ This message could not be decrypted.";
+                                }
+                            } else {
+                                repliedText = originalRepliedText;
+                            }
 
                             if (holder.mRepliedMessageLayoutImage != null) {
-                                if (snapshot.containsKey("attachments")) {
-                                    ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) snapshot.get("attachments");
+                                if (snapshot.containsKey(ChatActivity.ATTACHMENTS_KEY)) {
+                                    ArrayList<HashMap<String, Object>> attachments = getDecryptedAttachments(snapshot);
                                     if (attachments != null && !attachments.isEmpty()) {
                                         holder.mRepliedMessageLayoutImage.setVisibility(View.VISIBLE);
                                         String publicId = (String) attachments.get(0).get("publicId");
@@ -435,7 +444,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void bindTextViewHolder(TextViewHolder holder, int position) {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> messageData = _data.get(position);
-        boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
+        boolean isEncrypted = Boolean.TRUE.equals(messageData.get("isEncrypted"));
         String messageContent = String.valueOf(messageData.getOrDefault("message_text", ""));
 
         if (isEncrypted) {
@@ -459,7 +468,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Log.d(TAG, "bindMediaViewHolder called for position " + position);
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
-        String msgText = data.getOrDefault("message_text", "").toString();
+        String msgText = String.valueOf(data.getOrDefault("message_text", ""));
+        boolean isEncrypted = Boolean.TRUE.equals(data.get("isEncrypted"));
+
+        if (isEncrypted) {
+            try {
+                msgText = e2eeHelper.decrypt(secondUserUid, msgText);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to decrypt message text in media view holder", e);
+                msgText = "⚠️ Could not decrypt message";
+            }
+        }
         
         // Ensure message text is always visible and has content if available
         if (holder.message_text != null) {
@@ -469,8 +488,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
 
-        ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
-        Log.d(TAG, "Attachments found: " + (attachments != null ? attachments.size() : 0));
+        ArrayList<HashMap<String, Object>> attachments = getDecryptedAttachments(data);
         
         // CRITICAL FIX: Always ensure at least one layout is visible
         if (attachments == null || attachments.isEmpty()) {
@@ -750,10 +768,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void bindVideoViewHolder(VideoViewHolder holder, int position) {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
-        String msgText = data.getOrDefault("message_text", "").toString();
+        String msgText = String.valueOf(data.getOrDefault("message_text", ""));
+        boolean isEncrypted = Boolean.TRUE.equals(data.get("isEncrypted"));
+
+        if (isEncrypted) {
+            try {
+                msgText = e2eeHelper.decrypt(secondUserUid, msgText);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to decrypt message text in video view holder", e);
+                msgText = "⚠️ Could not decrypt message";
+            }
+        }
+
         holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
         if (!msgText.isEmpty()) com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
-        ArrayList<HashMap<String, Object>> attachments = (ArrayList<HashMap<String, Object>>) data.get("attachments");
+        ArrayList<HashMap<String, Object>> attachments = getDecryptedAttachments(data);
         if (attachments != null && !attachments.isEmpty()) {
             String videoUrl = String.valueOf(attachments.get(0).get("url"));
             if(holder.videoThumbnail != null) Glide.with(_context).load(videoUrl).into(holder.videoThumbnail);
@@ -788,11 +817,24 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void bindLinkPreviewViewHolder(LinkPreviewViewHolder holder, int position) {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
-        String messageText = String.valueOf(data.getOrDefault("message_text", ""));
-        holder.message_text.setVisibility(View.VISIBLE);
-        com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, messageText);
 
-        String urlToPreview = LinkPreviewUtil.extractUrl(messageText);
+        boolean isEncrypted = Boolean.TRUE.equals(data.get("isEncrypted"));
+        String messageContent = String.valueOf(data.getOrDefault("message_text", ""));
+        String decryptedText = messageContent;
+
+        if (isEncrypted) {
+            try {
+                decryptedText = e2eeHelper.decrypt(secondUserUid, messageContent);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to decrypt message for link preview", e);
+                decryptedText = "⚠️ Could not decrypt message";
+            }
+        }
+
+        holder.message_text.setVisibility(View.VISIBLE);
+        com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, decryptedText);
+
+        String urlToPreview = LinkPreviewUtil.extractUrl(decryptedText);
         if (urlToPreview != null) {
             // Check if link preview views exist before accessing them
             if (holder.linkPreviewImage != null) holder.linkPreviewImage.setVisibility(View.GONE);
@@ -873,5 +915,61 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.w(TAG, "Error parsing message timestamp: " + e.getMessage());
         }
         return System.currentTimeMillis();
+    }
+
+    private ArrayList<HashMap<String, Object>> getAttachmentsFromMessage(HashMap<String, Object> messageData) {
+        Object attachmentsObj = messageData.get(ChatActivity.ATTACHMENTS_KEY);
+        if (attachmentsObj instanceof ArrayList) {
+            try {
+                return (ArrayList<HashMap<String, Object>>) attachmentsObj;
+            } catch (ClassCastException e) {
+                Log.e(TAG, "Failed to cast attachments to ArrayList<HashMap>", e);
+                return new ArrayList<>();
+            }
+        } else if (attachmentsObj instanceof String) {
+            ArrayList<HashMap<String, Object>> attachmentsList = new ArrayList<>();
+            HashMap<String, Object> attachmentMap = new HashMap<>();
+            attachmentMap.put("url", attachmentsObj.toString());
+            attachmentMap.put("publicId", "");
+            attachmentMap.put("width", 200);
+            attachmentMap.put("height", 200);
+            attachmentsList.add(attachmentMap);
+            return attachmentsList;
+        } else if (attachmentsObj != null) {
+            Log.w(TAG, "Unexpected type for attachments: " + attachmentsObj.getClass().getName());
+            return new ArrayList<>();
+        }
+        return new ArrayList<>();
+    }
+
+    private ArrayList<HashMap<String, Object>> getDecryptedAttachments(HashMap<String, Object> messageData) {
+        ArrayList<HashMap<String, Object>> attachments = getAttachmentsFromMessage(messageData);
+        boolean isEncrypted = Boolean.TRUE.equals(messageData.get("isEncrypted"));
+
+        if (isEncrypted && attachments != null && !attachments.isEmpty()) {
+            ArrayList<HashMap<String, Object>> decryptedAttachments = new ArrayList<>();
+            for (HashMap<String, Object> attachment : attachments) {
+                HashMap<String, Object> decryptedAttachment = new HashMap<>(attachment);
+                try {
+                    String url = (String) decryptedAttachment.get("url");
+                    String publicId = (String) decryptedAttachment.get("publicId");
+
+                    if (url != null) {
+                        decryptedAttachment.put("url", e2eeHelper.decrypt(secondUserUid, url));
+                    }
+                    if (publicId != null) {
+                        decryptedAttachment.put("publicId", e2eeHelper.decrypt(secondUserUid, publicId));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to decrypt attachment", e);
+                    // Replace with placeholder or error indicator
+                    decryptedAttachment.put("url", "https://via.placeholder.com/150/FF0000/FFFFFF?text=Error");
+                    decryptedAttachment.put("publicId", "error");
+                }
+                decryptedAttachments.add(decryptedAttachment);
+            }
+            return decryptedAttachments;
+        }
+        return attachments;
     }
 }

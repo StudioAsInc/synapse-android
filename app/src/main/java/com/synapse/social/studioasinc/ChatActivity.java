@@ -129,7 +129,7 @@ public class ChatActivity extends AppCompatActivity {
 	private static final String MESSAGE_STATE_KEY = "message_state";
 	private static final String PUSH_DATE_KEY = "push_date";
 	private static final String REPLIED_MESSAGE_ID_KEY = "replied_message_id";
-	private static final String ATTACHMENTS_KEY = "attachments";
+	public static final String ATTACHMENTS_KEY = "attachments";
 	private static final String LAST_MESSAGE_UID_KEY = "last_message_uid";
 	private static final String LAST_MESSAGE_TEXT_KEY = "last_message_text";
 	private static final String LAST_MESSAGE_STATE_KEY = "last_message_state";
@@ -944,7 +944,7 @@ public class ChatActivity extends AppCompatActivity {
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		String senderUid = messageData.get(UID_KEY) != null ? String.valueOf(messageData.get(UID_KEY)) : null;
 		final boolean isMine = currentUser != null && senderUid != null && senderUid.equals(currentUser.getUid());
-		final String messageText = messageData.get(MESSAGE_TEXT_KEY) != null ? messageData.get(MESSAGE_TEXT_KEY).toString() : "";
+		final String decryptedMessageText = getDecryptedMessageContent(messageData);
 
 		// Inflate the custom popup layout
 		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -963,23 +963,34 @@ public class ChatActivity extends AppCompatActivity {
 		LinearLayout deleteLayout = popupView.findViewById(R.id.delete);
 
 		// Configure visibility based on message owner and content
-		editLayout.setVisibility(isMine ? View.VISIBLE : View.GONE);
+		editLayout.setVisibility(isMine && !decryptedMessageText.isEmpty() ? View.VISIBLE : View.GONE);
 		deleteLayout.setVisibility(isMine ? View.VISIBLE : View.GONE);
-		summaryLayout.setVisibility(messageText.length() > 200 ? View.VISIBLE : View.GONE);
+		summaryLayout.setVisibility(decryptedMessageText.length() > 200 ? View.VISIBLE : View.GONE);
+		explainLayout.setVisibility(!decryptedMessageText.isEmpty() ? View.VISIBLE : View.GONE);
+		copyLayout.setVisibility(!decryptedMessageText.isEmpty() ? View.VISIBLE : View.GONE);
+
 
 		// Set click listeners
 		replyLayout.setOnClickListener(v -> {
-			ReplyMessageID = messageData.get(KEY_KEY).toString();
+			String messageKey = messageData.get(KEY_KEY).toString();
+			ReplyMessageID = messageKey;
+
+			// Cache the message being replied to, so it's available when we send our own reply.
+			if (!repliedMessagesCache.containsKey(messageKey)) {
+				repliedMessagesCache.put(messageKey, messageData);
+			}
+
 			mMessageReplyLayoutBodyRightUsername.setText(isMine ? FirstUserName : SecondUserName);
-			mMessageReplyLayoutBodyRightMessage.setText(messageText);
+			mMessageReplyLayoutBodyRightMessage.setText(decryptedMessageText);
 			mMessageReplyLayout.setVisibility(View.VISIBLE);
 			vbr.vibrate(48);
 			popupWindow.dismiss();
 		});
 
 		copyLayout.setOnClickListener(v -> {
-			((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", messageText));
+			((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clipboard", decryptedMessageText));
 			vbr.vibrate(48);
+			Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
 			popupWindow.dismiss();
 		});
 
@@ -994,28 +1005,41 @@ public class ChatActivity extends AppCompatActivity {
 			View dialogView = LayoutInflater.from(ChatActivity.this).inflate(R.layout.single_et, null);
 			dialog.setView(dialogView);
 			final EditText editText = dialogView.findViewById(R.id.edittext1);
-			editText.setText(messageText);
+			editText.setText(decryptedMessageText);
 			dialog.setPositiveButton("Save", (d, w) -> {
 				String newText = editText.getText().toString();
-				FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
-				String myUid = cu != null ? cu.getUid() : null;
-				if (myUid == null) {
+				if (newText.isEmpty()) {
+					Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
 					return;
 				}
-				String otherUid = getIntent().getStringExtra("uid");
-				String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
-				if (otherUid == null || msgKey == null) {
-					return;
+
+				try {
+					String encryptedText = e2eeHelper.encrypt(getIntent().getStringExtra("uid"), newText);
+
+					FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
+					String myUid = cu != null ? cu.getUid() : null;
+					if (myUid == null) return;
+
+					String otherUid = getIntent().getStringExtra("uid");
+					String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
+					if (otherUid == null || msgKey == null) return;
+
+					DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
+					DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
+
+					msgRef1.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
+					msgRef2.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
+					msgRef1.child("isEncrypted").setValue(true);
+					msgRef2.child("isEncrypted").setValue(true);
+
+				} catch (Exception e) {
+					Log.e(TAG, "Failed to encrypt and save edited message", e);
+					Toast.makeText(this, "Error saving message", Toast.LENGTH_SHORT).show();
 				}
-				DatabaseReference msgRef1 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(otherUid).child(msgKey);
-				DatabaseReference msgRef2 = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(otherUid).child(myUid).child(msgKey);
-				msgRef1.child(MESSAGE_TEXT_KEY).setValue(newText);
-				msgRef2.child(MESSAGE_TEXT_KEY).setValue(newText);
 			});
 			dialog.setNegativeButton("Cancel", null);
 			AlertDialog shownDialog = dialog.show();
 
-			// Request focus and show keyboard
 			editText.requestFocus();
 			if (shownDialog.getWindow() != null) {
 				shownDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
@@ -1025,7 +1049,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 		
 		summaryLayout.setOnClickListener(v -> {
-			String prompt = "Summarize the following text in a few sentences:\n\n" + messageText;
+			String prompt = "Summarize the following text in a few sentences:\n\n" + decryptedMessageText;
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition((int)_position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForSummary(prompt, (BaseMessageViewHolder) vh);
@@ -1035,7 +1059,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		explainLayout.setOnClickListener(v -> {
 			int position = (int)_position;
-			String prompt = buildExplanationPrompt(position, messageText, messageData);
+			String prompt = buildExplanationPrompt(position, decryptedMessageText, messageData);
 			RecyclerView.ViewHolder vh = ChatMessagesListRecycler.findViewHolderForAdapterPosition(position);
 			if (vh instanceof BaseMessageViewHolder) {
 				callGeminiForExplanation(prompt, (BaseMessageViewHolder) vh);
@@ -1285,65 +1309,24 @@ public class ChatActivity extends AppCompatActivity {
 		_chat_child_listener = new ChildEventListener() {
 				@Override
 				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
-					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
-					Log.d("ChatActivity", "Snapshot key: " + dataSnapshot.getKey() + ", Previous child: " + previousChildName);
-					
-					if (dataSnapshot.exists()) {
-						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
-						
-						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-							String messageKey = newMessage.get(KEY_KEY).toString();
-							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
-							Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + messageKey);
-							
-							if (!messageKeys.contains(messageKey)) {
-								// This is a truly new message from Firebase. Add it.
-								messageKeys.add(messageKey);
-								_safeUpdateRecyclerView();
-								
-								int insertPosition = _findCorrectInsertPosition(newMessage);
-								ChatMessagesList.add(insertPosition, newMessage);
-								
-								Log.d("ChatActivity", "Added new Firebase message to list at position " + insertPosition + ", key: " + messageKey);
-								
-								if (chatAdapter != null) {
-									chatAdapter.notifyItemInserted(insertPosition);
-									if (insertPosition > 0) chatAdapter.notifyItemChanged(insertPosition - 1);
-									if (insertPosition < ChatMessagesList.size() - 1) chatAdapter.notifyItemChanged(insertPosition + 1);
-								}
-								
-								if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
-									ChatMessagesListRecycler.post(() -> scrollToBottom());
-								}
-								
-								if (newMessage.containsKey("replied_message_id")) {
-									ArrayList<HashMap<String, Object>> singleMessageList = new ArrayList<>();
-									singleMessageList.add(newMessage);
-									_fetchRepliedMessages(singleMessageList);
-								}
-							} else {
-								// The message key already exists. This means it was a local message that has now been confirmed by the server.
-								// We need to find it and update it to remove the 'isLocalMessage' flag and get the server timestamp.
-								for (int i = 0; i < ChatMessagesList.size(); i++) {
-									if (messageKey.equals(ChatMessagesList.get(i).get(KEY_KEY))) {
-										Log.d("ChatActivity", "Updating local message with server data at position " + i);
-										newMessage.remove("isLocalMessage"); // Ensure local flag is removed
-										ChatMessagesList.set(i, newMessage);
-										if (chatAdapter != null) {
-											chatAdapter.notifyItemChanged(i);
-										}
-										break;
-									}
-								}
-							}
+					if (!dataSnapshot.exists()) {
+						return;
+					}
+					HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					if (newMessage == null || newMessage.get(KEY_KEY) == null || messageKeys.contains(newMessage.get(KEY_KEY).toString())) {
+						return;
+					}
+
+					if (newMessage.containsKey(REPLIED_MESSAGE_ID_KEY)) {
+						String repliedId = String.valueOf(newMessage.get(REPLIED_MESSAGE_ID_KEY));
+						if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null") && !repliedMessagesCache.containsKey(repliedId)) {
+							_fetchRepliedMessageAndThenAdd(repliedId, newMessage);
 						} else {
-							Log.w("ChatActivity", "New message is null or missing key");
+							_addMessageToList(newMessage);
 						}
 					} else {
-						Log.w("ChatActivity", "DataSnapshot does not exist");
+						_addMessageToList(newMessage);
 					}
-					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded END ===");
 				}
 
 				@Override
@@ -1529,6 +1512,54 @@ public class ChatActivity extends AppCompatActivity {
 		} catch (Exception e) {
 			Log.e("ChatActivity", "Error reordering messages: " + e.getMessage());
 		}
+	}
+
+	private void _addMessageToList(HashMap<String, Object> newMessage) {
+		String messageKey = newMessage.get(KEY_KEY).toString();
+		if (messageKeys.contains(messageKey)) {
+			return;
+		}
+		messageKeys.add(messageKey);
+		_safeUpdateRecyclerView();
+		int insertPosition = _findCorrectInsertPosition(newMessage);
+		ChatMessagesList.add(insertPosition, newMessage);
+		if (chatAdapter != null) {
+			chatAdapter.notifyItemInserted(insertPosition);
+			if (insertPosition > 0) {
+				chatAdapter.notifyItemChanged(insertPosition - 1);
+			}
+			if (insertPosition < ChatMessagesList.size() - 1) {
+				chatAdapter.notifyItemChanged(insertPosition + 1);
+			}
+		}
+		if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
+			ChatMessagesListRecycler.post(this::scrollToBottom);
+		}
+	}
+
+	private void _fetchRepliedMessageAndThenAdd(String repliedId, final HashMap<String, Object> newMessage) {
+		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String theirUid = getIntent().getStringExtra("uid");
+		DatabaseReference chatRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(theirUid);
+
+		chatRef.child(repliedId).addListenerForSingleValueEvent(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					HashMap<String, Object> repliedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					if (repliedMessage != null) {
+						repliedMessagesCache.put(repliedId, repliedMessage);
+					}
+				}
+				_addMessageToList(newMessage);
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError error) {
+				Log.e(TAG, "Failed to fetch replied message: " + error.getMessage());
+				_addMessageToList(newMessage);
+			}
+		});
 	}
 
 	/**
@@ -1986,6 +2017,11 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _send_btn() {
+		if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+			Log.e(TAG, "Cannot send message, user is not authenticated.");
+			Toast.makeText(this, "Error: User not signed in.", Toast.LENGTH_SHORT).show();
+			return;
+		}
 		final String messageText = message_et.getText().toString().trim();
 		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		final String recipientUid = getIntent().getStringExtra("uid");
@@ -2066,8 +2102,34 @@ public class ChatActivity extends AppCompatActivity {
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, senderUid);
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, messageText);
-				ChatSendMap.put(ATTACHMENTS_KEY, successfulAttachments);
+
+				try {
+					String encryptedMessageText = messageText.isEmpty() ? "" : e2eeHelper.encrypt(recipientUid, messageText);
+					ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessageText);
+
+					ArrayList<HashMap<String, Object>> encryptedAttachments = new ArrayList<>();
+					for (HashMap<String, Object> attachment : successfulAttachments) {
+						HashMap<String, Object> encryptedAttachment = new HashMap<>(attachment);
+						String url = (String) encryptedAttachment.get("url");
+						String publicId = (String) encryptedAttachment.get("publicId");
+
+						if (url != null) {
+							encryptedAttachment.put("url", e2eeHelper.encrypt(recipientUid, url));
+						}
+						if (publicId != null) {
+							encryptedAttachment.put("publicId", e2eeHelper.encrypt(recipientUid, publicId));
+						}
+						encryptedAttachments.add(encryptedAttachment);
+					}
+					ChatSendMap.put(ATTACHMENTS_KEY, encryptedAttachments);
+					ChatSendMap.put("isEncrypted", true);
+
+				} catch (Exception e) {
+					Log.e(TAG, "Failed to encrypt attachment message", e);
+					Toast.makeText(this, "Error: Could not send secure attachment message.", Toast.LENGTH_SHORT).show();
+					return;
+				}
+
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
 				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
 				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
@@ -2485,14 +2547,20 @@ public class ChatActivity extends AppCompatActivity {
 	public void _showReplyUI(final double _position) {
 		// This is where you trigger your reply UI.
 		HashMap<String, Object> messageData = ChatMessagesList.get((int)_position);
-		ReplyMessageID = messageData.get(KEY_KEY).toString();
+		String messageKey = messageData.get(KEY_KEY).toString();
+		ReplyMessageID = messageKey;
+
+		// Cache the message being replied to, so it's available when we send our own reply.
+		if (!repliedMessagesCache.containsKey(messageKey)) {
+			repliedMessagesCache.put(messageKey, messageData);
+		}
 
 		if (messageData.get(UID_KEY).toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 			mMessageReplyLayoutBodyRightUsername.setText(FirstUserName);
 		} else {
 			mMessageReplyLayoutBodyRightUsername.setText(SecondUserName);
 		}
-		mMessageReplyLayoutBodyRightMessage.setText(messageData.get(MESSAGE_TEXT_KEY).toString());
+		mMessageReplyLayoutBodyRightMessage.setText(getDecryptedMessageContent(messageData));
 		mMessageReplyLayout.setVisibility(View.VISIBLE);
 		vbr.vibrate((long)(48));
 	}
@@ -3045,6 +3113,21 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}
 	}
+
+    private String getDecryptedMessageContent(HashMap<String, Object> messageData) {
+        String messageContent = messageData.getOrDefault("message_text", "").toString();
+        boolean isEncrypted = Boolean.TRUE.equals(messageData.get("isEncrypted"));
+
+        if (isEncrypted) {
+            try {
+                return e2eeHelper.decrypt(getIntent().getStringExtra("uid"), messageContent);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to decrypt message for popup", e);
+                return "⚠️ Could not decrypt message";
+            }
+        }
+        return messageContent;
+    }
 
 	public class ChatMessagesListRecyclerAdapter extends RecyclerView.Adapter<ChatMessagesListRecyclerAdapter.ViewHolder> {
 
