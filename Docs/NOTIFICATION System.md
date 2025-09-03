@@ -1,0 +1,1 @@
+How notification works in Synapse
