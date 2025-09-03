@@ -468,7 +468,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Log.d(TAG, "bindMediaViewHolder called for position " + position);
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
-        String msgText = data.getOrDefault("message_text", "").toString();
+        String msgText = String.valueOf(data.getOrDefault("message_text", ""));
+        boolean isEncrypted = (boolean) data.getOrDefault("isEncrypted", false);
+
+        if (isEncrypted) {
+            try {
+                msgText = e2eeHelper.decrypt(secondUserUid, msgText);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to decrypt message text in media view holder", e);
+                msgText = "⚠️ Could not decrypt message";
+            }
+        }
         
         // Ensure message text is always visible and has content if available
         if (holder.message_text != null) {
@@ -758,7 +768,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void bindVideoViewHolder(VideoViewHolder holder, int position) {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
-        String msgText = data.getOrDefault("message_text", "").toString();
+        String msgText = String.valueOf(data.getOrDefault("message_text", ""));
+        boolean isEncrypted = (boolean) data.getOrDefault("isEncrypted", false);
+
+        if (isEncrypted) {
+            try {
+                msgText = e2eeHelper.decrypt(secondUserUid, msgText);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to decrypt message text in video view holder", e);
+                msgText = "⚠️ Could not decrypt message";
+            }
+        }
+
         holder.message_text.setVisibility(msgText.isEmpty() ? View.GONE : View.VISIBLE);
         if (!msgText.isEmpty()) com.synapse.social.studioasinc.styling.MarkdownRenderer.get(holder.message_text.getContext()).render(holder.message_text, msgText);
         ArrayList<HashMap<String, Object>> attachments = getDecryptedAttachments(data);
