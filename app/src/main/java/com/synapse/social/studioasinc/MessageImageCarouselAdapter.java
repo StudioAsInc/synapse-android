@@ -60,17 +60,14 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
     @Override
     public void onBindViewHolder(@NonNull ImageCarouselViewHolder holder, int position) {
         if (attachments == null || position < 0 || position >= attachments.size()) {
-            holder.imageView.setImageResource(R.drawable.ph_imgbluredsqure);
-            holder.itemView.setOnClickListener(null);
+            resetViewHolder(holder);
             return;
         }
         Attachment attachment = attachments.get(position);
 
         // Handle case where attachment is null to prevent crashes
         if (attachment == null) {
-            holder.imageView.setImageResource(R.drawable.ph_imgbluredsqure);
-            holder.itemView.setOnClickListener(null);
-            holder.itemView.setOnTouchListener(null); // Disable touch feedback
+            resetViewHolder(holder);
             return;
         }
 
@@ -109,7 +106,7 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
         // Add ripple effect with hover animation
         TypedValue outValue = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
-        holder.cardView.setForeground(context.getDrawable(outValue.resourceId));
+        holder.cardView.setForeground(context.getDrawable(out.resourceId));
         
         // Add subtle scale animation on touch
         int animationDuration = context.getResources().getInteger(R.integer.touch_feedback_duration);
@@ -133,6 +130,12 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
     @Override
     public int getItemCount() {
         return attachments != null ? attachments.size() : 0;
+    }
+
+    private void resetViewHolder(ImageCarouselViewHolder holder) {
+        holder.imageView.setImageResource(R.drawable.ph_imgbluredsqure);
+        holder.itemView.setOnClickListener(null);
+        holder.itemView.setOnTouchListener(null);
     }
     
     static class ImageCarouselViewHolder extends RecyclerView.ViewHolder {
