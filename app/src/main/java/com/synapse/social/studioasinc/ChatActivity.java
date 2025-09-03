@@ -129,7 +129,7 @@ public class ChatActivity extends AppCompatActivity {
 	private static final String MESSAGE_STATE_KEY = "message_state";
 	private static final String PUSH_DATE_KEY = "push_date";
 	private static final String REPLIED_MESSAGE_ID_KEY = "replied_message_id";
-	private static final String ATTACHMENTS_KEY = "attachments";
+	public static final String ATTACHMENTS_KEY = "attachments";
 	private static final String LAST_MESSAGE_UID_KEY = "last_message_uid";
 	private static final String LAST_MESSAGE_TEXT_KEY = "last_message_text";
 	private static final String LAST_MESSAGE_STATE_KEY = "last_message_state";
@@ -2017,6 +2017,11 @@ public class ChatActivity extends AppCompatActivity {
 
 
 	public void _send_btn() {
+		if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+			Log.e(TAG, "Cannot send message, user is not authenticated.");
+			Toast.makeText(this, "Error: User not signed in.", Toast.LENGTH_SHORT).show();
+			return;
+		}
 		final String messageText = message_et.getText().toString().trim();
 		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		final String recipientUid = getIntent().getStringExtra("uid");
@@ -3111,7 +3116,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private String getDecryptedMessageContent(HashMap<String, Object> messageData) {
         String messageContent = messageData.getOrDefault("message_text", "").toString();
-        boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
+        boolean isEncrypted = Boolean.TRUE.equals(messageData.get("isEncrypted"));
 
         if (isEncrypted) {
             try {

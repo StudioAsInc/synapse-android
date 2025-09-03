@@ -274,7 +274,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             String repliedUid = snapshot.get("uid") instanceof String ? (String) snapshot.get("uid") : null;
 
                             String repliedText = "";
-                            boolean isRepliedMsgEncrypted = (boolean) snapshot.getOrDefault("isEncrypted", false);
+                            boolean isRepliedMsgEncrypted = Boolean.TRUE.equals(snapshot.get("isEncrypted"));
                             String originalRepliedText = (String) snapshot.get("message_text");
 
                             if (isRepliedMsgEncrypted) {
@@ -289,7 +289,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             }
 
                             if (holder.mRepliedMessageLayoutImage != null) {
-                                if (snapshot.containsKey("attachments")) {
+                                if (snapshot.containsKey(ChatActivity.ATTACHMENTS_KEY)) {
                                     ArrayList<HashMap<String, Object>> attachments = getDecryptedAttachments(snapshot);
                                     if (attachments != null && !attachments.isEmpty()) {
                                         holder.mRepliedMessageLayoutImage.setVisibility(View.VISIBLE);
@@ -444,7 +444,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void bindTextViewHolder(TextViewHolder holder, int position) {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> messageData = _data.get(position);
-        boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
+        boolean isEncrypted = Boolean.TRUE.equals(messageData.get("isEncrypted"));
         String messageContent = String.valueOf(messageData.getOrDefault("message_text", ""));
 
         if (isEncrypted) {
@@ -469,7 +469,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
         String msgText = String.valueOf(data.getOrDefault("message_text", ""));
-        boolean isEncrypted = (boolean) data.getOrDefault("isEncrypted", false);
+        boolean isEncrypted = Boolean.TRUE.equals(data.get("isEncrypted"));
 
         if (isEncrypted) {
             try {
@@ -769,7 +769,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
         String msgText = String.valueOf(data.getOrDefault("message_text", ""));
-        boolean isEncrypted = (boolean) data.getOrDefault("isEncrypted", false);
+        boolean isEncrypted = Boolean.TRUE.equals(data.get("isEncrypted"));
 
         if (isEncrypted) {
             try {
@@ -818,7 +818,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         bindCommonMessageProperties(holder, position);
         HashMap<String, Object> data = _data.get(position);
 
-        boolean isEncrypted = (boolean) data.getOrDefault("isEncrypted", false);
+        boolean isEncrypted = Boolean.TRUE.equals(data.get("isEncrypted"));
         String messageContent = String.valueOf(data.getOrDefault("message_text", ""));
         String decryptedText = messageContent;
 
@@ -918,7 +918,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private ArrayList<HashMap<String, Object>> getAttachmentsFromMessage(HashMap<String, Object> messageData) {
-        Object attachmentsObj = messageData.get("attachments");
+        Object attachmentsObj = messageData.get(ChatActivity.ATTACHMENTS_KEY);
         if (attachmentsObj instanceof ArrayList) {
             try {
                 return (ArrayList<HashMap<String, Object>>) attachmentsObj;
@@ -944,7 +944,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private ArrayList<HashMap<String, Object>> getDecryptedAttachments(HashMap<String, Object> messageData) {
         ArrayList<HashMap<String, Object>> attachments = getAttachmentsFromMessage(messageData);
-        boolean isEncrypted = (boolean) messageData.getOrDefault("isEncrypted", false);
+        boolean isEncrypted = Boolean.TRUE.equals(messageData.get("isEncrypted"));
 
         if (isEncrypted && attachments != null && !attachments.isEmpty()) {
             ArrayList<HashMap<String, Object>> decryptedAttachments = new ArrayList<>();
