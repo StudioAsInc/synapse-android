@@ -759,53 +759,7 @@ class c {
 					} else {
 						ProfilePageTabUserInfoBioLayoutText.setText(dataSnapshot.child("biography").getValue(String.class));
 					}
-					/*
-if (dataSnapshot.child("gender").getValue(String.class).equals("hidden")) {
-
-} else {
-if (dataSnapshot.child("gender").getValue(String.class).equals("male")) {
-
-} else {
-if (dataSnapshot.child("gender").getValue(String.class).equals("female")) {
-
-}
-}
-}
-if (dataSnapshot.child("user_region").getValue(String.class) != null) {
-
-} else {
-
-}
-if (dataSnapshot.child("account_type").getValue(String.class).equals("admin")) {
-
-} else {
-if (dataSnapshot.child("account_type").getValue(String.class).equals("moderator")) {
-
-} else {
-if (dataSnapshot.child("account_type").getValue(String.class).equals("support")) {
-
-} else {
-
-}
-}
-}
-if (dataSnapshot.child("account_premium").getValue(String.class).equals("true")) {
-
-} else {
-
-}
-if (dataSnapshot.child("verify").getValue(String.class).equals("true")) {
-
-} else {
-
-}
-join_date_layout_text.setText(new SimpleDateFormat("dd MMMM yyyy").format(JoinDateCC.getTime()));
-if ( || ( || )) {
-
-} else {
-
-}
-*/
+					// Removed the problematic commented-out block as requested.
 				} else {
 				}
 			}
