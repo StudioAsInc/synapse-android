@@ -353,7 +353,6 @@ class c {
 						} else {
 							FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
 							com.synapse.social.studioasinc.util.UserUtils.getCurrentUserDisplayName(new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
-								@Override
 								public void onResult(String displayName) {
 									String recipientUid = getIntent().getStringExtra("uid");
 									String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -423,7 +422,6 @@ class c {
 							FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
 							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).setValue(getIntent().getStringExtra("uid"));
 							com.synapse.social.studioasinc.util.UserUtils.getCurrentUserDisplayName(new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
-								@Override
 								public void onResult(String displayName) {
 									String recipientUid = getIntent().getStringExtra("uid");
 									String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();

@@ -429,7 +429,6 @@ public class CreatePostActivity extends AppCompatActivity {
 		}
 		String currentUid = currentUser.getUid();
 		com.synapse.social.studioasinc.util.UserUtils.getUserDisplayName(currentUid, new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
-			@Override
 			public void onResult(String senderName) {
 				// Send notification to followers
 				DatabaseReference followersRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("followers");
