@@ -30,11 +30,11 @@ public class Gemini {
     private String responseType = "text";
     private String tone = "normal";
     private String size = "normal";
-    private int maxTokens = 2500;
+    private int maxTokens = -1; // -1 indicates no limit
     private double temperature = 1.0;
     private boolean showThinking = false;
     private String thinkingText = "Thinking...";
-    private String systemInstruction = "Your name is Synapse AI, you are an AI made for Synapse (social media) assistance";
+    private String systemInstruction = "Your name is Synapse AI, you are an AI made for Synapse (social media) assistance. Keep your responses concise and to the point.";
     
     private Context context;
     private TextView responseTextView;
@@ -73,11 +73,11 @@ public class Gemini {
             this.responseType = "text";
             this.tone = "normal";
             this.size = "normal";
-            this.maxTokens = 2500;
+            this.maxTokens = -1; // -1 indicates no limit
             this.temperature = 1.0;
             this.showThinking = false;
             this.thinkingText = "Thinking...";
-            this.systemInstruction = "Your name is Synapse AI, you are an AI made for Synapse (social media) assistance";
+            this.systemInstruction = "Your name is Synapse AI, you are an AI made for Synapse (social media) assistance. Keep your responses concise and to the point.";
         }
         
         public Builder model(String model) {
@@ -290,7 +290,9 @@ public class Gemini {
             
             JSONObject generationConfig = new JSONObject();
             generationConfig.put("temperature", temperature);
-            generationConfig.put("maxOutputTokens", maxTokens);
+            if (maxTokens > 0) {
+                generationConfig.put("maxOutputTokens", maxTokens);
+            }
             payload.put("generationConfig", generationConfig);
             
         } catch (JSONException e) {
@@ -326,15 +328,33 @@ public class Gemini {
                 JSONArray candidates = root.optJSONArray("candidates");
                 if (candidates != null && candidates.length() > 0) {
                     JSONObject c0 = candidates.getJSONObject(0);
+
+                    String finishReason = c0.optString("finishReason");
+                    String text = "";
+
                     if (c0.has("content")) {
                         JSONObject content = c0.getJSONObject("content");
                         if (content.has("parts")) {
                             JSONArray parts = content.getJSONArray("parts");
                             if (parts.length() > 0) {
-                                return parts.getJSONObject(0).optString("text", "No text found");
+                                text = parts.getJSONObject(0).optString("text", "");
                             }
                         }
                     }
+
+                    if ("MAX_TOKENS".equals(finishReason)) {
+                        if (!text.isEmpty()) {
+                            return text + "\n\n[Warning: The response was too long and may be incomplete.]";
+                        } else {
+                            return "The response was too long and got cut off. Please try a shorter request.";
+                        }
+                    }
+
+                    if (!text.isEmpty()) {
+                        return text;
+                    } else {
+						return "The response is empty";
+					}
                 }
             }
             
