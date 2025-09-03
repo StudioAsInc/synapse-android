@@ -106,7 +106,7 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
         // Add ripple effect with hover animation
         TypedValue outValue = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
-        holder.cardView.setForeground(context.getDrawable(out.resourceId));
+        holder.cardView.setForeground(context.getDrawable(outValue.resourceId));
         
         // Add subtle scale animation on touch
         int animationDuration = context.getResources().getInteger(R.integer.touch_feedback_duration);
