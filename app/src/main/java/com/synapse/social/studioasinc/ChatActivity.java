@@ -2187,6 +2187,7 @@ public class ChatActivity extends AppCompatActivity {
 					senderUid,
 					notificationMessage,
 					"chat_message",
+					recipientOneSignalPlayerId,
 					data
 				);
 
@@ -2264,6 +2265,7 @@ public class ChatActivity extends AppCompatActivity {
 				senderUid,
 				notificationMessage,
 				"chat_message",
+				recipientOneSignalPlayerId,
 				data
 			);
 
