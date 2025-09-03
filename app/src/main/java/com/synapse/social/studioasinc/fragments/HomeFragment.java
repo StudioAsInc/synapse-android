@@ -956,44 +956,35 @@ public class HomeFragment extends Fragment {
     }
 
     private void _displayUserInfoFromCache(String postUid, ImageView userInfoProfileImage, TextView userInfoUsername, ImageView userInfoGenderBadge, ImageView userInfoUsernameVerifiedBadge) {
-        Object bannedObj = UserInfoCacheMap.get("banned-".concat(postUid));
-        if (bannedObj != null && "true".equals(bannedObj.toString())) {
+        if (UserInfoCacheMap.get("banned-".concat(postUid)).toString().equals("true")) {
             userInfoProfileImage.setImageResource(R.drawable.banned_avatar);
         } else {
-            Object avatarObj = UserInfoCacheMap.get("avatar-".concat(postUid));
-            if (avatarObj == null || "null".equals(avatarObj.toString())) {
+            if (UserInfoCacheMap.get("avatar-".concat(postUid)).toString().equals("null")) {
                 userInfoProfileImage.setImageResource(R.drawable.avatar);
             } else {
-                Glide.with(getContext()).load(Uri.parse(avatarObj.toString())).into(userInfoProfileImage);
+                Glide.with(getContext()).load(Uri.parse(UserInfoCacheMap.get("avatar-".concat(postUid)).toString())).into(userInfoProfileImage);
             }
         }
 
-        Object nicknameObj = UserInfoCacheMap.get("nickname-".concat(postUid));
-        if (nicknameObj == null || "null".equals(nicknameObj.toString())) {
-            Object usernameObj = UserInfoCacheMap.get("username-".concat(postUid));
-            userInfoUsername.setText("@" + (usernameObj != null ? usernameObj.toString() : ""));
+        if (UserInfoCacheMap.get("nickname-".concat(postUid)).toString().equals("null")) {
+            userInfoUsername.setText("@" + UserInfoCacheMap.get("username-".concat(postUid)).toString());
         } else {
-            userInfoUsername.setText(nicknameObj.toString());
+            userInfoUsername.setText(UserInfoCacheMap.get("nickname-".concat(postUid)).toString());
         }
 
-        Object genderObj = UserInfoCacheMap.get("gender-".concat(postUid));
-        if (genderObj == null || "hidden".equals(genderObj.toString())) {
+        if (UserInfoCacheMap.get("gender-".concat(postUid)).toString().equals("hidden")) {
             userInfoGenderBadge.setVisibility(View.GONE);
         } else {
-            if ("male".equals(genderObj.toString())) {
+            if (UserInfoCacheMap.get("gender-".concat(postUid)).toString().equals("male")) {
                 userInfoGenderBadge.setImageResource(R.drawable.male_badge);
                 userInfoGenderBadge.setVisibility(View.VISIBLE);
-            } else if ("female".equals(genderObj.toString())) {
+            } else if (UserInfoCacheMap.get("gender-".concat(postUid)).toString().equals("female")) {
                 userInfoGenderBadge.setImageResource(R.drawable.female_badge);
                 userInfoGenderBadge.setVisibility(View.VISIBLE);
-            } else {
-                userInfoGenderBadge.setVisibility(View.GONE);
             }
         }
 
-        Object accountTypeObj = UserInfoCacheMap.get("acc_type-".concat(postUid));
-        String accountType = (accountTypeObj != null) ? accountTypeObj.toString() : "";
-
+        String accountType = UserInfoCacheMap.get("acc_type-".concat(postUid)).toString();
         if ("admin".equals(accountType)) {
             userInfoUsernameVerifiedBadge.setImageResource(R.drawable.admin_badge);
             userInfoUsernameVerifiedBadge.setVisibility(View.VISIBLE);
@@ -1004,14 +995,11 @@ public class HomeFragment extends Fragment {
             userInfoUsernameVerifiedBadge.setImageResource(R.drawable.support_badge);
             userInfoUsernameVerifiedBadge.setVisibility(View.VISIBLE);
         } else if ("user".equals(accountType)) {
-            Object verifyObj = UserInfoCacheMap.get("verify-".concat(postUid));
-            if (verifyObj != null && "true".equals(verifyObj.toString())) {
+            if (UserInfoCacheMap.get("verify-".concat(postUid)).toString().equals("true")) {
                 userInfoUsernameVerifiedBadge.setVisibility(View.VISIBLE);
             } else {
                 userInfoUsernameVerifiedBadge.setVisibility(View.GONE);
             }
-        } else {
-            userInfoUsernameVerifiedBadge.setVisibility(View.GONE);
         }
     }
 }

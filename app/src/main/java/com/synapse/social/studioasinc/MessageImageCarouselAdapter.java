@@ -60,11 +60,17 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
     @Override
     public void onBindViewHolder(@NonNull ImageCarouselViewHolder holder, int position) {
         if (attachments == null || position < 0 || position >= attachments.size()) {
-            holder.imageView.setImageResource(R.drawable.ph_imgbluredsqure);
-            holder.itemView.setOnClickListener(null);
+            resetViewHolder(holder);
             return;
         }
         Attachment attachment = attachments.get(position);
+
+        // Handle case where attachment is null to prevent crashes
+        if (attachment == null) {
+            resetViewHolder(holder);
+            return;
+        }
+
         String publicId = attachment.getPublicId();
         
         // Set consistent size for all carousel images
@@ -124,6 +130,12 @@ public class MessageImageCarouselAdapter extends RecyclerView.Adapter<MessageIma
     @Override
     public int getItemCount() {
         return attachments != null ? attachments.size() : 0;
+    }
+
+    private void resetViewHolder(ImageCarouselViewHolder holder) {
+        holder.imageView.setImageResource(R.drawable.ph_imgbluredsqure);
+        holder.itemView.setOnClickListener(null);
+        holder.itemView.setOnTouchListener(null);
     }
     
     static class ImageCarouselViewHolder extends RecyclerView.ViewHolder {

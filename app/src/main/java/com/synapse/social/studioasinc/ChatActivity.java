@@ -2828,7 +2828,7 @@ public class ChatActivity extends AppCompatActivity {
 				"GeminiSummary",
 				getString(R.string.gemini_error_summary),
 				viewHolder,
-				-1
+				null
 		);
 		callGeminiForAiFeature(params);
 	}
@@ -2842,7 +2842,7 @@ public class ChatActivity extends AppCompatActivity {
 				"GeminiExplanation",
 				getString(R.string.gemini_error_explanation),
 				viewHolder,
-				-1
+				1000
 		);
 		callGeminiForAiFeature(params);
 	}
@@ -2855,9 +2855,9 @@ public class ChatActivity extends AppCompatActivity {
 		String logTag;
 		String errorMessage;
 		BaseMessageViewHolder viewHolder;
-		int maxTokens;
+		Integer maxTokens;
 
-		AiFeatureParams(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, BaseMessageViewHolder viewHolder, int maxTokens) {
+		AiFeatureParams(String prompt, String systemInstruction, String model, String bottomSheetTitle, String logTag, String errorMessage, BaseMessageViewHolder viewHolder, Integer maxTokens) {
 			this.prompt = prompt;
 			this.systemInstruction = systemInstruction;
 			this.model = model;
@@ -2875,7 +2875,7 @@ public class ChatActivity extends AppCompatActivity {
 				.showThinking(true)
 				.systemInstruction(params.systemInstruction);
 
-		if (params.maxTokens > 0) {
+		if (params.maxTokens != null) {
 			builder.maxTokens(params.maxTokens);
 		}
 
@@ -2885,6 +2885,9 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onSuccess(String response) {
 				runOnUiThread(() -> {
+					if (isFinishing() || isDestroyed()) {
+						return; // Activity is not in a valid state to show a dialog
+					}
 					if (params.viewHolder != null) {
 						params.viewHolder.stopShimmer();
 					}
