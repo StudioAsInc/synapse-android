@@ -37,4 +37,31 @@
     <dimen name="elevation_small">2dp</dimen>
     <dimen name="elevation_medium">4dp</dimen>
     <dimen name="elevation_large">8dp</dimen>
+
+    <!-- Auth Screen Dimensions -->
+    <dimen name="auth_padding_left">18dp</dimen>
+    <dimen name="auth_padding_top">46dp</dimen>
+    <dimen name="auth_padding_right">18dp</dimen>
+    <dimen name="auth_padding_bottom">18dp</dimen>
+    <dimen name="auth_title_text_size">30sp</dimen>
+    <dimen name="auth_margin_top">15dp</dimen>
+    <dimen name="auth_response_text_size">18sp</dimen>
+    <dimen name="auth_hidden_layout_height">300dp</dimen>
+    <dimen name="auth_name_layout_padding">16dp</dimen>
+    <dimen name="auth_profile_margin_right">10dp</dimen>
+    <dimen name="auth_profile_picture_size">50dp</dimen>
+    <dimen name="auth_name_letter_text_size">20sp</dimen>
+    <dimen name="auth_user_response_text_size">16sp</dimen>
+    <dimen name="auth_edit_text_margin_top">5dp</dimen>
+    <dimen name="auth_edit_text_padding">2dp</dimen>
+    <dimen name="auth_animator_support_padding">8dp</dimen>
+    <dimen name="auth_checkbox_margin_left">12dp</dimen>
+    <dimen name="auth_checkbox_margin_right">12dp</dimen>
+    <dimen name="auth_checkbox_text_size">12sp</dimen>
+    <dimen name="auth_continue_button_height">60dp</dimen>
+    <dimen name="auth_info_text_size">12sp</dimen>
+    <dimen name="auth_rule_icon_width">25dp</dimen>
+    <dimen name="auth_rule_icon_height">30dp</dimen>
+    <dimen name="auth_rule_text_padding">4dp</dimen>
+    <dimen name="auth_finish_button_margin_top">20dp</dimen>
 </resources>
