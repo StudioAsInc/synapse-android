@@ -2256,10 +2256,18 @@ public class ChatActivity extends AppCompatActivity {
 			// Enhanced Smart Notification Check with chat ID for deep linking
 			String chatId = senderUid + "_" + recipientUid;
 			String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-			String notificationMessage = senderDisplayName + ": " + "Encrypted Message";
-			NotificationHelper.sendMessageAndNotifyIfNeeded(senderUid, recipientUid, recipientOneSignalPlayerId, notificationMessage, chatId);
+			String notificationMessage = senderDisplayName + ": " + messageText;
+			HashMap<String, String> data = new HashMap<>();
+			data.put("chatId", chatId);
+			NotificationHelper.sendNotification(
+				recipientUid,
+				senderUid,
+				notificationMessage,
+				"chat_message",
+				data
+			);
 
-			_updateInbox("Encrypted Message");
+			_updateInbox(messageText);
 
 			// Clear UI
 			message_et.setText("");

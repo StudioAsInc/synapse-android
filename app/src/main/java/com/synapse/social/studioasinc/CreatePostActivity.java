@@ -410,7 +410,7 @@ public class CreatePostActivity extends AppCompatActivity {
 			@Override
 			public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 				if (databaseError == null) {
-					_sendNotificationsToFollowers(UniquePostKey);
+					_sendNotificationsToFollowers(UniquePostKey, postDescription.getText().toString().trim());
 					Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
 					_LoadingDialog(false);
 					finish();
@@ -422,44 +422,74 @@ public class CreatePostActivity extends AppCompatActivity {
 		});
 	}
 	
-	private void _sendNotificationsToFollowers(String postKey) {
+	private void _sendNotificationsToFollowers(String postKey, final String postText) {
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		if (currentUser == null) {
 			return;
 		}
 		String currentUid = currentUser.getUid();
-		DatabaseReference followersRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("followers");
-		followersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+		com.synapse.social.studioasinc.util.UserUtils.getUserDisplayName(currentUid, new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
 			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				List<Task<DataSnapshot>> tasks = new ArrayList<>();
-				for (DataSnapshot followerSnapshot : dataSnapshot.getChildren()) {
-					String followerUid = followerSnapshot.getKey();
-					if (followerUid != null) {
-						tasks.add(FirebaseDatabase.getInstance().getReference("skyline/users").child(followerUid).get());
-					}
-				}
-
-				com.google.android.gms.tasks.Tasks.whenAllSuccess(tasks).addOnSuccessListener(new OnSuccessListener<List<Object>>() {
+			public void onResult(String senderName) {
+				// Send notification to followers
+				DatabaseReference followersRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("followers");
+				followersRef.addListenerForSingleValueEvent(new ValueEventListener() {
 					@Override
-					public void onSuccess(List<Object> list) {
-						for (Object object : list) {
-							DataSnapshot snapshot = (DataSnapshot) object;
-							String followerUid = snapshot.getKey();
-							String senderName = currentUser.getDisplayName();
-							String message = senderName + " has a new post";
-							HashMap<String, String> data = new HashMap<>();
-							data.put("postId", postKey);
-							NotificationHelper.sendNotification(
-							followerUid,
-							currentUid,
-							message,
-							NotificationConfig.NOTIFICATION_TYPE_NEW_POST,
-							data
-							);
+					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+						for (DataSnapshot followerSnapshot : dataSnapshot.getChildren()) {
+							String followerUid = followerSnapshot.getKey();
+							if (followerUid != null) {
+								String message = senderName + " has a new post";
+								HashMap<String, String> data = new HashMap<>();
+								data.put("postId", postKey);
+								NotificationHelper.sendNotification(
+									followerUid,
+									currentUid,
+									message,
+									NotificationConfig.NOTIFICATION_TYPE_NEW_POST,
+									data
+								);
+							}
 						}
 					}
+
+					@Override
+					public void onCancelled(@NonNull DatabaseError databaseError) {
+						// Handle error
+					}
 				});
+
+				// Send notification to mentioned users
+				Pattern pattern = Pattern.compile("@(\\w+)");
+				Matcher matcher = pattern.matcher(postText);
+				while (matcher.find()) {
+					String username = matcher.group(1);
+					DatabaseReference usernameRef = FirebaseDatabase.getInstance().getReference("skyline/usernames").child(username);
+					usernameRef.addListenerForSingleValueEvent(new ValueEventListener() {
+						@Override
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+							if (dataSnapshot.exists()) {
+								String recipientUid = dataSnapshot.child("uid").getValue(String.class);
+								if (recipientUid != null && !recipientUid.equals(currentUid)) {
+									String message = senderName + " mentioned you in a post";
+									HashMap<String, String> data = new HashMap<>();
+									data.put("postId", postKey);
+									NotificationHelper.sendNotification(
+										recipientUid,
+										currentUid,
+										message,
+										"mention_post",
+										data
+									);
+								}
+							}
+						}
+
+						@Override
+						public void onCancelled(@NonNull DatabaseError databaseError) {
+						}
+					});
+				}
 			}
 
 			@Override

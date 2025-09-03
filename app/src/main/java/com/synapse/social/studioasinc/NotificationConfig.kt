@@ -11,12 +11,12 @@ object NotificationConfig {
     // ===== NOTIFICATION SYSTEM TOGGLE =====
     // Set to true to use client-side OneSignal notifications
     // Set to false to use server-side Cloudflare Worker notifications
-    const val USE_CLIENT_SIDE_NOTIFICATIONS = false
+    const val USE_CLIENT_SIDE_NOTIFICATIONS = true
     
     // ===== ONESIGNAL CONFIGURATION =====
-    // Replace these placeholder values with your actual OneSignal credentials
-    const val ONESIGNAL_APP_ID = "YOUR_ONESIGNAL_APP_ID_HERE"
-    const val ONESIGNAL_REST_API_KEY = "YOUR_ONESIGNAL_REST_API_KEY_HERE"
+    // IMPORTANT: Replace these placeholder values with your actual OneSignal credentials
+    const val ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2"
+    const val ONESIGNAL_REST_API_KEY = "os_v2_app_arhbseljcfehdfpz2yaagabp4jflvswe4bzekf5t4ukcruoeys27khnzzxu6gnn5waqamsfzskypitfrwcls2g2ed5e44fgcjs7pu6i"
     
     // ===== NOTIFICATION SETTINGS =====
     const val NOTIFICATION_TITLE = "New Message"
@@ -30,6 +30,9 @@ object NotificationConfig {
     const val NOTIFICATION_TYPE_NEW_REPLY = "NEW_REPLY"
     const val NOTIFICATION_TYPE_NEW_LIKE_POST = "NEW_LIKE_POST"
     const val NOTIFICATION_TYPE_NEW_LIKE_COMMENT = "NEW_LIKE_COMMENT"
+    const val NOTIFICATION_TYPE_NEW_FOLLOWER = "new_follower"
+    const val NOTIFICATION_TYPE_PROFILE_LIKE = "profile_like"
+    const val NOTIFICATION_TYPE_MENTION_POST = "mention_post"
 
     // ===== NOTIFICATION TITLES =====
     const val NOTIFICATION_TITLE_NEW_POST = "New Post"
@@ -37,6 +40,9 @@ object NotificationConfig {
     const val NOTIFICATION_TITLE_NEW_REPLY = "New Reply"
     const val NOTIFICATION_TITLE_NEW_LIKE_POST = "New Like"
     const val NOTIFICATION_TITLE_NEW_LIKE_COMMENT = "New Like"
+    const val NOTIFICATION_TITLE_NEW_FOLLOWER = "New Follower"
+    const val NOTIFICATION_TITLE_PROFILE_LIKE = "Profile Liked"
+    const val NOTIFICATION_TITLE_MENTION_POST = "You were mentioned"
     
     // ===== SERVER-SIDE CONFIGURATION =====
     const val WORKER_URL = "https://my-app-notification-sender.mashikahamed0.workers.dev"
@@ -84,6 +90,9 @@ object NotificationConfig {
             NOTIFICATION_TYPE_NEW_REPLY -> NOTIFICATION_TITLE_NEW_REPLY
             NOTIFICATION_TYPE_NEW_LIKE_POST -> NOTIFICATION_TITLE_NEW_LIKE_POST
             NOTIFICATION_TYPE_NEW_LIKE_COMMENT -> NOTIFICATION_TITLE_NEW_LIKE_COMMENT
+            NOTIFICATION_TYPE_NEW_FOLLOWER -> NOTIFICATION_TITLE_NEW_FOLLOWER
+            NOTIFICATION_TYPE_PROFILE_LIKE -> NOTIFICATION_TITLE_PROFILE_LIKE
+            NOTIFICATION_TYPE_MENTION_POST -> NOTIFICATION_TITLE_MENTION_POST
             else -> NOTIFICATION_TITLE
         }
     }
