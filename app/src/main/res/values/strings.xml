@@ -260,28 +260,4 @@ Please explain the following message from %3$s in detail, considering the contex
 </string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="auth_hello">Hello, I\'m Synapse AI</string>
-    <string name="auth_nice_to_meet_you">Nice to meet you, I\'m...</string>
-    <string name="auth_enter_your_name">Enter your name</string>
-    <string name="auth_you_can_change_name_later">You can always change your name later</string>
-    <string name="auth_continue">Continue</string>
-    <string name="auth_hello_user">Hello</string>
-    <string name="auth_terms_of_service">You own the content you share, but you give Synapse permission to display and share it inside the app. Do not post anything illegal, offensive, or harmful. Spamming, impersonation, hate speech, or harassment of any kind is not allowed and may lead to account suspension.</string>
-    <string name="auth_privacy_policy">We respect your privacy. Synapse collects only the minimum data needed to run and improve the app. We do not sell your information. By continuing to use Synapse, you accept future updates to these terms. For questions, contact our support team.</string>
-    <string name="auth_i_agree">I agree</string>
-    <string name="auth_give_email">Give me your email address</string>
-    <string name="auth_enter_email">Enter your email</string>
-    <string name="auth_your_password">Now, your password</string>
-    <string name="auth_enter_password">Enter your password</string>
-    <string name="auth_ai_intro">I\'m a next generation AI built to assist you in Synapse and to be safe, accurate and secure.\n\nI would love to get to know each other before we get started</string>
-    <string name="auth_almost_done">Okay %1$s, we\'re almost there, but before that one last final process. Please I kindly request you to look at Synapse terms and conditions before using their services</string>
-    <string name="auth_terms_and_conditions">By using Synapse, you agree to follow our rules. You must be at least 13 years old to create an account. You are responsible for keeping your login information private and secure. Misuse of the platform may result in your account being restricted or removed.</string>
-    <string name="auth_we_are_almost_done">We are almost done!</string>
-    <string name="auth_boring_process">Okay brother, believe me... We are going to finish this boring process within a few seconds. Just like instant noodles. First, you have to...</string>
-    <string name="auth_creating_account">Creating your account...</string>
-    <string name="auth_email_in_use">The email address is already in use by another account.</string>
-    <string name="auth_hey_i_know_you">Hey, I know you!</string>
-    <string name="auth_welcome_back_username">You are @%1$s right? No further steps, Let\'s go...</string>
-    <string name="auth_i_recognize_you">I recognize you! Let\'s go...</string>
-    <string name="auth_password_mismatch">Hmm, that password doesn\'t match. Try again?</string>
 </resources>
