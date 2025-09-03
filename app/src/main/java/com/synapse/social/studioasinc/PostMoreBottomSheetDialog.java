@@ -91,6 +91,7 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
     private TextView shareTitle;
     private ImageView reportIc;
     private TextView reportTitle;
+    private LinearLayout savePost;
     
     private FirebaseAuth auth;
     private DatabaseReference main = FirebaseDatabase.getInstance().getReference("skyline");
@@ -117,6 +118,7 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
         editPost = rootView.findViewById(R.id.editPost);
         report = rootView.findViewById(R.id.report);
         deletePost = rootView.findViewById(R.id.deletePost);
+        savePost = rootView.findViewById(R.id.savePost);
         editPostIc = rootView.findViewById(R.id.editPostIc);
         editPostTitle = rootView.findViewById(R.id.editPostTitle);
         deletePostIc = rootView.findViewById(R.id.deletePostIc);
@@ -209,6 +211,12 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
         _viewGraphics(deletePost, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, Color.TRANSPARENT);
         _ImageColor(deletePostIc, 0xFFF44336);
         
+        if (postImg != null && !postImg.isEmpty()) {
+            savePost.setVisibility(View.VISIBLE);
+        } else {
+            savePost.setVisibility(View.GONE);
+        }
+
         if (postType.equals("TEXT")) {
             copyPostText.setVisibility(View.VISIBLE);
         } else {
