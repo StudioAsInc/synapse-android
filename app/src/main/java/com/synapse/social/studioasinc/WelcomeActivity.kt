@@ -44,5 +44,6 @@ class WelcomeActivity : AppCompatActivity() {
         askPermission.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    @Suppress("DEPRECATION")
     override fun onBackPressed() {}
 }

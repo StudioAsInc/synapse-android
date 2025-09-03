@@ -272,6 +272,7 @@ object NotificationHelper {
     @JvmStatic
     @Deprecated("Use sendMessageAndNotifyIfNeeded with chatId parameter for better deep linking")
     fun triggerPushNotification(recipientId: String, message: String) {
+        @Suppress("DEPRECATION")
         sendMessageAndNotifyIfNeeded("", "", recipientId, message)
     }
 
