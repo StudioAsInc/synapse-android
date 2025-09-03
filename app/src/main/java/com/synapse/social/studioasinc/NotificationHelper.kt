@@ -6,6 +6,7 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import org.json.JSONArray
 import java.io.IOException
 
 /**
@@ -54,34 +55,29 @@ object NotificationHelper {
                 return@addOnSuccessListener
             }
 
-            val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid/status")
+            val usersRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid")
 
-            recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
-                val recipientStatus = dataSnapshot.getValue(String::class.java)
-                val suppressStatus = "chatting_with_$senderUid"
+            usersRef.get().addOnSuccessListener { dataSnapshot ->
+                val recipientStatus = dataSnapshot.child("status").getValue(String::class.java)
+                val recipientActivity = dataSnapshot.child("activity").getValue(String::class.java)
+                val suppressActivity = "chatting_with_$senderUid"
 
                 if (NotificationConfig.ENABLE_SMART_SUPPRESSION) {
-                    if (suppressStatus == recipientStatus) {
+                    // Suppress only if the recipient is explicitly marked as chatting with the sender
+                    if (suppressActivity == recipientActivity) {
                         if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                            Log.i(TAG, "Recipient is actively chatting with sender. Suppressing notification.")
+                            Log.i(TAG, "Recipient is actively chatting with sender (activity match). Suppressing notification.")
                         }
                         return@addOnSuccessListener
                     }
 
-                    if (recipientStatus == "online") {
-                        if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                            Log.i(TAG, "Recipient is online. Suppressing notification for real-time message visibility.")
-                        }
-                        return@addOnSuccessListener
-                    }
-
-                    // Check for recent activity based on timestamp
+                    // If status is a numeric last-seen timestamp and is very recent, suppress to prevent rapid duplicates
                     val lastSeen = recipientStatus?.toLongOrNull()
                     if (lastSeen != null) {
                         val now = System.currentTimeMillis()
                         if (now - lastSeen < NotificationConfig.RECENT_ACTIVITY_THRESHOLD) {
                             if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
-                                Log.i(TAG, "Recipient was recently active. Suppressing notification.")
+                                Log.i(TAG, "Recipient was recently active ($now - $lastSeen < threshold). Suppressing notification.")
                             }
                             return@addOnSuccessListener
                         }
@@ -219,7 +215,7 @@ object NotificationHelper {
         
         try {
             jsonBody.put("app_id", NotificationConfig.ONESIGNAL_APP_ID)
-            jsonBody.put("include_player_ids", JSONObject().put("0", recipientPlayerId))
+            jsonBody.put("include_player_ids", JSONArray().put(recipientPlayerId))
             jsonBody.put("contents", JSONObject().put("en", message))
             jsonBody.put("headings", JSONObject().put("en", NotificationConfig.getTitleForNotificationType(notificationType)))
             jsonBody.put("subtitle", JSONObject().put("en", NotificationConfig.NOTIFICATION_SUBTITLE))

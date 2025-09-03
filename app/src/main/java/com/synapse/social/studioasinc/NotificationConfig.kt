@@ -50,7 +50,7 @@ object NotificationConfig {
     // ===== PRESENCE SETTINGS =====
     // Time threshold (in milliseconds) to consider a user "recently active"
     // Users who were active within this time will not receive notifications
-    const val RECENT_ACTIVITY_THRESHOLD = 5 * 60 * 1000L // 5 minutes
+    const val RECENT_ACTIVITY_THRESHOLD = 10 * 1000L // 10 seconds
     
     // ===== FEATURE FLAGS =====
     // Enable/disable smart notification suppression
