@@ -1302,65 +1302,24 @@ public class ChatActivity extends AppCompatActivity {
 		_chat_child_listener = new ChildEventListener() {
 				@Override
 				public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
-					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded ===");
-					Log.d("ChatActivity", "Snapshot key: " + dataSnapshot.getKey() + ", Previous child: " + previousChildName);
-					
-					if (dataSnapshot.exists()) {
-						HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
-						Log.d("ChatActivity", "New message data: " + (newMessage != null ? newMessage.toString() : "null"));
-						
-						if (newMessage != null && newMessage.get(KEY_KEY) != null) {
-							String messageKey = newMessage.get(KEY_KEY).toString();
-							String messageType = newMessage.getOrDefault("TYPE", "unknown").toString();
-							Log.d("ChatActivity", "New message received from Firebase - Type: " + messageType + ", Key: " + messageKey);
-							
-							if (!messageKeys.contains(messageKey)) {
-								// This is a truly new message from Firebase. Add it.
-								messageKeys.add(messageKey);
-								_safeUpdateRecyclerView();
-								
-								int insertPosition = _findCorrectInsertPosition(newMessage);
-								ChatMessagesList.add(insertPosition, newMessage);
-								
-								Log.d("ChatActivity", "Added new Firebase message to list at position " + insertPosition + ", key: " + messageKey);
-								
-								if (chatAdapter != null) {
-									chatAdapter.notifyItemInserted(insertPosition);
-									if (insertPosition > 0) chatAdapter.notifyItemChanged(insertPosition - 1);
-									if (insertPosition < ChatMessagesList.size() - 1) chatAdapter.notifyItemChanged(insertPosition + 1);
-								}
-								
-								if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
-									ChatMessagesListRecycler.post(() -> scrollToBottom());
-								}
-								
-								if (newMessage.containsKey("replied_message_id")) {
-									ArrayList<HashMap<String, Object>> singleMessageList = new ArrayList<>();
-									singleMessageList.add(newMessage);
-									_fetchRepliedMessages(singleMessageList);
-								}
-							} else {
-								// The message key already exists. This means it was a local message that has now been confirmed by the server.
-								// We need to find it and update it to remove the 'isLocalMessage' flag and get the server timestamp.
-								for (int i = 0; i < ChatMessagesList.size(); i++) {
-									if (messageKey.equals(ChatMessagesList.get(i).get(KEY_KEY))) {
-										Log.d("ChatActivity", "Updating local message with server data at position " + i);
-										newMessage.remove("isLocalMessage"); // Ensure local flag is removed
-										ChatMessagesList.set(i, newMessage);
-										if (chatAdapter != null) {
-											chatAdapter.notifyItemChanged(i);
-										}
-										break;
-									}
-								}
-							}
+					if (!dataSnapshot.exists()) {
+						return;
+					}
+					HashMap<String, Object> newMessage = dataSnapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					if (newMessage == null || newMessage.get(KEY_KEY) == null || messageKeys.contains(newMessage.get(KEY_KEY).toString())) {
+						return;
+					}
+
+					if (newMessage.containsKey(REPLIED_MESSAGE_ID_KEY)) {
+						String repliedId = String.valueOf(newMessage.get(REPLIED_MESSAGE_ID_KEY));
+						if (repliedId != null && !repliedId.isEmpty() && !repliedId.equals("null") && !repliedMessagesCache.containsKey(repliedId)) {
+							_fetchRepliedMessageAndThenAdd(repliedId, newMessage);
 						} else {
-							Log.w("ChatActivity", "New message is null or missing key");
+							_addMessageToList(newMessage);
 						}
 					} else {
-						Log.w("ChatActivity", "DataSnapshot does not exist");
+						_addMessageToList(newMessage);
 					}
-					Log.d("ChatActivity", "=== FIREBASE LISTENER: onChildAdded END ===");
 				}
 
 				@Override
@@ -1546,6 +1505,54 @@ public class ChatActivity extends AppCompatActivity {
 		} catch (Exception e) {
 			Log.e("ChatActivity", "Error reordering messages: " + e.getMessage());
 		}
+	}
+
+	private void _addMessageToList(HashMap<String, Object> newMessage) {
+		String messageKey = newMessage.get(KEY_KEY).toString();
+		if (messageKeys.contains(messageKey)) {
+			return;
+		}
+		messageKeys.add(messageKey);
+		_safeUpdateRecyclerView();
+		int insertPosition = _findCorrectInsertPosition(newMessage);
+		ChatMessagesList.add(insertPosition, newMessage);
+		if (chatAdapter != null) {
+			chatAdapter.notifyItemInserted(insertPosition);
+			if (insertPosition > 0) {
+				chatAdapter.notifyItemChanged(insertPosition - 1);
+			}
+			if (insertPosition < ChatMessagesList.size() - 1) {
+				chatAdapter.notifyItemChanged(insertPosition + 1);
+			}
+		}
+		if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
+			ChatMessagesListRecycler.post(this::scrollToBottom);
+		}
+	}
+
+	private void _fetchRepliedMessageAndThenAdd(String repliedId, final HashMap<String, Object> newMessage) {
+		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String theirUid = getIntent().getStringExtra("uid");
+		DatabaseReference chatRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(theirUid);
+
+		chatRef.child(repliedId).addListenerForSingleValueEvent(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					HashMap<String, Object> repliedMessage = snapshot.getValue(new GenericTypeIndicator<HashMap<String, Object>>() {});
+					if (repliedMessage != null) {
+						repliedMessagesCache.put(repliedId, repliedMessage);
+					}
+				}
+				_addMessageToList(newMessage);
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError error) {
+				Log.e(TAG, "Failed to fetch replied message: " + error.getMessage());
+				_addMessageToList(newMessage);
+			}
+		});
 	}
 
 	/**
