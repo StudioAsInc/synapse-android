@@ -33,6 +33,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.util.Log;
 import android.content.res.ColorStateList;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -92,8 +93,12 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
     private ImageView reportIc;
     private TextView reportTitle;
     private LinearLayout savePost;
+    private ImageView savePostIc;
+    private TextView savePostTitle;
     
     private FirebaseAuth auth;
+    private DatabaseReference savedPostsRef;
+    private boolean isPostSaved = false;
     private DatabaseReference main = FirebaseDatabase.getInstance().getReference("skyline");
     private Calendar cc = Calendar.getInstance();
     
@@ -118,7 +123,6 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
         editPost = rootView.findViewById(R.id.editPost);
         report = rootView.findViewById(R.id.report);
         deletePost = rootView.findViewById(R.id.deletePost);
-        savePost = rootView.findViewById(R.id.savePost);
         editPostIc = rootView.findViewById(R.id.editPostIc);
         editPostTitle = rootView.findViewById(R.id.editPostTitle);
         deletePostIc = rootView.findViewById(R.id.deletePostIc);
@@ -129,6 +133,23 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
         shareTitle = rootView.findViewById(R.id.shareTitle);
         reportIc = rootView.findViewById(R.id.reportIc);
         reportTitle = rootView.findViewById(R.id.reportTitle);
+        savePost = rootView.findViewById(R.id.savePost);
+        savePostIc = rootView.findViewById(R.id.savePostIc);
+        savePostTitle = rootView.findViewById(R.id.savePostTitle);
+
+        savePost.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View _view) {
+                if (isPostSaved) {
+                    savedPostsRef.child(postKey).removeValue();
+                    SketchwareUtil.showMessage(getActivity(), "Post unsaved");
+                } else {
+                    savedPostsRef.child(postKey).setValue(true);
+                    SketchwareUtil.showMessage(getActivity(), "Post saved");
+                }
+                dialog.dismiss();
+            }
+        });
         
         copyPostText.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -190,6 +211,11 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
             postText = getArguments().getString("postText");
         }
         
+        if (auth.getCurrentUser() != null) {
+            savedPostsRef = FirebaseDatabase.getInstance().getReference("skyline/user-saved-posts").child(auth.getCurrentUser().getUid());
+            checkIfPostIsSaved();
+        }
+
         dialogStyles();
         
         return dialog;
@@ -211,19 +237,20 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
         _viewGraphics(deletePost, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, Color.TRANSPARENT);
         _ImageColor(deletePostIc, 0xFFF44336);
         
-        if (postImg != null && !postImg.isEmpty()) {
-            savePost.setVisibility(View.VISIBLE);
-        } else {
-            savePost.setVisibility(View.GONE);
-        }
-
         if (postType.equals("TEXT")) {
             copyPostText.setVisibility(View.VISIBLE);
         } else {
             copyPostText.setVisibility(View.GONE);
         }
         
-        if (postPublisherUID.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) || FirebaseAuth.getInstance().getCurrentUser().getEmail().equals("mashikahamed0@gmail.com")) {
+        if (auth.getCurrentUser() != null) {
+            savePost.setVisibility(View.VISIBLE);
+        } else {
+            savePost.setVisibility(View.GONE);
+        }
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null && postPublisherUID != null && (postPublisherUID.equals(currentUser.getUid()) || currentUser.getEmail().equals("mashikahamed0@gmail.com"))) {
             share.setVisibility(View.VISIBLE);
             editPost.setVisibility(View.VISIBLE);
             report.setVisibility(View.GONE);
@@ -378,5 +405,30 @@ public class PostMoreBottomSheetDialog extends DialogFragment {
         GG.setStroke((int) _stroke, _strokeColor);
         android.graphics.drawable.RippleDrawable RE = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{ _onRipple}), GG, null);
         _view.setBackground(RE);
+    }
+
+    private void checkIfPostIsSaved() {
+        savedPostsRef.child(postKey).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                isPostSaved = dataSnapshot.exists();
+                updateSaveButtonState();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("PostMoreBottomSheet", "Failed to check if post is saved.", databaseError.toException());
+            }
+        });
+    }
+
+    private void updateSaveButtonState() {
+        if (isPostSaved) {
+            savePostTitle.setText("Unsave");
+            savePostIc.setImageResource(R.drawable.ic_bookmark_filled);
+        } else {
+            savePostTitle.setText("Save");
+            savePostIc.setImageResource(R.drawable.ic_bookmark_border);
+        }
     }
 }
