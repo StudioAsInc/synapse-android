@@ -8,13 +8,12 @@
 
   [![License](https://img.shields.io/badge/license-Custom-blue.svg)](LICENSE.md)
   [![Release](https://img.shields.io/github/v/release/StudioAsInc/synapse-android?include_prereleases)](https://github.com/StudioAsInc/synapse-android/releases)
+[![Repository Size](https://img.shields.io/github/repo-size/StudioAsInc/synapse-android)](https://github.com/StudioAsInc/synapse-android)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTE.md)
   [![Build Status](https://img.shields.io/github/actions/workflow/status/StudioAsInc/synapse-android/android.yml?label=build)](https://github.com/StudioAsInc/synapse-android/actions)
   [![Stars](https://img.shields.io/github/stars/StudioAsInc/synapse-android?style=social)](https://github.com/StudioAsInc/synapse-android/stargazers)
 
   [Website](https://dl-synapse.pages.dev) • [Docs](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues/new?template=bug_report.md) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues/new?template=feature_request.md)
-[![Repository Size](https://img.shields.io/github/repo-size/StudioAsInc/synapse-android)](https://github.com/StudioAsInc/synapse-android)
-</div>
 
 ---
 
