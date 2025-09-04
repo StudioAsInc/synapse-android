@@ -338,7 +338,7 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
-		View.OnClickListener profileClickListener = v -> startActivityWithUid(ConversationSettingsActivity.class);
+		View.OnClickListener profileClickListener = v -> startActivityWithUid(Chat2ndUserMoreSettingsActivity.class);
 		topProfileLayout.setOnClickListener(profileClickListener);
 		ic_more.setOnClickListener(profileClickListener);
 
