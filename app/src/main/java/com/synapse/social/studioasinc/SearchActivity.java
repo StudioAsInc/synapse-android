@@ -88,7 +88,6 @@ public class SearchActivity extends AppCompatActivity {
 	private ArrayList<HashMap<String, Object>> searchedUsersList = new ArrayList<>();
 
 	private com.google.android.material.appbar.AppBarLayout app_bar_layout;
-	private com.google.android.material.appbar.MaterialToolbar toolbar;
 	private com.google.android.material.search.SearchBar search_bar;
 	private com.google.android.material.search.SearchView search_view;
 	private RecyclerView SearchUserLayoutRecyclerView;
@@ -125,7 +124,6 @@ public class SearchActivity extends AppCompatActivity {
 
 	private void initialize(Bundle _savedInstanceState) {
 		app_bar_layout = findViewById(R.id.app_bar_layout);
-		toolbar = findViewById(R.id.toolbar);
 		search_bar = findViewById(R.id.search_bar);
 		search_view = findViewById(R.id.search_view);
 		SearchUserLayoutRecyclerView = findViewById(R.id.SearchUserLayoutRecyclerView);
@@ -133,13 +131,6 @@ public class SearchActivity extends AppCompatActivity {
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		auth = FirebaseAuth.getInstance();
 		request = new RequestNetwork(this);
-
-		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				onBackPressed();
-			}
-		});
 
 		search_view.getEditText().setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
@@ -343,6 +334,11 @@ public class SearchActivity extends AppCompatActivity {
 		SearchUserLayoutRecyclerView.setAdapter(new SearchUserLayoutRecyclerViewAdapter(searchedUsersList));
 		SearchUserLayoutRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 		_showAllUser();
+
+		search_bar.setNavigationIcon(R.drawable.ic_arrow_back_black);
+		search_bar.setNavigationOnClickListener(v -> onBackPressed());
+
+		search_view.setupWithSearchBar(search_bar);
 	}
 
 

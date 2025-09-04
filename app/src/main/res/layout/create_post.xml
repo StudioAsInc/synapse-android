@@ -10,7 +10,7 @@
 		android:id="@+id/main"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="#FFFFFF"
+		android:background="?attr/colorSurface"
 		android:orientation="vertical">
 		<LinearLayout
 			android:id="@+id/top"
@@ -20,7 +20,7 @@
 			android:paddingTop="4dp"
 			android:paddingRight="8dp"
 			android:paddingBottom="4dp"
-			android:background="#FFFFFF"
+			android:background="?attr/colorSurface"
 			android:gravity="center_vertical"
 			android:orientation="horizontal"
 			android:elevation="1dp">
@@ -47,7 +47,7 @@
 					android:text="Create Post"
 					android:textSize="20sp"
 					android:textStyle="bold"
-					android:textColor="#000000" />
+					android:textColor="?attr/colorOnSurface" />
 			</LinearLayout>
 			<LinearLayout
 				android:id="@+id/settingsButton"
@@ -81,7 +81,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="1dp"
 			android:padding="8dp"
-			android:background="#F5F5F5"
+			android:background="?attr/dividerColor"
 			android:orientation="horizontal" />
 		<ScrollView
 			android:id="@+id/scroll"
@@ -97,12 +97,19 @@
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
 					android:orientation="vertical">
-					<LinearLayout
+					<com.google.android.material.card.MaterialCardView
 						android:id="@+id/media_selection_container"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:orientation="vertical"
-						android:layout_margin="16dp">
+						android:layout_margin="16dp"
+						app:cardCornerRadius="22dp"
+						app:cardElevation="0dp"
+						app:strokeWidth="1dp"
+						app:strokeColor="?attr/dividerColor">
+						<LinearLayout
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:orientation="vertical">
 
 						<androidx.cardview.widget.CardView
 							android:id="@+id/imageCard"
@@ -176,7 +183,15 @@
 								android:layout_height="200dp"
 								android:visibility="gone" />
 						</androidx.cardview.widget.CardView>
-					</LinearLayout>
+						<Button
+							android:id="@+id/addVideoFromUrl"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginTop="16dp"
+							android:text="Add Video from URL"
+							style="@style/Widget.Material3.Button.OutlinedButton" />
+						</LinearLayout>
+					</com.google.android.material.card.MaterialCardView>
 					<com.synapse.social.studioasinc.FadeEditText
 						android:id="@+id/postDescription"
 						android:layout_width="match_parent"
@@ -204,7 +219,7 @@
 					android:layout_width="match_parent"
 					android:layout_height="1dp"
 					android:padding="8dp"
-					android:background="#ECEFF1"
+					android:background="?attr/dividerColor"
 					android:orientation="horizontal" />
 			</LinearLayout>
 		</ScrollView>

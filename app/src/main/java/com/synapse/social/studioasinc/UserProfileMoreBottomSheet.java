@@ -142,8 +142,6 @@ public class UserProfileMoreBottomSheet extends DialogFragment {
         settings.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-			//	intent.setClass(getActivity(), SettingsActivity.class);
-			//	startActivity(intent);
                 dismiss();
 			}
 		});

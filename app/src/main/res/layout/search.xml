@@ -1,65 +1,53 @@
-<LinearLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical"
 	android:id="@+id/_main">
-	<LinearLayout
-		android:id="@+id/body"
+
+	<com.google.android.material.appbar.AppBarLayout
+		android:id="@+id/app_bar_layout"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:background="?attr/colorSurface"
-		android:orientation="vertical">
-		<com.google.android.material.appbar.AppBarLayout
-			android:id="@+id/app_bar_layout"
+		android:layout_height="wrap_content"
+		android:background="?attr/colorSurface">
+
+		<com.google.android.material.search.SearchBar
+			android:id="@+id/search_bar"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:background="?attr/colorSurface">
+			android:hint="@string/search_users" />
 
-			<com.google.android.material.appbar.MaterialToolbar
-				android:id="@+id/toolbar"
-				android:layout_width="match_parent"
-				android:layout_height="?attr/actionBarSize"
-				app:title="@string/search"
-				app:navigationIcon="@drawable/ic_arrow_back_black" />
+	</com.google.android.material.appbar.AppBarLayout>
 
-			<com.google.android.material.search.SearchBar
-				android:id="@+id/search_bar"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:hint="@string/search_users" />
+	<androidx.recyclerview.widget.RecyclerView
+		android:id="@+id/SearchUserLayoutRecyclerView"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		app:layout_behavior="@string/appbar_scrolling_view_behavior"
+		android:visibility="gone"
+		tools:listitem="@layout/synapse_users_list_cv" />
 
-		</com.google.android.material.appbar.AppBarLayout>
+	<TextView
+		android:id="@+id/SearchUserLayoutNoUserFound"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		app:layout_behavior="@string/appbar_scrolling_view_behavior"
+		android:padding="8dp"
+		android:gravity="center_horizontal|center_vertical"
+		android:textSize="18sp"
+		android:textColor="?attr/colorOnSurfaceVariant"
+		tools:replace="android:text"
+		android:text="@string/no_user_found"
+		android:visibility="gone" />
 
-		<com.google.android.material.search.SearchView
-			android:id="@+id/search_view"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:hint="@string/search_users"
-			app:layout_anchor="@id/search_bar">
-			<LinearLayout
-				android:id="@+id/SearchUserLayout"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent"
-				android:orientation="vertical">
-				<androidx.recyclerview.widget.RecyclerView
-					android:id="@+id/SearchUserLayoutRecyclerView"
-					android:layout_width="match_parent"
-					android:layout_height="match_parent"
-					tools:listitem="@layout/synapse_users_list_cv" />
-				<TextView
-					android:id="@+id/SearchUserLayoutNoUserFound"
-					android:layout_width="match_parent"
-					android:layout_height="match_parent"
-					android:padding="8dp"
-					android:gravity="center_horizontal|center_vertical"
-					android:textSize="18sp"
-					android:textColor="?attr/colorOnSurfaceVariant"
-					tools:replace="android:text"
-					android:text="@string/no_user_found" />
-			</LinearLayout>
-		</com.google.android.material.search.SearchView>
-	</LinearLayout>
-</LinearLayout>
+	<com.google.android.material.search.SearchView
+		android:id="@+id/search_view"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:hint="@string/search_users"
+		app:layout_anchor="@id/search_bar">
+		<!-- Search suggestions/results go here (e.g. RecyclerView) -->
+	</com.google.android.material.search.SearchView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

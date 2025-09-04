@@ -62,7 +62,7 @@ public class ReelsFragment extends Fragment {
             @Override
             public void onResponse(String _param1, String _param2, HashMap<String, Object> _param3) {
                 loadedBody.setVisibility(View.VISIBLE);
-                Query getLineVideosRef = FirebaseDatabase.getInstance().getReference("reels").limitToLast(50);
+                Query getLineVideosRef = FirebaseDatabase.getInstance().getReference("skyline/line-posts").orderByChild("publish_date").limitToLast(50);
                 getLineVideosRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot _dataSnapshot) {
@@ -71,7 +71,9 @@ public class ReelsFragment extends Fragment {
                             GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
                             for (DataSnapshot _data : _dataSnapshot.getChildren()) {
                                 HashMap<String, Object> _map = _data.getValue(_ind);
-                                lineVideosListMap.add(_map);
+                                if (_map != null && "LINE_VIDEO".equals(_map.get("post_type"))) {
+                                    lineVideosListMap.add(_map);
+                                }
                             }
                             mLineVideosRecyclerViewAdapter = new LineVideosRecyclerViewAdapter(getContext(), getParentFragmentManager(),  lineVideosListMap);
                             videosRecyclerView.setAdapter(mLineVideosRecyclerViewAdapter);

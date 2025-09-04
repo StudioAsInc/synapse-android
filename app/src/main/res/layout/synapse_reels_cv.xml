@@ -96,7 +96,7 @@
 									android:text="@username"
 									android:textSize="18sp"
 									android:textStyle="bold"
-									android:textColor="#FFFFFF"
+									android:textColor="?attr/colorOnPrimary"
 									android:singleLine="true"
 									android:layout_weight="1"
 									android:focusable="false"
@@ -127,7 +127,7 @@
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:textSize="16sp"
-							android:textColor="#FFFFFF"
+							android:textColor="?attr/colorOnPrimary"
 							android:focusable="false"
 							tools:replace="android:text"
 							android:fontFamily="@font/product_sans" />
@@ -161,7 +161,7 @@
 								android:text="0"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#FFFFFF"
+								android:textColor="?attr/colorOnPrimary"
 								android:focusable="false"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
@@ -187,7 +187,7 @@
 								android:text="0"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#FFFFFF"
+								android:textColor="?attr/colorOnPrimary"
 								android:focusable="false"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
@@ -213,7 +213,7 @@
 								android:text="0"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#FFFFFF"
+								android:textColor="?attr/colorOnPrimary"
 								android:focusable="false"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
@@ -238,7 +238,7 @@
 								android:text="0"
 								android:textSize="18sp"
 								android:textStyle="bold"
-								android:textColor="#FFFFFF"
+								android:textColor="?attr/colorOnPrimary"
 								android:focusable="false"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
@@ -249,7 +249,7 @@
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
 					android:padding="8dp"
-					android:background="#212121"
+					android:background="?attr/colorPrimaryVariant"
 					android:gravity="center_horizontal|center_vertical"
 					android:orientation="horizontal">
 					<TextView
@@ -257,7 +257,8 @@
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:textSize="16sp"
-						android:textColor="#9E9E9E"
+						android:textColor="?attr/colorOnPrimary"
+						android:alpha="0.7"
 						android:layout_weight="1"
 						android:focusable="false"
 						tools:replace="android:text"

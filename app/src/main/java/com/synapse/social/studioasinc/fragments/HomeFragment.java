@@ -238,7 +238,12 @@ public class HomeFragment extends Fragment {
                         GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
                         for (DataSnapshot _data : _dataSnapshot.getChildren()) {
                             HashMap<String, Object> _map = _data.getValue(_ind);
-                            PostsList.add(_map);
+                            if (_map != null) {
+                                String postType = (_map.containsKey("post_type")) ? _map.get("post_type").toString() : "TEXT";
+                                if (postType.equals("TEXT") || postType.equals("IMAGE")) {
+                                    PostsList.add(_map);
+                                }
+                            }
                         }
                     } catch (Exception _e) {
                         _e.printStackTrace();

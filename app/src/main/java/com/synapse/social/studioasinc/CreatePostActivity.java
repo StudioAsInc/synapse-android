@@ -85,6 +85,8 @@ import com.synapse.social.studioasinc.ImageUploader;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import android.content.ClipData;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 
 public class CreatePostActivity extends AppCompatActivity {
@@ -122,6 +124,7 @@ public class CreatePostActivity extends AppCompatActivity {
 	private CardView videoCard;
 	private LinearLayout videoPlaceholder;
 	private VideoView postVideoView;
+	private Button addVideoFromUrl;
 	private LinearLayout settingsButton;
 	private DatabaseReference maindb = _firebase.getReference("skyline");
 	private Calendar cc = Calendar.getInstance();
@@ -191,6 +194,7 @@ public class CreatePostActivity extends AppCompatActivity {
 		videoCard = findViewById(R.id.videoCard);
 		videoPlaceholder = findViewById(R.id.videoPlaceholder);
 		postVideoView = findViewById(R.id.postVideoView);
+		addVideoFromUrl = findViewById(R.id.addVideoFromUrl);
 		settingsButton = findViewById(R.id.settingsButton);
 		appSavedData = getSharedPreferences("data", Activity.MODE_PRIVATE);
 		
@@ -198,6 +202,13 @@ public class CreatePostActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View _view) {
 				_openVideoPicker();
+			}
+		});
+
+		addVideoFromUrl.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				_showAddVideoFromUrlDialog();
 			}
 		});
 
@@ -331,7 +342,7 @@ public class CreatePostActivity extends AppCompatActivity {
 						selectedImagePath = "";
 						imageCard.setVisibility(View.GONE);
 						videoCard.setVisibility(View.VISIBLE);
-						_loadSelectedVideo();
+						_loadSelectedVideo(videoPath, false);
 					}
 				}
 			}
@@ -384,11 +395,12 @@ public class CreatePostActivity extends AppCompatActivity {
 		}
 	}
 
-	private void _loadSelectedVideo() {
-		if (hasVideo && selectedVideoPath != null) {
+	private void _loadSelectedVideo(String path, boolean isUrl) {
+		if (hasVideo && path != null) {
+			selectedVideoPath = path;
 			videoPlaceholder.setVisibility(View.GONE);
 			postVideoView.setVisibility(View.VISIBLE);
-			postVideoView.setVideoURI(Uri.parse(selectedVideoPath));
+			postVideoView.setVideoURI(Uri.parse(path));
 			MediaController mediaController = new MediaController(this);
 			postVideoView.setMediaController(mediaController);
 			mediaController.setAnchorView(postVideoView);
@@ -420,7 +432,11 @@ public class CreatePostActivity extends AppCompatActivity {
 				}
 			});
 		} else if (hasVideo) {
-			_uploadVideo(selectedVideoPath);
+			if (selectedVideoPath.startsWith("http")) {
+				_saveVideoPostToDatabase(selectedVideoPath);
+			} else {
+				_uploadVideo(selectedVideoPath);
+			}
 		} else {
 			// Create text-only post
 			_savePostToDatabase(null);
@@ -699,7 +715,7 @@ public class CreatePostActivity extends AppCompatActivity {
 
 			@Override
 			public void onSuccess(String url, String publicId) {
-				_saveReelToDatabase(url);
+				_saveVideoPostToDatabase(url);
 			}
 
 			@Override
@@ -710,7 +726,7 @@ public class CreatePostActivity extends AppCompatActivity {
 		});
 	}
 
-	private void _saveReelToDatabase(String videoUrl) {
+	private void _saveVideoPostToDatabase(String videoUrl) {
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		if (currentUser == null) {
 			Toast.makeText(getApplicationContext(), "User not logged in", Toast.LENGTH_SHORT).show();
@@ -722,17 +738,39 @@ public class CreatePostActivity extends AppCompatActivity {
 		PostSendMap = new HashMap<>();
 		PostSendMap.put("key", UniquePostKey);
 		PostSendMap.put("uid", currentUser.getUid());
-		if (!postDescription.getText().toString().trim().equals("")) {
-			PostSendMap.put("text", postDescription.getText().toString().trim());
-		}
+		PostSendMap.put("post_type", "LINE_VIDEO");
 		PostSendMap.put("videoUrl", videoUrl);
-		PostSendMap.put("thumbnailUrl", ""); // I'll leave this empty for now, as there's no thumbnail generation logic yet.
+
+		if (!postDescription.getText().toString().trim().equals("")) {
+			PostSendMap.put("post_text", postDescription.getText().toString().trim());
+		}
+
+		if (appSavedData.contains("user_region_data") && !appSavedData.getString("user_region_data", "").equals("none")) {
+			PostSendMap.put("post_region", appSavedData.getString("user_region_data", ""));
+		} else {
+			PostSendMap.put("post_region", "none");
+		}
+
+		// Apply post settings
+		PostSendMap.put("post_hide_views_count", hideViewsCount);
+		PostSendMap.put("post_hide_like_count", hideLikesCount);
+		PostSendMap.put("post_hide_comments_count", hideCommentsCount);
+
+		if (hidePostFromEveryone) {
+			PostSendMap.put("post_visibility", "private");
+		} else {
+			PostSendMap.put("post_visibility", "public");
+		}
+
+		PostSendMap.put("post_disable_favorite", disableSaveToFavorites);
+		PostSendMap.put("post_disable_comments", disableComments);
 		PostSendMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
 
-		FirebaseDatabase.getInstance().getReference("reels").child(UniquePostKey).updateChildren(PostSendMap, new DatabaseReference.CompletionListener() {
+		FirebaseDatabase.getInstance().getReference("skyline/line-posts").child(UniquePostKey).updateChildren(PostSendMap, new DatabaseReference.CompletionListener() {
 			@Override
 			public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 				if (databaseError == null) {
+					// TODO: Do I need to send notifications for reels? For now, I'll assume not.
 					Toast.makeText(getApplicationContext(), "Reel published successfully", Toast.LENGTH_SHORT).show();
 					_LoadingDialog(false);
 					finish();
@@ -742,6 +780,50 @@ public class CreatePostActivity extends AppCompatActivity {
 				}
 			}
 		});
+	}
+
+	private void _showAddVideoFromUrlDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle("Add Video from URL");
+
+		final EditText input = new EditText(this);
+		input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+		builder.setView(input);
+
+		builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				String url = input.getText().toString();
+				if (!url.isEmpty() && _checkValidUrl(url)) {
+					selectedVideoPath = url;
+					hasVideo = true;
+					hasImage = false;
+					selectedImagePath = "";
+					imageCard.setVisibility(View.GONE);
+					videoCard.setVisibility(View.VISIBLE);
+					_loadSelectedVideo(url, true);
+				} else {
+					Toast.makeText(getApplicationContext(), "Invalid URL", Toast.LENGTH_SHORT).show();
+				}
+			}
+		});
+		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.cancel();
+			}
+		});
+
+		builder.show();
+	}
+
+	public boolean _checkValidUrl(final String _url) {
+		try {
+			new URL(_url);
+			return true;
+		} catch (MalformedURLException e) {
+			return false;
+		}
 	}
 	
 }
