@@ -150,5 +150,6 @@
     <color name="md_theme_surfaceContainerHigh">#30363d</color>
 
     <color name="md_theme_surfaceContainerHighest">#444c56</color>
-
+    <color name="pureWhite">@color/github_dark_background</color>
+    <color name="message_item_background">@color/github_dark_surface</color>
 </resources>

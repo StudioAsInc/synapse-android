@@ -201,8 +201,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             profileIntent.putExtra("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
             startActivity(profileIntent);
         } else if (id == R.id.nav_settings) {
-            Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
-            startActivity(settingsIntent);
+            // Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
+            // startActivity(settingsIntent);
         } else if (id == R.id.nav_calls) {
             Intent callsIntent = new Intent(getApplicationContext(), CallActivity.class);
             startActivity(callsIntent);

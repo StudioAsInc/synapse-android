@@ -415,7 +415,6 @@ public class FragInboxChatsActivity extends Fragment {
 			try{
 				RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 				_view.setLayoutParams(_lp);
-				_viewGraphics(main, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, Color.TRANSPARENT);
 				userStatusCircleBG.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFFFFFFFF));
 				userStatusCircleIN.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFF388E3C));
 				unread_messages_count_badge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, getResources().getColor(R.color.colorPrimary)));
@@ -454,15 +453,11 @@ public class FragInboxChatsActivity extends Fragment {
 											public void run() {
 												long unReadMessageCount = dataSnapshot.getChildrenCount();
 												if(dataSnapshot.exists()) {
-													last_message.setTextColor(0xFF000000);
-													push.setTextColor(0xFF000000);
 													//	last_message.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 1);
 													//	push.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 1);
 													unread_messages_count_badge.setText(String.valueOf((long)(unReadMessageCount)));
 													unread_messages_count_badge.setVisibility(View.VISIBLE);
 												} else {
-													last_message.setTextColor(0xFF616161);
-													push.setTextColor(0xFF616161);
 													//	last_message.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 0);
 													//	push.setTypeface(Typeface.createFromAsset(getContext().getAssets(),"fonts/appfont.ttf"), 0);
 													unread_messages_count_badge.setVisibility(View.GONE);

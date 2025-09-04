@@ -64,7 +64,6 @@ synapse-android/
 
 #### Messaging System
 - **`InboxActivity.java`** - Message inbox interface
-- **`MessagesActivity.java`** - Chat interface
 - **`ChatActivity.java`** - Individual chat conversations
 - **`ChatAdapter.java`** - Message display adapter
 - **`FragInboxChatsActivity.java`** - Chat list fragment
@@ -79,7 +78,6 @@ synapse-android/
 - **`LineVideoPlayerActivity.java`** - Video playback interface
 
 #### Settings & Configuration
-- **`SettingsActivity.java`** - App settings
 - **`SelectRegionActivity.java`** - Region selection
 - **`BgWallpapersActivity.java`** - Background wallpaper selection
 - **`ChatsettingsActivity.java`** - Chat-specific settings
@@ -120,7 +118,6 @@ com.synapse.social.studioasinc/
 ├── AI/                              # Artificial Intelligence components
 ├── animations/                      # Animation utilities
 ├── audio/                          # Audio processing components
-├── lab/                            # Experimental features
 ├── permissionreq/                  # Permission request utilities
 ├── styling/                        # UI styling components
 └── widget/                         # Custom widget implementations
@@ -224,7 +221,7 @@ com.synapse.social.studioasinc/
 ### Required Permissions
 - **Internet access** - Network connectivity
 - **Network state** - Connection monitoring
-- **Notifications** - Push message delivery
+-- **Notifications** - Push message delivery
 - **Storage access** - File and media management
 - **Vibration** - Notification feedback
 
