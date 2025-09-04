@@ -2,4 +2,17 @@
     <style name="PlaceholderView">
         <item name="android:background">@drawable/rounded_corner_placeholder_solid</item>
     </style>
+
+    <style name="AppTheme.Material3.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/AppTheme.Material3.ModalBottomSheet</item>
+    </style>
+
+    <style name="AppTheme.Material3.ModalBottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="shapeAppearance">@style/AppTheme.Material3.Shape.Large</item>
+    </style>
+
+    <style name="AppTheme.Material3.Shape.Large" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">28dp</item>
+    </style>
 </resources>

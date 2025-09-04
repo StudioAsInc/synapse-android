@@ -47,7 +47,7 @@
         <item name="colorSurfaceContainer">@color/md_theme_surfaceContainer</item>
         <item name="colorSurfaceContainerHigh">@color/md_theme_surfaceContainerHigh</item>
         <item name="colorSurfaceContainerHighest">@color/md_theme_surfaceContainerHighest</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
         <item name="android:windowLightNavigationBar">true</item>
@@ -56,11 +56,11 @@
         <item name="android:windowAllowEnterTransitionOverlap">true</item>
         <item name="android:windowAllowReturnTransitionOverlap">true</item>
         <item name="android:windowAnimationStyle">@null</item>
-        <item name="android:forceDarkAllowed">false</item>
         <item name="android:windowDisablePreview">true</item>
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Material3.Expressive.Small</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Material3.Expressive.Medium</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Expressive.Large</item>
+        <item name="bottomSheetStyle">@style/Widget.Material3.BottomSheet.Modal</item>
     </style>
     <!--All additional styles from themes.xml-->
     <style name="AppTheme.FullScreen" parent="AppTheme">
@@ -70,6 +70,9 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.Material3.Dark.ActionBar">
     </style>
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.Material3.Light">
+    </style>
+    <style name="AppTheme.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Material3.BottomSheet.Modal</item>
     </style>
     <style name="PostCommentsBottomSheetDialogStyle" parent="Theme.AppCompat.Light.Dialog">
         <item name="android:windowIsFloating">false</item>

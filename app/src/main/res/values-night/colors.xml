@@ -1,0 +1,154 @@
+
+<resources>
+
+    <!-- Base GitHub Dark Theme Colors -->
+
+    <color name="github_dark_background">#0D1117</color>
+
+    <color name="github_dark_surface">#161B22</color>
+
+    <color name="github_dark_primary_text">#C9D1D9</color>
+
+    <color name="github_dark_secondary_text">#8B949E</color>
+
+    <color name="github_dark_accent">#58A6FF</color>
+
+    <color name="github_dark_border">#30363D</color>
+
+    <!-- Dark Mode Aliases (for compatibility) -->
+
+    <color name="darkPrimaryBackground">@color/github_dark_background</color>
+
+    <color name="darkSecondaryBackground">@color/github_dark_surface</color>
+
+    <color name="darkPrimaryText">@color/github_dark_primary_text</color>
+
+    <color name="darkSecondaryText">@color/github_dark_secondary_text</color>
+
+    <color name="darkAccent">@color/github_dark_accent</color>
+
+    <!-- App Theme Colors -->
+
+    <color name="colorPrimary">@color/darkAccent</color>
+
+    <color name="colorPrimaryDark">@color/darkPrimaryBackground</color>
+
+    <color name="colorControlHighlight">#40FFFFFF</color>
+
+    <color name="colorControlNormal">@color/darkAccent</color>
+
+    <color name="colorAccent">@color/darkAccent</color>
+
+    <color name="colorBackground">@color/darkPrimaryBackground</color>
+
+    <color name="colorSurface">@color/darkSecondaryBackground</color>
+
+    <color name="colorError">#f85149</color>
+
+    <color name="colorOnPrimary">#ffffff</color>
+
+    <color name="colorOnSecondary">@color/darkPrimaryText</color>
+
+    <color name="colorOnBackground">@color/darkPrimaryText</color>
+
+    <color name="colorOnSurface">@color/darkPrimaryText</color>
+
+    <color name="colorOnError">#ffffff</color>
+
+    <!-- Material 3 Colors -->
+
+    <color name="md_theme_primary">@color/github_dark_accent</color>
+
+    <color name="md_theme_onPrimary">#ffffff</color>
+
+    <color name="md_theme_primaryContainer">@color/github_dark_surface</color>
+
+    <color name="md_theme_onPrimaryContainer">@color/github_dark_primary_text</color>
+
+    <color name="md_theme_secondary">@color/github_dark_secondary_text</color>
+
+    <color name="md_theme_onSecondary">#ffffff</color>
+
+    <color name="md_theme_secondaryContainer">@color/github_dark_surface</color>
+
+    <color name="md_theme_onSecondaryContainer">@color/github_dark_primary_text</color>
+
+    <color name="md_theme_tertiary">@color/github_dark_accent</color>
+
+    <color name="md_theme_onTertiary">#ffffff</color>
+
+    <color name="md_theme_tertiaryContainer">@color/github_dark_surface</color>
+
+    <color name="md_theme_onTertiaryContainer">@color/github_dark_primary_text</color>
+
+    <color name="md_theme_error">#f85149</color>
+
+    <color name="md_theme_onError">#ffffff</color>
+
+    <color name="md_theme_errorContainer">#da3633</color>
+
+    <color name="md_theme_onErrorContainer">#ffffff</color>
+
+    <color name="md_theme_background">@color/github_dark_background</color>
+
+    <color name="md_theme_onBackground">@color/github_dark_primary_text</color>
+
+    <color name="md_theme_surface">@color/github_dark_surface</color>
+
+    <color name="md_theme_onSurface">@color/github_dark_primary_text</color>
+
+    <color name="md_theme_surfaceVariant">#21262d</color>
+
+    <color name="md_theme_onSurfaceVariant">@color/github_dark_secondary_text</color>
+
+    <color name="md_theme_outline">@color/github_dark_border</color>
+
+    <color name="md_theme_outlineVariant">#444c56</color>
+
+    <color name="md_theme_scrim">#000000</color>
+
+    <color name="md_theme_inverseSurface">@color/github_dark_primary_text</color>
+
+    <color name="md_theme_inverseOnSurface">@color/github_dark_background</color>
+
+    <color name="md_theme_inversePrimary">@color/github_dark_background</color>
+
+    <color name="md_theme_primaryFixed">@color/github_dark_accent</color>
+
+    <color name="md_theme_onPrimaryFixed">#ffffff</color>
+
+    <color name="md_theme_primaryFixedDim">@color/github_dark_accent</color>
+
+    <color name="md_theme_onPrimaryFixedVariant">#ffffff</color>
+
+    <color name="md_theme_secondaryFixed">@color/github_dark_secondary_text</color>
+
+    <color name="md_theme_onSecondaryFixed">#ffffff</color>
+
+    <color name="md_theme_secondaryFixedDim">@color/github_dark_secondary_text</color>
+
+    <color name="md_theme_onSecondaryFixedVariant">#ffffff</color>
+
+    <color name="md_theme_tertiaryFixed">@color/github_dark_accent</color>
+
+    <color name="md_theme_onTertiaryFixed">#ffffff</color>
+
+    <color name="md_theme_tertiaryFixedDim">@color/github_dark_accent</color>
+
+    <color name="md_theme_onTertiaryFixedVariant">#ffffff</color>
+
+    <color name="md_theme_surfaceDim">@color/github_dark_background</color>
+
+    <color name="md_theme_surfaceBright">@color/github_dark_surface</color>
+
+    <color name="md_theme_surfaceContainerLowest">#010409</color>
+
+    <color name="md_theme_surfaceContainerLow">@color/github_dark_surface</color>
+
+    <color name="md_theme_surfaceContainer">#21262d</color>
+
+    <color name="md_theme_surfaceContainerHigh">#30363d</color>
+
+    <color name="md_theme_surfaceContainerHighest">#444c56</color>
+
+</resources>

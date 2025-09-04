@@ -1,26 +1,33 @@
 package com.synapse.social.studioasinc
 
 import android.util.Log
-import com.onesignal.OneSignal
+import com.google.firebase.database.FirebaseDatabase
 
 object OneSignalManager {
 
     private const val TAG = "OneSignalManager"
+    private val db = FirebaseDatabase.getInstance().getReference("skyline/users")
 
     /**
-     * Logs the user into OneSignal using their Firebase UID as the External ID.
-     * This is the recommended approach for OneSignal v5+ to identify users.
+     * Saves or updates the user's OneSignal Player ID in the Firebase Realtime Database.
+     * This is now the primary method for storing the player ID.
      *
      * @param userUid The Firebase UID of the user.
+     * @param playerId The OneSignal Player ID to save.
      */
     @JvmStatic
-    fun loginUser(userUid: String) {
-        if (userUid.isBlank()) {
-            Log.w(TAG, "User UID is blank. Aborting OneSignal login.")
+    fun savePlayerIdToRealtimeDatabase(userUid: String, playerId: String) {
+        if (userUid.isBlank() || playerId.isBlank()) {
+            Log.w(TAG, "User UID or Player ID is blank. Aborting save.")
             return
         }
 
-        OneSignal.login(userUid)
-        Log.i(TAG, "OneSignal login called for user: $userUid")
+        db.child(userUid).child("oneSignalPlayerId").setValue(playerId)
+            .addOnSuccessListener {
+                Log.i(TAG, "OneSignal Player ID saved to Realtime Database for user: $userUid")
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Failed to save OneSignal Player ID to Realtime Database for user: $userUid", e)
+            }
     }
 }
