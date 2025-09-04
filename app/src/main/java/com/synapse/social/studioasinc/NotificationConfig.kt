@@ -21,7 +21,7 @@ object NotificationConfig {
     // ===== NOTIFICATION SETTINGS =====
     const val NOTIFICATION_TITLE = "New Message"
     const val NOTIFICATION_SUBTITLE = "Synapse Social"
-    const val NOTIFICATION_CHANNEL_ID = "chat_messages"
+    const val NOTIFICATION_CHANNEL_ID = "messages"
     const val NOTIFICATION_PRIORITY = 10 // High priority
 
     // ===== NOTIFICATION TYPES =====
