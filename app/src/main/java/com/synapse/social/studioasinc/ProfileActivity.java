@@ -359,13 +359,35 @@ class c {
 									String notificationMessage = displayName + " liked your profile.";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("sender_uid", senderUid);
-									NotificationHelper.sendNotification(
-										recipientUid,
-										senderUid,
-										notificationMessage,
-										"profile_like",
-										data
-									);
+									final String recipientUidFinal = recipientUid;
+									_firebase.getReference("skyline/users").child(recipientUidFinal).addListenerForSingleValueEvent(new ValueEventListener() {
+										@Override
+										public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+											String recipientOneSignalPlayerId = "missing_id";
+											if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
+												recipientOneSignalPlayerId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
+											}
+											NotificationHelper.sendNotification(
+												recipientUidFinal,
+												senderUid,
+												notificationMessage,
+												"profile_like",
+												data,
+												recipientOneSignalPlayerId
+											);
+										}
+										@Override
+										public void onCancelled(@NonNull DatabaseError databaseError) {
+											NotificationHelper.sendNotification(
+												recipientUidFinal,
+												senderUid,
+												notificationMessage,
+												"profile_like",
+												data,
+												"missing_id"
+											);
+										}
+									});
 								}
 							});
 							UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
@@ -428,13 +450,35 @@ class c {
 									String notificationMessage = displayName + " started following you.";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("sender_uid", senderUid);
-									NotificationHelper.sendNotification(
-										recipientUid,
-										senderUid,
-										notificationMessage,
-										"new_follower",
-										data
-									);
+									final String recipientUidFinal = recipientUid;
+									_firebase.getReference("skyline/users").child(recipientUidFinal).addListenerForSingleValueEvent(new ValueEventListener() {
+										@Override
+										public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+											String recipientOneSignalPlayerId = "missing_id";
+											if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
+												recipientOneSignalPlayerId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
+											}
+											NotificationHelper.sendNotification(
+												recipientUidFinal,
+												senderUid,
+												notificationMessage,
+												"new_follower",
+												data,
+												recipientOneSignalPlayerId
+											);
+										}
+										@Override
+										public void onCancelled(@NonNull DatabaseError databaseError) {
+											NotificationHelper.sendNotification(
+												recipientUidFinal,
+												senderUid,
+												notificationMessage,
+												"new_follower",
+												data,
+												"missing_id"
+											);
+										}
+									});
 								}
 							});
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));

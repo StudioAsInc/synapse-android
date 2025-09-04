@@ -6,7 +6,6 @@ import android.app.*;
 import android.content.*;
 import android.content.ClipData;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.*;
@@ -82,6 +81,8 @@ import java.util.regex.*;
 import org.json.*;
 import com.google.firebase.database.Query;
 import com.synapse.social.studioasinc.ImageUploader;
+import com.onesignal.OSDeviceState;
+import com.onesignal.OneSignal;
 
 
 import com.synapse.social.studioasinc.crypto.E2EEHelper;
@@ -796,11 +797,14 @@ public class CompleteProfileActivity extends AppCompatActivity {
 					usernameIndexMap.put("username", username_input.getText().toString().trim());
 					pushusername.child(username_input.getText().toString().trim()).updateChildren(usernameIndexMap);
 
-					SharedPreferences prefs = getSharedPreferences("onesignal", Context.MODE_PRIVATE);
-					String playerId = prefs.getString("player_id", null);
-					if (playerId != null) {
-						OneSignalManager.savePlayerIdToRealtimeDatabase(currentUser.getUid(), playerId);
-					}
+                    // Save OneSignal Player ID
+                    OSDeviceState device = OneSignal.getDeviceState();
+                    if (device != null) {
+                        String playerId = device.getUserId();
+                        if (playerId != null) {
+                            OneSignalManager.savePlayerIdToRealtimeDatabase(currentUser.getUid(), playerId);
+                        }
+                    }
 
 					E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
 					e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {

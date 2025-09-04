@@ -2,7 +2,6 @@ package com.synapse.social.studioasinc;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Build;
@@ -36,6 +35,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.onesignal.OSDeviceState;
+import com.onesignal.OneSignal;
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
 import com.synapse.social.studioasinc.animations.textview.TVeffects;
 
@@ -322,11 +323,6 @@ public class AuthActivity extends AppCompatActivity {
     }
 
     private void fetchUsername(String uid) {
-        SharedPreferences prefs = getSharedPreferences("onesignal", Context.MODE_PRIVATE);
-        String playerId = prefs.getString("player_id", null);
-        if (playerId != null) {
-            OneSignalManager.savePlayerIdToRealtimeDatabase(uid, playerId);
-        }
         DatabaseReference usernameRef = FirebaseDatabase.getInstance().getReference()
                 .child("skyline")
                 .child("users")
@@ -342,6 +338,19 @@ public class AuthActivity extends AppCompatActivity {
                 } else {
                     showWelcomeMessage("I recognize you! Let's go...");
                 }
+
+                // Save OneSignal Player ID
+                FirebaseUser user = fauth.getCurrentUser();
+                if (user != null) {
+                    OSDeviceState device = OneSignal.getDeviceState();
+                    if (device != null) {
+                        String playerId = device.getUserId();
+                        if (playerId != null) {
+                            OneSignalManager.savePlayerIdToRealtimeDatabase(user.getUid(), playerId);
+                        }
+                    }
+                }
+
                 navigateToHomeAfterDelay();
             }
 

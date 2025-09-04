@@ -366,13 +366,35 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 							HashMap<String, String> data = new HashMap<>();
 							data.put("postId", postKey);
 							data.put("commentId", commentKey);
-							NotificationHelper.sendNotification(
-							originalCommenterUid,
-							currentUid,
-							message,
-							NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
-							data
-							);
+							final String recipientUid = originalCommenterUid;
+							FirebaseDatabase.getInstance().getReference("skyline/users").child(recipientUid).addListenerForSingleValueEvent(new ValueEventListener() {
+								@Override
+								public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+									String recipientOneSignalPlayerId = "missing_id";
+									if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
+										recipientOneSignalPlayerId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
+									}
+									NotificationHelper.sendNotification(
+										recipientUid,
+										currentUid,
+										message,
+										NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
+										data,
+										recipientOneSignalPlayerId
+									);
+								}
+								@Override
+								public void onCancelled(@NonNull DatabaseError databaseError) {
+									NotificationHelper.sendNotification(
+										recipientUid,
+										currentUid,
+										message,
+										NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
+										data,
+										"missing_id"
+									);
+								}
+							});
 						}
 					}
 				});
@@ -385,13 +407,35 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						HashMap<String, String> data = new HashMap<>();
 						data.put("postId", postKey);
 						data.put("commentId", commentKey);
-						NotificationHelper.sendNotification(
-						postPublisherUID,
-						currentUid,
-						message,
-						NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT,
-						data
-						);
+						final String recipientUid = postPublisherUID;
+						FirebaseDatabase.getInstance().getReference("skyline/users").child(recipientUid).addListenerForSingleValueEvent(new ValueEventListener() {
+							@Override
+							public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+								String recipientOneSignalPlayerId = "missing_id";
+								if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
+									recipientOneSignalPlayerId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
+								}
+								NotificationHelper.sendNotification(
+									recipientUid,
+									currentUid,
+									message,
+									NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT,
+									data,
+									recipientOneSignalPlayerId
+								);
+							}
+							@Override
+							public void onCancelled(@NonNull DatabaseError databaseError) {
+								NotificationHelper.sendNotification(
+									recipientUid,
+									currentUid,
+									message,
+									NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT,
+									data,
+									"missing_id"
+								);
+							}
+						});
 					}
 				});
 			}

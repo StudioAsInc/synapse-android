@@ -473,13 +473,36 @@ public class CreatePostActivity extends AppCompatActivity {
 									String message = senderName + " mentioned you in a post";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("postId", postKey);
-									NotificationHelper.sendNotification(
-										recipientUid,
-										currentUid,
-										message,
-										"mention_post",
-										data
-									);
+									final String finalRecipientUid = recipientUid;
+									FirebaseDatabase.getInstance().getReference("skyline/users").child(finalRecipientUid).addListenerForSingleValueEvent(new ValueEventListener() {
+										@Override
+										public void onDataChange(@NonNull DataSnapshot userSnapshot) {
+											String recipientOneSignalPlayerId = "missing_id";
+											if (userSnapshot.exists() && userSnapshot.hasChild("oneSignalPlayerId")) {
+												recipientOneSignalPlayerId = userSnapshot.child("oneSignalPlayerId").getValue(String.class);
+											}
+											NotificationHelper.sendNotification(
+												finalRecipientUid,
+												currentUid,
+												message,
+												"mention_post",
+												data,
+												recipientOneSignalPlayerId
+											);
+										}
+
+										@Override
+										public void onCancelled(@NonNull DatabaseError databaseError) {
+											NotificationHelper.sendNotification(
+												finalRecipientUid,
+												currentUid,
+												message,
+												"mention_post",
+												data,
+												"missing_id"
+											);
+										}
+									});
 								}
 							}
 						}

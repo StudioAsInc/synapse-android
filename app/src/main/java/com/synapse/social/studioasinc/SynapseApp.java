@@ -30,8 +30,6 @@ import com.synapse.social.studioasinc.util.UpdateManager;
 import android.os.Bundle;
 import android.app.Activity;
 import java.lang.ref.WeakReference;
-import android.content.SharedPreferences;
-import android.content.Context;
 
 public class SynapseApp extends Application implements Application.ActivityLifecycleCallbacks, DefaultLifecycleObserver {
     
@@ -90,15 +88,15 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
 
-        // Add a subscription observer to get the Player ID and save it to SharedPreferences
+        // Add a subscription observer to get the Player ID and save it to Firestore
         OneSignal.getUser().getPushSubscription().addObserver(new IPushSubscriptionObserver() {
             @Override
             public void onPushSubscriptionChange(@NonNull PushSubscriptionChangedState state) {
                 if (state.getCurrent().getOptedIn()) {
                     String playerId = state.getCurrent().getId();
-                    if (playerId != null) {
-                        SharedPreferences prefs = getSharedPreferences("onesignal", Context.MODE_PRIVATE);
-                        prefs.edit().putString("player_id", playerId).apply();
+                    if (mAuth.getCurrentUser() != null && playerId != null) {
+                        String userUid = mAuth.getCurrentUser().getUid();
+                        OneSignalManager.savePlayerIdToRealtimeDatabase(userUid, playerId);
                     }
                 }
             }

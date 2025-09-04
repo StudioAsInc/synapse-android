@@ -32,13 +32,36 @@ public class NotificationUtils {
                 HashMap<String, String> data = new HashMap<>();
                 data.put("postId", postKey);
 
-                NotificationHelper.sendNotification(
-                    postAuthorUid,
-                    currentUid,
-                    message,
-                    NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_POST,
-                    data
-                );
+                final String recipientUid = postAuthorUid;
+                FirebaseDatabase.getInstance().getReference("skyline/users").child(recipientUid).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String recipientOneSignalPlayerId = "missing_id";
+                        if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
+                            recipientOneSignalPlayerId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
+                        }
+                        NotificationHelper.sendNotification(
+                            recipientUid,
+                            currentUid,
+                            message,
+                            NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_POST,
+                            data,
+                            recipientOneSignalPlayerId
+                        );
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        NotificationHelper.sendNotification(
+                            recipientUid,
+                            currentUid,
+                            message,
+                            NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_POST,
+                            data,
+                            "missing_id"
+                        );
+                    }
+                });
             }
 
             @Override
