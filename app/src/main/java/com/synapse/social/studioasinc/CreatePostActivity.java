@@ -431,14 +431,21 @@ public class CreatePostActivity extends AppCompatActivity {
 		}
 		PostSendMap.put("uid", currentUser.getUid());
 		
-		if (hasImage) {
-			PostSendMap.put("post_type", "IMAGE");
-			PostSendMap.put("post_image", mediaUrl);
-		} else if (hasVideo) {
-			PostSendMap.put("post_type", "VIDEO");
+		DatabaseReference targetRef;
+
+		if (hasVideo) {
+			PostSendMap.put("post_type", "LINE_VIDEO");
 			PostSendMap.put("post_video", mediaUrl);
+			// From ReelsFragment.java, the path is "skyline/line-posts"
+			targetRef = FirebaseDatabase.getInstance().getReference("skyline/line-posts").child(UniquePostKey);
 		} else {
-			PostSendMap.put("post_type", "TEXT");
+			if (hasImage) {
+				PostSendMap.put("post_type", "IMAGE");
+				PostSendMap.put("post_image", mediaUrl);
+			} else {
+				PostSendMap.put("post_type", "TEXT");
+			}
+			targetRef = FirebaseDatabase.getInstance().getReference("skyline/posts").child(UniquePostKey);
 		}
 		
 		if (!postDescription.getText().toString().trim().equals("")) {
@@ -466,11 +473,13 @@ public class CreatePostActivity extends AppCompatActivity {
 		PostSendMap.put("post_disable_comments", disableComments);
 		PostSendMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
 		
-		FirebaseDatabase.getInstance().getReference("skyline/posts").child(UniquePostKey).updateChildren(PostSendMap, new DatabaseReference.CompletionListener() {
+		targetRef.updateChildren(PostSendMap, new DatabaseReference.CompletionListener() {
 			@Override
 			public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 				if (databaseError == null) {
-					_sendNotificationsToFollowers(UniquePostKey, postDescription.getText().toString().trim());
+					if (!hasVideo) {
+						_sendNotificationsToFollowers(UniquePostKey, postDescription.getText().toString().trim());
+					}
 					Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
 					_LoadingDialog(false);
 					finish();
