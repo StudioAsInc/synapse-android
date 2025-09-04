@@ -2187,8 +2187,7 @@ public class ChatActivity extends AppCompatActivity {
 					senderUid,
 					notificationMessage,
 					"chat_message",
-					data,
-					recipientOneSignalPlayerId
+					data
 				);
 
 				_updateInbox(lastMessage);
@@ -2265,8 +2264,7 @@ public class ChatActivity extends AppCompatActivity {
 				senderUid,
 				notificationMessage,
 				"chat_message",
-				data,
-				recipientOneSignalPlayerId
+				data
 			);
 
 			_updateInbox(messageText);

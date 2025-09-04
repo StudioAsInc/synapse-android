@@ -66,6 +66,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.onesignal.OSDeviceState;
+import com.onesignal.OneSignal;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
@@ -81,8 +83,7 @@ import java.util.regex.*;
 import org.json.*;
 import com.google.firebase.database.Query;
 import com.synapse.social.studioasinc.ImageUploader;
-import com.onesignal.OSDeviceState;
-import com.onesignal.OneSignal;
+import com.synapse.social.studioasinc.onesignal.OneSignalManager;
 
 
 import com.synapse.social.studioasinc.crypto.E2EEHelper;
@@ -797,14 +798,14 @@ public class CompleteProfileActivity extends AppCompatActivity {
 					usernameIndexMap.put("username", username_input.getText().toString().trim());
 					pushusername.child(username_input.getText().toString().trim()).updateChildren(usernameIndexMap);
 
-                    // Save OneSignal Player ID
-                    OSDeviceState device = OneSignal.getDeviceState();
-                    if (device != null) {
-                        String playerId = device.getUserId();
-                        if (playerId != null) {
-                            OneSignalManager.savePlayerIdToRealtimeDatabase(currentUser.getUid(), playerId);
-                        }
-                    }
+					// Save OneSignal Player ID
+					OSDeviceState device = OneSignal.getDeviceState();
+					if (device != null) {
+						String playerId = device.getUserId();
+						if (playerId != null) {
+							OneSignalManager.savePlayerIdToRealtimeDatabase(currentUser.getUid(), playerId);
+						}
+					}
 
 					E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
 					e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
