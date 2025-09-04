@@ -73,6 +73,12 @@ import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
 import java.io.*;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -119,6 +125,7 @@ public class CreatePostActivity extends AppCompatActivity {
 	private FadeEditText postDescription;
 	private ImageView postImageView;
 	private VideoView postVideoView;
+	private ProgressBar downloadProgressBar;
 	private LinearLayout imagePlaceholder;
 	private LinearLayout settingsButton;
 	private LinearLayout addUrlButton;
@@ -187,6 +194,7 @@ public class CreatePostActivity extends AppCompatActivity {
 		postDescription = findViewById(R.id.postDescription);
 		postImageView = findViewById(R.id.postImageView);
 		postVideoView = findViewById(R.id.postVideoView);
+		downloadProgressBar = findViewById(R.id.downloadProgressBar);
 		imagePlaceholder = findViewById(R.id.imagePlaceholder);
 		settingsButton = findViewById(R.id.settingsButton);
 		addUrlButton = findViewById(R.id.addUrlButton);
@@ -295,7 +303,7 @@ public class CreatePostActivity extends AppCompatActivity {
 			Uri selectedFileUri = _data.getData();
 			if (selectedFileUri != null) {
 				String mimeType = getContentResolver().getType(selectedFileUri);
-				String filePath = FileUtil.convertUriToFilePath(getApplicationContext(), selectedFileUri);
+				String filePath = StorageUtil.getPathFromUri(getApplicationContext(), selectedFileUri);
 				
 				if (filePath == null) {
 					Toast.makeText(getApplicationContext(), "Failed to get file path.", Toast.LENGTH_SHORT).show();
@@ -331,18 +339,10 @@ public class CreatePostActivity extends AppCompatActivity {
 			if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED || checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED) {
 				requestPermissions(new String[] {android.Manifest.permission.READ_EXTERNAL_STORAGE,android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
 			} else {
-				Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-				intent.setType("image/*,video/*");
-				String[] mimeTypes = {"image/*", "video/*"};
-				intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-				startActivityForResult(intent, REQ_CD_FILE_PICKER);
+				StorageUtil.pickFileWithMimeTypes(this, new String[]{"image/*", "video/*"}, REQ_CD_FILE_PICKER);
 			}
 		} else {
-			Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-			intent.setType("image/*,video/*");
-			String[] mimeTypes = {"image/*", "video/*"};
-			intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-			startActivityForResult(intent, REQ_CD_FILE_PICKER);
+			StorageUtil.pickFileWithMimeTypes(this, new String[]{"image/*", "video/*"}, REQ_CD_FILE_PICKER);
 		}
 	}
 	
@@ -513,17 +513,13 @@ public class CreatePostActivity extends AppCompatActivity {
 	}
 
 	private class DownloadFileTask extends AsyncTask<String, Integer, String> {
-		private ProgressDialog progressDialog;
 
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			progressDialog = new ProgressDialog(CreatePostActivity.this);
-			progressDialog.setMessage("Downloading video...");
-			progressDialog.setIndeterminate(false);
-			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-			progressDialog.setCancelable(false);
-			progressDialog.show();
+			imagePlaceholder.setVisibility(View.GONE);
+			downloadProgressBar.setVisibility(View.VISIBLE);
+			downloadProgressBar.setIndeterminate(true); // Start as indeterminate
 		}
 
 		@Override
@@ -578,13 +574,13 @@ public class CreatePostActivity extends AppCompatActivity {
 		@Override
 		protected void onProgressUpdate(Integer... progress) {
 			super.onProgressUpdate(progress);
-			progressDialog.setIndeterminate(false);
-			progressDialog.setProgress(progress[0]);
+			downloadProgressBar.setIndeterminate(false);
+			downloadProgressBar.setProgress(progress[0]);
 		}
 
 		@Override
 		protected void onPostExecute(String result) {
-			progressDialog.dismiss();
+			downloadProgressBar.setVisibility(View.GONE);
 			if (result != null && new File(result).exists()) {
 				_resetMediaSelection();
 				mediaType = "video";
@@ -592,6 +588,7 @@ public class CreatePostActivity extends AppCompatActivity {
 				selectedVideoPath = result;
 				_loadSelectedVideo();
 			} else {
+				imagePlaceholder.setVisibility(View.VISIBLE);
 				Toast.makeText(getApplicationContext(), "Download failed: " + result, Toast.LENGTH_LONG).show();
 			}
 		}

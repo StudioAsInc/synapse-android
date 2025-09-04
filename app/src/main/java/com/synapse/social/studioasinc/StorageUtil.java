@@ -70,6 +70,16 @@ public class StorageUtil {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         activity.startActivityForResult(intent, requestCode);
     }
+
+    public static void pickFileWithMimeTypes(Activity activity, String[] mimeTypes, int requestCode) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*"); // General type
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        }
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        activity.startActivityForResult(intent, requestCode);
+    }
     
     public static void createFile(Activity activity, String mimeType, String defaultName, int requestCode) {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
