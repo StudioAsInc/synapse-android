@@ -101,7 +101,7 @@ public class LineVideosRecyclerViewAdapter extends RecyclerView.Adapter<LineVide
 
 		Object uidObj = videoData.get("uid");
 		Object keyObj = videoData.get("key");
-		Object videoUriObj = videoData.get("videoUri");
+		Object videoUriObj = videoData.get("videoUrl");
 
 		if (uidObj == null || keyObj == null || videoUriObj == null) {
 			return;

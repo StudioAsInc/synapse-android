@@ -90,6 +90,7 @@ import android.content.ClipData;
 public class CreatePostActivity extends AppCompatActivity {
 	
 	public final int REQ_CD_IMAGE_PICKER = 101;
+	public final int REQ_CD_VIDEO_PICKER = 102;
 	
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
 	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
@@ -99,6 +100,8 @@ public class CreatePostActivity extends AppCompatActivity {
 	private HashMap<String, Object> PostSendMap = new HashMap<>();
 	private String selectedImagePath = "";
 	private boolean hasImage = false;
+	private String selectedVideoPath = "";
+	private boolean hasVideo = false;
 	
 	private LinearLayout main;
 	private LinearLayout top;
@@ -116,6 +119,9 @@ public class CreatePostActivity extends AppCompatActivity {
 	private FadeEditText postDescription;
 	private ImageView postImageView;
 	private LinearLayout imagePlaceholder;
+	private CardView videoCard;
+	private LinearLayout videoPlaceholder;
+	private VideoView postVideoView;
 	private LinearLayout settingsButton;
 	private DatabaseReference maindb = _firebase.getReference("skyline");
 	private Calendar cc = Calendar.getInstance();
@@ -182,9 +188,19 @@ public class CreatePostActivity extends AppCompatActivity {
 		postDescription = findViewById(R.id.postDescription);
 		postImageView = findViewById(R.id.postImageView);
 		imagePlaceholder = findViewById(R.id.imagePlaceholder);
+		videoCard = findViewById(R.id.videoCard);
+		videoPlaceholder = findViewById(R.id.videoPlaceholder);
+		postVideoView = findViewById(R.id.postVideoView);
 		settingsButton = findViewById(R.id.settingsButton);
 		appSavedData = getSharedPreferences("data", Activity.MODE_PRIVATE);
 		
+		videoPlaceholder.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				_openVideoPicker();
+			}
+		});
+
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -295,7 +311,28 @@ public class CreatePostActivity extends AppCompatActivity {
 				if (imagePath != null) {
 					selectedImagePath = imagePath;
 					hasImage = true;
+					hasVideo = false;
+					selectedVideoPath = "";
+					videoCard.setVisibility(View.GONE);
+					imageCard.setVisibility(View.VISIBLE);
 					_loadSelectedImage();
+				}
+			}
+			break;
+			case REQ_CD_VIDEO_PICKER:
+			if (_resultCode == Activity.RESULT_OK && _data != null) {
+				Uri videoUri = _data.getData();
+				if (videoUri != null) {
+					String videoPath = FileUtil.convertUriToFilePath(getApplicationContext(), videoUri);
+					if (videoPath != null) {
+						selectedVideoPath = videoPath;
+						hasVideo = true;
+						hasImage = false;
+						selectedImagePath = "";
+						imageCard.setVisibility(View.GONE);
+						videoCard.setVisibility(View.VISIBLE);
+						_loadSelectedVideo();
+					}
 				}
 			}
 			break;
@@ -322,6 +359,22 @@ public class CreatePostActivity extends AppCompatActivity {
 			startActivityForResult(sendImgInt, REQ_CD_IMAGE_PICKER);
 		}
 	}
+
+	private void _openVideoPicker() {
+		if (Build.VERSION.SDK_INT >= 23) {
+			if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED || checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED) {
+				requestPermissions(new String[] {android.Manifest.permission.READ_EXTERNAL_STORAGE,android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+			} else {
+				Intent intent = new Intent(Intent.ACTION_PICK);
+				intent.setType("video/*");
+				startActivityForResult(intent, REQ_CD_VIDEO_PICKER);
+			}
+		} else {
+			Intent intent = new Intent(Intent.ACTION_PICK);
+			intent.setType("video/*");
+			startActivityForResult(intent, REQ_CD_VIDEO_PICKER);
+		}
+	}
 	
 	private void _loadSelectedImage() {
 		if (hasImage && selectedImagePath != null) {
@@ -330,10 +383,22 @@ public class CreatePostActivity extends AppCompatActivity {
 			Glide.with(getApplicationContext()).load(selectedImagePath).into(postImageView);
 		}
 	}
+
+	private void _loadSelectedVideo() {
+		if (hasVideo && selectedVideoPath != null) {
+			videoPlaceholder.setVisibility(View.GONE);
+			postVideoView.setVisibility(View.VISIBLE);
+			postVideoView.setVideoURI(Uri.parse(selectedVideoPath));
+			MediaController mediaController = new MediaController(this);
+			postVideoView.setMediaController(mediaController);
+			mediaController.setAnchorView(postVideoView);
+			postVideoView.start();
+		}
+	}
 	
 	private void _createPost() {
-		if (postDescription.getText().toString().trim().equals("") && !hasImage) {
-			Toast.makeText(getApplicationContext(), "Please add some text or an image to your post", Toast.LENGTH_SHORT).show();
+		if (postDescription.getText().toString().trim().equals("") && !hasImage && !hasVideo) {
+			Toast.makeText(getApplicationContext(), "Please add some text, an image, or a video to your post", Toast.LENGTH_SHORT).show();
 			return;
 		}
 		
@@ -354,6 +419,8 @@ public class CreatePostActivity extends AppCompatActivity {
 					Toast.makeText(getApplicationContext(), "Failed to upload image: " + errorMessage, Toast.LENGTH_SHORT).show();
 				}
 			});
+		} else if (hasVideo) {
+			_uploadVideo(selectedVideoPath);
 		} else {
 			// Create text-only post
 			_savePostToDatabase(null);
@@ -621,6 +688,53 @@ public class CreatePostActivity extends AppCompatActivity {
 		LinearLayout viewgroup =(LinearLayout) _view;
 		
 		android.transition.AutoTransition autoTransition = new android.transition.AutoTransition(); autoTransition.setDuration((long)_duration); android.transition.TransitionManager.beginDelayedTransition(viewgroup, autoTransition);
+	}
+
+	private void _uploadVideo(final String _path) {
+		UploadFiles.uploadFile(_path, new File(_path).getName(), new UploadFiles.UploadCallback() {
+			@Override
+			public void onProgress(int percent) {
+				// You can update the progress dialog here if you want
+			}
+
+			@Override
+			public void onSuccess(String url, String publicId) {
+				_saveReelToDatabase(url);
+			}
+
+			@Override
+			public void onFailure(String error) {
+				_LoadingDialog(false);
+				SketchwareUtil.showMessage(getApplicationContext(), error);
+			}
+		});
+	}
+
+	private void _saveReelToDatabase(String videoUrl) {
+		cc = Calendar.getInstance();
+		PostSendMap = new HashMap<>();
+		PostSendMap.put("reelId", UniquePostKey);
+		PostSendMap.put("userId", FirebaseAuth.getInstance().getCurrentUser().getUid());
+		if (!postDescription.getText().toString().trim().equals("")) {
+			PostSendMap.put("text", postDescription.getText().toString().trim());
+		}
+		PostSendMap.put("videoUrl", videoUrl);
+		PostSendMap.put("thumbnailUrl", ""); // I'll leave this empty for now, as there's no thumbnail generation logic yet.
+		PostSendMap.put("timestamp", String.valueOf((long)(cc.getTimeInMillis())));
+
+		FirebaseDatabase.getInstance().getReference("reels").child(UniquePostKey).updateChildren(PostSendMap, new DatabaseReference.CompletionListener() {
+			@Override
+			public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+				if (databaseError == null) {
+					Toast.makeText(getApplicationContext(), "Reel published successfully", Toast.LENGTH_SHORT).show();
+					_LoadingDialog(false);
+					finish();
+				} else {
+					Toast.makeText(getApplicationContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+					_LoadingDialog(false);
+				}
+			}
+		});
 	}
 	
 }

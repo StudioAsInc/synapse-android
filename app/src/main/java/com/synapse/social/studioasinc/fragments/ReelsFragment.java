@@ -62,7 +62,7 @@ public class ReelsFragment extends Fragment {
             @Override
             public void onResponse(String _param1, String _param2, HashMap<String, Object> _param3) {
                 loadedBody.setVisibility(View.VISIBLE);
-                Query getLineVideosRef = FirebaseDatabase.getInstance().getReference("skyline/line-posts").orderByChild("post_type").equalTo("LINE_VIDEO").limitToLast(50);
+                Query getLineVideosRef = FirebaseDatabase.getInstance().getReference("reels").limitToLast(50);
                 getLineVideosRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot _dataSnapshot) {
