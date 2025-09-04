@@ -64,7 +64,6 @@ synapse-android/
 
 #### Messaging System
 - **`InboxActivity.java`** - Message inbox interface
-- **`MessagesActivity.java`** - Chat interface
 - **`ChatActivity.java`** - Individual chat conversations
 - **`ChatAdapter.java`** - Message display adapter
 - **`FragInboxChatsActivity.java`** - Chat list fragment
@@ -72,10 +71,7 @@ synapse-android/
 - **`FragInboxStoriesActivity.java`** - Stories inbox fragment
 
 #### Content Creation
-- **`CreateImagePostActivity.java`** - Image post creation
-- **`CreateImagePostNextStepActivity.java`** - Post publishing workflow
-- **`CreateLineVideoActivity.java`** - Short video creation
-- **`CreateLineVideoNextStepActivity.java`** - Video publishing workflow
+- **`CreatePostActivity.java`** - Creating a new post (including image and video posts)
 - **`LineVideoPlayerActivity.java`** - Video playback interface
 
 #### Settings & Configuration
