@@ -6,6 +6,7 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import org.json.JSONArray
 import java.io.IOException
 
 /**
@@ -192,7 +193,8 @@ object NotificationHelper {
         
         try {
             jsonBody.put("app_id", NotificationConfig.ONESIGNAL_APP_ID)
-            jsonBody.put("include_player_ids", JSONObject().put("0", recipientPlayerId))
+            // OneSignal expects include_player_ids to be a JSON array of player IDs
+            jsonBody.put("include_player_ids", JSONArray().put(recipientPlayerId))
             jsonBody.put("contents", JSONObject().put("en", message))
             jsonBody.put("headings", JSONObject().put("en", NotificationConfig.getTitleForNotificationType(notificationType)))
             jsonBody.put("subtitle", JSONObject().put("en", NotificationConfig.NOTIFICATION_SUBTITLE))
@@ -210,7 +212,12 @@ object NotificationHelper {
             }
             
             jsonBody.put("priority", NotificationConfig.NOTIFICATION_PRIORITY)
-            jsonBody.put("android_channel_id", NotificationConfig.NOTIFICATION_CHANNEL_ID)
+            // Only include android_channel_id if it looks like a valid OneSignal channel ID (UUID). Otherwise omit to avoid 400s
+            val channelId = NotificationConfig.NOTIFICATION_CHANNEL_ID
+            val looksLikeUuid = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+            if (looksLikeUuid.matches(channelId)) {
+                jsonBody.put("android_channel_id", channelId)
+            }
             
         } catch (e: Exception) {
             Log.e(TAG, "Failed to create JSON for client-side notification", e)
