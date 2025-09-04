@@ -26,7 +26,7 @@ object NotificationHelper {
                 .put("contents", JSONObject().put("en", message))
                 .put("data", JSONObject(data as Map<*, *>))
 
-            OneSignal.postNotification(notificationContent, object : OneSignal.PostNotificationResponseHandler {
+            OneSignal.postNotification(notificationContent, object : com.onesignal.OneSignal.PostNotificationResponseHandler {
                 override fun onSuccess(response: JSONObject) {
                     Log.i("OneSignalExample", "postNotification Success: $response")
                 }
