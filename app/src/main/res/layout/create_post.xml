@@ -85,7 +85,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="1dp"
 			android:padding="8dp"
-		android:background="?attr/colorOutline"
+		android:background="?attr/colorOutlineVariant"
 			android:orientation="horizontal" />
 		<ScrollView
 			android:id="@+id/scroll"
@@ -165,7 +165,7 @@
 					android:layout_width="match_parent"
 					android:layout_height="1dp"
 					android:padding="8dp"
-				android:background="?attr/colorOutline"
+				android:background="?attr/colorOutlineVariant"
 					android:orientation="horizontal" />
 			</LinearLayout>
 		</ScrollView>

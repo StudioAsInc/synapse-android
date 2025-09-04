@@ -5,7 +5,7 @@
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
 	android:orientation="vertical"
-	android:background="#FFFFFF">
+	android:background="?attr/colorSurface">
 	
 	<!-- Handle -->
 	<LinearLayout
@@ -17,7 +17,7 @@
 		<View
 			android:layout_width="40dp"
 			android:layout_height="4dp"
-			android:background="#E0E0E0"
+			android:background="?attr/colorOutline"
 			android:layout_marginBottom="8dp" />
 	</LinearLayout>
 	
@@ -28,7 +28,7 @@
 		android:text="Post Settings"
 		android:textSize="20sp"
 		android:textStyle="bold"
-		android:textColor="#000000"
+		android:textColor="?attr/colorOnSurface"
 		android:paddingLeft="24dp"
 		android:paddingRight="24dp"
 		android:paddingBottom="16dp" />
@@ -48,7 +48,7 @@
 			android:text="Statistics Settings"
 			android:textSize="18sp"
 			android:textStyle="bold"
-			android:textColor="#000000"
+			android:textColor="?attr/colorOnSurface"
 			android:layout_marginBottom="12dp" />
 		
 		<!-- Hide Views Count -->
@@ -66,7 +66,7 @@
 				android:gravity="left|center_vertical"
 				android:textSize="16sp"
 				android:textStyle="bold"
-				android:textColor="#000000"
+				android:textColor="?attr/colorOnSurface"
 				android:text="@string/hide_the_number_of_views"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
@@ -75,7 +75,7 @@
 				android:layout_height="wrap_content"
 				android:text="If enabled, the views count won't be shown on this post"
 				android:textSize="14sp"
-				android:textColor="#424242" />
+				android:textColor="?attr/colorOnSurfaceVariant" />
 		</LinearLayout>
 		
 		<!-- Hide Likes Count -->
@@ -93,7 +93,7 @@
 				android:gravity="left|center_vertical"
 				android:textSize="16sp"
 				android:textStyle="bold"
-				android:textColor="#000000"
+				android:textColor="?attr/colorOnSurface"
 				android:text="@string/hide_the_number_of_likes"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
@@ -102,7 +102,7 @@
 				android:layout_height="wrap_content"
 				android:text="If enabled, Likes count won't be shown on this post"
 				android:textSize="14sp"
-				android:textColor="#424242" />
+				android:textColor="?attr/colorOnSurfaceVariant" />
 		</LinearLayout>
 		
 		<!-- Hide Comments Count -->
@@ -120,7 +120,7 @@
 				android:gravity="left|center_vertical"
 				android:textSize="16sp"
 				android:textStyle="bold"
-				android:textColor="#000000"
+				android:textColor="?attr/colorOnSurface"
 				android:text="@string/hide_the_number_of_comments"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
@@ -129,7 +129,7 @@
 				android:layout_height="wrap_content"
 				android:text="If enabled, the number of comments won't be shown on this post"
 				android:textSize="14sp"
-				android:textColor="#424242" />
+				android:textColor="?attr/colorOnSurfaceVariant" />
 		</LinearLayout>
 	</LinearLayout>
 	
@@ -137,7 +137,7 @@
 	<View
 		android:layout_width="match_parent"
 		android:layout_height="1dp"
-		android:background="#E0E0E0"
+		android:background="?attr/colorOutline"
 		android:layout_marginLeft="24dp"
 		android:layout_marginRight="24dp"
 		android:layout_marginBottom="16dp" />
@@ -157,7 +157,7 @@
 			android:text="Privacy Settings"
 			android:textSize="18sp"
 			android:textStyle="bold"
-			android:textColor="#000000"
+			android:textColor="?attr/colorOnSurface"
 			android:layout_marginBottom="12dp" />
 		
 		<!-- Hide Post from Everyone -->
@@ -175,7 +175,7 @@
 				android:gravity="left|center_vertical"
 				android:textSize="16sp"
 				android:textStyle="bold"
-				android:textColor="#000000"
+				android:textColor="?attr/colorOnSurface"
 				android:text="@string/hide_post_from_everyone"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
@@ -184,7 +184,7 @@
 				android:layout_height="wrap_content"
 				android:text="Only you can see the post"
 				android:textSize="14sp"
-				android:textColor="#424242" />
+				android:textColor="?attr/colorOnSurfaceVariant" />
 		</LinearLayout>
 		
 		<!-- Disable Save to Favorites -->
@@ -202,7 +202,7 @@
 				android:gravity="left|center_vertical"
 				android:textSize="16sp"
 				android:textStyle="bold"
-				android:textColor="#000000"
+				android:textColor="?attr/colorOnSurface"
 				android:text="@string/disable_saving_to_favorites"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
@@ -211,7 +211,7 @@
 				android:layout_height="wrap_content"
 				android:text="@string/disable_saving_to_favorites_subtitle"
 				android:textSize="14sp"
-				android:textColor="#424242" />
+				android:textColor="?attr/colorOnSurfaceVariant" />
 		</LinearLayout>
 		
 		<!-- Disable Comments -->
@@ -229,7 +229,7 @@
 				android:gravity="left|center_vertical"
 				android:textSize="16sp"
 				android:textStyle="bold"
-				android:textColor="#000000"
+				android:textColor="?attr/colorOnSurface"
 				android:text="@string/disable_comments"
 				android:thumb="@drawable/switch_in"
 				app:track="@drawable/switch_out" />
@@ -238,7 +238,7 @@
 				android:layout_height="wrap_content"
 				android:text="@string/disable_comments_subtitle"
 				android:textSize="14sp"
-				android:textColor="#424242" />
+				android:textColor="?attr/colorOnSurfaceVariant" />
 		</LinearLayout>
 	</LinearLayout>
 </LinearLayout>
