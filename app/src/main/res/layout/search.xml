@@ -4,25 +4,26 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:id="@+id/_main">
 	<LinearLayout
 		android:id="@+id/body"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="#FFFFFF"
+		android:background="?attr/colorSurface"
 		android:orientation="vertical">
 		<LinearLayout
 			android:id="@+id/middleLayout"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:background="#F5F5F5"
+			android:background="?attr/colorSurfaceVariant"
 			android:orientation="vertical"
 			android:layout_weight="1">
 			<LinearLayout
 				android:id="@+id/topLayout"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:background="#FFFFFF"
+				android:background="?attr/colorSurface"
 				android:orientation="vertical">
 				<LinearLayout
 					android:id="@+id/topLayoutBar"
@@ -135,7 +136,7 @@
 						android:layout_height="26dp"
 						android:layout_marginLeft="18dp"
 						android:padding="2dp"
-						android:src="@drawable/default_image"
+						android:src="@drawable/ic_arrow_back_ios_new_48px"
 						android:scaleType="centerCrop" />
 					<LinearLayout
 						android:id="@+id/topLayoutBarMiddleSearchLayout"

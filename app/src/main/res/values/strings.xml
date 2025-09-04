@@ -221,4 +221,43 @@
     <string name="placeholder_button_text">Button Text</string>
     <string name="placeholder_title">Title</string>
     <string name="placeholder_subtitle">Subtitle</string>
+    <string name="text_copied_toast">Text copied</string>
+    <string name="no_text_to_copy">No text to copy</string>
+    <string name="share_post_subject">Share post</string>
+    <string name="share_post_chooser_title">Share via</string>
+    <string name="share_error">Error sharing content</string>
+    <!-- New strings to add -->
+    <string name="no_user_data_found">No User Data Found</string>
+    <string name="reasons_no_user_data">Your user profile could not be loaded. This might indicate an issue with your account or a database problem.</string>
+    <string name="error_loading_user_data">Error Loading User Data</string>
+    <string name="disappearing_message_description">For more privacy and storage, new messages will disappear from this chat for everyone after the selected duration except when kept. Anyone in the chat can change this setting. Learn more</string>
+    <string name="text_loading">...</string>
+    <string name="cant_reply">You can\'t reply to this conversation. Learn more.</string>
+    <string name="ph_name">Name</string>
+    <string name="ph_username">username</string>
+    <string name="write_message">Write a message</string>
+    <string name="ph_message">I\'m also good, man.</string>
+    <string name="age_agreement">I confirm that I\'m at least 12 years of age.</string>
+    <string name="ph_replied_message">I\'m good, you?</string>
+
+    <!-- Gemini AI Feature Strings -->
+    <string name="gemini_summary_title">Summary</string>
+    <string name="gemini_explanation_title">Explanation</string>
+    <string name="gemini_error_summary">Error getting summary: </string>
+    <string name="gemini_error_explanation">Error getting explanation: </string>
+    <string name="gemini_system_instruction_summary">You are a text summarizer. Provide a concise summary of the given text.</string>
+    <string name="gemini_system_instruction_explanation">You are a helpful assistant. Explain the following text in a clear and detailed manner, using Markdown for formatting (headings, bold, etc.).</string>
+    <string name="explain_button_text">Explain</string>
+    <string name="gemini_explanation_prompt">Here is a part of a chat conversation between Me and %1$s:
+---
+%2$s
+---
+Please explain the following message from %3$s in detail, considering the context of the conversation:
+%4$s
+---
+%5$s
+---
+</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
 </resources>

@@ -1,51 +1,16 @@
-
 <manifest
-	xmlns:android="http://schemas.android.com/apk/res/android">
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools">
 	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 	<uses-permission android:name="android.permission.VIBRATE" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.RECORD_AUDIO" />
-	<uses-permission android:name="android.permission.INSTALL_PACKAGES" />
-	<uses-permission android:name="android.permission.INSTALL_PACKAGE_UPDATES" />
-	<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-	<uses-permission android:name="android.permission.INSTALL_DPC_PACKAGES" />
-	<uses-permission android:name="android.permission.INSTALL_DYNAMIC_SYSTEM" />
-	<uses-permission android:name="com.android.permission.INSTALL_EXISTING_PACKAGES" />
-	<uses-permission android:name="android.permission.INSTALL_GRANT_RUNTIME_PERMISSIONS" />
-	<uses-permission android:name="android.permission.INSTALL_LOCATION_PROVIDER" />
-	<uses-permission android:name="android.permission.INSTALL_LOCATION_TIME_ZONE_PROVIDER_SERVICE" />
-	<uses-permission android:name="android.permission.INSTALL_SELF_UPDATES" />
-	<uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
-	<uses-permission android:name="android.permission.MANAGE_DEVICE_POLICY_INSTALL_UNKNOWN_SOURCES" />
-	<uses-permission android:name="android.permission.MANAGE_DEVICE_POLICY_KEEP_UNINSTALLED_PACKAGES" />
-	<uses-permission android:name="android.permission.READ_INSTALL_SESSIONS" />
-	<uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
-	<uses-permission android:name="android.permission.MOVE_PACKAGE" />
-	<uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
-	<uses-permission android:name="android.permission.PACKAGE_VERIFICATION_AGENT" />
-	<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-	<uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
-	<uses-permission android:name="android.permission.RESTART_PACKAGES" />
-	<uses-permission android:name="android.permission.MANAGE_DEVICE_POLICY_PACKAGE_STATE" />
-	<uses-permission android:name="android.permission.GET_PACKAGE_SIZE" />
-	<uses-permission android:name="android.permission.FORCE_STOP_PACKAGES" />
-	<uses-permission android:name="android.permission.DELETE_PACKAGES" />
-	<uses-permission android:name="android.permission.BROADCAST_PACKAGE_REMOVED" />
-	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.SUGGEST_EXTERNAL_TIME" />
-	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.BIND_EXTERNAL_STORAGE_SERVICE" />
-	<uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
-	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-	<uses-permission android:name="android.permission.MANAGE_DEVICE_POLICY_MICROPHONE" />
-	<uses-permission android:name="android.permission.MANAGE_MUSIC_RECOGNITION" />
-	<uses-permission android:name="android.permission.BIND_MUSIC_RECOGNITION_SERVICE" />
-	<uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 	<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 	<uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+	<uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+	<uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
 	<application
 		android:allowBackup="true"
 		android:icon="@mipmap/ic_launcher"
@@ -164,6 +129,13 @@
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
+			android:name=".ImageGalleryActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:theme="@style/Theme.AppCompat.NoActionBar"
+			android:screenOrientation="portrait" />
+		<activity
 			android:name=".ChatsettingsActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
@@ -171,21 +143,21 @@
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
-			android:name=".CreateImagePostNextStepActivity"
+			android:name=".CreatePostActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
-			android:name=".CreateImagePostActivity"
+			android:name=".EditPostActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
-			android:name=".CheckpermissionActivity"
+			android:name=".LauncherActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
@@ -196,6 +168,12 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+		<activity
+			android:name=".WelcomeActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:windowSoftInputMode="stateHidden" />
 		<activity
 			android:name=".AuthActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -209,10 +187,46 @@
 			android:supportsPictureInPicture="true"
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
+		<activity
+			android:name=".CallActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true" />
+		<activity
+			android:name=".DisappearingMessageSettingsActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:windowSoftInputMode="stateHidden" />
+		<activity
+			android:name=".BgWallpapersActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:windowSoftInputMode="stateHidden" />
+		<activity
+			android:name=".InboxActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:screenOrientation="portrait" />
+		<activity
+			android:name=".LabsActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:windowSoftInputMode="stateHidden" />
+		<activity
+			android:name=".SettingsActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:windowSoftInputMode="stateHidden" />
 		<provider
 			android:name="androidx.startup.InitializationProvider"
 			android:authorities="com.synapse.social.studioasinc.androidx-startup"
-			android:exported="false">
+			android:exported="false"
+			tools:replace="android:authorities">
 			<meta-data
 				android:name="androidx.lifecycle.ProcessLifecycleInitializer"
 				android:value="androidx.startup" />
@@ -227,7 +241,8 @@
 			android:name="com.google.firebase.provider.FirebaseInitProvider"
 			android:authorities="com.synapse.social.studioasinc.firebaseinitprovider"
 			android:exported="false"
-			android:initOrder="100" />
+			android:initOrder="100"
+			tools:replace="android:authorities" />
 		<service
 			android:name="com.google.firebase.components.ComponentDiscoveryService"
 			android:exported="false">
@@ -243,21 +258,8 @@
 		</service>
 		<uses-library
 			android:name="org.apache.http.legacy"
-			android:required="false" />
-<service
-    android:name=".AppMessagingService"
-    android:exported="false">
-    <intent-filter>
-        <action android:name="com.google.firebase.MESSAGING_EVENT" />
-    </intent-filter>
-</service>
+			android:required="false" />
 
-<meta-data
-    android:name="com.google.firebase.messaging.default_notification_icon"
-    android:resource="@drawable/ic_notification" />
-<meta-data
-    android:name="com.google.firebase.messaging.default_notification_color"
-    android:resource="@color/colorAccent" />
 
 <provider
   android:name="androidx.core.content.FileProvider"
@@ -269,4 +271,4 @@
      android:resource="@xml/provider_paths"/>
 </provider>
 	</application>
-</manifest>
+</manifest>

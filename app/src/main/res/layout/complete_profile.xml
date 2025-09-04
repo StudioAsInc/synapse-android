@@ -4,7 +4,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:id="@+id/_main">
 	<ScrollView
 		android:id="@+id/scroll"
 		android:layout_width="match_parent"
@@ -42,7 +43,7 @@
 					android:layout_width="48dp"
 					android:layout_height="48dp"
 					android:padding="10dp"
-					android:src="@drawable/icon_delete_forever_round"
+					android:src="@drawable/ic_delete_48px"
 					android:scaleType="fitCenter" />
 				<ProgressBar
 					android:id="@+id/cancel_create_account_progress"

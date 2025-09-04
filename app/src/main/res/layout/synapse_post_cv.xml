@@ -122,7 +122,8 @@
 				android:focusable="false"
 				android:layout_width="35dp"
 				android:layout_height="35dp"
-				android:src="@drawable/icon_arrow_drop_up_round"
+				android:padding="10dp"
+				android:src="@drawable/icons_5"
 				android:scaleType="centerCrop" />
 		</LinearLayout>
 		<LinearLayout
@@ -143,7 +144,8 @@
 				android:text="TextView"
 				android:textSize="16sp"
 				android:textColor="#000000"
-				android:autoLink="all" />
+				android:autoLink="all"
+				android:textIsSelectable="true" />
 		</LinearLayout>
 		<LinearLayout
 			android:id="@+id/middle"
@@ -160,17 +162,8 @@
 				android:layout_marginBottom="8dp"
 				android:src="@drawable/default_image"
 				android:scaleType="fitCenter"
-				android:visibility="gone" />
-			<WebView
-				android:id="@+id/linkprewebview"
-				android:layout_width="match_parent"
-				android:layout_height="180dp"
-				android:visibility="gone" />
-			<VideoView
-				android:id="@+id/PostVideoPlayer"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:visibility="gone" />
+				android:visibility="gone"
+				android:maxHeight="200dp" />
 		</LinearLayout>
 		<LinearLayout
 			android:id="@+id/bottom"
@@ -312,7 +305,8 @@
 				android:layout_height="30dp"
 				android:padding="2dp"
 				android:src="@drawable/add_favorite_post_ic"
-				android:scaleType="centerInside" />
+				android:scaleType="centerInside"
+				android:visibility="gone" />
 		</LinearLayout>
 	</LinearLayout>
 </LinearLayout>

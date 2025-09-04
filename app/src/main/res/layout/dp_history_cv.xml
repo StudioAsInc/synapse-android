@@ -16,7 +16,8 @@
 			android:id="@+id/card"
 			android:layout_width="100dp"
 			android:layout_height="100dp"
-			app:cardElevation="0dp">
+			app:cardElevation="1dp"
+			app:cardCornerRadius="300dp">
 			<RelativeLayout
 				android:id="@+id/relative"
 				android:layout_width="match_parent"

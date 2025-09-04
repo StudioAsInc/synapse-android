@@ -26,7 +26,7 @@ import android.view.View.*;
 import android.view.animation.*;
 import android.webkit.*;
 import android.widget.*;
-import android.widget.HorizontalScrollView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -39,6 +39,7 @@ import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.gridlayout.*;
 import androidx.recyclerview.widget.*;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -46,12 +47,10 @@ import androidx.recyclerview.widget.RecyclerView.Adapter;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
-import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
-import com.google.android.material.color.MaterialColors;
+import com.google.android.material.button.MaterialButtonGroup;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
 import com.google.firebase.FirebaseApp;
@@ -82,7 +81,8 @@ import org.json.*;
 import androidx.core.widget.NestedScrollView;
 import com.google.firebase.database.Query;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import androidx.browser.customtabs.CustomTabsIntent;
 
 public class ProfileActivity extends AppCompatActivity {
 	
@@ -96,14 +96,13 @@ public class ProfileActivity extends AppCompatActivity {
 	private String handle = "";
 	private String object_clicked = "";
 	private String nickname = "";
+	private String AndroidDevelopersBlogURL = "";
 	
 	private ArrayList<HashMap<String, Object>> UserPostsList = new ArrayList<>();
 	
 	private LinearLayout ProfilePageBody;
 	private LinearLayout ProfilePageTopBar;
 	private LinearLayout ProfilePageMiddleLayout;
-	private LinearLayout ProfilePageBottomSpace;
-	private LinearLayout ProfilePageBottomBar;
 	private ImageView ProfilePageTopBarBack;
 	private LinearLayout ProfilePageTopBarSpace;
 	private ImageView myqr_btn;
@@ -127,43 +126,23 @@ public class ProfileActivity extends AppCompatActivity {
 	private LinearLayout likeUserProfileButton;
 	private ImageView likeUserProfileButtonIc;
 	private TextView likeUserProfileButtonLikeCount;
-	private LinearLayout bannedUserInfo;
 	private LinearLayout ProfilePageTabUserInfoNameLayout;
+	private TextView ProfilePageTabUserInfoBioLayoutText;
 	private LinearLayout ProfilePageTabUserInfoStateDetails;
 	private LinearLayout ProfilePageTabUserInfoFollowsDetails;
-	private HorizontalScrollView ProfilePageTabUserInfoBadgesScroll;
-	private LinearLayout ProfilePageTabUserInfoSecondaryButtons;
-	private LinearLayout ProfilePageTabUserInfoFirstButtons;
-	private LinearLayout ProfilePageTabUserInfoBioLayout;
+	private MaterialButtonGroup ProfilePageTabUserInfoSecondaryButtons;
+	private Button btnEditProfile;
 	private LinearLayout join_date_layout;
 	private LinearLayout user_uid_layout;
-	private ImageView bannedUserInfoIc;
-	private TextView bannedUserInfoText;
 	private TextView ProfilePageTabUserInfoNickname;
-	private ImageView ProfilePageTabUserInfoGenderBadge;
-	private CardView ProfilePageTabUserInfoRegionFlagCard;
-	private ImageView ProfilePageTabUserInfoRegionFlag;
 	private TextView ProfilePageTabUserInfoUsername;
 	private TextView ProfilePageTabUserInfoStateSpc;
 	private TextView ProfilePageTabUserInfoStatus;
 	private TextView ProfilePageTabUserInfoFollowersCount;
 	private TextView ProfilePageTabUserInfoSpc;
 	private TextView ProfilePageTabUserInfoFollowingCount;
-	private LinearLayout ProfilePageTabUserInfoBadgesScrollLayoutBody;
-	private LinearLayout ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge;
-	private LinearLayout ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadge;
-	private LinearLayout ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadge;
-	private ImageView ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeIc;
-	private TextView ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeTitle;
-	private ImageView ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadgeIc;
-	private TextView ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadgeTitle;
-	private ImageView ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadgeIc;
-	private TextView ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadgeTitle;
-	private TextView ProfilePageTabUserInfoFollowButton;
-	private TextView ProfilePageTabUserInfoChatButton;
-	private TextView ProfilePageTabUserInfoFirstButtonsEditProfile;
-	private TextView ProfilePageTabUserInfoBioLayoutTitle;
-	private TextView ProfilePageTabUserInfoBioLayoutText;
+	private Button btnFollow;
+	private Button btnMessage;
 	private TextView join_date_layout_title;
 	private TextView join_date_layout_text;
 	private TextView user_uid_layout_title;
@@ -175,16 +154,6 @@ public class ProfileActivity extends AppCompatActivity {
 	private TextView ProfilePageNoInternetBodySubtitle;
 	private TextView ProfilePageNoInternetBodyRetry;
 	private ProgressBar ProfilePageLoadingBodyBar;
-	private LinearLayout bottom_home;
-	private LinearLayout bottom_search;
-	private LinearLayout bottom_videos;
-	private LinearLayout bottom_chats;
-	private LinearLayout bottom_profile;
-	private ImageView bottom_home_ic;
-	private ImageView bottom_search_ic;
-	private ImageView bottom_videos_ic;
-	private ImageView bottom_chats_ic;
-	private ImageView bottom_profile_ic;
 	
 	private Intent intent = new Intent();
 	private FirebaseAuth auth;
@@ -214,11 +183,11 @@ class c {
 	public <T extends DialogFragment> c(T a) {
 		co = a.getActivity();
 	}
-	
+
 	public Context getContext() {
 		return co;
 	}
-	
+
 }
 	private RequestNetwork req;
 	private RequestNetwork.RequestListener _req_request_listener;
@@ -235,13 +204,24 @@ class c {
 		FirebaseApp.initializeApp(this);
 		initializeLogic();
 	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null) {
+			PresenceManager.setActivity(com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid(), "In Profile");
+		}
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+	}
 	
 	private void initialize(Bundle _savedInstanceState) {
 		ProfilePageBody = findViewById(R.id.ProfilePageBody);
 		ProfilePageTopBar = findViewById(R.id.ProfilePageTopBar);
 		ProfilePageMiddleLayout = findViewById(R.id.ProfilePageMiddleLayout);
-		ProfilePageBottomSpace = findViewById(R.id.ProfilePageBottomSpace);
-		ProfilePageBottomBar = findViewById(R.id.ProfilePageBottomBar);
 		ProfilePageTopBarBack = findViewById(R.id.ProfilePageTopBarBack);
 		ProfilePageTopBarSpace = findViewById(R.id.ProfilePageTopBarSpace);
 		myqr_btn = findViewById(R.id.myqr_btn);
@@ -265,43 +245,23 @@ class c {
 		likeUserProfileButton = findViewById(R.id.likeUserProfileButton);
 		likeUserProfileButtonIc = findViewById(R.id.likeUserProfileButtonIc);
 		likeUserProfileButtonLikeCount = findViewById(R.id.likeUserProfileButtonLikeCount);
-		bannedUserInfo = findViewById(R.id.bannedUserInfo);
 		ProfilePageTabUserInfoNameLayout = findViewById(R.id.ProfilePageTabUserInfoNameLayout);
+		ProfilePageTabUserInfoBioLayoutText = findViewById(R.id.ProfilePageTabUserInfoBioLayoutText);
 		ProfilePageTabUserInfoStateDetails = findViewById(R.id.ProfilePageTabUserInfoStateDetails);
 		ProfilePageTabUserInfoFollowsDetails = findViewById(R.id.ProfilePageTabUserInfoFollowsDetails);
-		ProfilePageTabUserInfoBadgesScroll = findViewById(R.id.ProfilePageTabUserInfoBadgesScroll);
 		ProfilePageTabUserInfoSecondaryButtons = findViewById(R.id.ProfilePageTabUserInfoSecondaryButtons);
-		ProfilePageTabUserInfoFirstButtons = findViewById(R.id.ProfilePageTabUserInfoFirstButtons);
-		ProfilePageTabUserInfoBioLayout = findViewById(R.id.ProfilePageTabUserInfoBioLayout);
+		btnEditProfile = findViewById(R.id.btnEditProfile);
 		join_date_layout = findViewById(R.id.join_date_layout);
 		user_uid_layout = findViewById(R.id.user_uid_layout);
-		bannedUserInfoIc = findViewById(R.id.bannedUserInfoIc);
-		bannedUserInfoText = findViewById(R.id.bannedUserInfoText);
 		ProfilePageTabUserInfoNickname = findViewById(R.id.ProfilePageTabUserInfoNickname);
-		ProfilePageTabUserInfoGenderBadge = findViewById(R.id.ProfilePageTabUserInfoGenderBadge);
-		ProfilePageTabUserInfoRegionFlagCard = findViewById(R.id.ProfilePageTabUserInfoRegionFlagCard);
-		ProfilePageTabUserInfoRegionFlag = findViewById(R.id.ProfilePageTabUserInfoRegionFlag);
 		ProfilePageTabUserInfoUsername = findViewById(R.id.ProfilePageTabUserInfoUsername);
 		ProfilePageTabUserInfoStateSpc = findViewById(R.id.ProfilePageTabUserInfoStateSpc);
 		ProfilePageTabUserInfoStatus = findViewById(R.id.ProfilePageTabUserInfoStatus);
 		ProfilePageTabUserInfoFollowersCount = findViewById(R.id.ProfilePageTabUserInfoFollowersCount);
 		ProfilePageTabUserInfoSpc = findViewById(R.id.ProfilePageTabUserInfoSpc);
 		ProfilePageTabUserInfoFollowingCount = findViewById(R.id.ProfilePageTabUserInfoFollowingCount);
-		ProfilePageTabUserInfoBadgesScrollLayoutBody = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutBody);
-		ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge);
-		ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadge = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadge);
-		ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadge = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadge);
-		ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeIc = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeIc);
-		ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeTitle = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeTitle);
-		ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadgeIc = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadgeIc);
-		ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadgeTitle = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadgeTitle);
-		ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadgeIc = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadgeIc);
-		ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadgeTitle = findViewById(R.id.ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadgeTitle);
-		ProfilePageTabUserInfoFollowButton = findViewById(R.id.ProfilePageTabUserInfoFollowButton);
-		ProfilePageTabUserInfoChatButton = findViewById(R.id.ProfilePageTabUserInfoChatButton);
-		ProfilePageTabUserInfoFirstButtonsEditProfile = findViewById(R.id.ProfilePageTabUserInfoFirstButtonsEditProfile);
-		ProfilePageTabUserInfoBioLayoutTitle = findViewById(R.id.ProfilePageTabUserInfoBioLayoutTitle);
-		ProfilePageTabUserInfoBioLayoutText = findViewById(R.id.ProfilePageTabUserInfoBioLayoutText);
+		btnFollow = findViewById(R.id.btnFollow);
+		btnMessage = findViewById(R.id.btnMessage);
 		join_date_layout_title = findViewById(R.id.join_date_layout_title);
 		join_date_layout_text = findViewById(R.id.join_date_layout_text);
 		user_uid_layout_title = findViewById(R.id.user_uid_layout_title);
@@ -313,16 +273,6 @@ class c {
 		ProfilePageNoInternetBodySubtitle = findViewById(R.id.ProfilePageNoInternetBodySubtitle);
 		ProfilePageNoInternetBodyRetry = findViewById(R.id.ProfilePageNoInternetBodyRetry);
 		ProfilePageLoadingBodyBar = findViewById(R.id.ProfilePageLoadingBodyBar);
-		bottom_home = findViewById(R.id.bottom_home);
-		bottom_search = findViewById(R.id.bottom_search);
-		bottom_videos = findViewById(R.id.bottom_videos);
-		bottom_chats = findViewById(R.id.bottom_chats);
-		bottom_profile = findViewById(R.id.bottom_profile);
-		bottom_home_ic = findViewById(R.id.bottom_home_ic);
-		bottom_search_ic = findViewById(R.id.bottom_search_ic);
-		bottom_videos_ic = findViewById(R.id.bottom_videos_ic);
-		bottom_chats_ic = findViewById(R.id.bottom_chats_ic);
-		bottom_profile_ic = findViewById(R.id.bottom_profile_ic);
 		auth = FirebaseAuth.getInstance();
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		req = new RequestNetwork(this);
@@ -337,7 +287,8 @@ class c {
 		ProfilePageTopBarMenu.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				
+				intent.setClass(getApplicationContext(), ChatsettingsActivity.class);
+				startActivity(intent);
 			}
 		});
 		
@@ -401,6 +352,22 @@ class c {
 							likeUserProfileButtonLikeCount.setTextColor(0xFF616161);
 						} else {
 							FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+							com.synapse.social.studioasinc.util.UserUtils.getCurrentUserDisplayName(new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
+								public void onResult(String displayName) {
+									String recipientUid = getIntent().getStringExtra("uid");
+									String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+									String notificationMessage = displayName + " liked your profile.";
+									HashMap<String, String> data = new HashMap<>();
+									data.put("sender_uid", senderUid);
+									NotificationHelper.sendNotification(
+										recipientUid,
+										senderUid,
+										notificationMessage,
+										"profile_like",
+										data
+									);
+								}
+							});
 							UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
 							likeUserProfileButtonLikeCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString())));
 							likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_2);
@@ -409,10 +376,10 @@ class c {
 							likeUserProfileButtonLikeCount.setTextColor(0xFFFFFFFF);
 						}
 					}
-					
+
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						
+
 					}
 				});
 				vbr.vibrate((long)(28));
@@ -428,7 +395,15 @@ class c {
 			}
 		});
 		
-		ProfilePageTabUserInfoFollowButton.setOnClickListener(new View.OnClickListener() {
+		btnEditProfile.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				intent.setClass(getApplicationContext(), ProfileEditActivity.class);
+				startActivity(intent);
+			}
+		});
+		
+		btnFollow.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				DatabaseReference checkUserFollow = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
@@ -440,42 +415,51 @@ class c {
 							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).removeValue();
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) - 1)));
 							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
-							_viewGraphics(ProfilePageTabUserInfoFollowButton, getResources().getColor(R.color.colorPrimary), 0xFF3949AB, 300, 0, Color.TRANSPARENT);
-							ProfilePageTabUserInfoFollowButton.setText(getResources().getString(R.string.follow));
-							ProfilePageTabUserInfoFollowButton.setTextColor(0xFFFFFFFF);
+							btnFollow.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+							btnFollow.setText(getResources().getString(R.string.follow));
+							btnFollow.setTextColor(0xFFFFFFFF);
 						} else {
 							FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
 							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).setValue(getIntent().getStringExtra("uid"));
+							com.synapse.social.studioasinc.util.UserUtils.getCurrentUserDisplayName(new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
+								public void onResult(String displayName) {
+									String recipientUid = getIntent().getStringExtra("uid");
+									String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+									String notificationMessage = displayName + " started following you.";
+									HashMap<String, String> data = new HashMap<>();
+									data.put("sender_uid", senderUid);
+									NotificationHelper.sendNotification(
+										recipientUid,
+										senderUid,
+										notificationMessage,
+										"new_follower",
+										data
+									);
+								}
+							});
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
 							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
-							_viewGraphics(ProfilePageTabUserInfoFollowButton, 0xFFF5F5F5, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
-							ProfilePageTabUserInfoFollowButton.setText(getResources().getString(R.string.unfollow));
-							ProfilePageTabUserInfoFollowButton.setTextColor(0xFF000000);
+							btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
+							btnFollow.setText(getResources().getString(R.string.unfollow));
+							btnFollow.setTextColor(0xFF000000);
 						}
 					}
-					
+
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						
+
 					}
 				});
 			}
 		});
 		
-		ProfilePageTabUserInfoChatButton.setOnClickListener(new View.OnClickListener() {
+		btnMessage.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				intent.setClass(getApplicationContext(), ChatActivity.class);
 				intent.putExtra("uid", getIntent().getStringExtra("uid"));
+				intent.putExtra("origin", "ProfileActivity");
 				intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-				startActivity(intent);
-			}
-		});
-		
-		ProfilePageTabUserInfoFirstButtonsEditProfile.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), ProfileEditActivity.class);
 				startActivity(intent);
 			}
 		});
@@ -492,40 +476,6 @@ class c {
 			@Override
 			public void onClick(View _view) {
 				_loadRequest();
-			}
-		});
-		
-		bottom_home.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), HomeActivity.class);
-				intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-				startActivity(intent);
-				finish();
-			}
-		});
-		
-		bottom_search.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), SearchActivity.class);
-				startActivity(intent);
-			}
-		});
-		
-		bottom_videos.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), LineVideoPlayerActivity.class);
-				startActivity(intent);
-			}
-		});
-		
-		bottom_chats.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), MessagesActivity.class);
-				startActivity(intent);
 			}
 		});
 		
@@ -717,7 +667,6 @@ class c {
 	}
 	
 	private void initializeLogic() {
-		_ViewLoad();
 		ProfilePageTabLayout.addTab(ProfilePageTabLayout.newTab().setText(getResources().getString(R.string.profile_tab)));
 		ProfilePageTabLayout.addTab(ProfilePageTabLayout.newTab().setText(getResources().getString(R.string.posts_tab)));
 		ProfilePageTabLayout.setTabTextColors(0xFF9E9E9E, 0xFF445E91);
@@ -725,33 +674,21 @@ class c {
 		
 		new int[] {0xFFEEEEEE}));
 		ProfilePageTabLayout.setSelectedTabIndicatorColor(0xFF445E91);
-		ProfilePageTabLayout.setElevation((float)2);
 		ProfilePageTabUserPostsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-		bannedUserInfo.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)28, 0xFF445E91));
-		_ImageColor(bannedUserInfoIc, 0xFFFFFFFF);
-		ProfilePageTabUserInfoBioLayout.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)28, 0xFFF5F5F5));
 		_loadRequest();
-		ProfilePageTabUserInfoNickname.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/ginto650otf.ttf"), 1);
+		ProfilePageTabUserInfoNickname.setTypeface(Typeface.DEFAULT, 1);
 		ProfilePageNoInternetBodyRetry.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)0, 0xFFFFFDE7, 0xFF445E91));
-		if (getIntent().getStringExtra("uid").equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-			ProfilePageTabUserInfoFirstButtons.setVisibility(View.VISIBLE);
+		String intentUid = getIntent().getStringExtra("uid");
+		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+		if (intentUid != null && currentUser != null && intentUid.equals(currentUser.getUid())) {
 			ProfilePageTabUserInfoSecondaryButtons.setVisibility(View.GONE);
-			ProfilePageBottomSpace.setVisibility(View.VISIBLE);
-			ProfilePageBottomBar.setVisibility(View.VISIBLE);
+			btnEditProfile.setVisibility(View.VISIBLE);
 		} else {
-			ProfilePageTabUserInfoFirstButtons.setVisibility(View.GONE);
 			ProfilePageTabUserInfoSecondaryButtons.setVisibility(View.VISIBLE);
-			ProfilePageBottomSpace.setVisibility(View.GONE);
-			ProfilePageBottomBar.setVisibility(View.GONE);
+			btnEditProfile.setVisibility(View.GONE);
 		}
+		_viewGraphics(likeUserProfileButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, 0xFF9E9E9E);
 	}
-	
-	public void _stateColor(final int _statusColor, final int _navigationColor) {
-		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-		getWindow().setStatusBarColor(_statusColor);
-		getWindow().setNavigationBarColor(_navigationColor);
-	}
-	
 	
 	public void _ImageColor(final ImageView _image, final int _color) {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
@@ -780,14 +717,12 @@ class c {
 					user_uid_layout_text.setText(dataSnapshot.child("uid").getValue(String.class));
 					JoinDateCC.setTimeInMillis((long)(Double.parseDouble(dataSnapshot.child("join_date").getValue(String.class))));
 					if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
-						bannedUserInfo.setVisibility(View.VISIBLE);
 						UserAvatarUri = "null";
 						ProfilePageTabUserInfoProfileImage.setImageResource(R.drawable.banned_avatar);
 						ProfilePageTabUserInfoCoverImage.setImageResource(R.drawable.banned_cover_photo);
 					} else {
 						_getUserPostsReference();
 						_getUserCountReference();
-						bannedUserInfo.setVisibility(View.GONE);
 						UserAvatarUri = dataSnapshot.child("avatar").getValue(String.class);
 						if (dataSnapshot.child("profile_cover_image").getValue(String.class).equals("null")) {
 							ProfilePageTabUserInfoCoverImage.setImageResource(R.drawable.user_null_cover_photo);
@@ -800,6 +735,7 @@ class c {
 							Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(ProfilePageTabUserInfoProfileImage);
 						}
 					}
+					// Check user status
 					if (dataSnapshot.child("status").getValue(String.class).equals("online")) {
 						ProfilePageTabUserInfoStatus.setText(getResources().getString(R.string.online));
 						ProfilePageTabUserInfoStatus.setTextColor(0xFF2196F3);
@@ -819,101 +755,21 @@ class c {
 						nickname = dataSnapshot.child("nickname").getValue(String.class);
 					}
 					if (dataSnapshot.child("biography").getValue(String.class).equals("null")) {
-						ProfilePageTabUserInfoBioLayout.setVisibility(View.GONE);
+						
 					} else {
 						ProfilePageTabUserInfoBioLayoutText.setText(dataSnapshot.child("biography").getValue(String.class));
-						ProfilePageTabUserInfoBioLayout.setVisibility(View.VISIBLE);
 					}
-					if (dataSnapshot.child("gender").getValue(String.class).equals("hidden")) {
-						ProfilePageTabUserInfoGenderBadge.setVisibility(View.GONE);
-					} else {
-						if (dataSnapshot.child("gender").getValue(String.class).equals("male")) {
-							ProfilePageTabUserInfoGenderBadge.setImageResource(R.drawable.male_badge);
-							ProfilePageTabUserInfoGenderBadge.setVisibility(View.VISIBLE);
-						} else {
-							if (dataSnapshot.child("gender").getValue(String.class).equals("female")) {
-								ProfilePageTabUserInfoGenderBadge.setImageResource(R.drawable.female_badge);
-								ProfilePageTabUserInfoGenderBadge.setVisibility(View.VISIBLE);
-							}
-						}
-					}
-					if (dataSnapshot.child("user_region").getValue(String.class) != null) {
-						Glide.with(getApplicationContext()).load(Uri.parse("https://flagcdn.com/w640/".concat(dataSnapshot.child("user_region").getValue(String.class).concat(".png")))).into(ProfilePageTabUserInfoRegionFlag);
-						ProfilePageTabUserInfoRegionFlagCard.setVisibility(View.VISIBLE);
-					} else {
-						ProfilePageTabUserInfoRegionFlagCard.setVisibility(View.GONE);
-					}
-					if (dataSnapshot.child("account_type").getValue(String.class).equals("admin")) {
-						ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFF651FFF, 0xFFFFFFFF));
-						ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeIc.setImageResource(R.drawable.admin_badge);
-						ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeTitle.setText(getResources().getString(R.string.admin));
-						ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeTitle.setTextColor(0xFF651FFF);
-						ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge.setVisibility(View.VISIBLE);
-					} else {
-						if (dataSnapshot.child("account_type").getValue(String.class).equals("moderator")) {
-							ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFF2196F3, 0xFFFFFFFF));
-							ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeIc.setImageResource(R.drawable.moderator_badge);
-							ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeTitle.setText(getResources().getString(R.string.moderator));
-							ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeTitle.setTextColor(0xFF2196F3);
-							ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge.setVisibility(View.VISIBLE);
-						} else {
-							if (dataSnapshot.child("account_type").getValue(String.class).equals("support")) {
-								ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFF03A9F4, 0xFFFFFFFF));
-								ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeIc.setImageResource(R.drawable.support_badge);
-								ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeTitle.setText(getResources().getString(R.string.supporter));
-								ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeTitle.setTextColor(0xFF03A9F4);
-								ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadgeIc.setVisibility(View.VISIBLE);
-							} else {
-								ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge.setVisibility(View.GONE);
-							}
-						}
-					}
-					if (dataSnapshot.child("account_premium").getValue(String.class).equals("true")) {
-						ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFFFF9800, 0xFFFFFFFF));
-						ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadge.setVisibility(View.VISIBLE);
-					} else {
-						ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadge.setVisibility(View.GONE);
-					}
-					if (dataSnapshot.child("verify").getValue(String.class).equals("true")) {
-						ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)2, 0xFF2196F3, 0xFFFFFFFF));
-						ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadge.setVisibility(View.VISIBLE);
-					} else {
-						ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadge.setVisibility(View.GONE);
-					}
-					join_date_layout_text.setText(new SimpleDateFormat("dd MMMM yyyy").format(JoinDateCC.getTime()));
-					if (ProfilePageTabUserInfoBadgesScrollLayoutAccountTypeBadge.getVisibility() == View.VISIBLE || (ProfilePageTabUserInfoBadgesScrollLayoutVerifiedBadge.getVisibility() == View.VISIBLE || ProfilePageTabUserInfoBadgesScrollLayoutPremiumBadge.getVisibility() == View.VISIBLE)) {
-						ProfilePageTabUserInfoBadgesScroll.setVisibility(View.VISIBLE);
-					} else {
-						ProfilePageTabUserInfoBadgesScroll.setVisibility(View.GONE);
-					}
+					// Removed the problematic commented-out block as requested.
 				} else {
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 		ProfilePageSwipeLayout.setRefreshing(false);
-	}
-	
-	
-	public void _ViewLoad() {
-		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
-		_ImageColor(bottom_home_ic, 0xFFBDBDBD);
-		_ImageColor(bottom_search_ic, 0xFFBDBDBD);
-		_ImageColor(bottom_videos_ic, 0xFFBDBDBD);
-		_ImageColor(bottom_chats_ic, 0xFFBDBDBD);
-		_ImageColor(bottom_profile_ic, 0xFF000000);
-		ProfilePageTabUserInfoProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
-		ProfilePageTabUserInfoCardLayout.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFFFFFFFF));
-		_viewGraphics(ProfilePageTabUserInfoFollowButton, getResources().getColor(R.color.colorPrimary), 0xFF283593, 300, 0, Color.TRANSPARENT);
-		_viewGraphics(ProfilePageTabUserInfoChatButton, 0xFFF5F5F5, 0xFFEEEEEE, 300, 0, 0xFF9E9E9E);
-		_viewGraphics(ProfilePageTabUserInfoFirstButtonsEditProfile, 0xFFF5F5F5, 0xFFEEEEEE, 300, 0, 0xFFEEEEEE);
-		_viewGraphics(likeUserProfileButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, 0xFF9E9E9E);
-		likeUserProfileButton.setElevation((float)1);
-		ProfilePageNoInternetBodySubtitle.setText(getResources().getString(R.string.reasons_may_be).concat("\n\n".concat(getResources().getString(R.string.err_no_internet).concat("\n".concat(getResources().getString(R.string.err_app_maintenance).concat("\n".concat(getResources().getString(R.string.err_problem_on_our_side))))))));
 	}
 	
 	
@@ -942,10 +798,10 @@ class c {
 					ProfilePageTabUserPostsNoPostsSubtitle.setVisibility(View.VISIBLE);
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 	}
@@ -1024,9 +880,9 @@ class c {
 		int left = (int)(_l * dpRatio);
 		int top = (int)(_t * dpRatio);
 		int bottom = (int)(_b * dpRatio);
-		
+
 		boolean _default = false;
-		
+
 		ViewGroup.LayoutParams p = _view.getLayoutParams();
 		if (p instanceof LinearLayout.LayoutParams) {
 			LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)p;
@@ -1054,10 +910,10 @@ class c {
 				ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(count).concat(" ".concat(getResources().getString(R.string.followers))));
 				UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(count)));
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError databaseError) {
-				
+
 			}
 		});
 		DatabaseReference getFollowingCount = FirebaseDatabase.getInstance().getReference("skyline/following").child(getIntent().getStringExtra("uid"));
@@ -1068,30 +924,30 @@ class c {
 				ProfilePageTabUserInfoFollowingCount.setText(_getStyledNumber(count).concat(" ".concat(getResources().getString(R.string.following))));
 				UserInfoCacheMap.put("following_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(count)));
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError databaseError) {
-				
+
 			}
 		});
 		Query checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-		checkFollowUser.addListenerForSingleValueEvent(new ValueEventListener() {
+		checkFollowUser.addValueEventListener(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if(dataSnapshot.exists()) {
-					_viewGraphics(ProfilePageTabUserInfoFollowButton, 0xFFF5F5F5, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
-					ProfilePageTabUserInfoFollowButton.setText(getResources().getString(R.string.unfollow));
-					ProfilePageTabUserInfoFollowButton.setTextColor(0xFF000000);
+					btnFollow.setText(getResources().getString(R.string.unfollow));
+					btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
+					btnFollow.setTextColor(0xFF000000);
 				} else {
-					_viewGraphics(ProfilePageTabUserInfoFollowButton, 0xFF000000, 0xFF424242, 300, 0, Color.TRANSPARENT);
-					ProfilePageTabUserInfoFollowButton.setText(getResources().getString(R.string.follow));
-					ProfilePageTabUserInfoFollowButton.setTextColor(0xFFFFFFFF);
+					btnFollow.setText(getResources().getString(R.string.follow));
+					btnFollow.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+					btnFollow.setTextColor(0xFFFFFFFF);
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 		Query checkProfileLike = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
@@ -1110,10 +966,10 @@ class c {
 					likeUserProfileButtonLikeCount.setTextColor(0xFF616161);
 				}
 			}
-			
+
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-				
+
 			}
 		});
 		DatabaseReference getProfileLikesCount = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid"));
@@ -1124,10 +980,10 @@ class c {
 				likeUserProfileButtonLikeCount.setText(_getStyledNumber(count));
 				UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(count)));
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError databaseError) {
-				
+
 			}
 		});
 	}
@@ -1207,7 +1063,7 @@ class c {
 			View mProfileImageViewDialogView = (View)getLayoutInflater().inflate(R.layout.dp_preview, null);
 			mProfileImageViewDialog.setView(mProfileImageViewDialogView);
 			mProfileImageViewDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-			
+
 			final LinearLayout body = mProfileImageViewDialogView.findViewById(R.id.body);
 			final CardView avatarCard = mProfileImageViewDialogView.findViewById(R.id.avatarCard);
 			final ImageView avatar = mProfileImageViewDialogView.findViewById(R.id.avatar);
@@ -1260,13 +1116,13 @@ class c {
 						mProfileImageViewDialog.dismiss();
 					}
 				}
-				
+
 				@Override
 				public void onCancelled(@NonNull DatabaseError databaseError) {
-					
+
 				}
 			});
-			
+
 			mProfileImageViewDialog.setCancelable(true);
 			mProfileImageViewDialog.show();
 		}
@@ -1277,9 +1133,9 @@ class c {
 		Calendar c1 = Calendar.getInstance();
 		Calendar c2 = Calendar.getInstance();
 		c2.setTimeInMillis((long)_currentTime);
-		
+
 		long time_diff = c1.getTimeInMillis() - c2.getTimeInMillis();
-		
+
 		long seconds = time_diff / 1000;
 		long minutes = seconds / 60;
 		long hours = minutes / 60;
@@ -1287,7 +1143,7 @@ class c {
 		long weeks = days / 7;
 		long months = days / 30;
 		long years = days / 365;
-		
+
 		if (seconds < 60) {
 			if (seconds < 2) {
 				_txt.setText("1 " + getResources().getString(R.string.status_text_seconds));
@@ -1344,11 +1200,11 @@ class c {
 		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?<![^\\s])(([@]{1}|[#]{1})([A-Za-z0-9_-]\\.?)+)(?![^\\s,])|\\*\\*(.*?)\\*\\*|__(.*?)__|~~(.*?)~~|_(.*?)_|\\*(.*?)\\*|///(.*?)///");
 		java.util.regex.Matcher matcher = pattern.matcher(str);
 		int offset = 0;
-		
+
 		while (matcher.find()) {
 			int start = matcher.start() + offset;
 			int end = matcher.end() + offset;
-			
+
 			if (matcher.group(3) != null) {
 				// For mentions or hashtags
 				ProfileSpan span = new ProfileSpan();
@@ -1394,17 +1250,17 @@ class c {
 		_txt.setText(ssb);
 	}
 	private class ProfileSpan extends android.text.style.ClickableSpan{
-		
-		
+
+
 		@Override
 		public void onClick(View view){
-			
+
 			if(view instanceof TextView){
 				TextView tv = (TextView)view;
-				
+
 				if(tv.getText() instanceof Spannable){
 					Spannable sp = (Spannable)tv.getText();
-					
+
 					int start = sp.getSpanStart(this);
 					int end = sp.getSpanEnd(this);
 					object_clicked = sp.subSequence(start,end).toString();
@@ -1435,7 +1291,7 @@ class c {
 					});
 				}
 			}
-			
+
 		}
 		@Override
 		public void updateDrawState(TextPaint ds) {
@@ -1452,6 +1308,15 @@ class c {
 		gd.setCornerRadius((int)_value);
 		_imageview.setClipToOutline(true);
 		_imageview.setBackground(gd);
+	}
+	
+	
+	public void _OpenWebView(final String _URL) {
+		AndroidDevelopersBlogURL = _URL;
+		CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+		builder.setToolbarColor(Color.parseColor("#242D39"));
+		CustomTabsIntent customtabsintent = builder.build();
+		customtabsintent.launchUrl(this, Uri.parse(AndroidDevelopersBlogURL));
 	}
 	
 	public class ProfilePageTabUserPostsRecyclerViewAdapter extends RecyclerView.Adapter<ProfilePageTabUserPostsRecyclerViewAdapter.ViewHolder> {
@@ -1495,8 +1360,6 @@ class c {
 			final ImageView postPrivateStateIcon = _view.findViewById(R.id.postPrivateStateIcon);
 			final TextView postMessageTextMiddle = _view.findViewById(R.id.postMessageTextMiddle);
 			final ImageView postImage = _view.findViewById(R.id.postImage);
-			final WebView linkprewebview = _view.findViewById(R.id.linkprewebview);
-			final VideoView PostVideoPlayer = _view.findViewById(R.id.PostVideoPlayer);
 			final LinearLayout likeButton = _view.findViewById(R.id.likeButton);
 			final LinearLayout commentsButton = _view.findViewById(R.id.commentsButton);
 			final LinearLayout shareButton = _view.findViewById(R.id.shareButton);
@@ -1516,12 +1379,9 @@ class c {
 			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			_view.setLayoutParams(_lp);
 			body.setVisibility(View.GONE);
-			userInfoProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
-			_ImageColor(postPrivateStateIcon, 0xFF616161);
-			_viewGraphics(topMoreButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
 			if (_data.get((int)_position).get("post_type").toString().equals("TEXT") || (_data.get((int)_position).get("post_type").toString().equals("IMAGE") || _data.get((int)_position).get("post_type").toString().equals("VIDEO"))) {
 				if (_data.get((int)_position).containsKey("post_text")) {
-					//		postMessageTextMiddle.setText(_data.get((int)_position).get("post_text").toString());		
+					//		postMessageTextMiddle.setText(_data.get((int)_position).get("post_text").toString());
 					//postMessageTextMiddle.setText(_data.get((int)_position).get("post_text").toString());
 					_textview_mh(postMessageTextMiddle, _data.get((int)_position).get("post_text").toString());
 					
@@ -1699,7 +1559,7 @@ class c {
 					}
 					@Override
 					public void onCancelled(@NonNull DatabaseError databaseError) {
-						
+
 					}
 				});
 				
@@ -1708,20 +1568,20 @@ class c {
 			DatabaseReference getCommentsCount = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(_data.get((int)_position).get("key").toString());
 			DatabaseReference getLikesCount = FirebaseDatabase.getInstance().getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString());
 			DatabaseReference getFavoriteCheck = FirebaseDatabase.getInstance().getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString());
-			
+
 			getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 					if(dataSnapshot.exists()) {
 						likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
 					} else {
 						likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
 					}
 				}
-				
+
 				@Override
 				public void onCancelled(@NonNull DatabaseError databaseError) {
-					
+
 				}
 			});
 			getCommentsCount.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1730,10 +1590,10 @@ class c {
 					long count = dataSnapshot.getChildrenCount();
 					_setCount(commentsButtonCount, count);
 				}
-				
+
 				@Override
 				public void onCancelled(DatabaseError databaseError) {
-					
+
 				}
 			});
 			getLikesCount.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1743,25 +1603,25 @@ class c {
 					_setCount(likeButtonCount, count);
 					postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(count)));
 				}
-				
+
 				@Override
 				public void onCancelled(DatabaseError databaseError) {
-					
+
 				}
 			});
 			getFavoriteCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 					if(dataSnapshot.exists()) {
 						favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
 					} else {
 						favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
 					}
 				}
-				
+
 				@Override
 				public void onCancelled(@NonNull DatabaseError databaseError) {
-					
+
 				}
 			});
 			
@@ -1771,7 +1631,7 @@ class c {
 					DatabaseReference getLikeCheck = FirebaseDatabase.getInstance().getReference("skyline/posts-likes").child(_data.get((int)_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 					getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 							if(dataSnapshot.exists()) {
 								getLikeCheck.removeValue();
 								postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString()) - 1)));
@@ -1779,15 +1639,16 @@ class c {
 								likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
 							} else {
 								getLikeCheck.setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+								com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get((int)_position).get("key").toString(), _data.get((int)_position).get("uid").toString());
 								postLikeCountCache.put(_data.get((int)_position).get("key").toString(), String.valueOf((long)(Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString()) + 1)));
 								_setCount(likeButtonCount, Double.parseDouble(postLikeCountCache.get(_data.get((int)_position).get("key").toString()).toString()));
 								likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
 							}
 						}
-						
+
 						@Override
 						public void onCancelled(@NonNull DatabaseError databaseError) {
-							
+
 						}
 					});
 					vbr.vibrate((long)(24));
@@ -1819,7 +1680,7 @@ class c {
 					DatabaseReference getFavoriteCheck = FirebaseDatabase.getInstance().getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("key").toString());
 					getFavoriteCheck.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) { 
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 							if(dataSnapshot.exists()) {
 								getFavoriteCheck.removeValue();
 								favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
@@ -1828,10 +1689,10 @@ class c {
 								favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
 							}
 						}
-						
+
 						@Override
 						public void onCancelled(@NonNull DatabaseError databaseError) {
-							
+
 						}
 					});
 					vbr.vibrate((long)(24));
@@ -1854,8 +1715,7 @@ class c {
 			postImage.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View _view) {
-					intent.putExtra("img", _data.get((int)_position).get("post_image").toString());
-					startActivity(intent);
+					_OpenWebView(_data.get((int)_position).get("post_image").toString());
 				}
 			});
 		}
@@ -1871,4 +1731,5 @@ class c {
 			}
 		}
 	}
-}
+
+}

@@ -3,7 +3,9 @@ package com.synapse.social.studioasinc;
 import android.Manifest;
 import android.animation.*;
 import android.app.*;
+import android.app.AlertDialog;
 import android.content.*;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.*;
@@ -35,6 +37,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.gridlayout.*;
 import androidx.recyclerview.widget.*;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,15 +45,12 @@ import androidx.recyclerview.widget.RecyclerView.Adapter;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
-import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
-import com.google.android.material.color.MaterialColors;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
@@ -83,7 +83,15 @@ import java.util.regex.*;
 import org.json.*;
 import com.google.firebase.database.Query;
 import java.net.URL;
-import java.net.MalformedURLException;
+import java.net.MalformedURLException;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
+import com.google.android.material.textfield.TextInputLayout;
+
+import com.google.android.material.card.*;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import androidx.core.content.ContextCompat;
 
 public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 	
@@ -135,6 +143,7 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 	private OnFailureListener _storage_failure_listener;
 	private Intent intent = new Intent();
 	private Calendar cc = Calendar.getInstance();
+	private AlertDialog.Builder Dialogs;
 	
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -145,8 +154,7 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 		
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
 		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-		} else {
+			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);} else {
 			initializeLogic();
 		}
 	}
@@ -176,6 +184,7 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 		isDataNotExistsLayoutSubTitle = findViewById(R.id.isDataNotExistsLayoutSubTitle);
 		mLoadingBar = findViewById(R.id.mLoadingBar);
 		auth = FirebaseAuth.getInstance();
+		Dialogs = new AlertDialog.Builder(this);
 		
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -549,81 +558,40 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 	
 	
 	public void _addProfilePhotoUrlDialog() {
-		{
-			final AlertDialog NewCustomDialog = new AlertDialog.Builder(ProfilePhotoHistoryActivity.this).create();
-			LayoutInflater NewCustomDialogLI = getLayoutInflater();
-			View NewCustomDialogCV = (View) NewCustomDialogLI.inflate(R.layout.add_dp_with_url_synapse, null);
-			NewCustomDialog.setView(NewCustomDialogCV);
-			NewCustomDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-			
-			final androidx.cardview.widget.CardView dialog_card = NewCustomDialogCV.findViewById(R.id.dialog_card);
-			final androidx.cardview.widget.CardView user_avatar_card = NewCustomDialogCV.findViewById(R.id.user_avatar_card);
-			final EditText user_avatar_url_input = NewCustomDialogCV.findViewById(R.id.user_avatar_url_input);
-			final ImageView user_avatar_image = NewCustomDialogCV.findViewById(R.id.user_avatar_image);
-			final TextView add_button = NewCustomDialogCV.findViewById(R.id.add_button);
-			final TextView cancel_button = NewCustomDialogCV.findViewById(R.id.cancel_button);
-			
-			dialog_card.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)28, 0xFFFFFFFF));
-			user_avatar_card.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
-			user_avatar_url_input.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, Color.TRANSPARENT));
-			_viewGraphics(add_button, 0xFF2196F3, 0xFF1976D2, 300, 0, Color.TRANSPARENT);
-			_viewGraphics(cancel_button, 0xFFF5F5F5, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
-			user_avatar_url_input.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-					final String _charSeq = _param1.toString();
-					
-					if (!_charSeq.trim().equals("")) {
-						if (_checkValidUrl(_charSeq.trim())) {
-							Glide.with(getApplicationContext()).load(Uri.parse(_charSeq.trim())).into(user_avatar_image);
-						} else {
-							((EditText)user_avatar_url_input).setError("Invalid URL");
-						}
-					} else {
-						((EditText)user_avatar_url_input).setError("Enter Profile Image URL");
+		MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(ProfilePhotoHistoryActivity.this);
+		Dialogs.setTitle("Add image with link");
+		View EdittextDesign = LayoutInflater.from(ProfilePhotoHistoryActivity.this).inflate(R.layout.single_et, null);
+		Dialogs.setView(EdittextDesign);
+		final EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
+		final TextInputLayout textinputlayout1 = EdittextDesign.findViewById(R.id.textinputlayout1);
+		edittext1.setFocusableInTouchMode(true);
+		Dialogs.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface _dialog, int _which) {
+				if (!edittext1.getText().toString().trim().equals("")) {
+					if (_checkValidUrl(edittext1.getText().toString().trim())) {
+						String ProfileHistoryKey = maindb.push().getKey();
+						mAddProfilePhotoMap = new HashMap<>();
+						mAddProfilePhotoMap.put("key", ProfileHistoryKey);
+						mAddProfilePhotoMap.put("image_url", edittext1.getText().toString().trim());
+						mAddProfilePhotoMap.put("upload_date", String.valueOf((long)(cc.getTimeInMillis())));
+						mAddProfilePhotoMap.put("type", "url");
+						maindb.child("skyline/profile-history/".concat(FirebaseAuth.getInstance().getCurrentUser().getUid().concat("/".concat(ProfileHistoryKey)))).updateChildren(mAddProfilePhotoMap);
+						_getReference();
 					}
 				}
+			}
+		});
+		Dialogs.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface _dialog, int _which) {
 				
-				@Override
-				public void beforeTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-					
-				}
-				
-				@Override
-				public void afterTextChanged(Editable _param1) {
-					
-				}
-			});
-			
-			add_button.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View _view) {
-					if (!user_avatar_url_input.getText().toString().trim().equals("")) {
-						if (_checkValidUrl(user_avatar_url_input.getText().toString().trim())) {
-							String ProfileHistoryKey = maindb.push().getKey();
-							mAddProfilePhotoMap = new HashMap<>();
-							mAddProfilePhotoMap.put("key", ProfileHistoryKey);
-							mAddProfilePhotoMap.put("image_url", user_avatar_url_input.getText().toString().trim());
-							mAddProfilePhotoMap.put("upload_date", String.valueOf((long)(cc.getTimeInMillis())));
-							mAddProfilePhotoMap.put("type", "url");
-							maindb.child("skyline/profile-history/".concat(FirebaseAuth.getInstance().getCurrentUser().getUid().concat("/".concat(ProfileHistoryKey)))).updateChildren(mAddProfilePhotoMap);
-							SketchwareUtil.showMessage(getApplicationContext(), "Profile Photo Added");
-							_getReference();
-							NewCustomDialog.dismiss();
-						}
-					}
-				}
-			});
-			cancel_button.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View _view) {
-					NewCustomDialog.dismiss();
-				}
-			});
-			
-			NewCustomDialog.setCancelable(true);
-			NewCustomDialog.show();
-		}
+			}
+		});
+		androidx.appcompat.app.AlertDialog edittextDialog = Dialogs.create();
+		
+		edittextDialog.setCancelable(true);
+		edittextDialog.show();
 	}
 	
 	
@@ -664,8 +632,6 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 			final LinearLayout checked = _view.findViewById(R.id.checked);
 			final ImageView checked_ic = _view.findViewById(R.id.checked_ic);
 			
-			_viewGraphics(body, 0xFFFFFFFF, 0xFFEEEEEE, 28, 0, Color.TRANSPARENT);
-			card.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
 			checked.setBackgroundColor(0x50000000);
 			_ImageColor(checked_ic, 0xFFFFFFFF);
 			Glide.with(getApplicationContext()).load(Uri.parse(_data.get((int)_position).get("image_url").toString())).into(profile);

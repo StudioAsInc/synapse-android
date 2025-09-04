@@ -101,7 +101,7 @@
 									android:layout_weight="1"
 									android:focusable="false"
 									android:maxWidth="150dp"
-									android:fontFamily="@font/appfont" />
+									android:fontFamily="@font/product_sans" />
 								<ImageView
 									android:id="@+id/buttonsRelativeBottomUserInfGenderBadge"
 									android:layout_width="16dp"
@@ -130,7 +130,7 @@
 							android:textColor="#FFFFFF"
 							android:focusable="false"
 							tools:replace="android:text"
-							android:fontFamily="@font/appfont" />
+							android:fontFamily="@font/product_sans" />
 					</LinearLayout>
 					<LinearLayout
 						android:id="@+id/buttonsRelativeTop"
@@ -163,7 +163,7 @@
 								android:textStyle="bold"
 								android:textColor="#FFFFFF"
 								android:focusable="false"
-								android:fontFamily="@font/appfont" />
+								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 						<LinearLayout
 							android:id="@+id/commentsButton"
@@ -177,7 +177,7 @@
 								android:layout_width="48dp"
 								android:layout_height="48dp"
 								android:padding="8dp"
-								android:src="@drawable/line_video_player_icons_3"
+								android:src="@drawable/ic_chat_48px"
 								android:scaleType="fitCenter"
 								android:focusable="false" />
 							<TextView
@@ -189,7 +189,7 @@
 								android:textStyle="bold"
 								android:textColor="#FFFFFF"
 								android:focusable="false"
-								android:fontFamily="@font/appfont" />
+								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 						<LinearLayout
 							android:id="@+id/shareButton"
@@ -203,7 +203,7 @@
 								android:layout_width="48dp"
 								android:layout_height="48dp"
 								android:padding="8dp"
-								android:src="@drawable/line_video_player_icons_4"
+								android:src="@drawable/ic_forward"
 								android:scaleType="fitCenter"
 								android:focusable="false" />
 							<TextView
@@ -215,7 +215,7 @@
 								android:textStyle="bold"
 								android:textColor="#FFFFFF"
 								android:focusable="false"
-								android:fontFamily="@font/appfont" />
+								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 						<LinearLayout
 							android:id="@+id/addFavoriteButton"
@@ -228,7 +228,7 @@
 								android:layout_width="48dp"
 								android:layout_height="48dp"
 								android:padding="8dp"
-								android:src="@drawable/line_video_player_icons_6"
+								android:src="@drawable/ic_bookmark"
 								android:scaleType="fitCenter"
 								android:focusable="false" />
 							<TextView
@@ -240,7 +240,7 @@
 								android:textStyle="bold"
 								android:textColor="#FFFFFF"
 								android:focusable="false"
-								android:fontFamily="@font/appfont" />
+								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 					</LinearLayout>
 				</LinearLayout>
@@ -261,7 +261,7 @@
 						android:layout_weight="1"
 						android:focusable="false"
 						tools:replace="android:text"
-						android:fontFamily="@font/appfont" />
+						android:fontFamily="@font/product_sans" />
 					<ImageView
 						android:id="@+id/videoMusicInfoIc"
 						android:layout_width="24dp"

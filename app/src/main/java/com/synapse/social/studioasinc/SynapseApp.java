@@ -12,118 +12,184 @@ import androidx.annotation.NonNull;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
-
-import java.io.*;
-import java.text.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.ArrayList;
+import com.onesignal.OneSignal;
+import com.onesignal.debug.LogLevel;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.regex.*;
-import org.json.*;
+import androidx.lifecycle.DefaultLifecycleObserver;
+import androidx.lifecycle.ProcessLifecycleOwner;
+import androidx.lifecycle.LifecycleOwner;
+import com.synapse.social.studioasinc.util.UpdateManager;
+import android.os.Bundle;
+import android.app.Activity;
+import java.lang.ref.WeakReference;
 
-public class SynapseApp extends Application {
-	
-	private static Context mContext;
-	private Thread.UncaughtExceptionHandler mExceptionHandler;
-	
-	public static FirebaseAuth mAuth;
-	
-	public static DatabaseReference getCheckUserReference;
-	public static DatabaseReference setUserStatusRef;
+public class SynapseApp extends Application implements Application.ActivityLifecycleCallbacks, DefaultLifecycleObserver {
+    
+    private static Context mContext;
+    private Thread.UncaughtExceptionHandler mExceptionHandler;
+    private WeakReference<Activity> currentActivity;
+    
+    public static FirebaseAuth mAuth;
+    
+    public static DatabaseReference getCheckUserReference;
+    public static DatabaseReference setUserStatusRef;
     public static DatabaseReference setUserStatusReference;
     
     public static Calendar mCalendar;
-	
-	public static Context getContext() {
-		return mContext;
-	}
-	
-	@Override
-	public void onCreate() {
-		mContext = this;
-		this.mExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
-        this.mCalendar = Calendar.getInstance();
-		FirebaseApp.initializeApp(this);
-		
-		this.mAuth = FirebaseAuth.getInstance();
-		this.getCheckUserReference = FirebaseDatabase.getInstance().getReference().child("skyline/users");
-		this.setUserStatusRef = FirebaseDatabase.getInstance().getReference(".info/connected");
-		
-		Thread.setDefaultUncaughtExceptionHandler(
-		new Thread.UncaughtExceptionHandler() {
-			@Override
-			public void uncaughtException(Thread mThread, Throwable mThrowable) {
-				Intent mIntent = new Intent(mContext, DebugActivity.class);
-				mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				mIntent.putExtra("error", Log.getStackTraceString(mThrowable));
-				mContext.startActivity(mIntent);
-				mExceptionHandler.uncaughtException(mThread, mThrowable);
-			}
-		});
-		
-		setUserStatus();
-		super.onCreate();
-	}
-	
-	public static void setUserStatus() {
-		if (mAuth.getCurrentUser() != null) {
-            setUserStatusReference = FirebaseDatabase.getInstance().getReference("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("status");
-			getCheckUserReference.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-					if(dataSnapshot.exists()) {
-						setUserStatusRef.addValueEventListener(new ValueEventListener() {
-							@Override
-							public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-								boolean connected = dataSnapshot.getValue(Boolean.class);
-								if (connected) {
-									setUserStatusReference.setValue("online");
-									setUserStatusReference.onDisconnect().setValue(String.valueOf((long)(mCalendar.getTimeInMillis())));
-								}
-							}
-							@Override
-							public void onCancelled(@NonNull DatabaseError databaseError) {
-								
-							}
-						});
-					}
-				}
-				
-				@Override
-				public void onCancelled(@NonNull DatabaseError databaseError) {
-					
-				}
-			});
-		}
-	}
-	
-	public static void setUserStatusOnline() {
-		if (mAuth.getCurrentUser() != null) {
-			FirebaseDatabase.getInstance().getReference("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("status").setValue("online");
-		}
-	}
-	
-	public static void setUserStatusOffline() {
-		if (mAuth.getCurrentUser() != null) {
-			FirebaseDatabase.getInstance().getReference("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("status").setValue(String.valueOf((long)(mCalendar.getTimeInMillis())));
-		}
-	}
     
-    public static void setUserStatusOfflineListenerCancel() {
-        setUserStatusReference.onDisconnect().cancel();
+    public static Context getContext() {
+        return mContext;
+    }
+    
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mContext = this;
+        this.mExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
+        this.mCalendar = Calendar.getInstance();
+        
+        // Initialize Firebase with disk persistence
+        FirebaseApp.initializeApp(this);
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        
+        // Create notification channels
+        createNotificationChannels();
+        
+        this.mAuth = FirebaseAuth.getInstance();
+        this.getCheckUserReference = FirebaseDatabase.getInstance().getReference("skyline/users");
+        this.setUserStatusRef = FirebaseDatabase.getInstance().getReference(".info/connected");
+        
+        // Keep users data synced for offline use
+        getCheckUserReference.keepSynced(true);
+        
+        // Set up global exception handler
+        Thread.setDefaultUncaughtExceptionHandler(
+            new Thread.UncaughtExceptionHandler() {
+                @Override
+                public void uncaughtException(Thread mThread, Throwable mThrowable) {
+                    Intent mIntent = new Intent(mContext, DebugActivity.class);
+                    mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    mIntent.putExtra("error", Log.getStackTraceString(mThrowable));
+                    mContext.startActivity(mIntent);
+                    mExceptionHandler.uncaughtException(mThread, mThrowable);
+                }
+            });
+        
+        // Initialize OneSignal
+        final String ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
+        OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
+        OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
+
+        // The IPushSubscriptionObserver has been removed.
+        // User identification is now handled by calling OneSignalManager.loginUser(uid)
+        // from AuthActivity and CompleteProfileActivity.
+
+        ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
+        registerActivityLifecycleCallbacks(this);
+    }
+
+    @Override
+    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+    }
+
+    @Override
+    public void onActivityStarted(Activity activity) {
+        currentActivity = new WeakReference<>(activity);
+    }
+
+    @Override
+    public void onActivityResumed(Activity activity) {
+        currentActivity = new WeakReference<>(activity);
+    }
+
+    @Override
+    public void onActivityPaused(Activity activity) {
+        currentActivity.clear();
+    }
+
+    @Override
+    public void onActivityStopped(Activity activity) {
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+    }
+
+    @Override
+    public void onActivityDestroyed(Activity activity) {
+    }
+
+    @Override
+    public void onStart(@NonNull LifecycleOwner owner) {
+        if (mAuth.getCurrentUser() != null) {
+            PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
+        }
+        Activity activity = currentActivity.get();
+        if (activity instanceof MainActivity) {
+            UpdateManager updateManager = new UpdateManager(activity, new Runnable() {
+                @Override
+                public void run() {
+                    ((MainActivity) activity).proceedToAuthCheck();
+                }
+            });
+            updateManager.checkForUpdate();
+        }
+    }
+
+    @Override
+    public void onStop(@NonNull LifecycleOwner owner) {
+        if (mAuth.getCurrentUser() != null) {
+            PresenceManager.goOffline(mAuth.getCurrentUser().getUid());
+        }
+    }
+    
+    private void createNotificationChannels() {
+        // Create notification channels for Android O and above
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.NotificationManager notificationManager = 
+                (android.app.NotificationManager) getSystemService(android.app.NotificationManager.class);
+            
+            // Messages channel
+            android.app.NotificationChannel messagesChannel = new android.app.NotificationChannel(
+                "messages",
+                "Messages",
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            );
+            messagesChannel.setDescription("Chat message notifications");
+            messagesChannel.enableLights(true);
+            messagesChannel.setLightColor(android.graphics.Color.RED);
+            messagesChannel.enableVibration(true);
+            messagesChannel.setShowBadge(true);
+            messagesChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
+            
+            // General notifications channel
+            android.app.NotificationChannel generalChannel = new android.app.NotificationChannel(
+                "general",
+                "General",
+                android.app.NotificationManager.IMPORTANCE_DEFAULT
+            );
+            generalChannel.setDescription("General app notifications");
+            generalChannel.enableLights(false);
+            generalChannel.enableVibration(false);
+            
+            // Create the channels
+            notificationManager.createNotificationChannel(messagesChannel);
+            notificationManager.createNotificationChannel(generalChannel);
+        }
+    }
+    
+    /**
+     * Enable offline persistence for any database reference
+     * @param ref DatabaseReference to enable offline sync for
+     */
+    public static void enableOfflineSync(DatabaseReference ref) {
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        ref.keepSynced(true);
     }
 }

@@ -35,17 +35,15 @@ import androidx.browser.*;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.gridlayout.*;
 import androidx.recyclerview.widget.*;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.Adapter;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
-import com.bumptech.glide.*;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.*;
-import com.google.android.material.color.MaterialColors;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -491,7 +489,6 @@ public class SearchActivity extends AppCompatActivity {
 	}
 	
 	private void initializeLogic() {
-		_stateColor(0xFFFFFFFF, 0xFFFFFFFF);
 		topLayoutBarMiddleSearchLayout.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)0, Color.TRANSPARENT, 0xFFF5F5F5));
 		SearchUserLayout.setVisibility(View.VISIBLE);
 		topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.GONE);
@@ -515,53 +512,7 @@ public class SearchActivity extends AppCompatActivity {
 				return false;
 			}
 		});
-		if (getIntent().hasExtra("handle")) {
-			if (getIntent().hasExtra("handle")) {
-				DatabaseReference searchRef = FirebaseDatabase.getInstance().getReference("skyline/users");
-				String handle = getIntent().getStringExtra("handle");  // Get the value from the activity extra
-				Query searchQuery = searchRef.orderByChild("username").startAt(handle).endAt(handle + "\uf8ff").limitToLast(50);
-				
-				searchQuery.addListenerForSingleValueEvent(new ValueEventListener() {
-					@Override
-					public void onDataChange(@NonNull DataSnapshot snapshot) {
-						if (snapshot.exists()) {
-							SearchUserLayoutRecyclerView.setVisibility(View.VISIBLE);
-							SearchUserLayoutNoUserFound.setVisibility(View.GONE);
-							
-							searchedUsersList.clear();
-							
-							for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-								HashMap<String, Object> searchMap = new HashMap<String, Object>((Map<String, Object>) dataSnapshot.getValue());
-								searchedUsersList.add(searchMap);
-							}
-							
-							SearchUserLayoutRecyclerView.getAdapter().notifyDataSetChanged();
-							
-							// Check if RecyclerView has exactly one item
-							if (searchedUsersList.size() == 1) {
-								// Directly open the first item
-								SearchUserLayoutRecyclerView.post(() -> {
-									SearchUserLayoutRecyclerView.findViewHolderForAdapterPosition(0).itemView.performClick();
-								});
-							}
-							
-						} else {
-							SearchUserLayoutRecyclerView.setVisibility(View.GONE);
-							SearchUserLayoutNoUserFound.setVisibility(View.VISIBLE);
-						}
-					}
-					
-					@Override
-					public void onCancelled(@NonNull DatabaseError error) {
-						// Handle possible errors
-					}
-				});
-			} else {
-				// Handle case when there is no "handle" extra
-			}
-		} else {
-			_showAllUser();
-		}
+		_showAllUser();
 	}
 	
 	
@@ -737,6 +688,7 @@ public class SearchActivity extends AppCompatActivity {
 		public void onBindViewHolder(ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
 			
+			final androidx.cardview.widget.CardView cardview1 = _view.findViewById(R.id.cardview1);
 			final LinearLayout body = _view.findViewById(R.id.body);
 			final RelativeLayout profileCardRelative = _view.findViewById(R.id.profileCardRelative);
 			final LinearLayout lin = _view.findViewById(R.id.lin);
@@ -754,7 +706,6 @@ public class SearchActivity extends AppCompatActivity {
 			try{
 				RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 				_view.setLayoutParams(_lp);
-				_viewGraphics(body, 0xFFFFFFFF, 0xFFEEEEEE, 28, 0, Color.TRANSPARENT);
 				profileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
 				userStatusCircleBG.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFFFFFFFF));
 				userStatusCircleIN.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFF2196F3));
@@ -820,27 +771,16 @@ public class SearchActivity extends AppCompatActivity {
 					userStatusCircleBG.setVisibility(View.GONE);
 				}
 				if (_position == 0) {
-					_setMargin(body, 18, 18, 18, 18);
+					_setMargin(body, 18, 18, 10, 10);
 				} else {
-					_setMargin(body, 18, 18, 0, 18);
-				}
-				if (getIntent().hasExtra("ref")) {
-					if (getIntent().getStringExtra("ref").equals("true")) {
-						intent.setClass(getApplicationContext(), ProfileActivity.class);
-						intent.putExtra("uid", _data.get((int)0).get("uid").toString());
-						startActivity(intent);
-						finish();
-					} else {
-						
-					}
-				} else {
-					
+					_setMargin(body, 18, 18, 0, 10);
 				}
 				body.setOnClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View _view) {
 						intent.setClass(getApplicationContext(), ProfileActivity.class);
 						intent.putExtra("uid", _data.get((int)_position).get("uid").toString());
+						intent.putExtra("origin", "SearchActivity");
 						startActivity(intent);
 						finish();
 					}
@@ -848,6 +788,128 @@ public class SearchActivity extends AppCompatActivity {
 			}catch(Exception e){
 				
 			}
+			/*
+try {
+    // Layout setup
+    RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT, 
+        ViewGroup.LayoutParams.WRAP_CONTENT
+    );
+    _view.setLayoutParams(lp);
+    
+    // Create reusable GradientDrawable creator
+    GradientDrawableCreator gradientCreator = new GradientDrawableCreator();
+    profileCard.setBackground(gradientCreator.create(300, Color.TRANSPARENT));
+    userStatusCircleBG.setBackground(gradientCreator.create(300, 0xFFFFFFFF));
+    userStatusCircleIN.setBackground(gradientCreator.create(300, 0xFF2196F3));
+    
+    // Get current item data once
+    Map<String, Object> currentItem = _data.get(_position);
+    
+    // Set name and username
+    name.setText("@" + currentItem.get("username").toString());
+    username.setText(currentItem.get("nickname").toString().equals("null") 
+        ? "@" + currentItem.get("username").toString() 
+        : currentItem.get("nickname").toString());
+    
+    // Avatar setup
+    if (currentItem.get("banned").toString().equals("true")) {
+        profileAvatar.setImageResource(R.drawable.banned_avatar);
+    } else {
+        String avatar = currentItem.get("avatar").toString();
+        if (avatar.equals("null")) {
+            profileAvatar.setImageResource(R.drawable.avatar);
+        } else {
+            Glide.with(getApplicationContext())
+                .load(Uri.parse(avatar))
+                .into(profileAvatar);
+        }
+    }
+    
+    // Gender badge setup
+    String gender = currentItem.get("gender").toString();
+    switch (gender) {
+        case "hidden":
+            genderBadge.setVisibility(View.GONE);
+            break;
+        case "male":
+            genderBadge.setImageResource(R.drawable.male_badge);
+            genderBadge.setVisibility(View.VISIBLE);
+            break;
+        case "female":
+            genderBadge.setImageResource(R.drawable.female_badge);
+            genderBadge.setVisibility(View.VISIBLE);
+            break;
+    }
+    
+    // Account badge setup
+    String accountType = currentItem.get("account_type").toString();
+    switch (accountType) {
+        case "admin":
+            badge.setImageResource(R.drawable.admin_badge);
+            badge.setVisibility(View.VISIBLE);
+            break;
+        case "moderator":
+            badge.setImageResource(R.drawable.moderator_badge);
+            badge.setVisibility(View.VISIBLE);
+            break;
+        case "support":
+            badge.setImageResource(R.drawable.support_badge);
+            badge.setVisibility(View.VISIBLE);
+            break;
+        case "user":
+            if (currentItem.get("account_premium").toString().equals("true")) {
+                badge.setImageResource(R.drawable.premium_badge);
+                badge.setVisibility(View.VISIBLE);
+            } else if (currentItem.get("verify").toString().equals("true")) {
+                badge.setImageResource(R.drawable.verified_badge);
+                badge.setVisibility(View.VISIBLE);
+            } else {
+                badge.setVisibility(View.GONE);
+            }
+            break;
+    }
+    
+    // Status visibility
+    userStatusCircleBG.setVisibility(
+        currentItem.get("status").toString().equals("online") 
+            ? View.VISIBLE 
+            : View.GONE
+    );
+    
+    // Margin setup
+    _setMargin(cardview1, 18, 18, _position == 0 ? 18 : 0, 18);
+    
+    // Intent handling
+    if (getIntent().hasExtra("ref") && getIntent().getStringExtra("ref").equals("true")) {
+        intent.setClass(getApplicationContext(), ProfileActivity.class);
+        intent.putExtra("uid", _data.get(0).get("uid").toString());
+        startActivity(intent);
+        finish();
+    }
+    
+    // Click listener
+    body.setOnClickListener(v -> {
+        intent.setClass(getApplicationContext(), ProfileActivity.class);
+        intent.putExtra("uid", currentItem.get("uid").toString());
+        startActivity(intent);
+        finish();
+    });
+} catch (Exception e) {
+    // Consider proper error handling or logging
+    e.printStackTrace();
+}
+
+// Helper class for GradientDrawable creation
+private static class GradientDrawableCreator {
+    GradientDrawable create(int cornerRadius, int color) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setCornerRadius(cornerRadius);
+        drawable.setColor(color);
+        return drawable;
+    }
+}
+*/
 		}
 		
 		@Override

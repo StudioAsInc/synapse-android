@@ -4,7 +4,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:id="@+id/_main">
 	<ScrollView
 		android:id="@+id/vscroll1"
 		android:layout_width="match_parent"
@@ -30,7 +31,7 @@
 				android:textSize="30sp"
 				android:textStyle="bold"
 				android:textColor="@color/md_theme_onBackground"
-				android:fontFamily="@font/product_sans" />
+				android:fontFamily="@font/product_sans_bold" />
 			<com.synapse.social.studioasinc.animations.textview.TVeffects
 				android:id="@+id/aiResponseTextView_1"
 				android:layout_width="wrap_content"
@@ -154,7 +155,7 @@
 							android:layout_marginRight="12dp"
 							android:background="@android:color/transparent"
 							android:gravity="center_vertical"
-							android:text="I confirm that I'm at least 13 years of age."
+							android:text="@string/age_agreement"
 							android:textSize="12sp"
 							android:textStyle="bold"
 							android:textColor="?colorOnSurface"
@@ -187,7 +188,6 @@
 						android:text="You can always change your name later"
 						android:textSize="12sp"
 						android:textColor="@color/md_theme_onBackground"
-						android:drawableStart="@drawable/ic_mtrl_info"
 						android:fontFamily="@font/product_sans" />
 				</LinearLayout>
 			</LinearLayout>
@@ -301,7 +301,7 @@
 								android:id="@+id/ic_rule_3"
 								android:layout_width="25dp"
 								android:layout_height="30dp"
-								android:src="@drawable/encrypted_24px"
+								android:src="@drawable/ic_shield_lock"
 								android:scaleType="fitCenter" />
 						</LinearLayout>
 						<LinearLayout
@@ -330,7 +330,7 @@
 					android:text="I agree"
 					android:textSize="16sp"
 					android:textColor="?colorSurface"
-					style="@style/Widget.Material3Expressive.Button"
+					style="@style/Widget.Material3.Button"
 					android:fontFamily="@font/product_sans_bold" />
 			</LinearLayout>
 			<LinearLayout
@@ -520,7 +520,7 @@
 							android:text="Continue"
 							android:textSize="16sp"
 							android:textColor="?colorSurface"
-							style="@style/Widget.Material3Expressive.Button"
+							style="@style/Widget.Material3.Button"
 							android:fontFamily="@font/product_sans_bold" />
 					</LinearLayout>
 				</LinearLayout>

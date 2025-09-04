@@ -4,7 +4,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:id="@+id/_main">
 	<LinearLayout
 		android:id="@+id/linear1"
 		android:layout_width="match_parent"
@@ -55,7 +56,8 @@
 		<ScrollView
 			android:id="@+id/vscroll1"
 			android:layout_width="match_parent"
-			android:layout_height="match_parent">
+			android:layout_height="match_parent"
+			android:scrollbars="none">
 			<LinearLayout
 				android:id="@+id/container"
 				android:layout_width="match_parent"
@@ -74,13 +76,20 @@
 						android:padding="8dp"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="vertical">
-						<ImageView
-							android:id="@+id/user_profile_picture"
-							android:layout_width="100dp"
-							android:layout_height="100dp"
+						<androidx.cardview.widget.CardView
+							android:id="@+id/cardProfilePictureWrapper"
+							android:layout_width="120dp"
+							android:layout_height="120dp"
 							android:layout_marginTop="60dp"
-							android:src="@drawable/avatar"
-							android:scaleType="centerCrop" />
+							app:cardElevation="1dp"
+							app:cardCornerRadius="300dp">
+							<ImageView
+								android:id="@+id/profilePictureIV"
+								android:layout_width="match_parent"
+								android:layout_height="match_parent"
+								android:src="@drawable/avatar"
+								android:scaleType="centerCrop" />
+						</androidx.cardview.widget.CardView>
 						<TextView
 							android:id="@+id/username"
 							android:layout_width="wrap_content"
@@ -103,148 +112,16 @@
 							android:textSize="14sp"
 							android:textColor="#000000"
 							style="@style/Widget.Material3.Button.TonalButton.Icon"
-							app:icon="@drawable/encrypted_24px" />
+							app:icon="@drawable/ic_shield_lock" />
 					</LinearLayout>
 					<LinearLayout
-						android:id="@+id/action_btn_container"
+						android:id="@+id/actionButtonGroup"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:layout_marginTop="16dp"
 						android:padding="8dp"
 						android:gravity="center_horizontal|center_vertical"
-						android:orientation="horizontal">
-						<LinearLayout
-							android:id="@+id/audio_call_btn"
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:padding="4dp"
-							android:background="@android:color/transparent"
-							android:gravity="center_horizontal|center_vertical"
-							android:orientation="vertical">
-							<LinearLayout
-								android:id="@+id/round_this1"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:padding="8dp"
-								android:background="#F5F5F5"
-								android:gravity="center_horizontal|center_vertical"
-								android:orientation="horizontal">
-								<ImageView
-									android:id="@+id/imageview6"
-									android:layout_width="23dp"
-									android:layout_height="23dp"
-									android:src="@drawable/ic_call_48px"
-									android:scaleType="fitCenter" />
-							</LinearLayout>
-							<TextView
-								android:id="@+id/textview4"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_marginTop="8dp"
-								android:text="Audio"
-								android:textSize="14sp"
-								android:textColor="#000000" />
-						</LinearLayout>
-						<LinearLayout
-							android:id="@+id/video_call_btn"
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:layout_marginLeft="30dp"
-							android:layout_marginRight="30dp"
-							android:padding="4dp"
-							android:background="@android:color/transparent"
-							android:gravity="center_horizontal|center_vertical"
-							android:orientation="vertical">
-							<LinearLayout
-								android:id="@+id/round_this2"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:padding="8dp"
-								android:background="#F5F5F5"
-								android:gravity="center_horizontal|center_vertical"
-								android:orientation="horizontal">
-								<ImageView
-									android:id="@+id/imageview7"
-									android:layout_width="23dp"
-									android:layout_height="23dp"
-									android:src="@drawable/ic_video_chat_48px"
-									android:scaleType="fitCenter" />
-							</LinearLayout>
-							<TextView
-								android:id="@+id/textview5"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_marginTop="8dp"
-								android:text="video"
-								android:textSize="14sp"
-								android:textColor="#000000" />
-						</LinearLayout>
-						<LinearLayout
-							android:id="@+id/mute_btn"
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:layout_marginRight="30dp"
-							android:padding="4dp"
-							android:background="@android:color/transparent"
-							android:gravity="center_horizontal|center_vertical"
-							android:orientation="vertical">
-							<LinearLayout
-								android:id="@+id/round_this3"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:padding="8dp"
-								android:background="#F5F5F5"
-								android:gravity="center_horizontal|center_vertical"
-								android:orientation="horizontal">
-								<ImageView
-									android:id="@+id/imageview8"
-									android:layout_width="23dp"
-									android:layout_height="23dp"
-									android:src="@drawable/ic_block_48px"
-									android:scaleType="fitCenter" />
-							</LinearLayout>
-							<TextView
-								android:id="@+id/textview6"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_marginTop="8dp"
-								android:text="Mute"
-								android:textSize="14sp"
-								android:textColor="#000000" />
-						</LinearLayout>
-						<LinearLayout
-							android:id="@+id/delete_chat_btn"
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:padding="4dp"
-							android:background="@android:color/transparent"
-							android:gravity="center_horizontal|center_vertical"
-							android:orientation="vertical">
-							<LinearLayout
-								android:id="@+id/round_this4"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:padding="8dp"
-								android:background="#F5F5F5"
-								android:gravity="center_horizontal|center_vertical"
-								android:orientation="horizontal">
-								<ImageView
-									android:id="@+id/imageview9"
-									android:layout_width="23dp"
-									android:layout_height="23dp"
-									android:src="@drawable/ic_account_circle_48px"
-									android:scaleType="fitCenter" />
-							</LinearLayout>
-							<TextView
-								android:id="@+id/textview7"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_marginTop="8dp"
-								android:text="Profile"
-								android:textSize="14sp"
-								android:textColor="#000000" />
-						</LinearLayout>
-					</LinearLayout>
+						android:orientation="horizontal" />
 					<LinearLayout
 						android:id="@+id/settings_container"
 						android:layout_width="match_parent"
@@ -263,9 +140,8 @@
 							android:id="@+id/cardview1"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
-							app:contentPadding="8dp"
 							app:cardElevation="0dp"
-							app:cardCornerRadius="0dp">
+							app:cardCornerRadius="20dp">
 							<LinearLayout
 								android:id="@+id/linear14"
 								android:layout_width="match_parent"
@@ -273,7 +149,7 @@
 								android:padding="8dp"
 								android:orientation="vertical">
 								<LinearLayout
-									android:id="@+id/linear12"
+									android:id="@+id/themeMainOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:gravity="center_horizontal|center_vertical"
@@ -310,13 +186,15 @@
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
-									android:id="@+id/linear15"
+									android:id="@+id/nicknameMainOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:layout_marginTop="10dp"
 									android:layout_marginBottom="10dp"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal">
+									android:orientation="horizontal"
+									android:clickable="true"
+									android:focusable="true">
 									<ImageView
 										android:id="@+id/imageview11"
 										android:layout_width="25dp"
@@ -349,7 +227,7 @@
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
-									android:id="@+id/linear17"
+									android:id="@+id/wordEffectMainOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:gravity="center_horizontal|center_vertical"
@@ -386,7 +264,7 @@
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
-									android:id="@+id/linear19"
+									android:id="@+id/quickReactionOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:layout_marginTop="10dp"
@@ -438,70 +316,82 @@
 							android:id="@+id/cardview2"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
-							app:contentPadding="8dp"
 							app:cardElevation="0dp"
-							app:cardCornerRadius="0dp">
+							app:cardCornerRadius="20dp">
 							<LinearLayout
 								android:id="@+id/linear21"
 								android:layout_width="match_parent"
 								android:layout_height="wrap_content"
 								android:padding="8dp"
 								android:orientation="vertical">
-								<LinearLayout
-									android:id="@+id/linear22"
+								<androidx.cardview.widget.CardView
+									android:id="@+id/cardReadReceipt"
 									android:layout_width="match_parent"
-									android:layout_height="wrap_content"
-									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal">
-									<ImageView
-										android:id="@+id/imageview14"
-										android:layout_width="25dp"
-										android:layout_height="25dp"
-										android:layout_marginLeft="10dp"
-										android:layout_marginRight="12dp"
-										android:src="@drawable/mark_chat_read_24px"
-										android:scaleType="fitCenter" />
+									android:layout_height="70dp"
+									app:cardCornerRadius="20dp"
+									android:clickable="true"
+									android:focusable="true"
+									android:background="?attr/selectableItemBackground"
+									android:elevation="0dp">
 									<LinearLayout
-										android:id="@+id/linear26"
-										android:layout_width="wrap_content"
-										android:layout_height="wrap_content"
-										android:padding="8dp"
-										android:orientation="vertical"
-										android:layout_weight="1">
-										<TextView
-											android:id="@+id/textview18"
+										android:id="@+id/readReceiptsMainSwitch"
+										android:layout_width="match_parent"
+										android:layout_height="match_parent"
+										android:gravity="center_horizontal|center_vertical"
+										android:orientation="horizontal">
+										<ImageView
+											android:id="@+id/imageview14"
+											android:layout_width="wrap_content"
+											android:layout_height="25dp"
+											android:layout_marginLeft="10dp"
+											android:layout_marginRight="12dp"
+											android:src="@drawable/mark_chat_read_24px"
+											android:scaleType="fitCenter" />
+										<LinearLayout
+											android:id="@+id/linear26"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
-											android:text="Read receipts"
-											android:textSize="18sp"
-											android:textColor="#000000" />
-										<TextView
-											android:id="@+id/textview19"
+											android:padding="8dp"
+											android:orientation="vertical"
+											android:layout_weight="1">
+											<TextView
+												android:id="@+id/textview18"
+												android:layout_width="wrap_content"
+												android:layout_height="wrap_content"
+												android:text="Read receipts"
+												android:textSize="18sp"
+												android:textColor="#000000" />
+											<TextView
+												android:id="@+id/textview19"
+												android:layout_width="wrap_content"
+												android:layout_height="wrap_content"
+												android:layout_marginTop="5dp"
+												android:text="Default"
+												android:textSize="14sp"
+												android:textColor="#616161" />
+										</LinearLayout>
+										<com.google.android.material.materialswitch.MaterialSwitch
+											android:id="@+id/switchReadReceipt"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
-											android:layout_marginTop="5dp"
-											android:text="Default"
-											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:layout_marginLeft="3dp"
+											android:layout_marginRight="10dp"
+											android:textSize="12sp"
+											android:textColor="#000000"
+											android:checked="true" />
 									</LinearLayout>
-									<com.google.android.material.materialswitch.MaterialSwitch
-										android:id="@+id/Read_recipt_switch"
-										android:layout_width="wrap_content"
-										android:layout_height="wrap_content"
-										android:layout_marginLeft="3dp"
-										android:layout_marginRight="10dp"
-										android:textSize="12sp"
-										android:textColor="#000000"
-										android:checked="true" />
-								</LinearLayout>
+								</androidx.cardview.widget.CardView>
 								<LinearLayout
-									android:id="@+id/linear23"
+									android:id="@+id/disappearingMainSwitch"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:layout_marginTop="10dp"
 									android:layout_marginBottom="10dp"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal">
+									android:orientation="horizontal"
+									android:clickable="true"
+									android:focusable="true"
+									android:background="?attr/selectableItemBackground">
 									<ImageView
 										android:id="@+id/imageview15"
 										android:layout_width="25dp"
@@ -534,7 +424,7 @@
 											android:textColor="#616161" />
 									</LinearLayout>
 									<com.google.android.material.materialswitch.MaterialSwitch
-										android:id="@+id/disapear_switch"
+										android:id="@+id/switchDisappearingMessages"
 										android:layout_width="wrap_content"
 										android:layout_height="wrap_content"
 										android:layout_marginLeft="3dp"
@@ -543,12 +433,15 @@
 										android:textColor="#000000" />
 								</LinearLayout>
 								<LinearLayout
-									android:id="@+id/linear48"
+									android:id="@+id/savePhotoVideoMainSwitch"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:layout_marginBottom="10dp"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal">
+									android:orientation="horizontal"
+									android:clickable="true"
+									android:focusable="true"
+									android:background="?attr/selectableItemBackground">
 									<ImageView
 										android:id="@+id/imageview26"
 										android:layout_width="25dp"
@@ -581,21 +474,22 @@
 											android:textColor="#616161" />
 									</LinearLayout>
 									<com.google.android.material.materialswitch.MaterialSwitch
-										android:id="@+id/autosavephoto_switch"
-										android:layout_width="50dp"
-										android:layout_height="30dp"
+										android:id="@+id/switchAutoSaveMedia"
+										android:layout_width="wrap_content"
+										android:layout_height="wrap_content"
 										android:layout_marginLeft="3dp"
 										android:layout_marginRight="10dp"
-										android:text="Switch"
 										android:textSize="12sp"
 										android:textColor="#000000" />
 								</LinearLayout>
 								<LinearLayout
-									android:id="@+id/linear24"
+									android:id="@+id/pinnedMessagesMainOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal">
+									android:orientation="horizontal"
+									android:clickable="true"
+									android:focusable="true">
 									<ImageView
 										android:id="@+id/imageview16"
 										android:layout_width="25dp"
@@ -628,12 +522,14 @@
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
-									android:id="@+id/linear25"
+									android:id="@+id/searchMessagesMainOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:layout_marginTop="10dp"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal">
+									android:orientation="horizontal"
+									android:clickable="true"
+									android:focusable="true">
 									<ImageView
 										android:id="@+id/imageview17"
 										android:layout_width="25dp"
@@ -680,9 +576,8 @@
 							android:id="@+id/cardview4"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
-							app:contentPadding="8dp"
 							app:cardElevation="0dp"
-							app:cardCornerRadius="0dp">
+							app:cardCornerRadius="20dp">
 							<LinearLayout
 								android:id="@+id/linear39"
 								android:layout_width="match_parent"
@@ -690,7 +585,7 @@
 								android:padding="8dp"
 								android:orientation="vertical">
 								<LinearLayout
-									android:id="@+id/linear40"
+									android:id="@+id/e2eVerificationMainOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:gravity="center_horizontal|center_vertical"
@@ -701,7 +596,7 @@
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
-										android:src="@drawable/encrypted_24px"
+										android:src="@drawable/ic_key"
 										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear44"
@@ -728,7 +623,7 @@
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
-									android:id="@+id/linear41"
+									android:id="@+id/sharedContactsMainOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:layout_marginTop="10dp"
@@ -768,7 +663,7 @@
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
-									android:id="@+id/block_btn"
+									android:id="@+id/blockMainOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:gravity="center_horizontal|center_vertical"
@@ -806,7 +701,7 @@
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
-									android:id="@+id/linear43"
+									android:id="@+id/reportMainOption"
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:layout_marginTop="10dp"

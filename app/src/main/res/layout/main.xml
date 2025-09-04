@@ -4,7 +4,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:id="@+id/_main">
 	<com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect
 		android:id="@+id/body"
 		android:layout_width="match_parent"
@@ -13,7 +14,7 @@
 		android:gravity="center_horizontal|center_vertical"
 		android:orientation="vertical">
 		<LinearLayout
-			android:id="@+id/linear1"
+			android:id="@+id/top_layout"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:padding="8dp"
@@ -22,7 +23,7 @@
 			android:orientation="horizontal"
 			android:layout_weight="1" />
 		<LinearLayout
-			android:id="@+id/middleLayout"
+			android:id="@+id/middle_layout"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:background="@android:color/transparent"
@@ -33,25 +34,26 @@
 				android:id="@+id/app_logo"
 				android:layout_width="85dp"
 				android:layout_height="85dp"
-				android:src="@drawable/appicon"
+				android:src="@mipmap/ic_launcher"
 				android:scaleType="fitCenter"
 				android:translationY="40.0dp" />
 		</LinearLayout>
 		<LinearLayout
-			android:id="@+id/linear3"
+			android:id="@+id/bottom_layout"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:background="@android:color/transparent"
-			android:gravity="center_horizontal|bottom"
+			android:gravity="center_horizontal|center_vertical"
 			android:orientation="vertical"
 			android:layout_weight="1">
 			<ImageView
-				android:id="@+id/imageview4"
+				android:id="@+id/trademark_img"
 				android:layout_width="wrap_content"
-				android:layout_height="80dp"
+				android:layout_height="100dp"
 				android:layout_marginBottom="20dp"
 				android:src="@drawable/bycompany_mtrl"
-				android:scaleType="fitCenter" />
+				android:scaleType="fitCenter"
+				android:translationY="30.0dp" />
 		</LinearLayout>
 	</com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect>
 </LinearLayout>
