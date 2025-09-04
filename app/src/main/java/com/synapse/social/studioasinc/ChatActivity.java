@@ -338,7 +338,7 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
-		View.OnClickListener profileClickListener = v -> startActivityWithUid(ConversationSettingsActivity.class);
+		View.OnClickListener profileClickListener = v -> startActivityWithUid(Chat2ndUserMoreSettingsActivity.class);
 		topProfileLayout.setOnClickListener(profileClickListener);
 		ic_more.setOnClickListener(profileClickListener);
 
@@ -2033,43 +2033,16 @@ public class ChatActivity extends AppCompatActivity {
 		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		final String recipientUid = getIntent().getStringExtra("uid");
 
-		// The message sending logic is now wrapped inside a Realtime Database query.
-		// First, we fetch the recipient's OneSignal Player ID from the 'users' node.
-		_firebase.getReference(SKYLINE_REF).child(USERS_REF).child(recipientUid)
-			.addListenerForSingleValueEvent(new ValueEventListener() {
-				@Override
-				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-					String recipientOneSignalPlayerId = "missing_id"; // Default value
-
-					if (dataSnapshot.exists() && dataSnapshot.hasChild("oneSignalPlayerId")) {
-						String fetchedId = dataSnapshot.child("oneSignalPlayerId").getValue(String.class);
-						if (fetchedId != null && !fetchedId.isEmpty()) {
-							recipientOneSignalPlayerId = fetchedId;
-						} else {
-							Log.e("ChatActivity", "Recipient's OneSignal Player ID is null or empty in the database.");
-						}
-					} else {
-						Log.e("ChatActivity", "Recipient's user node or oneSignalPlayerId not found in Realtime Database.");
-					}
-
-					// After fetching the ID (or failing), proceed with sending the message.
-					proceedWithMessageSending(messageText, senderUid, recipientUid, recipientOneSignalPlayerId);
-				}
-
-				@Override
-				public void onCancelled(@NonNull DatabaseError databaseError) {
-					Log.e("ChatActivity", "Failed to fetch recipient's data from RTDB. Sending message without notification.", databaseError.toException());
-					// Still send the message, just without the notification.
-					proceedWithMessageSending(messageText, senderUid, recipientUid, "missing_id");
-				}
-			});
+		// The logic to fetch the OneSignal Player ID has been removed.
+		// We now call proceedWithMessageSending directly.
+		proceedWithMessageSending(messageText, senderUid, recipientUid);
 	}
 
 	/**
 	 * This helper method contains the original logic for sending a message.
-	 * It's now called after the recipient's OneSignal ID has been fetched.
+	 * The recipient's OneSignal Player ID is no longer needed.
 	 */
-	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid, String recipientOneSignalPlayerId) {
+	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid) {
 		if (auth.getCurrentUser() != null) {
 			PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
 		}

@@ -10,7 +10,7 @@
 		android:id="@+id/main"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-	android:background="?attr/colorSurface"
+		android:background="#FFFFFF"
 		android:orientation="vertical">
 		<LinearLayout
 			android:id="@+id/top"
@@ -20,7 +20,7 @@
 			android:paddingTop="4dp"
 			android:paddingRight="8dp"
 			android:paddingBottom="4dp"
-		android:background="?attr/colorSurface"
+			android:background="#FFFFFF"
 			android:gravity="center_vertical"
 			android:orientation="horizontal"
 			android:elevation="1dp">
@@ -31,9 +31,7 @@
 				android:layout_marginRight="8dp"
 				android:padding="12dp"
 				android:src="@drawable/ic_arrow_back_black"
-			android:scaleType="fitCenter"
-			android:background="@drawable/ripple_round_corners"
-			app:tint="?attr/colorOnSurface" />
+				android:scaleType="fitCenter" />
 			<LinearLayout
 				android:id="@+id/topSpc"
 				android:layout_width="wrap_content"
@@ -49,7 +47,7 @@
 					android:text="Create Post"
 					android:textSize="20sp"
 					android:textStyle="bold"
-				android:textColor="?attr/colorOnSurface" />
+					android:textColor="#000000" />
 			</LinearLayout>
 			<LinearLayout
 				android:id="@+id/addUrlButton"
@@ -75,6 +73,7 @@
 				android:gravity="center"
 				android:orientation="vertical"
 				android:background="@drawable/ripple_round_corners">
+
 				<ImageView
 					android:layout_width="24dp"
 					android:layout_height="24dp"
@@ -92,7 +91,7 @@
 				android:paddingBottom="8dp"
 				android:text="Post"
 				android:textSize="16sp"
-			android:textColor="?attr/colorOnPrimary"
+				android:textColor="@color/colorSurface"
 				style="@style/Widget.Material3Expressive.Button" />
 		</LinearLayout>
 		<LinearLayout
@@ -100,7 +99,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="1dp"
 			android:padding="8dp"
-		android:background="?attr/colorOutlineVariant"
+			android:background="#F5F5F5"
 			android:orientation="horizontal" />
 		<ScrollView
 			android:id="@+id/scroll"
@@ -125,6 +124,7 @@
 						app:cardElevation="0dp"
 						app:cardCornerRadius="16dp"
 						app:cardBackgroundColor="?attr/colorSurfaceVariant">
+
 						<LinearLayout
 							android:id="@+id/imagePlaceholder"
 							android:layout_width="match_parent"
@@ -132,19 +132,29 @@
 							android:gravity="center"
 							android:orientation="vertical"
 							android:background="?attr/colorSurfaceVariant">
+							android:background="#F5F5F5">
+
 							<ImageView
 								android:layout_width="48dp"
 								android:layout_height="48dp"
 								android:layout_marginBottom="8dp"
+
 								android:src="@drawable/ic_add_white"
 								android:scaleType="fitCenter"
 								app:tint="?attr/colorOnSurfaceVariant" />
+
+								android:src="@drawable/ic_add_photo_black"
+								android:scaleType="fitCenter" />
+
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:text="Add Photo or Video"
 								android:textSize="16sp"
 								android:textColor="?attr/colorOnSurfaceVariant" />
+
+								android:textColor="#757575" />
+
 						</LinearLayout>
 						<ImageView
 							android:id="@+id/postImageView"
@@ -175,11 +185,11 @@
 						android:layout_marginRight="16dp"
 						android:layout_marginBottom="16dp"
 						android:padding="16dp"
-					android:background="@drawable/bg_message_input"
+						android:background="#F5F5F5"
 						android:textSize="18sp"
-					android:textColor="?attr/colorOnSurface"
+						android:textColor="#000000"
 						android:hint="What's on your mind?"
-					android:textColorHint="?attr/colorOnSurfaceVariant"
+						android:textColorHint="#757575"
 						android:layout_weight="1"
 						android:maxLength="2500" />
 				</LinearLayout>
@@ -194,7 +204,7 @@
 					android:layout_width="match_parent"
 					android:layout_height="1dp"
 					android:padding="8dp"
-				android:background="?attr/colorOutlineVariant"
+					android:background="#ECEFF1"
 					android:orientation="horizontal" />
 			</LinearLayout>
 		</ScrollView>

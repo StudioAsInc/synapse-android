@@ -81,6 +81,7 @@ import java.util.regex.*;
 import org.json.*;
 import com.google.firebase.database.Query;
 import com.synapse.social.studioasinc.ImageUploader;
+import com.synapse.social.studioasinc.OneSignalManager;
 
 
 import com.synapse.social.studioasinc.crypto.E2EEHelper;
@@ -794,6 +795,9 @@ public class CompleteProfileActivity extends AppCompatActivity {
 					usernameIndexMap.put("email", currentUser.getEmail());
 					usernameIndexMap.put("username", username_input.getText().toString().trim());
 					pushusername.child(username_input.getText().toString().trim()).updateChildren(usernameIndexMap);
+
+					// Login to OneSignal
+					OneSignalManager.loginUser(currentUser.getUid());
 
 					E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
 					e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {

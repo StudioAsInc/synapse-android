@@ -104,6 +104,7 @@
 			android:screenOrientation="portrait" />
 		<activity
 			android:name=".ConversationSettingsActivity"
+
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true" />
