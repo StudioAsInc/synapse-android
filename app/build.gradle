@@ -143,8 +143,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:21.4.0'
 
     // Image Loading
-    implementation 'com.github.bumptech.glide:glide:5.0.0-rc01'
-    kapt 'com.github.bumptech.glide:compiler:5.0.0-rc01'
+    implementation 'com.github.bumptech.glide:glide:5.0.4'
+    kapt 'com.github.bumptech.glide:compiler:5.0.4'
 
     // Networking
     implementation 'com.squareup.okhttp3:okhttp:5.1.0'

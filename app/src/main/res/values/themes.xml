@@ -60,6 +60,7 @@
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Material3.Expressive.Small</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Material3.Expressive.Medium</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Expressive.Large</item>
+        <item name="bottomSheetStyle">@style/Widget.Material3.BottomSheet.Modal</item>
     </style>
     <!--All additional styles from themes.xml-->
     <style name="AppTheme.FullScreen" parent="AppTheme">
@@ -69,6 +70,9 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.Material3.Dark.ActionBar">
     </style>
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.Material3.Light">
+    </style>
+    <style name="AppTheme.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Material3.BottomSheet.Modal</item>
     </style>
     <style name="PostCommentsBottomSheetDialogStyle" parent="Theme.AppCompat.Light.Dialog">
         <item name="android:windowIsFloating">false</item>
