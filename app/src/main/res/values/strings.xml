@@ -78,6 +78,7 @@
     <string name="recommended_posts">Recommended posts</string>
     <string name="followed_users_posts">Followed users posts</string>
     <string name="search">Search</string>
+    <string name="search_users">Search users...</string>
     <string name="no_user_found">No user found with this username :(</string>
     <string name="no_description">No Description</string>
     <string name="original_sound">Original Sound</string>

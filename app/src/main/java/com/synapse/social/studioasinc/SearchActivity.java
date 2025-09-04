@@ -2,18 +2,22 @@ package com.synapse.social.studioasinc;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
-import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.search.SearchBar;
+import com.google.android.material.search.SearchView;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -21,6 +25,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +33,7 @@ import java.util.Map;
 public class SearchActivity extends AppCompatActivity {
 
     private ArrayList<HashMap<String, Object>> searchedUsersList = new ArrayList<>();
-    private MaterialToolbar toolbar;
+    private SearchBar searchBar;
     private SearchView searchView;
     private RecyclerView searchUserLayoutRecyclerView;
     private TextView searchUserLayoutNoUserFound;
@@ -44,40 +49,32 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void initialize(Bundle savedInstanceState) {
-        toolbar = findViewById(R.id.toolbar);
+        searchBar = findViewById(R.id.search_bar);
         searchView = findViewById(R.id.search_view);
         searchUserLayoutRecyclerView = findViewById(R.id.SearchUserLayoutRecyclerView);
         searchUserLayoutNoUserFound = findViewById(R.id.SearchUserLayoutNoUserFound);
     }
 
     private void initializeLogic() {
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-        }
-        toolbar.setNavigationOnClickListener(v -> finish());
-
         searchUserLayoutRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new SearchUserLayoutRecyclerViewAdapter(searchedUsersList);
         searchUserLayoutRecyclerView.setAdapter(adapter);
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        searchView.getEditText().addTextChangedListener(new TextWatcher() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                searchUsers(query);
-                return true;
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.toString().isEmpty()) {
+                    showAllUsers();
+                } else {
+                    searchUsers(s.toString());
+                }
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
-                if (newText.isEmpty()) {
-                    showAllUsers();
-                } else {
-                    searchUsers(newText);
-                }
-                return true;
-            }
+            public void afterTextChanged(Editable s) {}
         });
 
         showAllUsers();
