@@ -246,7 +246,7 @@ object NotificationHelper {
                 Log.e(TAG, "Failed to send client-side notification", e)
                 if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                     Log.i(TAG, "Falling back to server-side notification due to client-side failure")
-                    sendServerSideNotification(recipientPlayerId, message, notificationType, data)
+                    sendServerSideNotification(recipientUid, message, notificationType, data)
                 }
             }
 
@@ -258,7 +258,7 @@ object NotificationHelper {
                         Log.e(TAG, "Failed to send client-side notification: ${it.code} - ${it.body?.string()}")
                         if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                             Log.i(TAG, "Falling back to server-side notification due to client-side error")
-                            sendServerSideNotification(recipientPlayerId, message, notificationType, data)
+                            sendServerSideNotification(recipientUid, message, notificationType, data)
                         }
                     }
                 }
