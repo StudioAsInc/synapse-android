@@ -35,8 +35,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.onesignal.OSDeviceState;
-import com.onesignal.OneSignal;
+import com.synapse.social.studioasinc.OneSignalManager;
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
 import com.synapse.social.studioasinc.animations.textview.TVeffects;
 
@@ -339,17 +338,8 @@ public class AuthActivity extends AppCompatActivity {
                     showWelcomeMessage("I recognize you! Let's go...");
                 }
 
-                // Save OneSignal Player ID
-                FirebaseUser user = fauth.getCurrentUser();
-                if (user != null) {
-                    OSDeviceState device = OneSignal.getDeviceState();
-                    if (device != null) {
-                        String playerId = device.getUserId();
-                        if (playerId != null) {
-                            OneSignalManager.savePlayerIdToRealtimeDatabase(user.getUid(), playerId);
-                        }
-                    }
-                }
+                // Login to OneSignal
+                OneSignalManager.loginUser(uid);
 
                 navigateToHomeAfterDelay();
             }
