@@ -20,6 +20,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.onesignal.OneSignal;
 import com.onesignal.debug.LogLevel;
+import com.onesignal.user.subscriptions.IPushSubscriptionObserver;
+import com.onesignal.user.subscriptions.PushSubscriptionChangedState;
 import java.util.Calendar;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
@@ -86,10 +88,19 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
 
-        // The IPushSubscriptionObserver has been removed.
-        // User identification is now handled by calling OneSignalManager.loginUser(uid)
-        // from AuthActivity and CompleteProfileActivity.
-
+        // Add a subscription observer to get the Player ID and save it to Firestore
+        OneSignal.getUser().getPushSubscription().addObserver(new IPushSubscriptionObserver() {
+            @Override
+            public void onPushSubscriptionChange(@NonNull PushSubscriptionChangedState state) {
+                if (state.getCurrent().getOptedIn()) {
+                    String playerId = state.getCurrent().getId();
+                    if (mAuth.getCurrentUser() != null && playerId != null) {
+                        String userUid = mAuth.getCurrentUser().getUid();
+                        OneSignalManager.savePlayerIdToRealtimeDatabase(userUid, playerId);
+                    }
+                }
+            }
+        });
         ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
         registerActivityLifecycleCallbacks(this);
     }

@@ -6,7 +6,6 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import org.json.JSONArray
 import java.io.IOException
 
 /**
@@ -58,7 +57,36 @@ object NotificationHelper {
             val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid/status")
 
             recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
-            // Smart suppression logic removed as per user request.
+                val recipientStatus = dataSnapshot.getValue(String::class.java)
+                val suppressStatus = "chatting_with_$senderUid"
+
+                if (NotificationConfig.ENABLE_SMART_SUPPRESSION) {
+                    if (suppressStatus == recipientStatus) {
+                        if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+                            Log.i(TAG, "Recipient is actively chatting with sender. Suppressing notification.")
+                        }
+                        return@addOnSuccessListener
+                    }
+
+                    if (recipientStatus == "online") {
+                        if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+                            Log.i(TAG, "Recipient is online. Suppressing notification for real-time message visibility.")
+                        }
+                        return@addOnSuccessListener
+                    }
+
+                    // Check for recent activity based on timestamp
+                    val lastSeen = recipientStatus?.toLongOrNull()
+                    if (lastSeen != null) {
+                        val now = System.currentTimeMillis()
+                        if (now - lastSeen < NotificationConfig.RECENT_ACTIVITY_THRESHOLD) {
+                            if (NotificationConfig.ENABLE_DEBUG_LOGGING) {
+                                Log.i(TAG, "Recipient was recently active. Suppressing notification.")
+                            }
+                            return@addOnSuccessListener
+                        }
+                    }
+                }
 
                 if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                     sendClientSideNotification(
@@ -188,13 +216,10 @@ object NotificationHelper {
     ) {
         val client = OkHttpClient()
         val jsonBody = JSONObject()
-
-        Log.d(TAG, "Attempting to send notification with channel ID: ${NotificationConfig.NOTIFICATION_CHANNEL_ID}")
         
         try {
             jsonBody.put("app_id", NotificationConfig.ONESIGNAL_APP_ID)
-            // OneSignal expects include_player_ids to be a JSON array of player IDs
-            jsonBody.put("include_player_ids", JSONArray().put(recipientPlayerId))
+            jsonBody.put("include_player_ids", JSONObject().put("0", recipientPlayerId))
             jsonBody.put("contents", JSONObject().put("en", message))
             jsonBody.put("headings", JSONObject().put("en", NotificationConfig.getTitleForNotificationType(notificationType)))
             jsonBody.put("subtitle", JSONObject().put("en", NotificationConfig.NOTIFICATION_SUBTITLE))
@@ -212,12 +237,7 @@ object NotificationHelper {
             }
             
             jsonBody.put("priority", NotificationConfig.NOTIFICATION_PRIORITY)
-            // Only include android_channel_id if it looks like a valid OneSignal channel ID (UUID). Otherwise omit to avoid 400s
-            val channelId = NotificationConfig.NOTIFICATION_CHANNEL_ID
-            val looksLikeUuid = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
-            if (looksLikeUuid.matches(channelId)) {
-                jsonBody.put("android_channel_id", channelId)
-            }
+            jsonBody.put("android_channel_id", NotificationConfig.NOTIFICATION_CHANNEL_ID)
             
         } catch (e: Exception) {
             Log.e(TAG, "Failed to create JSON for client-side notification", e)

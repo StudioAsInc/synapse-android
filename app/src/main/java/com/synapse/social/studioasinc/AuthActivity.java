@@ -35,7 +35,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.synapse.social.studioasinc.OneSignalManager;
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
 import com.synapse.social.studioasinc.animations.textview.TVeffects;
 
@@ -337,10 +336,6 @@ public class AuthActivity extends AppCompatActivity {
                 } else {
                     showWelcomeMessage("I recognize you! Let's go...");
                 }
-
-                // Login to OneSignal
-                OneSignalManager.loginUser(uid);
-
                 navigateToHomeAfterDelay();
             }
 

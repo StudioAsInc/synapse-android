@@ -285,12 +285,7 @@ public class CreatePostActivity extends AppCompatActivity {
 	}
 	
 	private void initializeLogic() {
-		_setStatusBarColor(true, 0xFFFFFFFF, 0xFFFFFFFF);
-		_viewGraphics(back, 0xFFFFFFFF, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
-		_viewGraphics(settingsButton, 0xFFFFFFFF, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
-		imageCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)22, (int)2, 0xFFEEEEEE, 0xFFFFFFFF));
-		postDescription.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
-		_viewGraphics(imagePlaceholder, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, Color.TRANSPARENT);
+		// Removed hardcoded color settings to allow theme to control the UI
 		
 		// Check if we have an image from intent
 		if (getIntent().hasExtra("type") && getIntent().hasExtra("path")) {
@@ -684,7 +679,7 @@ public class CreatePostActivity extends AppCompatActivity {
 	}
 
 	private void _showPostSettingsBottomSheet() {
-		BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+		BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this, R.style.AppTheme_Material3_BottomSheetDialog);
 		View bottomSheetView = getLayoutInflater().inflate(R.layout.create_post_settings_bottom_sheet, null);
 		bottomSheetDialog.setContentView(bottomSheetView);
 		
@@ -756,25 +751,6 @@ public class CreatePostActivity extends AppCompatActivity {
 		
 		bottomSheetDialog.show();
 	}
-
-	public void _setStatusBarColor(final boolean _isLight, final int _stateColor, final int _navigationColor) {
-		if (_isLight) {
-			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-		}
-		getWindow().setStatusBarColor(_stateColor);
-		getWindow().setNavigationBarColor(_navigationColor);
-	}
-
-
-	public void _viewGraphics(final View _view, final int _onFocus, final int _onRipple, final double _radius, final double _stroke, final int _strokeColor) {
-		android.graphics.drawable.GradientDrawable GG = new android.graphics.drawable.GradientDrawable();
-		GG.setColor(_onFocus);
-		GG.setCornerRadius((float)_radius);
-		GG.setStroke((int) _stroke, _strokeColor);
-		android.graphics.drawable.RippleDrawable RE = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{ _onRipple}), GG, null);
-		_view.setBackground(RE);
-	}
-
 	
 	public void _LoadingDialog(final boolean _visibility) {
 		if (_visibility) {
