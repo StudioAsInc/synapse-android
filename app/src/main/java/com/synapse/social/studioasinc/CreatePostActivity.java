@@ -435,7 +435,7 @@ public class CreatePostActivity extends AppCompatActivity {
 
 		if (hasVideo) {
 			PostSendMap.put("post_type", "LINE_VIDEO");
-			PostSendMap.put("post_video", mediaUrl);
+			PostSendMap.put("videoUri", mediaUrl);
 			// From ReelsFragment.java, the path is "skyline/line-posts"
 			targetRef = FirebaseDatabase.getInstance().getReference("skyline/line-posts").child(UniquePostKey);
 		} else {

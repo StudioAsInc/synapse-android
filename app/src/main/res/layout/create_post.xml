@@ -123,6 +123,7 @@
 						android:layout_margin="16dp"
 						android:gravity="center_horizontal|center_vertical"
 						app:cardElevation="0dp"
+						app:cardCornerRadius="16dp"
 						app:cardBackgroundColor="?attr/colorSurfaceVariant">
 						<LinearLayout
 							android:id="@+id/imagePlaceholder"
