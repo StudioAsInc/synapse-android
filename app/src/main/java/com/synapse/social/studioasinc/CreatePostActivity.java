@@ -81,7 +81,7 @@ import java.util.HashMap;
 import java.util.regex.*;
 import org.json.*;
 import androidx.appcompat.widget.SwitchCompat;
-import com.synapse.social.studioasinc.ImageUploader;
+import com.synapse.social.studioasinc.UploadFiles;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import android.content.ClipData;
@@ -89,7 +89,7 @@ import android.content.ClipData;
 
 public class CreatePostActivity extends AppCompatActivity {
 	
-	public final int REQ_CD_IMAGE_PICKER = 101;
+	public final int REQ_CD_FILE_PICKER = 101;
 	
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
 	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
@@ -98,7 +98,10 @@ public class CreatePostActivity extends AppCompatActivity {
 	private String UniquePostKey = "";
 	private HashMap<String, Object> PostSendMap = new HashMap<>();
 	private String selectedImagePath = "";
+	private String selectedVideoPath = "";
 	private boolean hasImage = false;
+	private boolean hasVideo = false;
+	private String mediaType = "none"; // "none", "image", "video"
 	
 	private LinearLayout main;
 	private LinearLayout top;
@@ -115,8 +118,10 @@ public class CreatePostActivity extends AppCompatActivity {
 	private CardView imageCard;
 	private FadeEditText postDescription;
 	private ImageView postImageView;
+	private VideoView postVideoView;
 	private LinearLayout imagePlaceholder;
 	private LinearLayout settingsButton;
+	private LinearLayout addUrlButton;
 	private DatabaseReference maindb = _firebase.getReference("skyline");
 	private Calendar cc = Calendar.getInstance();
 	private SharedPreferences appSavedData;
@@ -181,10 +186,17 @@ public class CreatePostActivity extends AppCompatActivity {
 		imageCard = findViewById(R.id.imageCard);
 		postDescription = findViewById(R.id.postDescription);
 		postImageView = findViewById(R.id.postImageView);
+		postVideoView = findViewById(R.id.postVideoView);
 		imagePlaceholder = findViewById(R.id.imagePlaceholder);
 		settingsButton = findViewById(R.id.settingsButton);
+		addUrlButton = findViewById(R.id.addUrlButton);
 		appSavedData = getSharedPreferences("data", Activity.MODE_PRIVATE);
 		
+		// Setup MediaController for VideoView
+		MediaController mediaController = new MediaController(this);
+		mediaController.setAnchorView(postVideoView);
+		postVideoView.setMediaController(mediaController);
+
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -202,27 +214,23 @@ public class CreatePostActivity extends AppCompatActivity {
 		imagePlaceholder.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				_openImagePicker();
+				_openFilePicker();
 			}
 		});
 		
-		postImageView.setOnClickListener(new View.OnClickListener() {
+		View.OnClickListener mediaClickListener = new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				final CharSequence[] items = { "Change Image", "Remove Image", "Cancel" };
+				final CharSequence[] items = { "Change Media", "Remove Media", "Cancel" };
 				AlertDialog.Builder builder = new AlertDialog.Builder(CreatePostActivity.this);
-				builder.setTitle("Image Options");
+				builder.setTitle("Media Options");
 				builder.setItems(items, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int item) {
-						if (items[item].equals("Change Image")) {
-							_openImagePicker();
-						} else if (items[item].equals("Remove Image")) {
-							hasImage = false;
-							selectedImagePath = "";
-							postImageView.setVisibility(View.GONE);
-							imagePlaceholder.setVisibility(View.VISIBLE);
-							postImageView.setImageDrawable(null);
+						if (items[item].equals("Change Media")) {
+							_openFilePicker();
+						} else if (items[item].equals("Remove Media")) {
+							_resetMediaSelection();
 						} else if (items[item].equals("Cancel")) {
 							dialog.dismiss();
 						}
@@ -230,7 +238,10 @@ public class CreatePostActivity extends AppCompatActivity {
 				});
 				builder.show();
 			}
-		});
+		};
+
+		postImageView.setOnClickListener(mediaClickListener);
+		postVideoView.setOnClickListener(mediaClickListener);
 
 		settingsButton.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -239,6 +250,13 @@ public class CreatePostActivity extends AppCompatActivity {
 			}
 		});
 		
+		addUrlButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				_showAddFromUrlDialog();
+			}
+		});
+
 		postDescription.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
@@ -273,29 +291,33 @@ public class CreatePostActivity extends AppCompatActivity {
 	protected void onActivityResult(int _requestCode, int _resultCode, Intent _data) {
 		super.onActivityResult(_requestCode, _resultCode, _data);
 		
-		switch (_requestCode) {
-			case REQ_CD_IMAGE_PICKER:
-			if (_resultCode == Activity.RESULT_OK && _data != null) {
-				String imagePath = null;
+		if (_requestCode == REQ_CD_FILE_PICKER && _resultCode == Activity.RESULT_OK && _data != null) {
+			Uri selectedFileUri = _data.getData();
+			if (selectedFileUri != null) {
+				String mimeType = getContentResolver().getType(selectedFileUri);
+				String filePath = FileUtil.convertUriToFilePath(getApplicationContext(), selectedFileUri);
 				
-				if (_data.getClipData() != null) {
-					// Multiple images selected, use only the first one
-					ClipData.Item item = _data.getClipData().getItemAt(0);
-					imagePath = FileUtil.convertUriToFilePath(getApplicationContext(), item.getUri());
-				} else if (_data.getData() != null) {
-					// Single image selected
-					imagePath = FileUtil.convertUriToFilePath(getApplicationContext(), _data.getData());
+				if (filePath == null) {
+					Toast.makeText(getApplicationContext(), "Failed to get file path.", Toast.LENGTH_SHORT).show();
+					return;
 				}
 				
-				if (imagePath != null) {
-					selectedImagePath = imagePath;
+				_resetMediaSelection();
+
+				if (mimeType != null && mimeType.startsWith("image/")) {
+					mediaType = "image";
 					hasImage = true;
+					selectedImagePath = filePath;
 					_loadSelectedImage();
+				} else if (mimeType != null && mimeType.startsWith("video/")) {
+					mediaType = "video";
+					hasVideo = true;
+					selectedVideoPath = filePath;
+					_loadSelectedVideo();
+				} else {
+					Toast.makeText(getApplicationContext(), "Unsupported file type selected.", Toast.LENGTH_SHORT).show();
 				}
 			}
-			break;
-			default:
-			break;
 		}
 	}
 	
@@ -304,17 +326,23 @@ public class CreatePostActivity extends AppCompatActivity {
 		finish();
 	}
 	
-	private void _openImagePicker() {
+	private void _openFilePicker() {
 		if (Build.VERSION.SDK_INT >= 23) {
 			if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED || checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED) {
 				requestPermissions(new String[] {android.Manifest.permission.READ_EXTERNAL_STORAGE,android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
 			} else {
-				Intent sendImgInt = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-				startActivityForResult(sendImgInt, REQ_CD_IMAGE_PICKER);
+				Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+				intent.setType("image/*,video/*");
+				String[] mimeTypes = {"image/*", "video/*"};
+				intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+				startActivityForResult(intent, REQ_CD_FILE_PICKER);
 			}
 		} else {
-			Intent sendImgInt = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-			startActivityForResult(sendImgInt, REQ_CD_IMAGE_PICKER);
+			Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+			intent.setType("image/*,video/*");
+			String[] mimeTypes = {"image/*", "video/*"};
+			intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+			startActivityForResult(intent, REQ_CD_FILE_PICKER);
 		}
 	}
 	
@@ -322,40 +350,74 @@ public class CreatePostActivity extends AppCompatActivity {
 		if (hasImage && selectedImagePath != null) {
 			imagePlaceholder.setVisibility(View.GONE);
 			postImageView.setVisibility(View.VISIBLE);
+			postVideoView.setVisibility(View.GONE);
 			Glide.with(getApplicationContext()).load(selectedImagePath).into(postImageView);
 		}
 	}
 	
+	private void _loadSelectedVideo() {
+		if (hasVideo && selectedVideoPath != null) {
+			imagePlaceholder.setVisibility(View.GONE);
+			postImageView.setVisibility(View.GONE);
+			postVideoView.setVisibility(View.VISIBLE);
+			postVideoView.setVideoURI(Uri.parse(selectedVideoPath));
+			postVideoView.start();
+		}
+	}
+
+	private void _resetMediaSelection() {
+		hasImage = false;
+		hasVideo = false;
+		mediaType = "none";
+		selectedImagePath = "";
+		selectedVideoPath = "";
+
+		postImageView.setVisibility(View.GONE);
+		postVideoView.setVisibility(View.GONE);
+		imagePlaceholder.setVisibility(View.VISIBLE);
+
+		postImageView.setImageDrawable(null);
+		postVideoView.stopPlayback();
+		postVideoView.setVideoURI(null);
+	}
+
 	private void _createPost() {
-		if (postDescription.getText().toString().trim().equals("") && !hasImage) {
-			Toast.makeText(getApplicationContext(), "Please add some text or an image to your post", Toast.LENGTH_SHORT).show();
+		if (postDescription.getText().toString().trim().isEmpty() && !hasImage && !hasVideo) {
+			Toast.makeText(getApplicationContext(), "Please add some text, an image, or a video to your post", Toast.LENGTH_SHORT).show();
 			return;
 		}
 		
-		UniquePostKey = maindb.push().getKey();
 		_LoadingDialog(true);
+		UniquePostKey = maindb.push().getKey();
+
+		UploadFiles.UploadCallback uploadCallback = new UploadFiles.UploadCallback() {
+			@Override
+			public void onProgress(int percent) {
+				// You can update a progress bar here if you want
+			}
+
+			@Override
+			public void onSuccess(String url, String publicId) {
+				_savePostToDatabase(url);
+			}
+
+			@Override
+			public void onFailure(String error) {
+				_LoadingDialog(false);
+				Toast.makeText(getApplicationContext(), "Upload failed: " + error, Toast.LENGTH_SHORT).show();
+			}
+		};
 		
 		if (hasImage) {
-			// Upload image first, then create post
-			ImageUploader.uploadImage(selectedImagePath, new ImageUploader.UploadCallback() {
-				@Override
-				public void onUploadComplete(String imageUrl) {
-					_savePostToDatabase(imageUrl);
-				}
-				
-				@Override
-				public void onUploadError(String errorMessage) {
-					_LoadingDialog(false);
-					Toast.makeText(getApplicationContext(), "Failed to upload image: " + errorMessage, Toast.LENGTH_SHORT).show();
-				}
-			});
+			UploadFiles.uploadFile(selectedImagePath, new File(selectedImagePath).getName(), uploadCallback);
+		} else if (hasVideo) {
+			UploadFiles.uploadFile(selectedVideoPath, new File(selectedVideoPath).getName(), uploadCallback);
 		} else {
-			// Create text-only post
-			_savePostToDatabase(null);
+			_savePostToDatabase(null); // Text-only post
 		}
 	}
 	
-	private void _savePostToDatabase(String imageUrl) {
+	private void _savePostToDatabase(String mediaUrl) {
 		cc = Calendar.getInstance();
 		PostSendMap = new HashMap<>();
 		PostSendMap.put("key", UniquePostKey);
@@ -371,7 +433,10 @@ public class CreatePostActivity extends AppCompatActivity {
 		
 		if (hasImage) {
 			PostSendMap.put("post_type", "IMAGE");
-			PostSendMap.put("post_image", imageUrl);
+			PostSendMap.put("post_image", mediaUrl);
+		} else if (hasVideo) {
+			PostSendMap.put("post_type", "VIDEO");
+			PostSendMap.put("post_video", mediaUrl);
 		} else {
 			PostSendMap.put("post_type", "TEXT");
 		}
@@ -417,6 +482,121 @@ public class CreatePostActivity extends AppCompatActivity {
 		});
 	}
 	
+	private void _showAddFromUrlDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle("Add Video from URL");
+
+		final EditText input = new EditText(this);
+		input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+		input.setHint("Enter video URL");
+		builder.setView(input);
+
+		builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				String url = input.getText().toString().trim();
+				if (!url.isEmpty() && Patterns.WEB_URL.matcher(url).matches()) {
+					new DownloadFileTask().execute(url);
+				} else {
+					Toast.makeText(getApplicationContext(), "Invalid URL", Toast.LENGTH_SHORT).show();
+				}
+			}
+		});
+		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.cancel();
+			}
+		});
+
+		builder.show();
+	}
+
+	private class DownloadFileTask extends AsyncTask<String, Integer, String> {
+		private ProgressDialog progressDialog;
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			progressDialog = new ProgressDialog(CreatePostActivity.this);
+			progressDialog.setMessage("Downloading video...");
+			progressDialog.setIndeterminate(false);
+			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			progressDialog.setCancelable(false);
+			progressDialog.show();
+		}
+
+		@Override
+		protected String doInBackground(String... sUrl) {
+			InputStream input = null;
+			OutputStream output = null;
+			HttpURLConnection connection = null;
+			try {
+				URL url = new URL(sUrl[0]);
+				connection = (HttpURLConnection) url.openConnection();
+				connection.connect();
+
+				if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+					return "Server returned HTTP " + connection.getResponseCode() + " " + connection.getResponseMessage();
+				}
+
+				int fileLength = connection.getContentLength();
+
+				File tempFile = File.createTempFile("video", ".mp4", getCacheDir());
+
+				input = connection.getInputStream();
+				output = new FileOutputStream(tempFile);
+
+				byte data[] = new byte[4096];
+				long total = 0;
+				int count;
+				while ((count = input.read(data)) != -1) {
+					if (isCancelled()) {
+						input.close();
+						return null;
+					}
+					total += count;
+					if (fileLength > 0) {
+						publishProgress((int) (total * 100 / fileLength));
+					}
+					output.write(data, 0, count);
+				}
+				return tempFile.getAbsolutePath();
+			} catch (Exception e) {
+				return e.toString();
+			} finally {
+				try {
+					if (output != null) output.close();
+					if (input != null) input.close();
+				} catch (IOException ignored) {
+				}
+
+				if (connection != null) connection.disconnect();
+			}
+		}
+
+		@Override
+		protected void onProgressUpdate(Integer... progress) {
+			super.onProgressUpdate(progress);
+			progressDialog.setIndeterminate(false);
+			progressDialog.setProgress(progress[0]);
+		}
+
+		@Override
+		protected void onPostExecute(String result) {
+			progressDialog.dismiss();
+			if (result != null && new File(result).exists()) {
+				_resetMediaSelection();
+				mediaType = "video";
+				hasVideo = true;
+				selectedVideoPath = result;
+				_loadSelectedVideo();
+			} else {
+				Toast.makeText(getApplicationContext(), "Download failed: " + result, Toast.LENGTH_LONG).show();
+			}
+		}
+	}
+
 	private void _sendNotificationsToFollowers(String postKey, final String postText) {
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		if (currentUser == null) {

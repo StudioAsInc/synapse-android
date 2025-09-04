@@ -52,20 +52,35 @@
 				android:textColor="?attr/colorOnSurface" />
 			</LinearLayout>
 			<LinearLayout
+				android:id="@+id/addUrlButton"
+				android:layout_width="48dp"
+				android:layout_height="48dp"
+				android:padding="12dp"
+				android:gravity="center"
+				android:orientation="vertical"
+				android:background="@drawable/ripple_round_corners">
+				<ImageView
+					android:layout_width="24dp"
+					android:layout_height="24dp"
+					android:src="@drawable/icon_add_link_round"
+					android:scaleType="fitCenter"
+					app:tint="?attr/colorOnSurface" />
+			</LinearLayout>
+			<LinearLayout
 				android:id="@+id/settingsButton"
 				android:layout_width="48dp"
 				android:layout_height="48dp"
 				android:layout_marginRight="8dp"
 				android:padding="12dp"
 				android:gravity="center"
-			android:orientation="vertical"
-			android:background="@drawable/ripple_round_corners">
+				android:orientation="vertical"
+				android:background="@drawable/ripple_round_corners">
 				<ImageView
 					android:layout_width="24dp"
 					android:layout_height="24dp"
 					android:src="@drawable/ic_settings_black"
-				android:scaleType="fitCenter"
-				app:tint="?attr/colorOnSurface" />
+					android:scaleType="fitCenter"
+					app:tint="?attr/colorOnSurface" />
 			</LinearLayout>
 			<Button
 				android:id="@+id/postButton"
@@ -107,28 +122,28 @@
 						android:layout_height="wrap_content"
 						android:layout_margin="16dp"
 						android:gravity="center_horizontal|center_vertical"
-					app:cardElevation="0dp"
-					app:cardBackgroundColor="?attr/colorSurfaceVariant">
+						app:cardElevation="0dp"
+						app:cardBackgroundColor="?attr/colorSurfaceVariant">
 						<LinearLayout
 							android:id="@+id/imagePlaceholder"
 							android:layout_width="match_parent"
 							android:layout_height="200dp"
 							android:gravity="center"
 							android:orientation="vertical"
-						android:background="?attr/colorSurfaceVariant">
+							android:background="?attr/colorSurfaceVariant">
 							<ImageView
 								android:layout_width="48dp"
 								android:layout_height="48dp"
 								android:layout_marginBottom="8dp"
-								android:src="@drawable/ic_add_photo_black"
-							android:scaleType="fitCenter"
-							app:tint="?attr/colorOnSurfaceVariant" />
+								android:src="@drawable/ic_add_white"
+								android:scaleType="fitCenter"
+								app:tint="?attr/colorOnSurfaceVariant" />
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="Add Photo"
+								android:text="Add Photo or Video"
 								android:textSize="16sp"
-							android:textColor="?attr/colorOnSurfaceVariant" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<ImageView
 							android:id="@+id/postImageView"
@@ -136,6 +151,11 @@
 							android:layout_height="wrap_content"
 							android:src="@drawable/default_image"
 							android:scaleType="fitCenter"
+							android:visibility="gone" />
+						<VideoView
+							android:id="@+id/postVideoView"
+							android:layout_width="match_parent"
+							android:layout_height="200dp"
 							android:visibility="gone" />
 					</androidx.cardview.widget.CardView>
 					<com.synapse.social.studioasinc.FadeEditText
