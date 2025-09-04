@@ -5,13 +5,12 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:orientation="vertical"
-	android:id="@+id/_main"
-	android:background="?attr/colorSurface">
+	android:id="@+id/_main">
 	<LinearLayout
 		android:id="@+id/linear1"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="?attr/colorSurface"
+		android:background="#FFFFFF"
 		android:orientation="vertical">
 		<LinearLayout
 			android:id="@+id/linear2"
@@ -24,21 +23,20 @@
 			android:gravity="center_vertical"
 			android:orientation="horizontal">
 			<ImageView
-				android:id="@+id/backBtn"
+				android:id="@+id/back_btn"
 				android:layout_width="25dp"
 				android:layout_height="match_parent"
 				android:layout_marginLeft="8dp"
 				android:layout_marginRight="16dp"
 				android:src="@drawable/ic_arrow_back_ios_new_48px"
-				android:scaleType="fitCenter"
-				app:tint="?attr/colorOnSurface" />
+				android:scaleType="fitCenter" />
 			<TextView
-				android:id="@+id/invisibleTxtAppbar"
+				android:id="@+id/invisible_txt_appbar"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:background="@android:color/transparent"
 				android:textSize="20sp"
-				android:textColor="?attr/colorOnSurface" />
+				android:textColor="#000000" />
 			<LinearLayout
 				android:id="@+id/linear3"
 				android:layout_width="wrap_content"
@@ -47,17 +45,16 @@
 				android:orientation="horizontal"
 				android:layout_weight="1" />
 			<ImageView
-				android:id="@+id/menuBtn"
+				android:id="@+id/menu_btn"
 				android:layout_width="25dp"
 				android:layout_height="25dp"
 				android:layout_marginLeft="8dp"
 				android:layout_marginRight="8dp"
 				android:src="@drawable/hand_package_24px"
-				android:scaleType="fitCenter"
-				app:tint="?attr/colorOnSurface" />
+				android:scaleType="fitCenter" />
 		</LinearLayout>
 		<ScrollView
-			android:id="@+id/vscroll"
+			android:id="@+id/vscroll1"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:scrollbars="none">
@@ -67,13 +64,13 @@
 				android:layout_height="wrap_content"
 				android:orientation="vertical">
 				<LinearLayout
-					android:id="@+id/userInfoAndActionsContainer"
+					android:id="@+id/user_info_and_actions_container"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:background="@android:color/transparent"
 					android:orientation="vertical">
 					<LinearLayout
-						android:id="@+id/userInfo"
+						android:id="@+id/user_info"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:padding="8dp"
@@ -85,8 +82,7 @@
 							android:layout_height="120dp"
 							android:layout_marginTop="60dp"
 							app:cardElevation="1dp"
-							app:cardCornerRadius="300dp"
-							app:cardBackgroundColor="?attr/colorSurface">
+							app:cardCornerRadius="300dp">
 							<ImageView
 								android:id="@+id/profilePictureIV"
 								android:layout_width="match_parent"
@@ -103,9 +99,9 @@
 							android:text="Md Ashik"
 							android:textSize="30sp"
 							android:textStyle="bold"
-							android:textColor="?attr/colorOnSurface" />
+							android:textColor="#000000" />
 						<Button
-							android:id="@+id/encryptedButton"
+							android:id="@+id/button1"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:paddingLeft="20dp"
@@ -114,10 +110,9 @@
 							android:paddingBottom="10dp"
 							android:text="End-to-end encrypted"
 							android:textSize="14sp"
-							android:textColor="?attr/colorOnPrimary"
+							android:textColor="#000000"
 							style="@style/Widget.Material3.Button.TonalButton.Icon"
-							app:icon="@drawable/ic_shield_lock"
-							app:iconTint="?attr/colorOnPrimary" />
+							app:icon="@drawable/ic_shield_lock" />
 					</LinearLayout>
 					<LinearLayout
 						android:id="@+id/actionButtonGroup"
@@ -128,26 +123,25 @@
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="horizontal" />
 					<LinearLayout
-						android:id="@+id/settingsContainer"
+						android:id="@+id/settings_container"
 						android:layout_width="match_parent"
 						android:layout_height="match_parent"
 						android:padding="8dp"
 						android:orientation="vertical">
 						<TextView
-							android:id="@+id/conversationTitle"
+							android:id="@+id/textview8"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:padding="8dp"
 							android:text="Conversation"
 							android:textSize="14sp"
-							android:textColor="?attr/colorOnSurfaceVariant" />
+							android:textColor="#757575" />
 						<androidx.cardview.widget.CardView
-							android:id="@+id/conversationCard"
+							android:id="@+id/cardview1"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
 							app:cardElevation="0dp"
-							app:cardCornerRadius="20dp"
-							app:cardBackgroundColor="?attr/colorSurface">
+							app:cardCornerRadius="20dp">
 							<LinearLayout
 								android:id="@+id/linear14"
 								android:layout_width="match_parent"
@@ -159,21 +153,15 @@
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal"
-									android:background="?attr/selectableItemBackground"
-									android:clickable="true"
-									android:focusable="true"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:orientation="horizontal">
 									<ImageView
-										android:id="@+id/themeIcon"
+										android:id="@+id/imageview10"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_category"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear13"
 										android:layout_width="match_parent"
@@ -181,20 +169,20 @@
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/themeTitle"
+											android:id="@+id/textview10"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Theme"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/themeSubtitle"
+											android:id="@+id/textview9"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginTop="5dp"
 											android:text="Default"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -206,19 +194,15 @@
 									android:gravity="center_horizontal|center_vertical"
 									android:orientation="horizontal"
 									android:clickable="true"
-									android:focusable="true"
-									android:background="?attr/selectableItemBackground"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:focusable="true">
 									<ImageView
-										android:id="@+id/nicknameIcon"
+										android:id="@+id/imageview11"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_edit_note_48px"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear16"
 										android:layout_width="match_parent"
@@ -226,20 +210,20 @@
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/nicknameTitle"
+											android:id="@+id/textview11"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Nickname"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/nicknameSubtitle"
+											android:id="@+id/textview12"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginTop="5dp"
 											android:text="Md Ashik"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -247,21 +231,15 @@
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal"
-									android:background="?attr/selectableItemBackground"
-									android:clickable="true"
-									android:focusable="true"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:orientation="horizontal">
 									<ImageView
-										android:id="@+id/wordEffectIcon"
+										android:id="@+id/imageview12"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/filter_vintage_24px"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear18"
 										android:layout_width="match_parent"
@@ -269,20 +247,20 @@
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/wordEffectTitle"
+											android:id="@+id/textview13"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Word effect"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/wordEffectSubtitle"
+											android:id="@+id/textview14"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginTop="5dp"
 											android:text="No word effect"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -291,21 +269,15 @@
 									android:layout_height="wrap_content"
 									android:layout_marginTop="10dp"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal"
-									android:background="?attr/selectableItemBackground"
-									android:clickable="true"
-									android:focusable="true"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:orientation="horizontal">
 									<ImageView
-										android:id="@+id/quickReactionIcon"
+										android:id="@+id/imageview13"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_thumb_up_48px"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear20"
 										android:layout_width="match_parent"
@@ -313,40 +285,39 @@
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/quickReactionTitle"
+											android:id="@+id/textview15"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Quick reaction"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/quickReactionSubtitle"
+											android:id="@+id/textview16"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginTop="5dp"
 											android:text="👍"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 							</LinearLayout>
 						</androidx.cardview.widget.CardView>
 						<TextView
-							android:id="@+id/moreActionsTitle"
+							android:id="@+id/textview17"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:layout_marginTop="20dp"
 							android:padding="8dp"
 							android:text="More actions"
 							android:textSize="14sp"
-							android:textColor="?attr/colorOnSurfaceVariant" />
+							android:textColor="#757575" />
 						<androidx.cardview.widget.CardView
-							android:id="@+id/moreActionsCard"
+							android:id="@+id/cardview2"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
 							app:cardElevation="0dp"
-							app:cardCornerRadius="20dp"
-							app:cardBackgroundColor="?attr/colorSurface">
+							app:cardCornerRadius="20dp">
 							<LinearLayout
 								android:id="@+id/linear21"
 								android:layout_width="match_parent"
@@ -361,7 +332,6 @@
 									android:clickable="true"
 									android:focusable="true"
 									android:background="?attr/selectableItemBackground"
-									app:cardBackgroundColor="?attr/colorSurface"
 									android:elevation="0dp">
 									<LinearLayout
 										android:id="@+id/readReceiptsMainSwitch"
@@ -370,14 +340,13 @@
 										android:gravity="center_horizontal|center_vertical"
 										android:orientation="horizontal">
 										<ImageView
-											android:id="@+id/readReceiptsIcon"
+											android:id="@+id/imageview14"
 											android:layout_width="wrap_content"
 											android:layout_height="25dp"
 											android:layout_marginLeft="10dp"
 											android:layout_marginRight="12dp"
 											android:src="@drawable/mark_chat_read_24px"
-											android:scaleType="fitCenter"
-											app:tint="?attr/colorOnSurface" />
+											android:scaleType="fitCenter" />
 										<LinearLayout
 											android:id="@+id/linear26"
 											android:layout_width="wrap_content"
@@ -386,20 +355,20 @@
 											android:orientation="vertical"
 											android:layout_weight="1">
 											<TextView
-												android:id="@+id/readReceiptsTitle"
+												android:id="@+id/textview18"
 												android:layout_width="wrap_content"
 												android:layout_height="wrap_content"
 												android:text="Read receipts"
 												android:textSize="18sp"
-												android:textColor="?attr/colorOnSurface" />
+												android:textColor="#000000" />
 											<TextView
-												android:id="@+id/readReceiptsSubtitle"
+												android:id="@+id/textview19"
 												android:layout_width="wrap_content"
 												android:layout_height="wrap_content"
 												android:layout_marginTop="5dp"
 												android:text="Default"
 												android:textSize="14sp"
-												android:textColor="?attr/colorOnSurfaceVariant" />
+												android:textColor="#616161" />
 										</LinearLayout>
 										<com.google.android.material.materialswitch.MaterialSwitch
 											android:id="@+id/switchReadReceipt"
@@ -408,7 +377,7 @@
 											android:layout_marginLeft="3dp"
 											android:layout_marginRight="10dp"
 											android:textSize="12sp"
-											android:textColor="?attr/colorOnSurface"
+											android:textColor="#000000"
 											android:checked="true" />
 									</LinearLayout>
 								</androidx.cardview.widget.CardView>
@@ -424,14 +393,13 @@
 									android:focusable="true"
 									android:background="?attr/selectableItemBackground">
 									<ImageView
-										android:id="@+id/disappearingIcon"
+										android:id="@+id/imageview15"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/auto_delete_24px"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear27"
 										android:layout_width="wrap_content"
@@ -440,20 +408,20 @@
 										android:orientation="vertical"
 										android:layout_weight="1">
 										<TextView
-											android:id="@+id/disappearingTitle"
+											android:id="@+id/textview20"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Disappearing message"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/disappearingSubtitle"
+											android:id="@+id/textview21"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginTop="5dp"
 											android:text="24 hours"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 									<com.google.android.material.materialswitch.MaterialSwitch
 										android:id="@+id/switchDisappearingMessages"
@@ -462,7 +430,7 @@
 										android:layout_marginLeft="3dp"
 										android:layout_marginRight="10dp"
 										android:textSize="12sp"
-										android:textColor="?attr/colorOnSurface" />
+										android:textColor="#000000" />
 								</LinearLayout>
 								<LinearLayout
 									android:id="@+id/savePhotoVideoMainSwitch"
@@ -475,14 +443,13 @@
 									android:focusable="true"
 									android:background="?attr/selectableItemBackground">
 									<ImageView
-										android:id="@+id/saveMediaIcon"
+										android:id="@+id/imageview26"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/file_save_24px"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear49"
 										android:layout_width="wrap_content"
@@ -491,20 +458,20 @@
 										android:orientation="vertical"
 										android:layout_weight="1">
 										<TextView
-											android:id="@+id/saveMediaTitle"
+											android:id="@+id/textview44"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Save photos and videos"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/saveMediaSubtitle"
+											android:id="@+id/textview45"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginTop="5dp"
 											android:text="Automatically save photos and videos"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 									<com.google.android.material.materialswitch.MaterialSwitch
 										android:id="@+id/switchAutoSaveMedia"
@@ -513,7 +480,7 @@
 										android:layout_marginLeft="3dp"
 										android:layout_marginRight="10dp"
 										android:textSize="12sp"
-										android:textColor="?attr/colorOnSurface" />
+										android:textColor="#000000" />
 								</LinearLayout>
 								<LinearLayout
 									android:id="@+id/pinnedMessagesMainOption"
@@ -522,19 +489,15 @@
 									android:gravity="center_horizontal|center_vertical"
 									android:orientation="horizontal"
 									android:clickable="true"
-									android:focusable="true"
-									android:background="?attr/selectableItemBackground"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:focusable="true">
 									<ImageView
-										android:id="@+id/pinnedMessagesIcon"
+										android:id="@+id/imageview16"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/keep_24px"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear28"
 										android:layout_width="match_parent"
@@ -542,20 +505,20 @@
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/pinnedMessagesTitle"
+											android:id="@+id/textview22"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Pinned message"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/pinnedMessagesSubtitle"
+											android:id="@+id/textview23"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginTop="5dp"
 											android:text="View pinned message"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -566,19 +529,15 @@
 									android:gravity="center_horizontal|center_vertical"
 									android:orientation="horizontal"
 									android:clickable="true"
-									android:focusable="true"
-									android:background="?attr/selectableItemBackground"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:focusable="true">
 									<ImageView
-										android:id="@+id/searchIcon"
+										android:id="@+id/imageview17"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_search_48px"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear29"
 										android:layout_width="match_parent"
@@ -586,40 +545,39 @@
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/searchTitle"
+											android:id="@+id/textview24"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Search conversation"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/searchSubtitle"
+											android:id="@+id/textview25"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginTop="5dp"
 											android:text="Find specific conversations"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 							</LinearLayout>
 						</androidx.cardview.widget.CardView>
 						<TextView
-							android:id="@+id/privacyTitle"
+							android:id="@+id/textview34"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:layout_marginTop="20dp"
 							android:padding="8dp"
 							android:text="Privacy and support"
 							android:textSize="14sp"
-							android:textColor="?attr/colorOnSurfaceVariant" />
+							android:textColor="#757575" />
 						<androidx.cardview.widget.CardView
-							android:id="@+id/privacyCard"
+							android:id="@+id/cardview4"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
 							app:cardElevation="0dp"
-							app:cardCornerRadius="20dp"
-							app:cardBackgroundColor="?attr/colorSurface">
+							app:cardCornerRadius="20dp">
 							<LinearLayout
 								android:id="@+id/linear39"
 								android:layout_width="match_parent"
@@ -631,21 +589,15 @@
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal"
-									android:background="?attr/selectableItemBackground"
-									android:clickable="true"
-									android:focusable="true"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:orientation="horizontal">
 									<ImageView
-										android:id="@+id/verifyEncryptionIcon"
+										android:id="@+id/imageview22"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_key"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear44"
 										android:layout_width="match_parent"
@@ -653,21 +605,21 @@
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/verifyEncryptionTitle"
+											android:id="@+id/textview36"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Verify encryption"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/verifyEncryptionSubtitle"
+											android:id="@+id/textview37"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginLeft="1dp"
 											android:layout_marginTop="5dp"
 											android:text="Verify end-to-end and encryption"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -677,21 +629,15 @@
 									android:layout_marginTop="10dp"
 									android:layout_marginBottom="10dp"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal"
-									android:background="?attr/selectableItemBackground"
-									android:clickable="true"
-									android:focusable="true"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:orientation="horizontal">
 									<ImageView
-										android:id="@+id/shareContactIcon"
+										android:id="@+id/imageview23"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_forward"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear45"
 										android:layout_width="match_parent"
@@ -699,21 +645,21 @@
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/shareContactTitle"
+											android:id="@+id/textview38"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Share contact"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/shareContactSubtitle"
+											android:id="@+id/textview39"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginLeft="1dp"
 											android:layout_marginTop="5dp"
 											android:text="Share the link of  profile"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -721,43 +667,37 @@
 									android:layout_width="match_parent"
 									android:layout_height="wrap_content"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal"
-									android:background="?attr/selectableItemBackground"
-									android:clickable="true"
-									android:focusable="true"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:orientation="horizontal">
 									<ImageView
-										android:id="@+id/blockIcon"
+										android:id="@+id/imageview24"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/mobile_block_24px"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
-										android:id="@+id/blockLayout"
+										android:id="@+id/block_lay1"
 										android:layout_width="match_parent"
 										android:layout_height="wrap_content"
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/blockTitle"
+											android:id="@+id/textview40"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Block"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/blockSubtitle"
+											android:id="@+id/textview41"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginLeft="1dp"
 											android:layout_marginTop="5dp"
 											android:text="They won't be able to call or message."
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -766,21 +706,15 @@
 									android:layout_height="wrap_content"
 									android:layout_marginTop="10dp"
 									android:gravity="center_horizontal|center_vertical"
-									android:orientation="horizontal"
-									android:background="?attr/selectableItemBackground"
-									android:clickable="true"
-									android:focusable="true"
-									android:paddingTop="8dp"
-									android:paddingBottom="8dp">
+									android:orientation="horizontal">
 									<ImageView
-										android:id="@+id/reportIcon"
+										android:id="@+id/imageview25"
 										android:layout_width="25dp"
 										android:layout_height="25dp"
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/report_24px"
-										android:scaleType="fitCenter"
-										app:tint="?attr/colorOnSurface" />
+										android:scaleType="fitCenter" />
 									<LinearLayout
 										android:id="@+id/linear47"
 										android:layout_width="match_parent"
@@ -788,21 +722,21 @@
 										android:padding="8dp"
 										android:orientation="vertical">
 										<TextView
-											android:id="@+id/reportTitle"
+											android:id="@+id/textview42"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:text="Report"
 											android:textSize="18sp"
-											android:textColor="?attr/colorOnSurface" />
+											android:textColor="#000000" />
 										<TextView
-											android:id="@+id/reportSubtitle"
+											android:id="@+id/textview43"
 											android:layout_width="wrap_content"
 											android:layout_height="wrap_content"
 											android:layout_marginLeft="1dp"
 											android:layout_marginTop="5dp"
 											android:text="Give feedbacks and report conversation"
 											android:textSize="14sp"
-											android:textColor="?attr/colorOnSurfaceVariant" />
+											android:textColor="#616161" />
 									</LinearLayout>
 								</LinearLayout>
 							</LinearLayout>

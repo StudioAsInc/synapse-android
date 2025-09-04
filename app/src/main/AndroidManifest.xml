@@ -117,7 +117,7 @@
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
-			android:name=".ConversationSettingsActivity"
+			android:name=".Chat2ndUserMoreSettingsActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true" />
