@@ -1,0 +1,35 @@
+<resources>
+    <!-- GitHub Dark Theme Colors -->
+    <color name="github_dark_background">#0D1117</color>
+    <color name="github_dark_surface">#161B22</color>
+    <color name="github_dark_primary_text">#C9D1D9</color>
+    <color name="github_dark_secondary_text">#8B949E</color>
+    <color name="github_dark_accent">#58A6FF</color>
+    <color name="github_dark_border">#30363D</color>
+
+    <!-- Overriding Material 3 Colors -->
+    <color name="md_theme_background">@color/github_dark_background</color>
+    <color name="md_theme_surface">@color/github_dark_surface</color>
+    <color name="md_theme_onBackground">@color/github_dark_primary_text</color>
+    <color name="md_theme_onSurface">@color/github_dark_primary_text</color>
+    <color name="md_theme_primary">@color/github_dark_accent</color>
+    <color name="md_theme_onPrimary">@color/github_dark_background</color>
+    <color name="md_theme_surfaceVariant">@color/github_dark_surface</color>
+    <color name="md_theme_onSurfaceVariant">@color/github_dark_secondary_text</color>
+    <color name="md_theme_outline">@color/github_dark_border</color>
+
+    <!-- Specific component colors -->
+    <color name="colorBackground">@color/github_dark_background</color>
+    <color name="colorSurface">@color/github_dark_surface</color>
+    <color name="colorPrimary">@color/github_dark_accent</color>
+    <color name="colorPrimaryDark">@color/github_dark_accent</color>
+    <color name="colorAccent">@color/github_dark_accent</color>
+    <color name="colorControlHighlight">#4058A6FF</color>
+    <color name="colorControlNormal">@color/github_dark_secondary_text</color>
+
+    <color name="darkPrimaryBackground">@color/github_dark_background</color>
+    <color name="darkSecondaryBackground">@color/github_dark_surface</color>
+    <color name="darkPrimaryText">@color/github_dark_primary_text</color>
+    <color name="darkSecondaryText">@color/github_dark_secondary_text</color>
+    <color name="darkAccent">@color/github_dark_accent</color>
+</resources>
