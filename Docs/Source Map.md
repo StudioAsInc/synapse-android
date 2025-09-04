@@ -33,7 +33,7 @@ synapse-android/
 ├── build.gradle                     # Project-level build configuration
 ├── settings.gradle                  # Gradle settings
 ├── gradle.properties               # Build properties
-├── worker.js                       # Cloudflare Worker for push notifications
+├── worker.js                       # Cloudflare Worker for server-side notifications
 └── README.md                       # Project overview
 ```
 
@@ -44,7 +44,7 @@ synapse-android/
 #### Main Application Class
 - **`SynapseApp.java`** - Application class handling:
   - Firebase initialization
-  - OneSignal push notifications setup
+  - Notification bootstrap (see `NotificationConfig.kt`)
   - Global exception handling
   - User presence management
 
@@ -104,8 +104,8 @@ synapse-android/
 
 #### Specialized Components
 - **`PresenceManager.kt`** (Kotlin) - User online status management
-- **`NotificationHelper.kt`** (Kotlin) - Push notification handling
-- **`OneSignalManager.kt`** (Kotlin) - OneSignal integration
+- **`NotificationConfig.kt`** (Kotlin) - Centralized notification settings, feature flags, and system toggle
+- **`NotificationHelper.kt`** (Kotlin) - Unified notification sender (client-side OneSignal REST or server-side Cloudflare Worker) with fallback
 - **`RadialProgress.java`** - Custom progress indicator
 - **`FadeEditText.java`** - Custom text input with fade effects
 
@@ -149,7 +149,8 @@ com.synapse.social.studioasinc/
 - **Markwon 4.6.2** - Markdown rendering with extensions
 
 ### Push Notifications
-- **OneSignal** - Push notification service
+- **OneSignal (client-side REST)** - Primary push service when enabled
+- **Cloudflare Worker (server-side)** - Alternate push path and fallback
 - **Google Play Services Auth** - Google authentication
 
 ### AI & Machine Learning
@@ -230,16 +231,17 @@ com.synapse.social.studioasinc/
 
 ### Security Features
 - **Firebase Authentication** - Secure user management
-- **Encrypted communication** - End-to-end chat encryption
+- **End-to-end encryption (E2EE)** - Identity keypair + session key derivation; message encryption with AES-GCM
 - **Signed APKs** - Release build verification
 
 ## Project Roadmap Features
 
 ### Current Features
 - Real-time messaging with typing indicators
+- End-to-end encrypted chats (see `crypto/E2EEHelper.java`)
 - Image and video post creation
 - User profiles and following system
-- Push notifications via OneSignal
+- Push notifications via configurable system (`NotificationConfig.kt`)
 - AI-powered content assistance
 - Markdown support in messages
 
