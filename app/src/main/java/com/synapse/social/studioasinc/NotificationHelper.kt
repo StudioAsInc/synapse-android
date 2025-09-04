@@ -46,37 +46,48 @@ object NotificationHelper {
             return
         }
 
-        val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid/status")
+        val userDb = FirebaseDatabase.getInstance().getReference("skyline/users")
+        userDb.child(recipientUid).child("oneSignalPlayerId").get().addOnSuccessListener {
+            val recipientOneSignalPlayerId = it.getValue(String::class.java)
+            if (recipientOneSignalPlayerId.isNullOrBlank()) {
+                Log.w(TAG, "Recipient OneSignal Player ID is blank. Cannot send notification.")
+                return@addOnSuccessListener
+            }
 
-        recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
+            val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid/status")
+
+            recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
             // Smart suppression logic removed as per user request.
 
-            if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                sendClientSideNotification(
-                    recipientUid,
-                    message,
-                    senderUid,
-                    notificationType,
-                    data
-                )
-            } else {
-                sendServerSideNotification(recipientUid, message, notificationType, data)
+                if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
+                    sendClientSideNotification(
+                        recipientOneSignalPlayerId,
+                        message,
+                        senderUid,
+                        notificationType,
+                        data
+                    )
+                } else {
+                    sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
+                }
+                saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+            }.addOnFailureListener { e ->
+                Log.e(TAG, "Status check failed. Defaulting to send notification.", e)
+                if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
+                     sendClientSideNotification(
+                        recipientOneSignalPlayerId,
+                        message,
+                        senderUid,
+                        notificationType,
+                        data
+                    )
+                } else {
+                    sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
+                }
+                saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
             }
-            saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
-        }.addOnFailureListener { e ->
-            Log.e(TAG, "Status check failed. Defaulting to send notification.", e)
-            if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                 sendClientSideNotification(
-                    recipientUid,
-                    message,
-                    senderUid,
-                    notificationType,
-                    data
-                )
-            } else {
-                sendServerSideNotification(recipientUid, message, notificationType, data)
-            }
-            saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+        }.addOnFailureListener {
+            Log.e(TAG, "Failed to get recipient's OneSignal Player ID.", it)
         }
     }
 
@@ -168,7 +179,7 @@ object NotificationHelper {
      */
     @JvmStatic
     fun sendClientSideNotification(
-        recipientUid: String,
+        recipientPlayerId: String,
         message: String,
         senderUid: String? = null,
         notificationType: String,
@@ -176,10 +187,12 @@ object NotificationHelper {
     ) {
         val client = OkHttpClient()
         val jsonBody = JSONObject()
+
+        Log.d(TAG, "Attempting to send notification with channel ID: ${NotificationConfig.NOTIFICATION_CHANNEL_ID}")
         
         try {
             jsonBody.put("app_id", NotificationConfig.ONESIGNAL_APP_ID)
-            jsonBody.put("include_external_user_ids", JSONObject().put("0", recipientUid))
+            jsonBody.put("include_player_ids", JSONObject().put("0", recipientPlayerId))
             jsonBody.put("contents", JSONObject().put("en", message))
             jsonBody.put("headings", JSONObject().put("en", NotificationConfig.getTitleForNotificationType(notificationType)))
             jsonBody.put("subtitle", JSONObject().put("en", NotificationConfig.NOTIFICATION_SUBTITLE))
@@ -217,7 +230,7 @@ object NotificationHelper {
                 Log.e(TAG, "Failed to send client-side notification", e)
                 if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                     Log.i(TAG, "Falling back to server-side notification due to client-side failure")
-                    sendServerSideNotification(recipientUid, message, notificationType, data)
+                    sendServerSideNotification(recipientPlayerId, message, notificationType, data)
                 }
             }
 
@@ -229,7 +242,7 @@ object NotificationHelper {
                         Log.e(TAG, "Failed to send client-side notification: ${it.code} - ${it.body?.string()}")
                         if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                             Log.i(TAG, "Falling back to server-side notification due to client-side error")
-                            sendServerSideNotification(recipientUid, message, notificationType, data)
+                            sendServerSideNotification(recipientPlayerId, message, notificationType, data)
                         }
                     }
                 }
