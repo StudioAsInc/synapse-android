@@ -1,0 +1,10 @@
+<resources>
+    <!--
+    Having a themes.xml in values-night ensures that the system picks up the dark theme variant.
+    The main AppTheme in values/themes.xml already inherits from a DayNight theme, so no specific
+    overrides are needed here for the colors to apply correctly.
+    -->
+    <style name="AppTheme" parent="Theme.Material3Expressive.DynamicColors.DayNight.NoActionBar">
+        <!-- You can add specific dark theme overrides here if needed -->
+    </style>
+</resources>
