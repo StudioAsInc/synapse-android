@@ -63,7 +63,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.browser.customtabs.CustomTabsIntent;
 import com.google.firebase.database.Query;
-import com.synapse.social.studioasinc.CreateLineVideoActivity;
 import com.synapse.social.studioasinc.CreatePostActivity;
 import com.synapse.social.studioasinc.PostCommentsBottomSheetDialog;
 import com.synapse.social.studioasinc.PostMoreBottomSheetDialog;
@@ -497,7 +496,7 @@ public class HomeFragment extends Fragment {
             });
 
             holder.miniPostLayoutVideoPost.setOnClickListener(v -> {
-                intent.setClass(getContext(), CreateLineVideoActivity.class);
+                intent.setClass(getContext(), CreatePostActivity.class);
                 startActivity(intent);
             });
 

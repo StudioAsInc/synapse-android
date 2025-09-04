@@ -67,7 +67,7 @@ import java.util.regex.*;
 import org.json.*;
 import androidx.core.widget.NestedScrollView;
 import com.google.firebase.database.Query;
-
+import android.view.inputmethod.EditorInfo;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -78,40 +78,22 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Map;
+
 
 public class SearchActivity extends AppCompatActivity {
-	
+
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
-	
+
 	private ArrayList<HashMap<String, Object>> searchedUsersList = new ArrayList<>();
-	
-	private LinearLayout body;
-	private LinearLayout middleLayout;
-	private LinearLayout bottomSpc;
-	private LinearLayout topLayout;
-	private LinearLayout SearchUserLayout;
-	private LinearLayout topLayoutBar;
-	private LinearLayout topLayoutBarMiddle;
-	private LinearLayout bottomBar;
-	private TextView topLayoutBarTitle;
-	private LinearLayout bottom_home;
-	private LinearLayout bottom_search;
-	private LinearLayout bottom_videos;
-	private LinearLayout bottom_chats;
-	private LinearLayout bottom_profile;
-	private ImageView bottom_home_ic;
-	private ImageView bottom_search_ic;
-	private ImageView bottom_videos_ic;
-	private ImageView bottom_chats_ic;
-	private ImageView bottom_profile_ic;
-	private ImageView topLayoutBarMiddleSearchLayoutCancel;
-	private LinearLayout topLayoutBarMiddleSearchLayout;
-	private EditText topLayoutBarMiddleSearchInput;
-	private ImageView topLayoutBarMiddleSearchLayoutIc;
+
+	private com.google.android.material.appbar.AppBarLayout app_bar_layout;
+	private com.google.android.material.appbar.MaterialToolbar toolbar;
+	private com.google.android.material.search.SearchBar search_bar;
+	private com.google.android.material.search.SearchView search_view;
 	private RecyclerView SearchUserLayoutRecyclerView;
 	private TextView SearchUserLayoutNoUserFound;
-	
+
 	private Intent intent = new Intent();
 	private Vibrator vbr;
 	private FirebaseAuth auth;
@@ -131,7 +113,7 @@ public class SearchActivity extends AppCompatActivity {
 	private RequestNetwork.RequestListener _request_request_listener;
 	private DatabaseReference maindb = _firebase.getReference("/");
 	private ChildEventListener _maindb_child_listener;
-	
+
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
@@ -140,390 +122,239 @@ public class SearchActivity extends AppCompatActivity {
 		FirebaseApp.initializeApp(this);
 		initializeLogic();
 	}
-	
+
 	private void initialize(Bundle _savedInstanceState) {
-		body = findViewById(R.id.body);
-		middleLayout = findViewById(R.id.middleLayout);
-		bottomSpc = findViewById(R.id.bottomSpc);
-		topLayout = findViewById(R.id.topLayout);
-		SearchUserLayout = findViewById(R.id.SearchUserLayout);
-		topLayoutBar = findViewById(R.id.topLayoutBar);
-		topLayoutBarMiddle = findViewById(R.id.topLayoutBarMiddle);
-		bottomBar = findViewById(R.id.bottomBar);
-		topLayoutBarTitle = findViewById(R.id.topLayoutBarTitle);
-		bottom_home = findViewById(R.id.bottom_home);
-		bottom_search = findViewById(R.id.bottom_search);
-		bottom_videos = findViewById(R.id.bottom_videos);
-		bottom_chats = findViewById(R.id.bottom_chats);
-		bottom_profile = findViewById(R.id.bottom_profile);
-		bottom_home_ic = findViewById(R.id.bottom_home_ic);
-		bottom_search_ic = findViewById(R.id.bottom_search_ic);
-		bottom_videos_ic = findViewById(R.id.bottom_videos_ic);
-		bottom_chats_ic = findViewById(R.id.bottom_chats_ic);
-		bottom_profile_ic = findViewById(R.id.bottom_profile_ic);
-		topLayoutBarMiddleSearchLayoutCancel = findViewById(R.id.topLayoutBarMiddleSearchLayoutCancel);
-		topLayoutBarMiddleSearchLayout = findViewById(R.id.topLayoutBarMiddleSearchLayout);
-		topLayoutBarMiddleSearchInput = findViewById(R.id.topLayoutBarMiddleSearchInput);
-		topLayoutBarMiddleSearchLayoutIc = findViewById(R.id.topLayoutBarMiddleSearchLayoutIc);
+		app_bar_layout = findViewById(R.id.app_bar_layout);
+		toolbar = findViewById(R.id.toolbar);
+		search_bar = findViewById(R.id.search_bar);
+		search_view = findViewById(R.id.search_view);
 		SearchUserLayoutRecyclerView = findViewById(R.id.SearchUserLayoutRecyclerView);
 		SearchUserLayoutNoUserFound = findViewById(R.id.SearchUserLayoutNoUserFound);
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		auth = FirebaseAuth.getInstance();
 		request = new RequestNetwork(this);
-		
-		bottom_home.setOnClickListener(new View.OnClickListener() {
+
+		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), HomeActivity.class);
-				intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-				startActivity(intent);
-				finish();
+				onBackPressed();
 			}
 		});
-		
-		bottom_search.setOnClickListener(new View.OnClickListener() {
+
+		search_view.getEditText().setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
-			public void onClick(View _view) {
-				
-			}
-		});
-		
-		bottom_videos.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), LineVideoPlayerActivity.class);
-				startActivity(intent);
-			}
-		});
-		
-		bottom_chats.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), MessagesActivity.class);
-				startActivity(intent);
-			}
-		});
-		
-		bottom_profile.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), ProfileActivity.class);
-				intent.putExtra("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-				startActivity(intent);
-			}
-		});
-		
-		topLayoutBarMiddleSearchLayoutCancel.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				SearchUserLayout.setVisibility(View.GONE);
-				topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.GONE);
-			}
-		});
-		
-		topLayoutBarMiddleSearchInput.addTextChangedListener(new TextWatcher() {
-			@Override
-			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-				final String _charSeq = _param1.toString();
-				if (_charSeq.trim().equals("")) {
-					_showAllUser();
-					_TransitionManager(topLayoutBarMiddleSearchLayout, 100);
-					topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.GONE);
-					_ImageColor(topLayoutBarMiddleSearchLayoutIc, 0xFF757575);
-				} else {
-					_search();
-					topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.VISIBLE);
-					_TransitionManager(topLayoutBarMiddleSearchLayout, 100);
-					_ImageColor(topLayoutBarMiddleSearchLayoutIc, 0xFF2962FF);
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+					_search(search_view.getText().toString());
+					return true;
 				}
-			}
-			
-			@Override
-			public void beforeTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-				
-			}
-			
-			@Override
-			public void afterTextChanged(Editable _param1) {
-				
+				return false;
 			}
 		});
-		
-		topLayoutBarMiddleSearchLayoutIc.setOnClickListener(new View.OnClickListener() {
+
+		search_view.getEditText().addTextChangedListener(new TextWatcher() {
 			@Override
-			public void onClick(View _view) {
-				if (topLayoutBarMiddleSearchInput.getText().toString().trim().equals("")) {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				if (s.toString().isEmpty()) {
 					_showAllUser();
 				} else {
-					_getSearchedUserReference();
+					_search(s.toString());
 				}
 			}
-		});
-		
-		SearchUserLayoutRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
 			@Override
-			public void onScrollStateChanged(RecyclerView recyclerView, int _scrollState) {
-				super.onScrollStateChanged(recyclerView, _scrollState);
-				
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 			}
-			
+
 			@Override
-			public void onScrolled(RecyclerView recyclerView, int _offsetX, int _offsetY) {
-				super.onScrolled(recyclerView, _offsetX, _offsetY);
-				
+			public void afterTextChanged(Editable s) {
 			}
 		});
-		
+
 		_main_child_listener = new ChildEventListener() {
 			@Override
 			public void onChildAdded(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildChanged(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildMoved(DataSnapshot _param1, String _param2) {
-				
+
 			}
-			
+
 			@Override
 			public void onChildRemoved(DataSnapshot _param1) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError _param1) {
 				final int _errorCode = _param1.getCode();
 				final String _errorMessage = _param1.getMessage();
-				
+
 			}
 		};
 		main.addChildEventListener(_main_child_listener);
-		
-		_request_request_listener = new RequestNetwork.RequestListener() {
-			@Override
-			public void onResponse(String _param1, String _param2, HashMap<String, Object> _param3) {
-				final String _tag = _param1;
-				final String _response = _param2;
-				final HashMap<String, Object> _responseHeaders = _param3;
-				DatabaseReference searchRef = FirebaseDatabase.getInstance().getReference("skyline/users");
-				Query searchQuery = searchRef.orderByChild("username").startAt(topLayoutBarMiddleSearchInput.getText().toString()).endAt(topLayoutBarMiddleSearchInput.getText().toString() + "\uf8ff").limitToLast(50);
-				searchQuery.addListenerForSingleValueEvent(new ValueEventListener() {
-					@Override
-					public void onDataChange(@NonNull DataSnapshot snapshot) {
-						if (snapshot.exists()) {
-							SearchUserLayoutRecyclerView.setVisibility(View.VISIBLE);
-							SearchUserLayoutNoUserFound.setVisibility(View.GONE);
-							
-							searchedUsersList.clear();
-							
-							for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-								HashMap<String, Object> searchMap = new HashMap<String, Object>((Map<String, Object>) dataSnapshot.getValue());
-								searchedUsersList.add(searchMap);
-							}
-							
-							SearchUserLayoutRecyclerView.getAdapter().notifyDataSetChanged();
-							
-						} else {
-							SearchUserLayoutRecyclerView.setVisibility(View.GONE);
-							SearchUserLayoutNoUserFound.setVisibility(View.VISIBLE);
-						}
-					}
-					
-					@Override
-					public void onCancelled(@NonNull DatabaseError error) {
-						
-					}
-				});
-				
-			}
-			
-			@Override
-			public void onErrorResponse(String _param1, String _param2) {
-				final String _tag = _param1;
-				final String _message = _param2;
-				
-			}
-		};
-		
+
 		_maindb_child_listener = new ChildEventListener() {
 			@Override
 			public void onChildAdded(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildChanged(DataSnapshot _param1, String _param2) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onChildMoved(DataSnapshot _param1, String _param2) {
-				
+
 			}
-			
+
 			@Override
 			public void onChildRemoved(DataSnapshot _param1) {
 				GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
 				final String _childKey = _param1.getKey();
 				final HashMap<String, Object> _childValue = _param1.getValue(_ind);
-				
+
 			}
-			
+
 			@Override
 			public void onCancelled(DatabaseError _param1) {
 				final int _errorCode = _param1.getCode();
 				final String _errorMessage = _param1.getMessage();
-				
+
 			}
 		};
 		maindb.addChildEventListener(_maindb_child_listener);
-		
+
 		auth_updateEmailListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_updatePasswordListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_emailVerificationSentListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_deleteUserListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_phoneAuthListener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> task) {
 				final boolean _success = task.isSuccessful();
 				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_updateProfileListener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		auth_googleSignInListener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> task) {
 				final boolean _success = task.isSuccessful();
 				final String _errorMessage = task.getException() != null ? task.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_create_user_listener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_sign_in_listener = new OnCompleteListener<AuthResult>() {
 			@Override
 			public void onComplete(Task<AuthResult> _param1) {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
-				
+
 			}
 		};
-		
+
 		_auth_reset_password_listener = new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(Task<Void> _param1) {
 				final boolean _success = _param1.isSuccessful();
-				
+
 			}
 		};
 	}
-	
+
 	private void initializeLogic() {
-		topLayoutBarMiddleSearchLayout.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)0, Color.TRANSPARENT, 0xFFF5F5F5));
-		SearchUserLayout.setVisibility(View.VISIBLE);
-		topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.GONE);
-		_ImageColor(topLayoutBarMiddleSearchLayoutIc, 0xFF757575);
-		_ImageColor(topLayoutBarMiddleSearchLayoutCancel, 0xFF757575);
-		_ImageColor(bottom_home_ic, 0xFFBDBDBD);
-		_ImageColor(bottom_search_ic, 0xFF000000);
-		_ImageColor(bottom_videos_ic, 0xFFBDBDBD);
-		_ImageColor(bottom_chats_ic, 0xFFBDBDBD);
-		_ImageColor(bottom_profile_ic, 0xFFBDBDBD);
 		SearchUserLayoutRecyclerView.setAdapter(new SearchUserLayoutRecyclerViewAdapter(searchedUsersList));
 		SearchUserLayoutRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-		topLayoutBarMiddleSearchInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-				if(actionId== 3) {
-					if (!topLayoutBarMiddleSearchInput.getText().toString().trim().equals("")) {
-						_getSearchedUserReference();
-					}
-				}
-				return false;
-			}
-		});
 		_showAllUser();
 	}
-	
-	
+
+
 	@Override
 	public void onBackPressed() {
-		intent.setClass(getApplicationContext(), HomeActivity.class);
-		intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-		startActivity(intent);
-		finish();
+		if (search_view.isShowing()) {
+			search_view.hide();
+		} else {
+			super.onBackPressed();
+		}
 	}
-	
+
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -534,13 +365,13 @@ public class SearchActivity extends AppCompatActivity {
 		getWindow().setStatusBarColor(_statusColor);
 		getWindow().setNavigationBarColor(_navigationColor);
 	}
-	
-	
+
+
 	public void _ImageColor(final ImageView _image, final int _color) {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
 	}
-	
-	
+
+
 	public void _viewGraphics(final View _view, final int _onFocus, final int _onRipple, final double _radius, final double _stroke, final int _strokeColor) {
 		android.graphics.drawable.GradientDrawable GG = new android.graphics.drawable.GradientDrawable();
 		GG.setColor(_onFocus);
@@ -549,15 +380,13 @@ public class SearchActivity extends AppCompatActivity {
 		android.graphics.drawable.RippleDrawable RE = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{ _onRipple}), GG, null);
 		_view.setBackground(RE);
 	}
-	
-	
+
+
 	public void _getSearchedUserReference() {
-		request.startRequestNetwork(RequestNetworkController.POST, "https://google.com", "google", _request_request_listener);
-		SearchUserLayout.setVisibility(View.VISIBLE);
-		topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.VISIBLE);
+		// This method is no longer needed
 	}
-	
-	
+
+
 	public void _setMargin(final View _view, final double _r, final double _l, final double _t, final double _b) {
 		float dpRatio = new c(this).getContext().getResources().getDisplayMetrics().density;
 		int right = (int)(_r * dpRatio);
@@ -583,7 +412,7 @@ public class SearchActivity extends AppCompatActivity {
 			lp.setMargins(left, top, right, bottom);
 			_view.setLayoutParams(lp);
 		}
-		
+
 		
 	}
 	
@@ -609,30 +438,42 @@ public class SearchActivity extends AppCompatActivity {
 	{
 		
 	}
-	
-	
-	public void _search() {
-		request.startRequestNetwork(RequestNetworkController.POST, "https://google.com", "google", _request_request_listener);
-		SearchUserLayout.setVisibility(View.VISIBLE);
-		topLayoutBarMiddleSearchLayoutCancel.setVisibility(View.VISIBLE);
-	}
-	
-	
-	public void _showAllUser() {
-		// Assume you have this defined somewhere
-		//EditText topLayoutBarMiddleSearchInput = findViewById(R.id.topLayoutBarMiddleSearchInput);
-		
+
+
+	public void _search(String query) {
 		DatabaseReference searchRef = FirebaseDatabase.getInstance().getReference("skyline/users");
-		Query searchQuery;
+		Query searchQuery = searchRef.orderByChild("username").startAt(query).endAt(query + "\uf8ff").limitToLast(50);
 		
-		if (topLayoutBarMiddleSearchInput.getText().toString().isEmpty()) {
-			// If EditText is empty, show all users
-			searchQuery = searchRef.limitToLast(50);
-		} else {
-			// If EditText is not empty, perform search
-			String searchText = topLayoutBarMiddleSearchInput.getText().toString();
-			searchQuery = searchRef.orderByChild("username").startAt(searchText).endAt(searchText + "\uf8ff").limitToLast(50);
-		}
+		searchQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					SearchUserLayoutRecyclerView.setVisibility(View.VISIBLE);
+					SearchUserLayoutNoUserFound.setVisibility(View.GONE);
+					searchedUsersList.clear();
+
+					for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+						HashMap<String, Object> searchMap = new HashMap<String, Object>((Map<String, Object>) dataSnapshot.getValue());
+						searchedUsersList.add(searchMap);
+					}
+					SearchUserLayoutRecyclerView.getAdapter().notifyDataSetChanged();
+				} else {
+					SearchUserLayoutRecyclerView.setVisibility(View.GONE);
+					SearchUserLayoutNoUserFound.setVisibility(View.VISIBLE);
+				}
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError error) {
+				// Handle error
+			}
+		});
+	}
+
+
+	public void _showAllUser() {
+		DatabaseReference searchRef = FirebaseDatabase.getInstance().getReference("skyline/users");
+		Query searchQuery = searchRef.limitToLast(50);
 		
 		searchQuery.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
@@ -659,18 +500,16 @@ public class SearchActivity extends AppCompatActivity {
 			}
 		});
 	}
-	
-	
+
+
 	public void _TransitionManager(final View _view, final double _duration) {
-		LinearLayout viewgroup =(LinearLayout) _view;
-		
-		android.transition.AutoTransition autoTransition = new android.transition.AutoTransition(); autoTransition.setDuration((long)_duration); android.transition.TransitionManager.beginDelayedTransition(viewgroup, autoTransition);
+		// This method is no longer needed
 	}
-	
+
 	public class SearchUserLayoutRecyclerViewAdapter extends RecyclerView.Adapter<SearchUserLayoutRecyclerViewAdapter.ViewHolder> {
-		
+
 		ArrayList<HashMap<String, Object>> _data;
-		
+
 		public SearchUserLayoutRecyclerViewAdapter(ArrayList<HashMap<String, Object>> _arr) {
 			_data = _arr;
 		}
@@ -683,11 +522,11 @@ public class SearchActivity extends AppCompatActivity {
 			_v.setLayoutParams(_lp);
 			return new ViewHolder(_v);
 		}
-		
+
 		@Override
 		public void onBindViewHolder(ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
-			
+
 			final androidx.cardview.widget.CardView cardview1 = _view.findViewById(R.id.cardview1);
 			final LinearLayout body = _view.findViewById(R.id.body);
 			final RelativeLayout profileCardRelative = _view.findViewById(R.id.profileCardRelative);
@@ -702,7 +541,7 @@ public class SearchActivity extends AppCompatActivity {
 			final TextView username = _view.findViewById(R.id.username);
 			final ImageView genderBadge = _view.findViewById(R.id.genderBadge);
 			final ImageView badge = _view.findViewById(R.id.badge);
-			
+
 			try{
 				RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 				_view.setLayoutParams(_lp);
@@ -788,139 +627,17 @@ public class SearchActivity extends AppCompatActivity {
 			}catch(Exception e){
 				
 			}
-			/*
-try {
-    // Layout setup
-    RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT, 
-        ViewGroup.LayoutParams.WRAP_CONTENT
-    );
-    _view.setLayoutParams(lp);
-    
-    // Create reusable GradientDrawable creator
-    GradientDrawableCreator gradientCreator = new GradientDrawableCreator();
-    profileCard.setBackground(gradientCreator.create(300, Color.TRANSPARENT));
-    userStatusCircleBG.setBackground(gradientCreator.create(300, 0xFFFFFFFF));
-    userStatusCircleIN.setBackground(gradientCreator.create(300, 0xFF2196F3));
-    
-    // Get current item data once
-    Map<String, Object> currentItem = _data.get(_position);
-    
-    // Set name and username
-    name.setText("@" + currentItem.get("username").toString());
-    username.setText(currentItem.get("nickname").toString().equals("null") 
-        ? "@" + currentItem.get("username").toString() 
-        : currentItem.get("nickname").toString());
-    
-    // Avatar setup
-    if (currentItem.get("banned").toString().equals("true")) {
-        profileAvatar.setImageResource(R.drawable.banned_avatar);
-    } else {
-        String avatar = currentItem.get("avatar").toString();
-        if (avatar.equals("null")) {
-            profileAvatar.setImageResource(R.drawable.avatar);
-        } else {
-            Glide.with(getApplicationContext())
-                .load(Uri.parse(avatar))
-                .into(profileAvatar);
-        }
-    }
-    
-    // Gender badge setup
-    String gender = currentItem.get("gender").toString();
-    switch (gender) {
-        case "hidden":
-            genderBadge.setVisibility(View.GONE);
-            break;
-        case "male":
-            genderBadge.setImageResource(R.drawable.male_badge);
-            genderBadge.setVisibility(View.VISIBLE);
-            break;
-        case "female":
-            genderBadge.setImageResource(R.drawable.female_badge);
-            genderBadge.setVisibility(View.VISIBLE);
-            break;
-    }
-    
-    // Account badge setup
-    String accountType = currentItem.get("account_type").toString();
-    switch (accountType) {
-        case "admin":
-            badge.setImageResource(R.drawable.admin_badge);
-            badge.setVisibility(View.VISIBLE);
-            break;
-        case "moderator":
-            badge.setImageResource(R.drawable.moderator_badge);
-            badge.setVisibility(View.VISIBLE);
-            break;
-        case "support":
-            badge.setImageResource(R.drawable.support_badge);
-            badge.setVisibility(View.VISIBLE);
-            break;
-        case "user":
-            if (currentItem.get("account_premium").toString().equals("true")) {
-                badge.setImageResource(R.drawable.premium_badge);
-                badge.setVisibility(View.VISIBLE);
-            } else if (currentItem.get("verify").toString().equals("true")) {
-                badge.setImageResource(R.drawable.verified_badge);
-                badge.setVisibility(View.VISIBLE);
-            } else {
-                badge.setVisibility(View.GONE);
-            }
-            break;
-    }
-    
-    // Status visibility
-    userStatusCircleBG.setVisibility(
-        currentItem.get("status").toString().equals("online") 
-            ? View.VISIBLE 
-            : View.GONE
-    );
-    
-    // Margin setup
-    _setMargin(cardview1, 18, 18, _position == 0 ? 18 : 0, 18);
-    
-    // Intent handling
-    if (getIntent().hasExtra("ref") && getIntent().getStringExtra("ref").equals("true")) {
-        intent.setClass(getApplicationContext(), ProfileActivity.class);
-        intent.putExtra("uid", _data.get(0).get("uid").toString());
-        startActivity(intent);
-        finish();
-    }
-    
-    // Click listener
-    body.setOnClickListener(v -> {
-        intent.setClass(getApplicationContext(), ProfileActivity.class);
-        intent.putExtra("uid", currentItem.get("uid").toString());
-        startActivity(intent);
-        finish();
-    });
-} catch (Exception e) {
-    // Consider proper error handling or logging
-    e.printStackTrace();
-}
-
-// Helper class for GradientDrawable creation
-private static class GradientDrawableCreator {
-    GradientDrawable create(int cornerRadius, int color) {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setCornerRadius(cornerRadius);
-        drawable.setColor(color);
-        return drawable;
-    }
-}
-*/
 		}
-		
+
 		@Override
 		public int getItemCount() {
 			return _data.size();
 		}
-		
+
 		public class ViewHolder extends RecyclerView.ViewHolder {
 			public ViewHolder(View v) {
 				super(v);
 			}
 		}
 	}
-}
+}

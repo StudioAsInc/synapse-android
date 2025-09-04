@@ -1100,36 +1100,6 @@
 					android:background="@android:color/transparent"
 					android:orientation="vertical">
 					<LinearLayout
-						android:id="@+id/premiumFeaturesMainOption"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:gravity="center_horizontal|center_vertical"
-						android:orientation="horizontal">
-						<ImageView
-							android:id="@+id/imageview27"
-							android:layout_width="25dp"
-							android:layout_height="25dp"
-							android:layout_marginLeft="10dp"
-							android:layout_marginRight="12dp"
-							android:src="@drawable/star_shine_24px"
-							android:scaleType="fitCenter" />
-						<LinearLayout
-							android:id="@+id/linear56"
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:padding="8dp"
-							android:orientation="vertical"
-							android:layout_weight="1">
-							<TextView
-								android:id="@+id/textview51"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="Synapse Premium"
-								android:textSize="18sp"
-								android:textColor="#000000" />
-						</LinearLayout>
-					</LinearLayout>
-					<LinearLayout
 						android:id="@+id/linear54"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
