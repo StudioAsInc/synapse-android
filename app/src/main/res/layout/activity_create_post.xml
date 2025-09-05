@@ -10,16 +10,27 @@
 	<com.google.android.material.appbar.AppBarLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:fitsSystemWindows="true">
+		android:fitsSystemWindows="true"
+        android:elevation="4dp">
 
 		<com.google.android.material.appbar.MaterialToolbar
 			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
 			android:layout_height="?attr/actionBarSize"
 			app:title="Create Post"
-			app:navigationIcon="@drawable/ic_arrow_back_ios_new_48px"
+			app:navigationIcon="?attr/homeAsUpIndicator"
 			style="@style/Widget.Material3.Toolbar.Surface"
-			app:menu="@menu/create_post_menu" />
+			app:menu="@menu/create_post_menu">
+
+            <Button
+                android:id="@+id/postButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginEnd="16dp"
+                android:text="Post" />
+        </com.google.android.material.appbar.MaterialToolbar>
 
 	</com.google.android.material.appbar.AppBarLayout>
 
@@ -64,7 +75,7 @@
 					android:layout_height="200dp"
 					android:gravity="center"
 					android:orientation="vertical"
-					android:background="?attr/colorSurfaceContainer">
+					android:background="@drawable/image_placeholder_background">
 
 					<ImageView
 						android:layout_width="48dp"

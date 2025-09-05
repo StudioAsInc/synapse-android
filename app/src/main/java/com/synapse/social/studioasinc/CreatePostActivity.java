@@ -102,6 +102,7 @@ public class CreatePostActivity extends AppCompatActivity {
 	private boolean hasImage = false;
 	
 	private MaterialToolbar toolbar;
+	private Button postButton;
 	private ScrollView scrollView;
 	private LinearLayout scrollBodyLayout;
 	private FadeEditText postDescriptionEditText;
@@ -169,8 +170,16 @@ public class CreatePostActivity extends AppCompatActivity {
 		imageCardView = findViewById(R.id.imageCardView);
 		imagePlaceholderLayout = findViewById(R.id.imagePlaceholderLayout);
 		postImageView = findViewById(R.id.postImageView);
+		postButton = findViewById(R.id.postButton);
 		appSavedData = getSharedPreferences("data", Activity.MODE_PRIVATE);
 		
+		postButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				_createPost();
+			}
+		});
+
 		imagePlaceholderLayout.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -223,9 +232,6 @@ public class CreatePostActivity extends AppCompatActivity {
 	@Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_post:
-                _createPost();
-                return true;
             case R.id.action_settings:
                 _showPostSettingsBottomSheet();
                 return true;
