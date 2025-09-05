@@ -2163,7 +2163,7 @@ public class ChatActivity extends AppCompatActivity {
 					data
 				);
 
-				_updateInbox(lastMessage);
+				_updateInbox(lastMessage, ServerValue.TIMESTAMP);
 
 				// Clear UI
 				Log.d("ChatActivity", "Clearing attachment map and UI");
@@ -2240,7 +2240,7 @@ public class ChatActivity extends AppCompatActivity {
 				data
 			);
 
-			_updateInbox(messageText);
+			_updateInbox(messageText, ServerValue.TIMESTAMP);
 
 			// Clear UI
 			message_et.setText("");
@@ -2484,7 +2484,7 @@ public class ChatActivity extends AppCompatActivity {
 		Log.d("ChatActivity", "=== ATTACHMENT STATE RESET COMPLETE ===");
 	}
 
-	public void _updateInbox(final String _lastMessage) {
+	public void _updateInbox(final String _lastMessage, final Object _timestamp) {
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		if (currentUser == null) {
 			Log.e(TAG, "Cannot update inbox, user is not authenticated.");
@@ -2501,7 +2501,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatInboxSend.put(LAST_MESSAGE_UID_KEY, myUid);
 		ChatInboxSend.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
 		ChatInboxSend.put(LAST_MESSAGE_STATE_KEY, "sended");
-		ChatInboxSend.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+		ChatInboxSend.put(PUSH_DATE_KEY, _timestamp);
 		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(myUid).child(otherUid).setValue(ChatInboxSend);
 
 		// Update inbox for the other user
@@ -2510,7 +2510,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatInboxSend2.put(LAST_MESSAGE_UID_KEY, myUid);
 		ChatInboxSend2.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
 		ChatInboxSend2.put(LAST_MESSAGE_STATE_KEY, "sended");
-		ChatInboxSend2.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+		ChatInboxSend2.put(PUSH_DATE_KEY, _timestamp);
 		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(otherUid).child(myUid).setValue(ChatInboxSend2);
 	}
 
