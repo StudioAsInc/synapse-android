@@ -18,13 +18,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-        <com.google.android.material.carousel.CarouselView
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/storiesView"
             android:layout_width="match_parent"
-            android:layout_height="150dp"
-            app:carousel_layout_manager="hero"
-            app:carousel_item_size="fullscreen"
-            />
+            android:layout_height="150dp" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/miniPostLayout"

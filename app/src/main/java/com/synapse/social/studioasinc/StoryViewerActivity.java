@@ -13,10 +13,13 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.carousel.CarouselView;
+import com.google.android.material.carousel.CarouselLayoutManager;
+import com.google.android.material.carousel.CarouselSnapHelper;
+import com.google.android.material.carousel.FullScreenCarouselStrategy;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -31,7 +34,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class StoryViewerActivity extends AppCompatActivity {
 
-    private CarouselView storyCarouselView;
+    private RecyclerView storyCarouselView;
     private ArrayList<Story> stories;
     private int currentPosition;
     private CountDownTimer countDownTimer;
@@ -49,6 +52,10 @@ public class StoryViewerActivity extends AppCompatActivity {
         currentPosition = getIntent().getIntExtra("position", 0);
 
         adapter = new StoryCarouselAdapter(stories);
+        storyCarouselView.setLayoutManager(new CarouselLayoutManager(new FullScreenCarouselStrategy()));
+        CarouselSnapHelper snapHelper = new CarouselSnapHelper();
+        snapHelper.attachToRecyclerView(storyCarouselView);
+
         storyCarouselView.setAdapter(adapter);
         storyCarouselView.scrollToPosition(currentPosition);
 
@@ -57,7 +64,7 @@ public class StoryViewerActivity extends AppCompatActivity {
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    currentPosition = storyCarouselView.getCurrentItem();
+                    currentPosition = ((LinearLayoutManager)storyCarouselView.getLayoutManager()).findFirstVisibleItemPosition();
                     startStoryProgress();
                 }
             }
@@ -71,25 +78,27 @@ public class StoryViewerActivity extends AppCompatActivity {
             countDownTimer.cancel();
         }
 
-        StoryCarouselAdapter.StoryViewHolder currentViewHolder = (StoryCarouselAdapter.StoryViewHolder) storyCarouselView.findViewHolderForAdapterPosition(currentPosition);
+        RecyclerView.ViewHolder currentViewHolder = storyCarouselView.findViewHolderForAdapterPosition(currentPosition);
         if (currentViewHolder != null) {
-            currentViewHolder.storyProgressBar.setProgress(0);
+            ((StoryCarouselAdapter.StoryViewHolder) currentViewHolder).storyProgressBar.setProgress(0);
         }
 
 
         countDownTimer = new CountDownTimer(5000, 50) {
             @Override
             public void onTick(long millisUntilFinished) {
-                if (currentViewHolder != null) {
+                RecyclerView.ViewHolder currentViewHolderOnTick = storyCarouselView.findViewHolderForAdapterPosition(currentPosition);
+                if (currentViewHolderOnTick != null) {
                     int progress = (int) (100 * (5000 - millisUntilFinished) / 5000);
-                    currentViewHolder.storyProgressBar.setProgress(progress);
+                    ((StoryCarouselAdapter.StoryViewHolder) currentViewHolderOnTick).storyProgressBar.setProgress(progress);
                 }
             }
 
             @Override
             public void onFinish() {
-                if (currentViewHolder != null) {
-                    currentViewHolder.storyProgressBar.setProgress(100);
+                RecyclerView.ViewHolder currentViewHolderOnFinish = storyCarouselView.findViewHolderForAdapterPosition(currentPosition);
+                if (currentViewHolderOnFinish != null) {
+                    ((StoryCarouselAdapter.StoryViewHolder) currentViewHolderOnFinish).storyProgressBar.setProgress(100);
                 }
                 moveToNextStory();
             }

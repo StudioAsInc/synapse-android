@@ -168,7 +168,7 @@ public class HomeFragment extends Fragment {
         _view.setBackground(RE);
     }
 
-    private void _loadStories(final com.google.android.material.carousel.CarouselView storiesView, final ArrayList<com.synapse.social.studioasinc.models.Story> storiesList) {
+    private void _loadStories(final RecyclerView storiesView, final ArrayList<com.synapse.social.studioasinc.models.Story> storiesList) {
         storiesDbRef.orderByChild("timestamp")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -396,7 +396,7 @@ public class HomeFragment extends Fragment {
     public class HeaderAdapter extends RecyclerView.Adapter<HeaderAdapter.ViewHolder> {
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            final com.google.android.material.carousel.CarouselView storiesView;
+            final RecyclerView storiesView;
             final CardView miniPostLayoutProfileCard;
             final EditText miniPostLayoutTextPostInput;
             final ImageView miniPostLayoutProfileImage;
@@ -432,6 +432,9 @@ public class HomeFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(ViewHolder holder, final int _position) {
+            holder.storiesView.setLayoutManager(new com.google.android.material.carousel.CarouselLayoutManager(new com.google.android.material.carousel.HeroCarouselStrategy()));
+            com.google.android.material.carousel.CarouselSnapHelper snapHelper = new com.google.android.material.carousel.CarouselSnapHelper();
+            snapHelper.attachToRecyclerView(holder.storiesView);
             holder.storiesView.setAdapter(new CarouselAdapter(storiesList));
             _viewGraphics(holder.miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
             _loadStories(holder.storiesView, storiesList);
