@@ -422,16 +422,16 @@ public class EditPostActivity extends AppCompatActivity {
 	
 	private void _showPostSettingsBottomSheet() {
 		BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
-		View bottomSheetView = getLayoutInflater().inflate(R.layout.create_post_settings_bottom_sheet, null);
+		View bottomSheetView = getLayoutInflater().inflate(R.layout.bottomsheet_post_settings, null);
 		bottomSheetDialog.setContentView(bottomSheetView);
 		
 		// Initialize switches
-		SwitchCompat hideViewsSwitch = bottomSheetView.findViewById(R.id.hideViewsSwitch);
-		SwitchCompat hideLikesSwitch = bottomSheetView.findViewById(R.id.hideLikesSwitch);
-		SwitchCompat hideCommentsSwitch = bottomSheetView.findViewById(R.id.hideCommentsSwitch);
-		SwitchCompat hidePostSwitch = bottomSheetView.findViewById(R.id.hidePostSwitch);
-		SwitchCompat disableSaveSwitch = bottomSheetView.findViewById(R.id.disableSaveSwitch);
-		SwitchCompat disableCommentsSwitch = bottomSheetView.findViewById(R.id.disableCommentsSwitch);
+		com.google.android.material.materialswitch.MaterialSwitch hideViewsSwitch = bottomSheetView.findViewById(R.id.hideViewsSwitch);
+		com.google.android.material.materialswitch.MaterialSwitch hideLikesSwitch = bottomSheetView.findViewById(R.id.hideLikesSwitch);
+		com.google.android.material.materialswitch.MaterialSwitch hideCommentsSwitch = bottomSheetView.findViewById(R.id.hideCommentsSwitch);
+		com.google.android.material.materialswitch.MaterialSwitch hidePostSwitch = bottomSheetView.findViewById(R.id.hidePostSwitch);
+		com.google.android.material.materialswitch.MaterialSwitch disableSaveSwitch = bottomSheetView.findViewById(R.id.disableSaveSwitch);
+		com.google.android.material.materialswitch.MaterialSwitch disableCommentsSwitch = bottomSheetView.findViewById(R.id.disableCommentsSwitch);
 		
 		// Set current values
 		hideViewsSwitch.setChecked(hideViewsCount);
