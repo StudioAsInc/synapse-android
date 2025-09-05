@@ -92,6 +92,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
 import com.synapse.social.studioasinc.crypto.E2EEHelper;
+import com.synapse.social.studioasinc.model.AttachmentInfo;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
@@ -238,6 +239,7 @@ public class ChatActivity extends AppCompatActivity {
 	private SharedPreferences appSettings;
 	private Gemini gemini;
 	private E2EEHelper e2eeHelper;
+	private MessageSender messageSender;
 
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -560,6 +562,14 @@ public class ChatActivity extends AppCompatActivity {
 		.systemInstruction("Your name is ChatBot, help users with their questions")
 		.responseTextView(message_et)
 		.build();
+
+		messageSender = new MessageSender(
+				e2eeHelper,
+				_firebase,
+				FirebaseAuth.getInstance().getCurrentUser().getUid(),
+				getApplicationContext()
+		);
+
 		_setupSwipeToReply();
 		// --- START: Critical Initialization for Attachment RecyclerView ---
 
@@ -2030,227 +2040,72 @@ public class ChatActivity extends AppCompatActivity {
 			return;
 		}
 		final String messageText = message_et.getText().toString().trim();
-		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		final String recipientUid = getIntent().getStringExtra("uid");
 
-		// The logic to fetch the OneSignal Player ID has been removed.
-		// We now call proceedWithMessageSending directly.
-		proceedWithMessageSending(messageText, senderUid, recipientUid);
+		proceedWithMessageSending(messageText, recipientUid);
 	}
 
-	/**
-	 * This helper method contains the original logic for sending a message.
-	 * The recipient's OneSignal Player ID is no longer needed.
-	 */
-	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid) {
+	private void proceedWithMessageSending(String messageText, String recipientUid) {
 		if (auth.getCurrentUser() != null) {
 			PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
 		}
-		Log.d("ChatActivity", "=== MESSAGE SENDING START ===");
-		Log.d("ChatActivity", "Message text: '" + messageText + "'");
-		Log.d("ChatActivity", "Sender: " + senderUid + ", Recipient: " + recipientUid);
-		Log.d("ChatActivity", "Attachment map size: " + attactmentmap.size());
-		Log.d("ChatActivity", "Attachment map content: " + attactmentmap.toString());
-		
+
+		ArrayList<AttachmentInfo> attachments = new ArrayList<>();
+		boolean allUploadsSuccessful = true;
 		if (!attactmentmap.isEmpty()) {
-			Log.d("ChatActivity", "Processing message with " + attactmentmap.size() + " attachments");
-			// Logic for sending messages with attachments
-			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
-			boolean allUploadsSuccessful = true;
 			for (HashMap<String, Object> item : attactmentmap) {
-				Log.d("ChatActivity", "Checking attachment: " + item.toString());
 				if ("success".equals(item.get("uploadState"))) {
-					HashMap<String, Object> attachmentData = new HashMap<>();
-					attachmentData.put("url", item.get("cloudinaryUrl"));
-					attachmentData.put("publicId", item.get("publicId"));
-					attachmentData.put("width", item.get("width"));
-					attachmentData.put("height", item.get("height"));
-					successfulAttachments.add(attachmentData);
-					Log.d("ChatActivity", "Added successful attachment: " + attachmentData.toString());
+					attachments.add(new AttachmentInfo(
+							(String) item.get("cloudinaryUrl"),
+							(String) item.get("publicId"),
+							(Integer) item.get("width"),
+							(Integer) item.get("height")
+					));
 				} else {
-					Log.w("ChatActivity", "Attachment not ready: " + item.toString());
 					allUploadsSuccessful = false;
 				}
 			}
-
-			Log.d("ChatActivity", "All uploads successful: " + allUploadsSuccessful + ", Successful attachments: " + successfulAttachments.size());
-			
-			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
-				String uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated message key: " + uniqueMessageKey);
-				
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-
-				try {
-					String encryptedMessageText = messageText.isEmpty() ? "" : e2eeHelper.encrypt(recipientUid, messageText);
-					ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessageText);
-
-					ArrayList<HashMap<String, Object>> encryptedAttachments = new ArrayList<>();
-					for (HashMap<String, Object> attachment : successfulAttachments) {
-						HashMap<String, Object> encryptedAttachment = new HashMap<>(attachment);
-						String url = (String) encryptedAttachment.get("url");
-						String publicId = (String) encryptedAttachment.get("publicId");
-
-						if (url != null) {
-							encryptedAttachment.put("url", e2eeHelper.encrypt(recipientUid, url));
-						}
-						if (publicId != null) {
-							encryptedAttachment.put("publicId", e2eeHelper.encrypt(recipientUid, publicId));
-						}
-						encryptedAttachments.add(encryptedAttachment);
-					}
-					ChatSendMap.put(ATTACHMENTS_KEY, encryptedAttachments);
-					ChatSendMap.put("isEncrypted", true);
-
-				} catch (Exception e) {
-					Log.e(TAG, "Failed to encrypt attachment message", e);
-					Toast.makeText(this, "Error: Could not send secure attachment message.", Toast.LENGTH_SHORT).show();
-					return;
-				}
-
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-
-				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
-				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
-				
-				Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
-				refs.first.setValue(ChatSendMap);
-				refs.second.setValue(ChatSendMap);
-
-				// CRITICAL FIX: Immediately add the message to local list for instant feedback
-				ChatSendMap.put("isLocalMessage", true); // Mark as local message
-				messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-				// Add to the end since this is a new message being sent
-				ChatMessagesList.add(ChatSendMap);
-				int newPosition = ChatMessagesList.size() - 1;
-				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-				// Use more granular insertion notification for smooth updates
-				chatAdapter.notifyItemInserted(newPosition);
-				
-				// Scroll to the new message immediately
-				ChatMessagesListRecycler.post(() -> {
-					scrollToBottom();
-				});
-
-				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
-
-				// Enhanced Smart Notification Check with chat ID for deep linking
-				String chatId = senderUid + "_" + recipientUid;
-				String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-				String notificationPreview;
-				if (!successfulAttachments.isEmpty()) {
-					if (TextUtils.isEmpty(messageText)) {
-						notificationPreview = "Sent an attachment";
-					} else {
-						notificationPreview = messageText + " + Sent an attachment";
-					}
-				} else {
-					notificationPreview = messageText;
-				}
-				String notificationMessage = senderDisplayName + ": " + notificationPreview;
-				HashMap<String, String> data = new HashMap<>();
-				data.put("chatId", chatId);
-				NotificationHelper.sendNotification(
-					recipientUid,
-					senderUid,
-					notificationMessage,
-					"chat_message",
-					data
-				);
-
-				_updateInbox(lastMessage, ServerValue.TIMESTAMP);
-
-				// Clear UI
-				Log.d("ChatActivity", "Clearing attachment map and UI");
-				message_et.setText("");
-				ReplyMessageID = "null";
-				mMessageReplyLayout.setVisibility(View.GONE);
-				
-				// CRITICAL FIX: Reset attachment state completely
-				resetAttachmentState();
-				
-				Log.d("ChatActivity", "=== ATTACHMENT MESSAGE SENT SUCCESSFULLY ===");
-
-			} else {
-				Log.w("ChatActivity", "Cannot send message - All uploads successful: " + allUploadsSuccessful + ", Message text empty: " + messageText.isEmpty() + ", Attachments empty: " + successfulAttachments.isEmpty());
-				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
-			}
-
-		} else if (!messageText.isEmpty()) {
-			Log.d("ChatActivity", "Processing text-only message");
-			// Logic for sending text-only messages
-			String uniqueMessageKey;
-			try {
-				String encryptedMessage = e2eeHelper.encrypt(recipientUid, messageText);
-				uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated encrypted text message key: " + uniqueMessageKey);
-
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessage);
-				ChatSendMap.put("isEncrypted", true);
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-			} catch (Exception e) {
-				Log.e("ChatActivity", "Failed to encrypt and send message", e);
-				Toast.makeText(this, "Error: Could not send secure message.", Toast.LENGTH_SHORT).show();
-				return; // Don't proceed if encryption fails
-			}
-
-			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
-			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
-			
-			Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
-			refs.first.setValue(ChatSendMap);
-			refs.second.setValue(ChatSendMap);
-
-			// CRITICAL FIX: Immediately add the message to local list for instant feedback
-			ChatSendMap.put("isLocalMessage", true); // Mark as local message
-			messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-			// Add to the end since this is a new message being sent
-			ChatMessagesList.add(ChatSendMap);
-			int newPosition = ChatMessagesList.size() - 1;
-			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			chatAdapter.notifyItemInserted(newPosition);
-			
-			// Scroll to the new message immediately
-			ChatMessagesListRecycler.post(() -> {
-				scrollToBottom();
-			});
-
-			// Enhanced Smart Notification Check with chat ID for deep linking
-			String chatId = senderUid + "_" + recipientUid;
-			String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-			String notificationMessage = senderDisplayName + ": " + messageText;
-			HashMap<String, String> data = new HashMap<>();
-			data.put("chatId", chatId);
-			NotificationHelper.sendNotification(
-				recipientUid,
-				senderUid,
-				notificationMessage,
-				"chat_message",
-				data
-			);
-
-			_updateInbox(messageText, ServerValue.TIMESTAMP);
-
-			// Clear UI
-			message_et.setText("");
-			ReplyMessageID = "null";
-			mMessageReplyLayout.setVisibility(View.GONE);
-			
-			Log.d("ChatActivity", "=== TEXT MESSAGE SENT SUCCESSFULLY ===");
-		} else {
-			Log.w("ChatActivity", "No message text and no attachments - nothing to send");
 		}
+
+		if (!allUploadsSuccessful) {
+			Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		if (messageText.isEmpty() && attachments.isEmpty()) {
+			return; // Nothing to send
+		}
+
+		messageSender.sendMessage(
+				messageText,
+				recipientUid,
+				attachments,
+				ReplyMessageID,
+				new MessageSender.SendMessageCallback() {
+					@Override
+					public void onSuccess(HashMap<String, Object> messageData) {
+						runOnUiThread(() -> {
+							messageData.put("isLocalMessage", true);
+							messageKeys.add((String) messageData.get("key"));
+							ChatMessagesList.add(messageData);
+							chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+							scrollToBottom();
+
+							message_et.setText("");
+							ReplyMessageID = "null";
+							mMessageReplyLayout.setVisibility(View.GONE);
+							resetAttachmentState();
+						});
+					}
+
+					@Override
+					public void onFailure(@NonNull Exception exception) {
+						runOnUiThread(() -> {
+							Toast.makeText(ChatActivity.this, "Error sending message: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+						});
+					}
+				}
+		);
 	}
 
 
