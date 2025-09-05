@@ -10,8 +10,4 @@
         <attr name="shimmer_duration" format="integer" />
         <attr name="shimmer_color" format="color" />
     </declare-styleable>
-    <declare-styleable name="CarouselView">
-        <attr name="carousel_layout_manager" format="string"/>
-        <attr name="carousel_item_size" format="string"/>
-    </declare-styleable>
 </resources>
