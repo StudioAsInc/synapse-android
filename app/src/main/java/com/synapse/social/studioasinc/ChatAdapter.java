@@ -417,13 +417,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         // Consolidated long click listener for the message context menu.
         View.OnLongClickListener longClickListener = v -> {
-            Log.d(TAG, "Long click detected on view: " + v.getClass().getSimpleName() + " at position: " + position);
+            int currentPosition = holder.getAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION) {
+                return false;
+            }
+            Log.d(TAG, "Long click detected on view: " + v.getClass().getSimpleName() + " at position: " + currentPosition);
             if (chatActivity != null) {
                 chatActivity.performHapticFeedbackLight();
             }
             // Use the message bubble (messageBG) as the anchor for the popup if it exists.
             View anchor = holder.messageBG != null ? holder.messageBG : holder.itemView;
-            chatActivity._messageOverviewPopup(anchor, position, _data);
+            chatActivity._messageOverviewPopup(anchor, currentPosition, _data);
             return true;
         };
 
