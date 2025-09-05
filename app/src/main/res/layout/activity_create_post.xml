@@ -34,9 +34,9 @@
 				android:layout_margin="16dp"
 				android:orientation="horizontal">
 
-				<com.google.android.material.button.MaterialButton
+				<com.google.android.material.button.MaterialIconButton
 					android:id="@+id/settingsButton"
-					style="@style/Widget.Material3.Button.TonalButton.Icon"
+					style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					app:icon="@drawable/ic_settings_black" />

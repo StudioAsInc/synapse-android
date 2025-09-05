@@ -103,7 +103,7 @@ public class CreatePostActivity extends AppCompatActivity {
 	
 	private MaterialToolbar toolbar;
 	private Button postButton;
-	private Button settingsButton;
+	private com.google.android.material.button.MaterialIconButton settingsButton;
 	private ScrollView scrollView;
 	private LinearLayout scrollBodyLayout;
 	private FadeEditText postDescriptionEditText;
