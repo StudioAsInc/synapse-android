@@ -9,7 +9,7 @@
     <ImageView
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:src="@drawable/ic_notifications_off"
+        android:src="@drawable/ic_info_48px"
         android:tint="@color/md_theme_onSurfaceVariant"
         android:contentDescription="@null" />
 
