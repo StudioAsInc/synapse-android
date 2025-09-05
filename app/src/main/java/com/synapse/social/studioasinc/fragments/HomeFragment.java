@@ -413,6 +413,9 @@ public class HomeFragment extends Fragment {
             public ViewHolder(View view) {
                 super(view);
                 storiesView = view.findViewById(R.id.storiesView);
+                storiesView.setLayoutManager(new com.google.android.material.carousel.CarouselLayoutManager(new com.google.android.material.carousel.HeroCarouselStrategy()));
+                com.google.android.material.carousel.CarouselSnapHelper snapHelper = new com.google.android.material.carousel.CarouselSnapHelper();
+                snapHelper.attachToRecyclerView(storiesView);
                 miniPostLayoutProfileCard = view.findViewById(R.id.miniPostLayoutProfileCard);
                 miniPostLayoutTextPostInput = view.findViewById(R.id.miniPostLayoutTextPostInput);
                 miniPostLayoutProfileImage = view.findViewById(R.id.miniPostLayoutProfileImage);
@@ -434,9 +437,6 @@ public class HomeFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(ViewHolder holder, final int _position) {
-            holder.storiesView.setLayoutManager(new com.google.android.material.carousel.CarouselLayoutManager(new com.google.android.material.carousel.HeroCarouselStrategy()));
-            com.google.android.material.carousel.CarouselSnapHelper snapHelper = new com.google.android.material.carousel.CarouselSnapHelper();
-            snapHelper.attachToRecyclerView(holder.storiesView);
             holder.storiesView.setAdapter(new CarouselAdapter(storiesList));
             _viewGraphics(holder.miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
             _loadStories(holder.storiesView, storiesList);
