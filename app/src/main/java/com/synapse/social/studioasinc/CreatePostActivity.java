@@ -224,11 +224,24 @@ public class CreatePostActivity extends AppCompatActivity {
 	}
 	
 	private void initializeLogic() {
+		_setStatusBarColor();
 		// Check if we have an image from intent
 		if (getIntent().hasExtra("type") && getIntent().hasExtra("path")) {
 			selectedImagePath = getIntent().getStringExtra("path");
 			hasImage = true;
 			_loadSelectedImage();
+		}
+	}
+
+	private void _setStatusBarColor() {
+		TypedValue typedValue = new TypedValue();
+		getTheme().resolveAttribute(com.google.android.material.R.attr.colorSurface, typedValue, true);
+		int color = typedValue.data;
+		getWindow().setStatusBarColor(color);
+
+		int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+		if (currentNightMode == Configuration.UI_MODE_NIGHT_NO) {
+			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		}
 	}
 	
