@@ -35,6 +35,7 @@ Docs/
 - ❌ Do not create docs in `app/docs/`
 - ❌ Do not create docs in `.github/docs/`
 - ❌ Do not create docs in any subdirectories outside of `Docs/`
+- ❌️ Don't run build (only if you are jules)
 
 ### Formatting Standards
 - Use proper Markdown formatting
