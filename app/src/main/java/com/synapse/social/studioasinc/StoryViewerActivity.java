@@ -2,10 +2,14 @@ package com.synapse.social.studioasinc;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,15 +17,26 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.carousel.CarouselView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.models.Story;
+import com.synapse.social.studioasinc.models.User;
 
 import java.util.ArrayList;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class StoryViewerActivity extends AppCompatActivity {
 
     private CarouselView storyCarouselView;
     private ArrayList<Story> stories;
     private int currentPosition;
+    private CountDownTimer countDownTimer;
+    private StoryCarouselAdapter adapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,11 +48,79 @@ public class StoryViewerActivity extends AppCompatActivity {
         stories = (ArrayList<Story>) getIntent().getSerializableExtra("stories");
         currentPosition = getIntent().getIntExtra("position", 0);
 
-        storyCarouselView.setAdapter(new StoryCarouselAdapter(stories));
+        adapter = new StoryCarouselAdapter(stories);
+        storyCarouselView.setAdapter(adapter);
         storyCarouselView.scrollToPosition(currentPosition);
+
+        storyCarouselView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    currentPosition = storyCarouselView.getCurrentItem();
+                    startStoryProgress();
+                }
+            }
+        });
+
+        startStoryProgress();
     }
 
-    private static class StoryCarouselAdapter extends RecyclerView.Adapter<StoryCarouselAdapter.StoryViewHolder> {
+    private void startStoryProgress() {
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+
+        StoryCarouselAdapter.StoryViewHolder currentViewHolder = (StoryCarouselAdapter.StoryViewHolder) storyCarouselView.findViewHolderForAdapterPosition(currentPosition);
+        if (currentViewHolder != null) {
+            currentViewHolder.storyProgressBar.setProgress(0);
+        }
+
+
+        countDownTimer = new CountDownTimer(5000, 50) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                if (currentViewHolder != null) {
+                    int progress = (int) (100 * (5000 - millisUntilFinished) / 5000);
+                    currentViewHolder.storyProgressBar.setProgress(progress);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                if (currentViewHolder != null) {
+                    currentViewHolder.storyProgressBar.setProgress(100);
+                }
+                moveToNextStory();
+            }
+        }.start();
+    }
+
+    private void moveToNextStory() {
+        if (currentPosition < stories.size() - 1) {
+            currentPosition++;
+            storyCarouselView.scrollToPosition(currentPosition);
+        } else {
+            finish();
+        }
+    }
+
+    private void moveToPreviousStory() {
+        if (currentPosition > 0) {
+            currentPosition--;
+            storyCarouselView.scrollToPosition(currentPosition);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+    }
+
+    private class StoryCarouselAdapter extends RecyclerView.Adapter<StoryCarouselAdapter.StoryViewHolder> {
 
         private final ArrayList<Story> stories;
 
@@ -58,6 +141,19 @@ public class StoryViewerActivity extends AppCompatActivity {
             Glide.with(holder.itemView.getContext())
                     .load(Uri.parse(story.getUrl()))
                     .into(holder.storyImageView);
+
+            fetchUserInfo(story.getUid(), holder);
+
+            holder.itemView.setOnTouchListener((v, event) -> {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    if (event.getX() < v.getWidth() / 2) {
+                        moveToPreviousStory();
+                    } else {
+                        moveToNextStory();
+                    }
+                }
+                return true;
+            });
         }
 
         @Override
@@ -65,12 +161,43 @@ public class StoryViewerActivity extends AppCompatActivity {
             return stories.size();
         }
 
-        static class StoryViewHolder extends RecyclerView.ViewHolder {
+        private void fetchUserInfo(String uid, StoryViewHolder holder) {
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users").child(uid);
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        User user = snapshot.getValue(User.class);
+                        if (user != null) {
+                            holder.storyUsername.setText(user.getUsername());
+                            Glide.with(holder.itemView.getContext())
+                                    .load(user.getImageurl())
+                                    .into(holder.storyProfileImage);
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    // Handle error
+                }
+            });
+        }
+
+
+        class StoryViewHolder extends RecyclerView.ViewHolder {
             ImageView storyImageView;
+            CircleImageView storyProfileImage;
+            TextView storyUsername;
+            ProgressBar storyProgressBar;
+
 
             public StoryViewHolder(@NonNull View itemView) {
                 super(itemView);
                 storyImageView = itemView.findViewById(R.id.story_image_view);
+                storyProfileImage = itemView.findViewById(R.id.story_profile_image);
+                storyUsername = itemView.findViewById(R.id.story_username);
+                storyProgressBar = itemView.findViewById(R.id.story_progress_bar);
             }
         }
     }
