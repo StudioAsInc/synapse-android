@@ -39,6 +39,7 @@ public class StoryViewerActivity extends AppCompatActivity {
     private int currentPosition;
     private CountDownTimer countDownTimer;
     private StoryCarouselAdapter adapter;
+    private CarouselSnapHelper snapHelper;
 
 
     @Override
@@ -53,7 +54,7 @@ public class StoryViewerActivity extends AppCompatActivity {
 
         adapter = new StoryCarouselAdapter(stories);
         storyCarouselView.setLayoutManager(new CarouselLayoutManager(new FullScreenCarouselStrategy()));
-        CarouselSnapHelper snapHelper = new CarouselSnapHelper();
+        snapHelper = new CarouselSnapHelper();
         snapHelper.attachToRecyclerView(storyCarouselView);
 
         storyCarouselView.setAdapter(adapter);
@@ -64,8 +65,11 @@ public class StoryViewerActivity extends AppCompatActivity {
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    currentPosition = ((LinearLayoutManager)storyCarouselView.getLayoutManager()).findFirstVisibleItemPosition();
-                    startStoryProgress();
+                    View snapView = snapHelper.findSnapView(storyCarouselView.getLayoutManager());
+                    if (snapView != null) {
+                        currentPosition = storyCarouselView.getChildAdapterPosition(snapView);
+                        startStoryProgress();
+                    }
                 }
             }
         });
