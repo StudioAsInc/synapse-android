@@ -111,7 +111,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity implements SendMessageModal.Listener {
 
 	// Constants
 	private static final String SKYLINE_REF = "skyline";
@@ -187,7 +187,7 @@ public class ChatActivity extends AppCompatActivity {
 	private LinearLayout middle;
 	private RelativeLayout attachmentLayoutListHolder;
 	private LinearLayout mMessageReplyLayout;
-	private LinearLayout message_input_overall_container;
+	private SendMessageModal sendMessageModal;
 	private TextView blocked_txt;
 	private ImageView back;
 	private LinearLayout topProfileLayout;
@@ -214,14 +214,7 @@ public class ChatActivity extends AppCompatActivity {
 	private ImageView mMessageReplyLayoutBodyCancel;
 	private TextView mMessageReplyLayoutBodyRightUsername;
 	private TextView mMessageReplyLayoutBodyRightMessage;
-	private LinearLayout message_input_outlined_round;
-	private MaterialButton btn_sendMessage;
-	private FadeEditText message_et;
-	private LinearLayout toolContainer;
-	private ImageView expand_send_type_btn;
 	private ImageView close_attachments_btn;
-	private LinearLayout devider_mic_camera;
-	private ImageView galleryBtn;
 
 	private Intent intent = new Intent();
 	private DatabaseReference main = _firebase.getReference(SKYLINE_REF);
@@ -270,7 +263,7 @@ public class ChatActivity extends AppCompatActivity {
 		middle = findViewById(R.id.middle);
 		attachmentLayoutListHolder = findViewById(R.id.attachmentLayoutListHolder);
 		mMessageReplyLayout = findViewById(R.id.mMessageReplyLayout);
-		message_input_overall_container = findViewById(R.id.message_input_overall_container);
+		sendMessageModal = findViewById(R.id.sendMessageModal);
 		blocked_txt = findViewById(R.id.blocked_txt);
 		back = findViewById(R.id.back);
 		topProfileLayout = findViewById(R.id.topProfileLayout);
@@ -297,13 +290,6 @@ public class ChatActivity extends AppCompatActivity {
 		mMessageReplyLayoutBodyCancel = findViewById(R.id.mMessageReplyLayoutBodyCancel);
 		mMessageReplyLayoutBodyRightUsername = findViewById(R.id.mMessageReplyLayoutBodyRightUsername);
 		mMessageReplyLayoutBodyRightMessage = findViewById(R.id.mMessageReplyLayoutBodyRightMessage);
-		message_input_outlined_round = findViewById(R.id.message_input_outlined_round);
-		btn_sendMessage = findViewById(R.id.btn_sendMessage);
-		message_et = findViewById(R.id.message_et);
-		toolContainer = findViewById(R.id.toolContainer);
-		expand_send_type_btn = findViewById(R.id.expand_send_type_btn);
-		devider_mic_camera = findViewById(R.id.devider_mic_camera);
-		galleryBtn = findViewById(R.id.galleryBtn);
 		close_attachments_btn = findViewById(R.id.close_attachments_btn);
 		auth = FirebaseAuth.getInstance();
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -355,119 +341,6 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
-		message_input_outlined_round.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				message_et.requestFocus();
-			}
-		});
-
-		btn_sendMessage.setOnLongClickListener(new View.OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View _view) {
-				if (!message_et.getText().toString().isEmpty()) {
-					String prompt = "Fix grammar, punctuation, and clarity without changing meaning. " +
-					"Preserve original formatting (line breaks, lists, markdown). " +
-					"Censor profanity by replacing letters with asterisks. " +
-					"Return ONLY the corrected RAW text.\n```"
-					.concat(message_et.getText().toString())
-					.concat("```");
-					callGemini(prompt, true);
-				} else {
-					if (ReplyMessageID != null && !ReplyMessageID.equals("null")) {
-						int repliedMessageIndex = -1;
-						for (int i = 0; i < ChatMessagesList.size(); i++) {
-							if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(ReplyMessageID)) {
-								repliedMessageIndex = i;
-								break;
-							}
-						}
-
-						if (repliedMessageIndex != -1) {
-							StringBuilder contextBuilder = new StringBuilder();
-							contextBuilder.append("You are helping 'Me' to write a reply in a conversation with '").append(SecondUserName).append("'.\n");
-							contextBuilder.append("Here is the recent chat history:\n---\n");
-
-							int startIndex = Math.max(0, repliedMessageIndex - 10);
-							int endIndex = Math.min(ChatMessagesList.size() - 1, repliedMessageIndex + 10);
-
-							for (int i = startIndex; i <= endIndex; i++) {
-								HashMap<String, Object> message = ChatMessagesList.get(i);
-								String sender = message.get(UID_KEY).toString().equals(auth.getCurrentUser().getUid()) ? "Me" : SecondUserName;
-								contextBuilder.append(sender).append(": ").append(message.get(MESSAGE_TEXT_KEY).toString()).append("\n");
-							}
-
-							contextBuilder.append("---\n");
-
-							String repliedMessageSender = mMessageReplyLayoutBodyRightUsername.getText().toString();
-							String repliedMessageText = mMessageReplyLayoutBodyRightMessage.getText().toString();
-
-							contextBuilder.append("I need to reply to this message from '").append(repliedMessageSender).append("': \"").append(repliedMessageText).append("\"\n");
-							contextBuilder.append("Based on the conversation history, please suggest a short, relevant reply from 'Me'.");
-
-							String prompt = contextBuilder.toString();
-							callGemini(prompt, false);
-						}
-					} else {
-						// Fallback for non-reply long-press
-						String prompt = "Suggest a generic, friendly greeting.";
-						callGemini(prompt, false);
-					}
-				}
-				return true;
-			}
-		});
-
-		btn_sendMessage.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_send_btn();
-			}
-		});
-
-		message_et.addTextChangedListener(new TextWatcher() {
-			@Override
-			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-				final String _charSeq = _param1.toString();
-				DatabaseReference typingRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(getIntent().getStringExtra(UID_KEY)).child(auth.getCurrentUser().getUid()).child(TYPING_MESSAGE_REF);
-				if (_charSeq.length() == 0) {
-					typingRef.removeValue();
-					_setMargin(message_et, 0, 7, 0, 0);
-					message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-
-					_TransitionManager(message_input_overall_container, 125);
-					message_input_outlined_round.setBackgroundResource(R.drawable.bg_message_input);
-					message_input_outlined_round.invalidate();
-				} else {
-					typingSnd = new HashMap<>();
-					typingSnd.put(UID_KEY, auth.getCurrentUser().getUid());
-					typingSnd.put("typingMessageStatus", "true");
-					typingRef.updateChildren(typingSnd);
-					_TransitionManager(message_input_overall_container, 125);
-					message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-
-					message_input_outlined_round.setBackgroundResource(R.drawable.bg_message_input_expanded);
-					message_input_outlined_round.invalidate();
-				}
-			}
-
-			@Override
-			public void beforeTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-
-			}
-
-			@Override
-			public void afterTextChanged(Editable _param1) {
-
-			}
-		});
-
-		galleryBtn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				StorageUtil.pickMultipleFiles(ChatActivity.this, "*/*", REQ_CD_IMAGE_PICKER);
-			}
-		});
 
 		_blocklist_child_listener = new ChildEventListener() {
 			@Override
@@ -558,7 +431,7 @@ public class ChatActivity extends AppCompatActivity {
 		.showThinking(true)
 		.thinkingText("Analyzing your request...")
 		.systemInstruction("Your name is ChatBot, help users with their questions")
-		.responseTextView(message_et)
+		.responseTextView(sendMessageModal.getMessageEditText())
 		.build();
 		_setupSwipeToReply();
 		// --- START: Critical Initialization for Attachment RecyclerView ---
@@ -587,16 +460,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		// --- END: Critical Initialization ---
 		_getUserReference();
-		message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-		if (message_et.getText().toString().trim().equals("")) {
-			_TransitionManager(message_input_overall_container, 250);
-			message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
-
-		} else {
-			_TransitionManager(message_input_overall_container, 250);
-			message_input_outlined_round.setOrientation(LinearLayout.VERTICAL);
-
-		}
+		sendMessageModal.setListener(this);
 		ChatMessagesListRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
 			@Override
 			public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -1206,12 +1070,14 @@ public class ChatActivity extends AppCompatActivity {
 					Log.e("ChatActivity", "Error processing user data: " + e.getMessage());
 					FirstUserName = "Unknown User";
 				}
+				sendMessageModal.setChatPartner(getIntent().getStringExtra("uid"), FirstUserName);
 			}
 
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				Log.e("ChatActivity", "Failed to get first user name: " + databaseError.getMessage());
 				FirstUserName = "Unknown User";
+				sendMessageModal.setChatPartner(getIntent().getStringExtra("uid"), FirstUserName);
 			}
 		});
 
@@ -2023,235 +1889,6 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 
-	public void _send_btn() {
-		if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-			Log.e(TAG, "Cannot send message, user is not authenticated.");
-			Toast.makeText(this, "Error: User not signed in.", Toast.LENGTH_SHORT).show();
-			return;
-		}
-		final String messageText = message_et.getText().toString().trim();
-		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-		final String recipientUid = getIntent().getStringExtra("uid");
-
-		// The logic to fetch the OneSignal Player ID has been removed.
-		// We now call proceedWithMessageSending directly.
-		proceedWithMessageSending(messageText, senderUid, recipientUid);
-	}
-
-	/**
-	 * This helper method contains the original logic for sending a message.
-	 * The recipient's OneSignal Player ID is no longer needed.
-	 */
-	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid) {
-		if (auth.getCurrentUser() != null) {
-			PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
-		}
-		Log.d("ChatActivity", "=== MESSAGE SENDING START ===");
-		Log.d("ChatActivity", "Message text: '" + messageText + "'");
-		Log.d("ChatActivity", "Sender: " + senderUid + ", Recipient: " + recipientUid);
-		Log.d("ChatActivity", "Attachment map size: " + attactmentmap.size());
-		Log.d("ChatActivity", "Attachment map content: " + attactmentmap.toString());
-		
-		if (!attactmentmap.isEmpty()) {
-			Log.d("ChatActivity", "Processing message with " + attactmentmap.size() + " attachments");
-			// Logic for sending messages with attachments
-			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
-			boolean allUploadsSuccessful = true;
-			for (HashMap<String, Object> item : attactmentmap) {
-				Log.d("ChatActivity", "Checking attachment: " + item.toString());
-				if ("success".equals(item.get("uploadState"))) {
-					HashMap<String, Object> attachmentData = new HashMap<>();
-					attachmentData.put("url", item.get("cloudinaryUrl"));
-					attachmentData.put("publicId", item.get("publicId"));
-					attachmentData.put("width", item.get("width"));
-					attachmentData.put("height", item.get("height"));
-					successfulAttachments.add(attachmentData);
-					Log.d("ChatActivity", "Added successful attachment: " + attachmentData.toString());
-				} else {
-					Log.w("ChatActivity", "Attachment not ready: " + item.toString());
-					allUploadsSuccessful = false;
-				}
-			}
-
-			Log.d("ChatActivity", "All uploads successful: " + allUploadsSuccessful + ", Successful attachments: " + successfulAttachments.size());
-			
-			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
-				String uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated message key: " + uniqueMessageKey);
-				
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-
-				try {
-					String encryptedMessageText = messageText.isEmpty() ? "" : e2eeHelper.encrypt(recipientUid, messageText);
-					ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessageText);
-
-					ArrayList<HashMap<String, Object>> encryptedAttachments = new ArrayList<>();
-					for (HashMap<String, Object> attachment : successfulAttachments) {
-						HashMap<String, Object> encryptedAttachment = new HashMap<>(attachment);
-						String url = (String) encryptedAttachment.get("url");
-						String publicId = (String) encryptedAttachment.get("publicId");
-
-						if (url != null) {
-							encryptedAttachment.put("url", e2eeHelper.encrypt(recipientUid, url));
-						}
-						if (publicId != null) {
-							encryptedAttachment.put("publicId", e2eeHelper.encrypt(recipientUid, publicId));
-						}
-						encryptedAttachments.add(encryptedAttachment);
-					}
-					ChatSendMap.put(ATTACHMENTS_KEY, encryptedAttachments);
-					ChatSendMap.put("isEncrypted", true);
-
-				} catch (Exception e) {
-					Log.e(TAG, "Failed to encrypt attachment message", e);
-					Toast.makeText(this, "Error: Could not send secure attachment message.", Toast.LENGTH_SHORT).show();
-					return;
-				}
-
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-
-				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
-				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
-				
-				Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
-				refs.first.setValue(ChatSendMap);
-				refs.second.setValue(ChatSendMap);
-
-				// CRITICAL FIX: Immediately add the message to local list for instant feedback
-				ChatSendMap.put("isLocalMessage", true); // Mark as local message
-				messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-				// Add to the end since this is a new message being sent
-				ChatMessagesList.add(ChatSendMap);
-				int newPosition = ChatMessagesList.size() - 1;
-				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-				// Use more granular insertion notification for smooth updates
-				chatAdapter.notifyItemInserted(newPosition);
-				
-				// Scroll to the new message immediately
-				ChatMessagesListRecycler.post(() -> {
-					scrollToBottom();
-				});
-
-				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
-
-				// Enhanced Smart Notification Check with chat ID for deep linking
-				String chatId = senderUid + "_" + recipientUid;
-				String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-				String notificationPreview;
-				if (!successfulAttachments.isEmpty()) {
-					if (TextUtils.isEmpty(messageText)) {
-						notificationPreview = "Sent an attachment";
-					} else {
-						notificationPreview = messageText + " + Sent an attachment";
-					}
-				} else {
-					notificationPreview = messageText;
-				}
-				String notificationMessage = senderDisplayName + ": " + notificationPreview;
-				HashMap<String, String> data = new HashMap<>();
-				data.put("chatId", chatId);
-				NotificationHelper.sendNotification(
-					recipientUid,
-					senderUid,
-					notificationMessage,
-					"chat_message",
-					data
-				);
-
-				_updateInbox(lastMessage, ServerValue.TIMESTAMP);
-
-				// Clear UI
-				Log.d("ChatActivity", "Clearing attachment map and UI");
-				message_et.setText("");
-				ReplyMessageID = "null";
-				mMessageReplyLayout.setVisibility(View.GONE);
-				
-				// CRITICAL FIX: Reset attachment state completely
-				resetAttachmentState();
-				
-				Log.d("ChatActivity", "=== ATTACHMENT MESSAGE SENT SUCCESSFULLY ===");
-
-			} else {
-				Log.w("ChatActivity", "Cannot send message - All uploads successful: " + allUploadsSuccessful + ", Message text empty: " + messageText.isEmpty() + ", Attachments empty: " + successfulAttachments.isEmpty());
-				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
-			}
-
-		} else if (!messageText.isEmpty()) {
-			Log.d("ChatActivity", "Processing text-only message");
-			// Logic for sending text-only messages
-			String uniqueMessageKey;
-			try {
-				String encryptedMessage = e2eeHelper.encrypt(recipientUid, messageText);
-				uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated encrypted text message key: " + uniqueMessageKey);
-
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessage);
-				ChatSendMap.put("isEncrypted", true);
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-			} catch (Exception e) {
-				Log.e("ChatActivity", "Failed to encrypt and send message", e);
-				Toast.makeText(this, "Error: Could not send secure message.", Toast.LENGTH_SHORT).show();
-				return; // Don't proceed if encryption fails
-			}
-
-			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
-			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
-			
-			Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
-			refs.first.setValue(ChatSendMap);
-			refs.second.setValue(ChatSendMap);
-
-			// CRITICAL FIX: Immediately add the message to local list for instant feedback
-			ChatSendMap.put("isLocalMessage", true); // Mark as local message
-			messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-			// Add to the end since this is a new message being sent
-			ChatMessagesList.add(ChatSendMap);
-			int newPosition = ChatMessagesList.size() - 1;
-			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			chatAdapter.notifyItemInserted(newPosition);
-			
-			// Scroll to the new message immediately
-			ChatMessagesListRecycler.post(() -> {
-				scrollToBottom();
-			});
-
-			// Enhanced Smart Notification Check with chat ID for deep linking
-			String chatId = senderUid + "_" + recipientUid;
-			String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-			String notificationMessage = senderDisplayName + ": " + messageText;
-			HashMap<String, String> data = new HashMap<>();
-			data.put("chatId", chatId);
-			NotificationHelper.sendNotification(
-				recipientUid,
-				senderUid,
-				notificationMessage,
-				"chat_message",
-				data
-			);
-
-			_updateInbox(messageText, ServerValue.TIMESTAMP);
-
-			// Clear UI
-			message_et.setText("");
-			ReplyMessageID = "null";
-			mMessageReplyLayout.setVisibility(View.GONE);
-			
-			Log.d("ChatActivity", "=== TEXT MESSAGE SENT SUCCESSFULLY ===");
-		} else {
-			Log.w("ChatActivity", "No message text and no attachments - nothing to send");
-		}
-	}
 
 
 	public void _Block(final String _uid) {
@@ -2484,35 +2121,6 @@ public class ChatActivity extends AppCompatActivity {
 		Log.d("ChatActivity", "=== ATTACHMENT STATE RESET COMPLETE ===");
 	}
 
-	public void _updateInbox(final String _lastMessage, final Object _timestamp) {
-		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-		if (currentUser == null) {
-			Log.e(TAG, "Cannot update inbox, user is not authenticated.");
-			return;
-		}
-		// Using the correct parameter name '_lastMessage' with the underscore prefix.
-		cc = Calendar.getInstance();
-		String myUid = currentUser.getUid();
-		String otherUid = getIntent().getStringExtra(UID_KEY);
-
-		// Update inbox for the current user
-		ChatInboxSend = new HashMap<>();
-		ChatInboxSend.put(UID_KEY, otherUid);
-		ChatInboxSend.put(LAST_MESSAGE_UID_KEY, myUid);
-		ChatInboxSend.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
-		ChatInboxSend.put(LAST_MESSAGE_STATE_KEY, "sended");
-		ChatInboxSend.put(PUSH_DATE_KEY, _timestamp);
-		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(myUid).child(otherUid).setValue(ChatInboxSend);
-
-		// Update inbox for the other user
-		ChatInboxSend2 = new HashMap<>();
-		ChatInboxSend2.put(UID_KEY, myUid);
-		ChatInboxSend2.put(LAST_MESSAGE_UID_KEY, myUid);
-		ChatInboxSend2.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
-		ChatInboxSend2.put(LAST_MESSAGE_STATE_KEY, "sended");
-		ChatInboxSend2.put(PUSH_DATE_KEY, _timestamp);
-		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(otherUid).child(myUid).setValue(ChatInboxSend2);
-	}
 
 
 	public void _showLoadMoreIndicator() {
@@ -2543,7 +2151,7 @@ public class ChatActivity extends AppCompatActivity {
 		// This is where you trigger your reply UI.
 		HashMap<String, Object> messageData = ChatMessagesList.get((int)_position);
 		String messageKey = messageData.get(KEY_KEY).toString();
-		ReplyMessageID = messageKey;
+		sendMessageModal.setReplyMessageID(messageKey);
 
 		// Cache the message being replied to, so it's available when we send our own reply.
 		if (!repliedMessagesCache.containsKey(messageKey)) {
@@ -2783,18 +2391,18 @@ public class ChatActivity extends AppCompatActivity {
 		gemini.sendPrompt(prompt, new Gemini.GeminiCallback() {
 			@Override
 			public void onSuccess(String response) {
-				runOnUiThread(() -> message_et.setText(response));
+				runOnUiThread(() -> sendMessageModal.getMessageEditText().setText(response));
 			}
 
 			@Override
 			public void onError(String error) {
-				runOnUiThread(() -> message_et.setText("Error: " + error));
+				runOnUiThread(() -> sendMessageModal.getMessageEditText().setText("Error: " + error));
 			}
 
 			@Override
 			public void onThinking() {
 				if (showThinking) {
-					runOnUiThread(() -> message_et.setText(gemini.getThinkingText()));
+					runOnUiThread(() -> sendMessageModal.getMessageEditText().setText(gemini.getThinkingText()));
 				}
 			}
 		});
@@ -2913,19 +2521,19 @@ public class ChatActivity extends AppCompatActivity {
 
 		if (_childKey.equals(otherUid)) {
 			if (_childValue.containsKey(myUid)) {
-				message_input_overall_container.setVisibility(View.GONE);
+				sendMessageModal.setVisibility(View.GONE);
 				blocked_txt.setVisibility(View.VISIBLE);
 			} else {
-				message_input_overall_container.setVisibility(View.VISIBLE);
+				sendMessageModal.setVisibility(View.VISIBLE);
 				blocked_txt.setVisibility(View.GONE);
 			}
 		}
 
 		if (_childKey.equals(myUid)) {
 			if (_childValue.containsKey(otherUid)) {
-				message_input_overall_container.setVisibility(View.GONE);
+				sendMessageModal.setVisibility(View.GONE);
 			} else {
-				message_input_overall_container.setVisibility(View.VISIBLE);
+				sendMessageModal.setVisibility(View.VISIBLE);
 			}
 		}
 	}
@@ -3371,4 +2979,50 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
+	@Override
+	public void onMessageSent(HashMap<String, Object> messageData) {
+		messageData.put("isLocalMessage", true);
+		messageKeys.add(messageData.get(KEY_KEY).toString());
+		ChatMessagesList.add(messageData);
+		int newPosition = ChatMessagesList.size() - 1;
+		chatAdapter.notifyItemInserted(newPosition);
+		ChatMessagesListRecycler.post(this::scrollToBottom);
+		ReplyMessageID = "null";
+		mMessageReplyLayout.setVisibility(View.GONE);
+	}
+
+	@Override
+	public ArrayList<HashMap<String, Object>> getAttachmentMap() {
+		return attactmentmap;
+	}
+
+	@Override
+	public void resetAttachmentState() {
+		Log.d("ChatActivity", "=== RESETTING ATTACHMENT STATE ===");
+
+		// Hide the attachment layout
+		if (attachmentLayoutListHolder != null) {
+			attachmentLayoutListHolder.setVisibility(View.GONE);
+		}
+
+		// Update the attachment list adapter
+		if (rv_attacmentList.getAdapter() != null) {
+			int oldSize = attactmentmap.size();
+			if (oldSize > 0) {
+				attactmentmap.clear();
+				rv_attacmentList.getAdapter().notifyItemRangeRemoved(0, oldSize);
+			}
+		}
+
+		// Reset the path variable
+		path = "";
+
+		Log.d("ChatActivity", "Attachment state reset complete - Map size: " + attactmentmap.size() + ", Path: '" + path + "'");
+		Log.d("ChatActivity", "=== ATTACHMENT STATE RESET COMPLETE ===");
+	}
+
+	@Override
+	public void onPickFiles() {
+		StorageUtil.pickMultipleFiles(ChatActivity.this, "*/*", REQ_CD_IMAGE_PICKER);
+	}
 }
