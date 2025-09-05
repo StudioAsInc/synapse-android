@@ -2,7 +2,7 @@
 
 ## Documentation Guidelines
 
-**IMPORTANT:** Please follow these documentation guidelines:
+**IMPORTANT:** If you are an AI agent working on this project, please follow these documentation guidelines:
 
 ### Documentation Location
 - **ALL documentation must be placed in the `Docs/` directory**
@@ -35,7 +35,6 @@ Docs/
 - ❌ Do not create docs in `app/docs/`
 - ❌ Do not create docs in `.github/docs/`
 - ❌ Do not create docs in any subdirectories outside of `Docs/`
-- ❌️ Don't run build (only if you are jules)
 
 ### Formatting Standards
 - Use proper Markdown formatting
