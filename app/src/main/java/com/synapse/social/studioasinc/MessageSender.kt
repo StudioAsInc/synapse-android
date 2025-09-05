@@ -59,12 +59,12 @@ class MessageSender(
                 messageData["attachments"] = encryptedAttachments
             }
 
-            // Write to both chat nodes
-            val chatRefSender = mainRef.child("chats").child(currentUserUid).child(recipientUid).child(uniqueMessageKey)
-            val chatRefRecipient = mainRef.child("chats").child(recipientUid).child(currentUserUid).child(uniqueMessageKey)
+            // Use a multi-path update for an atomic write to both users' chat nodes.
+            val fanOutData = HashMap<String, Any>()
+            fanOutData["chats/$currentUserUid/$recipientUid/$uniqueMessageKey"] = messageData
+            fanOutData["chats/$recipientUid/$currentUserUid/$uniqueMessageKey"] = messageData
 
-            chatRefSender.setValue(messageData)
-            chatRefRecipient.setValue(messageData)
+            mainRef.updateChildren(fanOutData)
                 .addOnSuccessListener {
                     // Update inboxes and send notification after successful DB write
                     val lastMessage = if (attachments.isNotEmpty()) {
