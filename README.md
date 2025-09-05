@@ -58,7 +58,8 @@ Synapse uses a [custom open-source license](Docs/LICENSE.md) designed to:
 **Backend**: Node.js, Firebase (Storage)  
 **Key Features**:  
 - Peer-to-peer video/audio calling (upcoming)  
-- End-to-end encrypted chats  
+- End-to-end encrypted chats (see [E2EE Details](Docs/E2EE.md))
+- Configurable push notification system
 - Modular architecture  
 
 ---

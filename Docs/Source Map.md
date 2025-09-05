@@ -49,7 +49,6 @@ synapse-android/
   - User presence management
 
 #### Primary Activities
-- **`MainActivity.java`** - App launcher and authentication entry point
 - **`HomeActivity.java`** - Main social feed and navigation hub
 - **`AuthActivity.java`** - User authentication and registration
 - **`CheckpermissionActivity.java`** - Runtime permissions handling
@@ -64,7 +63,6 @@ synapse-android/
 
 #### Messaging System
 - **`InboxActivity.java`** - Message inbox interface
-- **`MessagesActivity.java`** - Chat interface
 - **`ChatActivity.java`** - Individual chat conversations
 - **`ChatAdapter.java`** - Message display adapter
 - **`FragInboxChatsActivity.java`** - Chat list fragment
@@ -97,10 +95,7 @@ synapse-android/
 - **`FileUtil.java`** - File operations and management
 - **`StorageUtil.java`** - Data storage utilities
 - **`SketchwareUtil.java`** - UI utility functions
-- **`RequestNetwork.java`** - Network request wrapper
-- **`RequestNetworkController.java`** - HTTP request management
 - **`UploadFiles.java`** - File upload functionality
-- **`ImageUploader.java`** - Image upload handling
 
 #### Specialized Components
 - **`PresenceManager.kt`** (Kotlin) - User online status management
@@ -188,10 +183,6 @@ com.synapse.social.studioasinc/
 - `loading.json` - Loading indicator
 - `typing.json` - Typing indicator
 - `update_animation.json` - Update notification animation
-
-### Web Integration
-- `firebase-presence.js` - Firebase presence integration
-- `presence-integration-example.html` - Web presence example
 
 ## CI/CD Pipeline
 
