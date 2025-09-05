@@ -8,7 +8,7 @@
         android:id="@+id/user_avatar_placeholder"
         android:layout_width="56dp"
         android:layout_height="56dp"
-        android:background="@color/grey_200"
+        android:background="@color/shimmer_placeholder"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -17,7 +17,7 @@
         android:layout_width="0dp"
         android:layout_height="20dp"
         android:layout_marginStart="16dp"
-        android:background="@color/grey_200"
+        android:background="@color/shimmer_placeholder"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/user_avatar_placeholder"
         app:layout_constraintTop_toTopOf="@id/user_avatar_placeholder" />
@@ -27,7 +27,7 @@
         android:layout_width="100dp"
         android:layout_height="16dp"
         android:layout_marginTop="8dp"
-        android:background="@color/grey_200"
+        android:background="@color/shimmer_placeholder"
         app:layout_constraintStart_toStartOf="@id/notification_message_placeholder"
         app:layout_constraintTop_toBottomOf="@id/notification_message_placeholder" />
 

@@ -4,6 +4,6 @@
     <item
         android:id="@+id/action_mark_all_read"
         android:title="Mark all as read"
-        android:icon="@drawable/ic_check_circle_outline"
+        android:icon="@drawable/ic_check_circle"
         app:showAsAction="ifRoom" />
 </menu>
