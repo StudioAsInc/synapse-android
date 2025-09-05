@@ -394,6 +394,7 @@ public class HomeFragment extends Fragment {
     }
 
     public class HeaderAdapter extends RecyclerView.Adapter<HeaderAdapter.ViewHolder> {
+        private ViewHolder mViewHolder;
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             final RecyclerView storiesView;
@@ -427,7 +428,8 @@ public class HomeFragment extends Fragment {
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater _inflater = getLayoutInflater();
             View _v = _inflater.inflate(R.layout.feed_header, parent, false);
-            return new ViewHolder(_v);
+            mViewHolder = new ViewHolder(_v);
+            return mViewHolder;
         }
 
         @Override
@@ -549,7 +551,9 @@ public class HomeFragment extends Fragment {
         }
 
         public void refreshStories() {
-            _loadStories(storiesView, storiesList);
+            if (mViewHolder != null) {
+                _loadStories(mViewHolder.storiesView, storiesList);
+            }
         }
     }
 
