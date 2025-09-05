@@ -103,6 +103,7 @@ public class CreatePostActivity extends AppCompatActivity {
 	
 	private MaterialToolbar toolbar;
 	private Button postButton;
+	private Button settingsButton;
 	private ScrollView scrollView;
 	private LinearLayout scrollBodyLayout;
 	private FadeEditText postDescriptionEditText;
@@ -171,12 +172,20 @@ public class CreatePostActivity extends AppCompatActivity {
 		imagePlaceholderLayout = findViewById(R.id.imagePlaceholderLayout);
 		postImageView = findViewById(R.id.postImageView);
 		postButton = findViewById(R.id.postButton);
+		settingsButton = findViewById(R.id.settingsButton);
 		appSavedData = getSharedPreferences("data", Activity.MODE_PRIVATE);
 		
 		postButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				_createPost();
+			}
+		});
+
+		settingsButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				_showPostSettingsBottomSheet();
 			}
 		});
 
@@ -222,22 +231,6 @@ public class CreatePostActivity extends AppCompatActivity {
 			_loadSelectedImage();
 		}
 	}
-
-	@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.create_post_menu, menu);
-        return true;
-    }
-
-	@Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            _showPostSettingsBottomSheet();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 	
 	@Override
 	protected void onActivityResult(int _requestCode, int _resultCode, Intent _data) {
@@ -474,6 +467,7 @@ public class CreatePostActivity extends AppCompatActivity {
 		MaterialSwitch hidePostSwitch = bottomSheetView.findViewById(R.id.hidePostSwitch);
 		MaterialSwitch disableSaveSwitch = bottomSheetView.findViewById(R.id.disableSaveSwitch);
 		MaterialSwitch disableCommentsSwitch = bottomSheetView.findViewById(R.id.disableCommentsSwitch);
+		Button doneButton = bottomSheetView.findViewById(R.id.doneButton);
 		
 		// Set current values
 		hideViewsSwitch.setChecked(hideViewsCount);
@@ -530,6 +524,13 @@ public class CreatePostActivity extends AppCompatActivity {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				disableComments = isChecked;
+			}
+		});
+
+		doneButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				bottomSheetDialog.dismiss();
 			}
 		});
 		
