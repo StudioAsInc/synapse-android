@@ -1,23 +1,25 @@
 package com.synapse.social.studioasinc.model;
 
 public class Notification {
-    private String from;
+    private String from; // This will be used as userId
     private String message;
     private String type;
     private String postId;
     private String commentId;
     private long timestamp;
+    private boolean isRead;
 
     public Notification() {
     }
 
-    public Notification(String from, String message, String type, String postId, String commentId, long timestamp) {
+    public Notification(String from, String message, String type, String postId, String commentId, long timestamp, boolean isRead) {
         this.from = from;
         this.message = message;
         this.type = type;
         this.postId = postId;
         this.commentId = commentId;
         this.timestamp = timestamp;
+        this.isRead = isRead;
     }
 
     public String getFrom() {
@@ -66,5 +68,13 @@ public class Notification {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
     }
 }

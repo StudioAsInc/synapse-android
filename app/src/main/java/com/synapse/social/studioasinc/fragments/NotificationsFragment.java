@@ -2,15 +2,19 @@ package com.synapse.social.studioasinc.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.view.ViewStub;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -30,17 +34,24 @@ public class NotificationsFragment extends Fragment {
     private RecyclerView recyclerView;
     private NotificationAdapter notificationAdapter;
     private List<Notification> notificationList;
-    private ProgressBar progressBar;
-    private TextView noNotificationsText;
+    private ShimmerFrameLayout shimmerFrameLayout;
+    private ViewStub emptyViewStub;
+    private View emptyView;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_notifications, container, false);
 
+        shimmerFrameLayout = view.findViewById(R.id.shimmer_view_container);
         recyclerView = view.findViewById(R.id.notifications_list);
-        progressBar = view.findViewById(R.id.loading_bar);
-        noNotificationsText = view.findViewById(R.id.no_notifications_text);
+        emptyViewStub = view.findViewById(R.id.view_stub_empty);
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -48,17 +59,22 @@ public class NotificationsFragment extends Fragment {
         notificationAdapter = new NotificationAdapter(getContext(), notificationList);
         recyclerView.setAdapter(notificationAdapter);
 
+        setupSwipeActions();
         fetchNotifications();
 
         return view;
     }
 
     private void fetchNotifications() {
-        progressBar.setVisibility(View.VISIBLE);
+        shimmerFrameLayout.startShimmer();
+        shimmerFrameLayout.setVisibility(View.VISIBLE);
+        recyclerView.setVisibility(View.GONE);
+
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser == null) {
-            progressBar.setVisibility(View.GONE);
-            noNotificationsText.setVisibility(View.VISIBLE);
+            shimmerFrameLayout.stopShimmer();
+            shimmerFrameLayout.setVisibility(View.GONE);
+            showEmptyView();
             return;
         }
 
@@ -69,26 +85,98 @@ public class NotificationsFragment extends Fragment {
                 notificationList.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Notification notification = snapshot.getValue(Notification.class);
-                    notificationList.add(notification);
+                    if (notification != null) {
+                        notificationList.add(notification);
+                    }
                 }
 
                 Collections.reverse(notificationList);
                 notificationAdapter.notifyDataSetChanged();
-                progressBar.setVisibility(View.GONE);
+
+                shimmerFrameLayout.stopShimmer();
+                shimmerFrameLayout.setVisibility(View.GONE);
 
                 if (notificationList.isEmpty()) {
-                    noNotificationsText.setVisibility(View.VISIBLE);
+                    showEmptyView();
                     recyclerView.setVisibility(View.GONE);
                 } else {
-                    noNotificationsText.setVisibility(View.GONE);
+                    hideEmptyView();
                     recyclerView.setVisibility(View.VISIBLE);
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                progressBar.setVisibility(View.GONE);
+                shimmerFrameLayout.stopShimmer();
+                shimmerFrameLayout.setVisibility(View.GONE);
             }
         });
+    }
+
+    private void setupSwipeActions() {
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                markNotificationAsRead(notificationList.get(position));
+            }
+        }).attachToRecyclerView(recyclerView);
+    }
+
+    private void markNotificationAsRead(Notification notification) {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser == null || notification.isRead()) {
+            return;
+        }
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("skyline/notifications")
+                .child(firebaseUser.getUid())
+                .child(String.valueOf(notification.getTimestamp())); // Assuming timestamp is unique key
+        ref.child("read").setValue(true);
+    }
+
+    private void markAllNotificationsAsRead() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser == null) {
+            return;
+        }
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("skyline/notifications").child(firebaseUser.getUid());
+        for (Notification notification : notificationList) {
+            if (!notification.isRead()) {
+                ref.child(String.valueOf(notification.getTimestamp())).child("read").setValue(true);
+            }
+        }
+    }
+
+    private void showEmptyView() {
+        if (emptyView == null) {
+            emptyView = emptyViewStub.inflate();
+        }
+        emptyView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideEmptyView() {
+        if (emptyView != null) {
+            emptyView.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.notifications_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_mark_all_read) {
+            markAllNotificationsAsRead();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
