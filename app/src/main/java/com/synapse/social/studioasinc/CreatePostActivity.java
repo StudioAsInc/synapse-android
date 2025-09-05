@@ -161,7 +161,6 @@ public class CreatePostActivity extends AppCompatActivity {
 		toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		getSupportActionBar().setHomeButtonEnabled(true);
 		toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
 		scrollView = findViewById(R.id.scrollView);
@@ -223,15 +222,16 @@ public class CreatePostActivity extends AppCompatActivity {
 
 	@Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_post) {
-            _createPost();
-            return true;
-        } else if (id == R.id.action_settings) {
-            _showPostSettingsBottomSheet();
-            return true;
+        switch (item.getItemId()) {
+            case R.id.action_post:
+                _createPost();
+                return true;
+            case R.id.action_settings:
+                _showPostSettingsBottomSheet();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 	
 	@Override

@@ -48,7 +48,6 @@
 				android:textColorHint="?attr/colorOnSurfaceVariant"
 				android:textSize="18sp"
 				android:textColor="?attr/colorOnSurface"
-				android:layout_weight="1"
 				android:maxLength="2500" />
 
 			<androidx.cardview.widget.CardView
