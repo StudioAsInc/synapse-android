@@ -87,7 +87,8 @@
 				android:layout_height="wrap_content"
 				android:layout_margin="16dp"
 				android:gravity="center_horizontal|center_vertical"
-				app:cardElevation="2dp">
+				app:cardElevation="2dp"
+				app:cardCornerRadius="28dp">
 
 				<LinearLayout
 					android:id="@+id/imagePlaceholderLayout"
@@ -95,7 +96,7 @@
 					android:layout_height="200dp"
 					android:gravity="center"
 					android:orientation="vertical"
-					android:background="@drawable/image_placeholder_background">
+					android:background="?attr/colorSurfaceContainer">
 
 					<ImageView
 						android:layout_width="48dp"
