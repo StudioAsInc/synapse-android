@@ -2,7 +2,7 @@
 
 ## Documentation Guidelines
 
-**IMPORTANT:** If you are an AI agent working on this project, please follow these documentation guidelines:
+**IMPORTANT:** Please follow these documentation guidelines:
 
 ### Documentation Location
 - **ALL documentation must be placed in the `Docs/` directory**
