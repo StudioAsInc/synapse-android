@@ -7,7 +7,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.Manifest
 import android.content.pm.PackageManager
-import com.synapse.social.studioasinc.MainActivity
+import com.synapse.social.studioasinc.HomeActivity
 import java.util.ArrayList
 
 class AskPermission(private val activity: Activity) {
@@ -86,7 +86,7 @@ class AskPermission(private val activity: Activity) {
 
 
     private fun startMainActivity() {
-        val intent = Intent(activity, MainActivity::class.java)
+        val intent = Intent(activity, HomeActivity::class.java)
         activity.startActivity(intent)
         activity.finish()
     }
