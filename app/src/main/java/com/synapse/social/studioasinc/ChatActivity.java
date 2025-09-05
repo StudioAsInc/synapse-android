@@ -341,7 +341,6 @@ public class ChatActivity extends AppCompatActivity implements SendMessageModal.
 			}
 		});
 
-
 		_blocklist_child_listener = new ChildEventListener() {
 			@Override
 			public void onChildAdded(DataSnapshot _param1, String _param2) {
@@ -2982,7 +2981,7 @@ public class ChatActivity extends AppCompatActivity implements SendMessageModal.
 	@Override
 	public void onMessageSent(HashMap<String, Object> messageData) {
 		messageData.put("isLocalMessage", true);
-		messageKeys.add(messageData.get(KEY_KEY).toString());
+		messageKeys.add((String) messageData.get(KEY_KEY));
 		ChatMessagesList.add(messageData);
 		int newPosition = ChatMessagesList.size() - 1;
 		chatAdapter.notifyItemInserted(newPosition);
