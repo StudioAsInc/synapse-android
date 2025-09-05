@@ -231,13 +231,12 @@ public class CreatePostActivity extends AppCompatActivity {
 
 	@Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                _showPostSettingsBottomSheet();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            _showPostSettingsBottomSheet();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 	
 	@Override
