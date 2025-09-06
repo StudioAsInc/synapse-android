@@ -27,29 +27,26 @@
         android:hint="@string/search_hint"
         app:layout_anchor="@id/search_bar">
 
-        <LinearLayout
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/SearchUserLayoutRecyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="match_parent"
                 tools:listitem="@layout/synapse_users_list_cv" />
 
             <TextView
                 android:id="@+id/SearchUserLayoutNoUserFound"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:padding="16dp"
+                android:layout_centerInParent="true"
                 android:text="@string/no_user_found"
                 android:textAppearance="?attr/textAppearanceBody1"
                 android:textColor="?attr/colorOnSurface"
                 android:visibility="gone" />
-        </LinearLayout>
+        </RelativeLayout>
 
     </com.google.android.material.search.SearchView>
 

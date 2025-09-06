@@ -77,6 +77,38 @@ public class SearchActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
             }
         });
+
+        _showAllUser();
+    }
+
+    public void _showAllUser() {
+        DatabaseReference searchRef = FirebaseDatabase.getInstance().getReference("skyline/users");
+        Query searchQuery = searchRef.limitToLast(50);
+
+        searchQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    SearchUserLayoutRecyclerView.setVisibility(View.VISIBLE);
+                    SearchUserLayoutNoUserFound.setVisibility(View.GONE);
+                    searchedUsersList.clear();
+
+                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                        HashMap<String, Object> searchMap = new HashMap<String, Object>((Map<String, Object>) dataSnapshot.getValue());
+                        searchedUsersList.add(searchMap);
+                    }
+                    SearchUserLayoutRecyclerView.getAdapter().notifyDataSetChanged();
+                } else {
+                    SearchUserLayoutRecyclerView.setVisibility(View.GONE);
+                    SearchUserLayoutNoUserFound.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle error
+            }
+        });
     }
 
     public void performSearch(final String query) {
@@ -163,7 +195,7 @@ public class SearchActivity extends AppCompatActivity {
                 } else {
                     Object avatarObj = currentItem.get("avatar");
                     if (avatarObj != null && !avatarObj.toString().equals("null")) {
-                        Glide.with(getApplicationContext()).load(Uri.parse(avatarObj.toString())).into(profileAvatar);
+                        Glide.with(getApplicationContext()).load(Uri.parse(avatarObj.toString())).circleCrop().into(profileAvatar);
                     } else {
                         profileAvatar.setImageResource(R.drawable.avatar);
                     }
