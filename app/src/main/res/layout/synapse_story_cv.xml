@@ -38,7 +38,7 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="8dp"
                 android:src="@drawable/avatar"
-                app:civ_border_color="@android:color/white"
+                app:civ_border_color="?attr/colorPrimary"
                 app:civ_border_width="2dp" />
 
             <TextView
@@ -49,8 +49,8 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginBottom="8dp"
                 android:text="Username"
-                android:textColor="@android:color/white"
-                android:shadowColor="@android:color/black"
+                android:textColor="?attr/colorOnPrimary"
+                android:shadowColor="?attr/colorOnSurface"
                 android:shadowDx="1"
                 android:shadowDy="1"
                 android:shadowRadius="2" />

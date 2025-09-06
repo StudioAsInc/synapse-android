@@ -16,7 +16,7 @@
 			android:id="@+id/dialog_card"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			app:cardBackgroundColor="#FFFFFF"
+			app:cardBackgroundColor="?attr/colorSurface"
 			app:cardElevation="0dp">
 			<LinearLayout
 				android:id="@+id/dialog_card_body"
@@ -42,14 +42,14 @@
 						android:text="Add Profile Photo"
 						android:textSize="18sp"
 						android:textStyle="bold"
-						android:textColor="#000000" />
+						android:textColor="?attr/colorOnSurface" />
 				</LinearLayout>
 				<LinearLayout
 					android:id="@+id/dialog_top_spc"
 					android:layout_width="match_parent"
 					android:layout_height="1dp"
 					android:padding="8dp"
-					android:background="#F5F5F5"
+					android:background="?attr/colorOutline"
 					android:orientation="horizontal" />
 				<LinearLayout
 					android:id="@+id/dialog_middle"
@@ -79,11 +79,11 @@
 						android:layout_height="wrap_content"
 						android:layout_marginTop="14dp"
 						android:padding="14dp"
-						android:background="#F5F5F5"
+						android:background="?attr/colorSurfaceVariant"
 						android:textSize="18sp"
-						android:textColor="#000000"
+						android:textColor="?attr/colorOnSurface"
 						android:hint="Profile Photo Url"
-						android:textColorHint="#9E9E9E"
+						android:textColorHint="?android:attr/textColorHint"
 						android:singleLine="true"
 						android:focusable="true"
 						android:focusableInTouchMode="true" />
@@ -93,7 +93,7 @@
 					android:layout_width="match_parent"
 					android:layout_height="1dp"
 					android:padding="8dp"
-					android:background="#F5F5F5"
+					android:background="?attr/colorOutline"
 					android:orientation="horizontal" />
 				<LinearLayout
 					android:id="@+id/dialog_bottom"
@@ -108,12 +108,12 @@
 						android:layout_height="wrap_content"
 						android:paddingTop="8dp"
 						android:paddingBottom="8dp"
-						android:background="#2196F3"
+						android:background="?attr/colorPrimary"
 						android:gravity="center_horizontal|center_vertical"
 						android:text="Add"
 						android:textSize="18sp"
 						android:textStyle="bold"
-						android:textColor="#FFFFFF" />
+						android:textColor="?attr/colorOnPrimary" />
 					<TextView
 						android:id="@+id/cancel_button"
 						android:focusable="false"
@@ -122,12 +122,12 @@
 						android:layout_marginTop="14dp"
 						android:paddingTop="8dp"
 						android:paddingBottom="8dp"
-						android:background="#F5F5F5"
+						android:background="?attr/colorSurfaceVariant"
 						android:gravity="center_horizontal|center_vertical"
 						android:text="Cancel"
 						android:textSize="18sp"
 						android:textStyle="bold"
-						android:textColor="#000000" />
+						android:textColor="?attr/colorOnSurface" />
 				</LinearLayout>
 			</LinearLayout>
 		</androidx.cardview.widget.CardView>

@@ -9,7 +9,7 @@
         android:id="@+id/notification_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="16sp" />
 
 </LinearLayout>
