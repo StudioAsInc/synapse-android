@@ -1,12 +1,15 @@
 package com.synapse.social.studioasinc.models;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Story implements Serializable {
     private String uid;
     private String url;
     private long timestamp;
     private String type;
+    private Map<String, Boolean> seenBy = new HashMap<>(); // Initialize here
 
     public Story() {
         // Default constructor required for calls to DataSnapshot.getValue(Story.class)
@@ -18,6 +21,8 @@ public class Story implements Serializable {
         this.timestamp = timestamp;
         this.type = type;
     }
+
+    // Getters and setters for all fields
 
     public String getUid() {
         return uid;
@@ -49,5 +54,13 @@ public class Story implements Serializable {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Map<String, Boolean> getSeenBy() {
+        return seenBy;
+    }
+
+    public void setSeenBy(Map<String, Boolean> seenBy) {
+        this.seenBy = seenBy;
     }
 }

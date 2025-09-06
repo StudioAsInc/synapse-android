@@ -177,8 +177,6 @@ public class HomeFragment extends Fragment {
                             return;
                         }
                         storiesList.clear();
-                        // Add a placeholder for "Add Story"
-                        storiesList.add(new com.synapse.social.studioasinc.models.Story(FirebaseAuth.getInstance().getCurrentUser().getUid(), "add_story", 0, "add"));
 
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot storySnap : dataSnapshot.getChildren()) {
@@ -413,8 +411,10 @@ public class HomeFragment extends Fragment {
             public ViewHolder(View view) {
                 super(view);
                 storiesView = view.findViewById(R.id.storiesView);
-                storiesView.setLayoutManager(new com.google.android.material.carousel.CarouselLayoutManager(new com.google.android.material.carousel.HeroCarouselStrategy()));
-                com.google.android.material.carousel.CarouselSnapHelper snapHelper = new com.google.android.material.carousel.CarouselSnapHelper();
+                // Set up the CarouselLayoutManager and SnapHelper for the stories RecyclerView
+                CarouselLayoutManager layoutManager = new com.google.android.material.carousel.CarouselLayoutManager(new com.google.android.material.carousel.HeroCarouselStrategy());
+                storiesView.setLayoutManager(layoutManager);
+                CarouselSnapHelper snapHelper = new com.google.android.material.carousel.CarouselSnapHelper();
                 snapHelper.attachToRecyclerView(storiesView);
                 miniPostLayoutProfileCard = view.findViewById(R.id.miniPostLayoutProfileCard);
                 miniPostLayoutTextPostInput = view.findViewById(R.id.miniPostLayoutTextPostInput);
@@ -557,7 +557,10 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    public class CarouselAdapter extends RecyclerView.Adapter<CarouselAdapter.ViewHolder> {
+    public class CarouselAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+        private static final int VIEW_TYPE_ADD = 0;
+        private static final int VIEW_TYPE_STORY = 1;
+
         ArrayList<com.synapse.social.studioasinc.models.Story> _data;
 
         public CarouselAdapter(ArrayList<com.synapse.social.studioasinc.models.Story> _arr) {
@@ -565,68 +568,90 @@ public class HomeFragment extends Fragment {
         }
 
         @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public int getItemViewType(int position) {
+            return (position == 0) ? VIEW_TYPE_ADD : VIEW_TYPE_STORY;
+        }
+
+        @NonNull
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LayoutInflater _inflater = getLayoutInflater();
-            View _v = _inflater.inflate(R.layout.story_carousel_item, parent, false);
-            return new ViewHolder(_v);
+            if (viewType == VIEW_TYPE_ADD) {
+                View _v = _inflater.inflate(R.layout.synapse_story_add_cv, parent, false);
+                return new AddStoryViewHolder(_v);
+            } else {
+                View _v = _inflater.inflate(R.layout.synapse_story_cv, parent, false);
+                return new StoryViewHolder(_v);
+            }
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder _holder, final int _position) {
-            com.synapse.social.studioasinc.models.Story story = _data.get(_position);
-
-            if (story.getType().equals("add")) {
-                _holder.userName.setText(getResources().getString(R.string.add_story));
-                DatabaseReference getReference = _firebase.getReference().child("skyline/users").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                getReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.exists()) {
-                            if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-                                Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(_holder.storyImage);
-                            } else {
-                                _holder.storyImage.setImageResource(R.drawable.avatar);
-                            }
-                        } else {
-                            _holder.storyImage.setImageResource(R.drawable.avatar);
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        _holder.storyImage.setImageResource(R.drawable.avatar);
-                    }
-                });
-                _holder.itemView.setOnClickListener(_view1 -> pickStoryMedia());
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
+            if (holder.getItemViewType() == VIEW_TYPE_ADD) {
+                AddStoryViewHolder addHolder = (AddStoryViewHolder) holder;
+                addHolder.itemView.setOnClickListener(_view -> pickStoryMedia());
             } else {
-                Glide.with(getContext()).load(Uri.parse(story.getUrl())).into(_holder.storyImage);
-                
-                // Fetch user info
+                StoryViewHolder storyHolder = (StoryViewHolder) holder;
+                final int storyPosition = position - 1;
+                com.synapse.social.studioasinc.models.Story story = _data.get(storyPosition);
+
+                // Set seen/unseen border
+                String currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                if (story.getSeenBy() != null && story.getSeenBy().containsKey(currentUid)) {
+                    storyHolder.storyBorder.setBackgroundResource(R.drawable.story_border_seen);
+                } else {
+                    storyHolder.storyBorder.setBackgroundResource(R.drawable.story_border_unseen);
+                }
+
+                // Load story preview image
+                Glide.with(getContext()).load(Uri.parse(story.getUrl())).into(storyHolder.storyPreviewImage);
+
+                // Fetch and display user info
                 udb.child(story.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
+                        if (isAdded() && dataSnapshot.exists()) {
                             String nickname = dataSnapshot.child("nickname").getValue(String.class);
                             String username = dataSnapshot.child("username").getValue(String.class);
+                            String avatarUrl = dataSnapshot.child("avatar").getValue(String.class);
+
                             if (nickname != null && !nickname.isEmpty()) {
-                                _holder.userName.setText(nickname);
+                                storyHolder.userName.setText(nickname);
                             } else if (username != null && !username.isEmpty()) {
-                                _holder.userName.setText("@" + username);
+                                storyHolder.userName.setText("@" + username);
                             } else {
-                                _holder.userName.setText("User");
+                                storyHolder.userName.setText("User");
+                            }
+
+                            if (avatarUrl != null && !avatarUrl.equals("null")) {
+                                Glide.with(getContext()).load(Uri.parse(avatarUrl)).into(storyHolder.userProfilePicture);
+                            } else {
+                                storyHolder.userProfilePicture.setImageResource(R.drawable.avatar);
                             }
                         }
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
-                        _holder.userName.setText("User");
+                        // Handle error, maybe set default user info
+                        if(isAdded()) {
+                            storyHolder.userName.setText("User");
+                            storyHolder.userProfilePicture.setImageResource(R.drawable.avatar);
+                        }
                     }
                 });
-                
-                _holder.itemView.setOnClickListener(_view1 -> {
+
+                storyHolder.itemView.setOnClickListener(_view -> {
+                    // Mark story as seen
+                    storiesDbRef.child(story.getUid()).child("seenBy").child(currentUid).setValue(true);
+
+                    // Create a new list for the story viewer to avoid issues with the "add story" item
+                    ArrayList<com.synapse.social.studioasinc.models.Story> storiesForViewer = new ArrayList<>(_data);
+
                     Intent intent = new Intent(getContext(), com.synapse.social.studioasinc.StoryViewerActivity.class);
-                    intent.putExtra("stories", _data);
-                    intent.putExtra("position", _position);
+                    intent.putExtra("stories", storiesForViewer);
+                    // The position passed to the viewer should be the index in the data list, not the adapter
+                    intent.putExtra("position", storyPosition);
                     startActivity(intent);
                 });
             }
@@ -634,16 +659,29 @@ public class HomeFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            return _data.size();
+            return _data.size() + 1; // +1 for the "Add Story" button
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            ImageView storyImage;
-            TextView userName;
-            public ViewHolder(View v) {
+        // ViewHolder for the "Add Story" item
+        public class AddStoryViewHolder extends RecyclerView.ViewHolder {
+            public AddStoryViewHolder(View v) {
                 super(v);
-                storyImage = v.findViewById(R.id.story_image_view);
-                userName = v.findViewById(R.id.story_user_name);
+            }
+        }
+
+        // ViewHolder for a regular story item
+        public class StoryViewHolder extends RecyclerView.ViewHolder {
+            View storyBorder;
+            ImageView storyPreviewImage;
+            de.hdodenhof.circleimageview.CircleImageView userProfilePicture;
+            TextView userName;
+
+            public StoryViewHolder(View v) {
+                super(v);
+                storyBorder = v.findViewById(R.id.story_border);
+                storyPreviewImage = v.findViewById(R.id.story_preview_image);
+                userProfilePicture = v.findViewById(R.id.user_profile_picture);
+                userName = v.findViewById(R.id.user_name);
             }
         }
     }
