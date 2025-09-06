@@ -692,8 +692,10 @@ public class HomeFragment extends Fragment {
                 });
 
                 storyHolder.itemView.setOnClickListener(_view -> {
-                    // Mark story as seen
-                    storiesDbRef.child(story.getUid()).child("seenBy").child(currentUid).setValue(true);
+                    // Add a null check for the story's UID to prevent a crash when marking as seen.
+                    if (story.getUid() != null && !story.getUid().isEmpty()) {
+                        storiesDbRef.child(story.getUid()).child("seenBy").child(currentUid).setValue(true);
+                    }
 
                     // Create a new list for the story viewer to avoid issues with the "add story" item
                     ArrayList<com.synapse.social.studioasinc.models.Story> storiesForViewer = new ArrayList<>(_data);
