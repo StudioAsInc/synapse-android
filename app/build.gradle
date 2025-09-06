@@ -49,8 +49,8 @@ android {
         applicationId = "com.synapse.social.studioasinc"
         minSdk = 26
         targetSdk = 32 // Keep 32
-        versionCode = 16
-        versionName = "1.0.0-alpha08"
+        versionCode = 17
+        versionName = "1.0.0-alpha09" // Alpha ends on 12th release then beta will come
         multiDexEnabled = true
 
         vectorDrawables.useSupportLibrary = true
