@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -17,12 +16,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.search.SearchBar;
 import com.google.android.material.search.SearchView;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -43,7 +39,6 @@ public class SearchActivity extends AppCompatActivity {
     private SearchView search_view;
     private RecyclerView SearchUserLayoutRecyclerView;
     private TextView SearchUserLayoutNoUserFound;
-    private BottomNavigationView bottom_navigation;
 
     private Intent intent = new Intent();
 
@@ -61,7 +56,6 @@ public class SearchActivity extends AppCompatActivity {
         search_view = findViewById(R.id.search_view);
         SearchUserLayoutRecyclerView = findViewById(R.id.SearchUserLayoutRecyclerView);
         SearchUserLayoutNoUserFound = findViewById(R.id.SearchUserLayoutNoUserFound);
-        bottom_navigation = findViewById(R.id.bottom_navigation);
     }
 
     private void initializeLogic() {
@@ -81,35 +75,6 @@ public class SearchActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-            }
-        });
-
-        bottom_navigation.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int itemId = item.getItemId();
-                if (itemId == R.id.bottom_home) {
-                    intent.setClass(getApplicationContext(), HomeActivity.class);
-                    startActivity(intent);
-                    return true;
-                } else if (itemId == R.id.bottom_search) {
-                    // Already in search
-                    return true;
-                } else if (itemId == R.id.bottom_videos) {
-                    intent.setClass(getApplicationContext(), LineVideoPlayerActivity.class);
-                    startActivity(intent);
-                    return true;
-                } else if (itemId == R.id.bottom_chats) {
-                    intent.setClass(getApplicationContext(), MessagesActivity.class);
-                    startActivity(intent);
-                    return true;
-                } else if (itemId == R.id.bottom_profile) {
-                    intent.setClass(getApplicationContext(), ProfileActivity.class);
-                    intent.putExtra("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                    startActivity(intent);
-                    return true;
-                }
-                return false;
             }
         });
     }
