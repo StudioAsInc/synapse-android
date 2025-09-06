@@ -82,7 +82,7 @@ class ConversationSettingsActivity : AppCompatActivity() {
                     }
 
                     user2nickname = if (dataSnapshot.child("nickname").getValue(String::class.java) == "null") {
-                        "@" + dataSnapshot.child("username").getValue(String.class)
+                        "@${dataSnapshot.child("username").getValue(String::class.java)}"
                     } else {
                         dataSnapshot.child("nickname").getValue(String::class.java) ?: ""
                     }
