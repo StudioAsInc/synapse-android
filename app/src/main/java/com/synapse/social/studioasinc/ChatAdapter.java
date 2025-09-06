@@ -171,36 +171,34 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         holder.body.setGravity(isMyMessage ? (Gravity.TOP | Gravity.RIGHT) : (Gravity.TOP | Gravity.LEFT));
         
         if (holder.my_message_info != null && holder.date != null && holder.message_state != null) {
-            boolean showMessageInfo = false;
+            boolean showMessageInfo;
             if (position == _data.size() - 1) {
                 showMessageInfo = true;
-            } else if (position + 1 < _data.size()) {
+            } else {
                 HashMap<String, Object> currentMsg = _data.get(position);
                 HashMap<String, Object> nextMsg = _data.get(position + 1);
 
-                String nextUid = nextMsg != null && nextMsg.get("uid") != null ? String.valueOf(nextMsg.get("uid")) : "";
-                String currUid = currentMsg != null && currentMsg.get("uid") != null ? String.valueOf(currentMsg.get("uid")) : "";
+                String nextUid = String.valueOf(nextMsg.get("uid"));
+                String currUid = String.valueOf(currentMsg.get("uid"));
                 boolean nextIsDifferentUser = !nextUid.equals(currUid);
                 boolean nextIsTyping = nextMsg.containsKey("typingMessageStatus");
 
                 boolean timeIsSignificant = false;
-                if (currentMsg.containsKey("push_date") && nextMsg.containsKey("push_date") && currentMsg.get("push_date") != null && nextMsg.get("push_date") != null) {
+                if (currentMsg.containsKey("push_date") && nextMsg.containsKey("push_date")) {
                     try {
-                        long currentTime = (long) Double.parseDouble(String.valueOf(currentMsg.get("push_date")));
-                        long nextTime = (long) Double.parseDouble(String.valueOf(nextMsg.get("push_date")));
+                        long currentTime = _getMessageTimestamp(currentMsg);
+                        long nextTime = _getMessageTimestamp(nextMsg);
                         if ((nextTime - currentTime) > (5 * 60 * 1000)) { // 5 minutes
                             timeIsSignificant = true;
                         }
-                    } catch (NumberFormatException e) {
-                        // Handle case where push_date is not a valid double
+                    } catch (Exception e) {
                         timeIsSignificant = false;
                     }
                 }
 
-                if (nextIsDifferentUser || nextIsTyping || timeIsSignificant) {
-                    showMessageInfo = true;
-                }
+                showMessageInfo = nextIsDifferentUser || nextIsTyping || timeIsSignificant;
             }
+
             holder.my_message_info.setVisibility(showMessageInfo ? View.VISIBLE : View.GONE);
             
             if (showMessageInfo) {
@@ -211,12 +209,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 } catch (Exception e) {
                     push.setTimeInMillis(System.currentTimeMillis());
                 }
-                // CRITICAL FIX: Smart timestamp visibility logic
-                boolean shouldShowTime = _shouldShowTimestamp(position, data);
-                holder.date.setVisibility(shouldShowTime ? View.VISIBLE : View.GONE);
-                if (shouldShowTime) {
-                    holder.date.setText(new SimpleDateFormat("hh:mm a").format(push.getTime()));
-                }
+                holder.date.setText(new SimpleDateFormat("hh:mm a").format(push.getTime()));
                 
                 holder.message_state.setVisibility(isMyMessage ? View.VISIBLE : View.GONE);
                 if (isMyMessage) {
