@@ -235,4 +235,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     .show();
         }
     }
+
+    public ViewPager2 getViewPager() {
+        return viewPager;
+    }
 }
