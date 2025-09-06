@@ -2,7 +2,7 @@ name: Gemini Auto Review
 
 on:
   pull_request:
-    branches: ["**"]   # allow PRs from every branch
+    branches: ["**"]
     types: [opened, synchronize]
 
 jobs:
@@ -10,20 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      # 1. Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Gemini CLI
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/google-github-actions/run-gemini-cli/main/install.sh | sh
-          echo "${{ secrets.GEMINI_API_KEY }}" > ~/.gemini_api_key
-          export GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-
+      # 2. Run Gemini via official GitHub Action (no manual install)
       - name: Run Gemini Review
-        run: |
-          gemini review . --format markdown > review.md
+        id: gemini
+        uses: google-github-actions/run-gemini-cli@v1
+        with:
+          args: review . --format markdown
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Post review as my account
+      # 3. Save Gemini output
+      - name: Save Gemini output
+        run: echo "${{ steps.gemini.outputs.stdout }}" > review.md
+
+      # 4. Post review as your account
+      - name: Post review comment as me
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.PAT }}
