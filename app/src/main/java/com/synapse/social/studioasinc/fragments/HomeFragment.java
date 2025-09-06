@@ -67,6 +67,7 @@ import androidx.browser.customtabs.CustomTabsIntent;
 import com.google.firebase.database.Query;
 import com.synapse.social.studioasinc.CreateLineVideoActivity;
 import com.synapse.social.studioasinc.CreatePostActivity;
+import com.synapse.social.studioasinc.HomeActivity;
 import com.synapse.social.studioasinc.PostCommentsBottomSheetDialog;
 import com.synapse.social.studioasinc.PostMoreBottomSheetDialog;
 import com.synapse.social.studioasinc.ProfileActivity;
