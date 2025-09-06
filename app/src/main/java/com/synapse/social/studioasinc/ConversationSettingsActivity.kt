@@ -3,6 +3,7 @@ package com.synapse.social.studioasinc
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
@@ -15,12 +16,19 @@ class ConversationSettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityConversationSettingsBinding
     private val firebaseDatabase = FirebaseDatabase.getInstance()
-    private val mainRef = firebaseDatabase.getReference("skyline")
-    private val blocklistRef = firebaseDatabase.getReference("skyline/blocklist")
+    private val blocklistRef = firebaseDatabase.getReference(REF_SKYLINE).child(REF_BLOCKLIST)
     private lateinit var auth: FirebaseAuth
 
-    private var userAvatarUri: String = ""
-    private var user2nickname: String = ""
+    companion object {
+        private const val REF_SKYLINE = "skyline"
+        private const val REF_USERS = "users"
+        private const val REF_BLOCKLIST = "blocklist"
+        private const val KEY_UID = "uid"
+        private const val KEY_BANNED = "banned"
+        private const val KEY_AVATAR = "avatar"
+        private const val KEY_NICKNAME = "nickname"
+        private const val KEY_USERNAME = "username"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,41 +65,43 @@ class ConversationSettingsActivity : AppCompatActivity() {
         }
 
         binding.blockMainOption.setOnClickListener {
-            blockUser(intent.getStringExtra("uid"))
+            blockUser(intent.getStringExtra(KEY_UID))
         }
     }
 
     private fun getUserReference() {
-        val userId = intent.getStringExtra("uid") ?: return
-        val getUserReference = firebaseDatabase.getReference("skyline/users").child(userId)
+        val userId = intent.getStringExtra(KEY_UID) ?: return
+        val getUserReference = firebaseDatabase.getReference(REF_SKYLINE).child(REF_USERS).child(userId)
 
         getUserReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    val isBanned = dataSnapshot.child("banned").getValue(String::class.java) == "true"
+                    val isBanned = dataSnapshot.child(KEY_BANNED).getValue(String::class.java) == "true"
                     if (isBanned) {
-                        userAvatarUri = "null"
                         binding.profilePictureIV.setImageResource(R.drawable.banned_avatar)
                     } else {
-                        userAvatarUri = dataSnapshot.child("avatar").getValue(String::class.java) ?: "null"
-                        if (userAvatarUri == "null") {
+                        val avatarUrl = dataSnapshot.child(KEY_AVATAR).getValue(String::class.java)
+                        if (avatarUrl.isNullOrEmpty() || avatarUrl == "null") {
                             binding.profilePictureIV.setImageResource(R.drawable.avatar)
                         } else {
-                            Glide.with(applicationContext).load(Uri.parse(userAvatarUri)).into(binding.profilePictureIV)
+                            Glide.with(applicationContext).load(Uri.parse(avatarUrl)).into(binding.profilePictureIV)
                         }
                     }
 
-                    user2nickname = if (dataSnapshot.child("nickname").getValue(String::class.java) == "null") {
-                        "@${dataSnapshot.child("username").getValue(String::class.java)}"
+                    val nickname = dataSnapshot.child(KEY_NICKNAME).getValue(String::class.java)
+                    val username = dataSnapshot.child(KEY_USERNAME).getValue(String::class.java)
+
+                    val user2nickname: String = if (nickname.isNullOrEmpty() || nickname == "null") {
+                        if (username.isNullOrEmpty()) "" else "@$username"
                     } else {
-                        dataSnapshot.child("nickname").getValue(String::class.java) ?: ""
+                        nickname
                     }
                     binding.username.text = user2nickname
                 }
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
+                Log.e("ConversationSettings", "Database error: ${databaseError.message}")
             }
         })
     }
