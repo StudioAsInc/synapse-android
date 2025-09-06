@@ -5,12 +5,12 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:orientation="vertical"
-	android:id="@+id/_main">
+	android:id="@+id/_main"
+	android:background="?attr/colorBackground">
 	<LinearLayout
 		android:id="@+id/linear1"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="#FFFFFF"
 		android:orientation="vertical">
 		<LinearLayout
 			android:id="@+id/linear2"
@@ -29,14 +29,15 @@
 				android:layout_marginLeft="8dp"
 				android:layout_marginRight="16dp"
 				android:src="@drawable/ic_arrow_back_ios_new_48px"
-				android:scaleType="fitCenter" />
+				android:scaleType="fitCenter"
+				app:tint="?attr/colorOnSurface" />
 			<TextView
 				android:id="@+id/invisible_txt_appbar"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:background="@android:color/transparent"
 				android:textSize="20sp"
-				android:textColor="#000000" />
+				android:textColor="?android:attr/textColorPrimary" />
 			<LinearLayout
 				android:id="@+id/linear3"
 				android:layout_width="wrap_content"
@@ -51,7 +52,8 @@
 				android:layout_marginLeft="8dp"
 				android:layout_marginRight="8dp"
 				android:src="@drawable/hand_package_24px"
-				android:scaleType="fitCenter" />
+				android:scaleType="fitCenter"
+				app:tint="?attr/colorOnSurface" />
 		</LinearLayout>
 		<ScrollView
 			android:id="@+id/vscroll1"
@@ -99,7 +101,7 @@
 							android:text="Md Ashik"
 							android:textSize="30sp"
 							android:textStyle="bold"
-							android:textColor="#000000" />
+							android:textColor="?android:attr/textColorPrimary" />
 						<Button
 							android:id="@+id/button1"
 							android:layout_width="wrap_content"
@@ -110,7 +112,7 @@
 							android:paddingBottom="10dp"
 							android:text="End-to-end encrypted"
 							android:textSize="14sp"
-							android:textColor="#000000"
+							android:textColor="?android:attr/textColorPrimary"
 							style="@style/Widget.Material3.Button.TonalButton.Icon"
 							app:icon="@drawable/ic_shield_lock" />
 					</LinearLayout>
@@ -135,13 +137,14 @@
 							android:padding="8dp"
 							android:text="Conversation"
 							android:textSize="14sp"
-							android:textColor="#757575" />
+							android:textColor="?android:attr/textColorSecondary" />
 						<androidx.cardview.widget.CardView
 							android:id="@+id/cardview1"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
 							app:cardElevation="0dp"
-							app:cardCornerRadius="20dp">
+							app:cardCornerRadius="20dp"
+							app:cardBackgroundColor="?attr/colorSurface">
 							<LinearLayout
 								android:id="@+id/linear14"
 								android:layout_width="match_parent"
@@ -161,7 +164,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_category"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear13"
 										android:layout_width="match_parent"
@@ -174,7 +178,7 @@
 											android:layout_height="wrap_content"
 											android:text="Theme"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview9"
 											android:layout_width="wrap_content"
@@ -182,7 +186,7 @@
 											android:layout_marginTop="5dp"
 											android:text="Default"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -202,7 +206,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_edit_note_48px"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear16"
 										android:layout_width="match_parent"
@@ -215,7 +220,7 @@
 											android:layout_height="wrap_content"
 											android:text="Nickname"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview12"
 											android:layout_width="wrap_content"
@@ -223,7 +228,7 @@
 											android:layout_marginTop="5dp"
 											android:text="Md Ashik"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -239,7 +244,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/filter_vintage_24px"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear18"
 										android:layout_width="match_parent"
@@ -252,7 +258,7 @@
 											android:layout_height="wrap_content"
 											android:text="Word effect"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview14"
 											android:layout_width="wrap_content"
@@ -260,7 +266,7 @@
 											android:layout_marginTop="5dp"
 											android:text="No word effect"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -277,7 +283,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_thumb_up_48px"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear20"
 										android:layout_width="match_parent"
@@ -290,7 +297,7 @@
 											android:layout_height="wrap_content"
 											android:text="Quick reaction"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview16"
 											android:layout_width="wrap_content"
@@ -298,7 +305,7 @@
 											android:layout_marginTop="5dp"
 											android:text="👍"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 							</LinearLayout>
@@ -311,13 +318,14 @@
 							android:padding="8dp"
 							android:text="More actions"
 							android:textSize="14sp"
-							android:textColor="#757575" />
+							android:textColor="?android:attr/textColorSecondary" />
 						<androidx.cardview.widget.CardView
 							android:id="@+id/cardview2"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
 							app:cardElevation="0dp"
-							app:cardCornerRadius="20dp">
+							app:cardCornerRadius="20dp"
+							app:cardBackgroundColor="?attr/colorSurface">
 							<LinearLayout
 								android:id="@+id/linear21"
 								android:layout_width="match_parent"
@@ -346,7 +354,8 @@
 											android:layout_marginLeft="10dp"
 											android:layout_marginRight="12dp"
 											android:src="@drawable/mark_chat_read_24px"
-											android:scaleType="fitCenter" />
+											android:scaleType="fitCenter"
+											app:tint="?attr/colorOnSurface" />
 										<LinearLayout
 											android:id="@+id/linear26"
 											android:layout_width="wrap_content"
@@ -360,7 +369,7 @@
 												android:layout_height="wrap_content"
 												android:text="Read receipts"
 												android:textSize="18sp"
-												android:textColor="#000000" />
+												android:textColor="?android:attr/textColorPrimary" />
 											<TextView
 												android:id="@+id/textview19"
 												android:layout_width="wrap_content"
@@ -368,7 +377,7 @@
 												android:layout_marginTop="5dp"
 												android:text="Default"
 												android:textSize="14sp"
-												android:textColor="#616161" />
+												android:textColor="?android:attr/textColorSecondary" />
 										</LinearLayout>
 										<com.google.android.material.materialswitch.MaterialSwitch
 											android:id="@+id/switchReadReceipt"
@@ -377,7 +386,7 @@
 											android:layout_marginLeft="3dp"
 											android:layout_marginRight="10dp"
 											android:textSize="12sp"
-											android:textColor="#000000"
+											android:textColor="?android:attr/textColorPrimary"
 											android:checked="true" />
 									</LinearLayout>
 								</androidx.cardview.widget.CardView>
@@ -399,7 +408,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/auto_delete_24px"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear27"
 										android:layout_width="wrap_content"
@@ -413,7 +423,7 @@
 											android:layout_height="wrap_content"
 											android:text="Disappearing message"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview21"
 											android:layout_width="wrap_content"
@@ -421,7 +431,7 @@
 											android:layout_marginTop="5dp"
 											android:text="24 hours"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 									<com.google.android.material.materialswitch.MaterialSwitch
 										android:id="@+id/switchDisappearingMessages"
@@ -430,7 +440,7 @@
 										android:layout_marginLeft="3dp"
 										android:layout_marginRight="10dp"
 										android:textSize="12sp"
-										android:textColor="#000000" />
+										android:textColor="?android:attr/textColorPrimary" />
 								</LinearLayout>
 								<LinearLayout
 									android:id="@+id/savePhotoVideoMainSwitch"
@@ -449,7 +459,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/file_save_24px"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear49"
 										android:layout_width="wrap_content"
@@ -463,7 +474,7 @@
 											android:layout_height="wrap_content"
 											android:text="Save photos and videos"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview45"
 											android:layout_width="wrap_content"
@@ -471,7 +482,7 @@
 											android:layout_marginTop="5dp"
 											android:text="Automatically save photos and videos"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 									<com.google.android.material.materialswitch.MaterialSwitch
 										android:id="@+id/switchAutoSaveMedia"
@@ -480,7 +491,7 @@
 										android:layout_marginLeft="3dp"
 										android:layout_marginRight="10dp"
 										android:textSize="12sp"
-										android:textColor="#000000" />
+										android:textColor="?android:attr/textColorPrimary" />
 								</LinearLayout>
 								<LinearLayout
 									android:id="@+id/pinnedMessagesMainOption"
@@ -497,7 +508,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/keep_24px"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear28"
 										android:layout_width="match_parent"
@@ -510,7 +522,7 @@
 											android:layout_height="wrap_content"
 											android:text="Pinned message"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview23"
 											android:layout_width="wrap_content"
@@ -518,7 +530,7 @@
 											android:layout_marginTop="5dp"
 											android:text="View pinned message"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -537,7 +549,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_search_48px"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear29"
 										android:layout_width="match_parent"
@@ -550,7 +563,7 @@
 											android:layout_height="wrap_content"
 											android:text="Search conversation"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview25"
 											android:layout_width="wrap_content"
@@ -558,7 +571,7 @@
 											android:layout_marginTop="5dp"
 											android:text="Find specific conversations"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 							</LinearLayout>
@@ -571,13 +584,14 @@
 							android:padding="8dp"
 							android:text="Privacy and support"
 							android:textSize="14sp"
-							android:textColor="#757575" />
+							android:textColor="?android:attr/textColorSecondary" />
 						<androidx.cardview.widget.CardView
 							android:id="@+id/cardview4"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
 							app:cardElevation="0dp"
-							app:cardCornerRadius="20dp">
+							app:cardCornerRadius="20dp"
+							app:cardBackgroundColor="?attr/colorSurface">
 							<LinearLayout
 								android:id="@+id/linear39"
 								android:layout_width="match_parent"
@@ -597,7 +611,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_key"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear44"
 										android:layout_width="match_parent"
@@ -610,7 +625,7 @@
 											android:layout_height="wrap_content"
 											android:text="Verify encryption"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview37"
 											android:layout_width="wrap_content"
@@ -619,7 +634,7 @@
 											android:layout_marginTop="5dp"
 											android:text="Verify end-to-end and encryption"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -637,7 +652,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/ic_forward"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear45"
 										android:layout_width="match_parent"
@@ -650,7 +666,7 @@
 											android:layout_height="wrap_content"
 											android:text="Share contact"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview39"
 											android:layout_width="wrap_content"
@@ -659,7 +675,7 @@
 											android:layout_marginTop="5dp"
 											android:text="Share the link of  profile"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -675,7 +691,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/mobile_block_24px"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/block_lay1"
 										android:layout_width="match_parent"
@@ -688,7 +705,7 @@
 											android:layout_height="wrap_content"
 											android:text="Block"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview41"
 											android:layout_width="wrap_content"
@@ -697,7 +714,7 @@
 											android:layout_marginTop="5dp"
 											android:text="They won't be able to call or message."
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 								<LinearLayout
@@ -714,7 +731,8 @@
 										android:layout_marginLeft="10dp"
 										android:layout_marginRight="12dp"
 										android:src="@drawable/report_24px"
-										android:scaleType="fitCenter" />
+										android:scaleType="fitCenter"
+										app:tint="?attr/colorOnSurface" />
 									<LinearLayout
 										android:id="@+id/linear47"
 										android:layout_width="match_parent"
@@ -727,7 +745,7 @@
 											android:layout_height="wrap_content"
 											android:text="Report"
 											android:textSize="18sp"
-											android:textColor="#000000" />
+											android:textColor="?android:attr/textColorPrimary" />
 										<TextView
 											android:id="@+id/textview43"
 											android:layout_width="wrap_content"
@@ -736,7 +754,7 @@
 											android:layout_marginTop="5dp"
 											android:text="Give feedbacks and report conversation"
 											android:textSize="14sp"
-											android:textColor="#616161" />
+											android:textColor="?android:attr/textColorSecondary" />
 									</LinearLayout>
 								</LinearLayout>
 							</LinearLayout>
