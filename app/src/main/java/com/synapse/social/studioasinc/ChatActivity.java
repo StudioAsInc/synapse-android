@@ -1,5 +1,7 @@
 package com.synapse.social.studioasinc;
 
+import com.synapse.social.studioasinc.adapter.RvAttachmentListAdapter;
+import com.synapse.social.studioasinc.model.AttachmentItem;
 import android.Manifest;
 import android.app.Activity;
 import androidx.appcompat.app.AlertDialog;
@@ -178,7 +180,7 @@ public class ChatActivity extends AppCompatActivity {
 	private HashMap<String, HashMap<String, Object>> repliedMessagesCache = new HashMap<>();
 	private java.util.Set<String> messageKeys = new java.util.HashSet<>();
 	private ArrayList<HashMap<String, Object>> ChatMessagesList = new ArrayList<>();
-	private ArrayList<HashMap<String, Object>> attactmentmap = new ArrayList<>();
+	private final ArrayList<AttachmentItem> attachmentList = new ArrayList<>();
 
 	private RelativeLayout relativelayout1;
 	private ImageView ivBGimage;
@@ -315,9 +317,9 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View _view) {
 				attachmentLayoutListHolder.setVisibility(View.GONE);
-				int oldSize = attactmentmap.size();
+				int oldSize = attachmentList.size();
 				if (oldSize > 0) {
-					attactmentmap.clear();
+					attachmentList.clear();
 					rv_attacmentList.getAdapter().notifyItemRangeRemoved(0, oldSize);
 				}
 
@@ -564,7 +566,41 @@ public class ChatActivity extends AppCompatActivity {
 		// --- START: Critical Initialization for Attachment RecyclerView ---
 
 		// 1. Create the adapter for the attachment list, passing it our empty list.
-		Rv_attacmentListAdapter attachmentAdapter = new Rv_attacmentListAdapter(attactmentmap);
+		RvAttachmentListAdapter attachmentAdapter = new RvAttachmentListAdapter(attachmentList, (position, attachment) -> {
+			// Cancel upload if in progress
+			if (AttachmentItem.UPLOAD_STATE_UPLOADING.equals(attachment.getUploadState())) {
+				AsyncUploadService.cancelUpload(ChatActivity.this, attachment.getLocalPath());
+			}
+
+			// Remove the item
+			attachmentList.remove(position);
+
+			// Notify adapter of changes
+			if (rv_attacmentList.getAdapter() != null) {
+				rv_attacmentList.getAdapter().notifyItemRemoved(position);
+				// Update remaining items
+				rv_attacmentList.getAdapter().notifyItemRangeChanged(position, attachmentList.size() - position);
+			}
+
+			// Delete from cloud storage if available
+			if (attachment.getPublicId() != null && !attachment.getPublicId().isEmpty()) {
+				UploadFiles.deleteByPublicId(attachment.getPublicId(), new UploadFiles.DeleteCallback() {
+					@Override
+					public void onSuccess() {
+						Log.d("ChatActivity", "Successfully deleted attachment: " + attachment.getPublicId());
+					}
+					@Override
+					public void onFailure(String error) {
+						Log.e("ChatActivity", "Failed to delete attachment: " + error);
+					}
+				});
+			}
+
+			// Hide attachment holder if no more attachments
+			if (attachmentList.isEmpty()) {
+				attachmentLayoutListHolder.setVisibility(View.GONE);
+			}
+		});
 		rv_attacmentList.setAdapter(attachmentAdapter);
 
 		// 2. A RecyclerView must have a LayoutManager to function.
@@ -655,28 +691,12 @@ public class ChatActivity extends AppCompatActivity {
 				if (!resolvedFilePaths.isEmpty()) {
 					attachmentLayoutListHolder.setVisibility(View.VISIBLE);
 
-					int startingPosition = attactmentmap.size();
+					int startingPosition = attachmentList.size();
 
 					for (String filePath : resolvedFilePaths) {
 						try {
-							HashMap<String, Object> itemMap = new HashMap<>();
-							itemMap.put("localPath", filePath);
-							itemMap.put("uploadState", "pending");
-
-							// Get image dimensions safely
-							BitmapFactory.Options options = new BitmapFactory.Options();
-							options.inJustDecodeBounds = true;
-							try {
-								BitmapFactory.decodeFile(filePath, options);
-								itemMap.put("width", options.outWidth > 0 ? options.outWidth : 100);
-								itemMap.put("height", options.outHeight > 0 ? options.outHeight : 100);
-							} catch (Exception e) {
-								Log.w("ChatActivity", "Could not decode image dimensions for: " + filePath);
-								itemMap.put("width", 100);
-								itemMap.put("height", 100);
-							}
-
-							attactmentmap.add(itemMap);
+							AttachmentItem item = new AttachmentItem(filePath);
+							attachmentList.add(item);
 						} catch (Exception e) {
 							Log.e("ChatActivity", "Error processing file: " + filePath + ", Error: " + e.getMessage());
 						}
@@ -792,8 +812,8 @@ public class ChatActivity extends AppCompatActivity {
 		if (ChatMessagesList != null) {
 			ChatMessagesList.clear();
 		}
-		if (attactmentmap != null) {
-			attactmentmap.clear();
+		if (attachmentList != null) {
+			attachmentList.clear();
 		}
 		
 		// Clean up progress dialog
@@ -2033,226 +2053,202 @@ public class ChatActivity extends AppCompatActivity {
 		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		final String recipientUid = getIntent().getStringExtra("uid");
 
-		// The logic to fetch the OneSignal Player ID has been removed.
-		// We now call proceedWithMessageSending directly.
-		proceedWithMessageSending(messageText, senderUid, recipientUid);
+		new SendMessageTask().execute(messageText, senderUid, recipientUid);
 	}
 
-	/**
-	 * This helper method contains the original logic for sending a message.
-	 * The recipient's OneSignal Player ID is no longer needed.
-	 */
-	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid) {
-		if (auth.getCurrentUser() != null) {
-			PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
-		}
-		Log.d("ChatActivity", "=== MESSAGE SENDING START ===");
-		Log.d("ChatActivity", "Message text: '" + messageText + "'");
-		Log.d("ChatActivity", "Sender: " + senderUid + ", Recipient: " + recipientUid);
-		Log.d("ChatActivity", "Attachment map size: " + attactmentmap.size());
-		Log.d("ChatActivity", "Attachment map content: " + attactmentmap.toString());
+	private static class SendMessageResult {
+		boolean success = false;
+		boolean allUploadsSuccessful = true;
+		HashMap<String, Object> messageToSend;
+		String lastMessage;
+		String uniqueMessageKey;
+		boolean isAttachment = false;
+	}
 
-		if (!attactmentmap.isEmpty()) {
-			Log.d("ChatActivity", "Processing message with " + attactmentmap.size() + " attachments");
-			// Logic for sending messages with attachments
-			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
-			boolean allUploadsSuccessful = true;
-			for (HashMap<String, Object> item : attactmentmap) {
-				Log.d("ChatActivity", "Checking attachment: " + item.toString());
-				if ("success".equals(item.get("uploadState"))) {
-					HashMap<String, Object> attachmentData = new HashMap<>();
-					attachmentData.put("url", item.get("cloudinaryUrl"));
-					attachmentData.put("publicId", item.get("publicId"));
-					attachmentData.put("width", item.get("width"));
-					attachmentData.put("height", item.get("height"));
-					successfulAttachments.add(attachmentData);
-					Log.d("ChatActivity", "Added successful attachment: " + attachmentData.toString());
-				} else {
-					Log.w("ChatActivity", "Attachment not ready: " + item.toString());
-					allUploadsSuccessful = false;
+	private class SendMessageTask extends AsyncTask<String, Void, SendMessageResult> {
+
+		@Override
+		protected SendMessageResult doInBackground(String... params) {
+			String messageText = params[0];
+			String senderUid = params[1];
+			String recipientUid = params[2];
+
+			SendMessageResult result = new SendMessageResult();
+
+			if (isCancelled()) {
+				return result;
+			}
+
+			if (auth.getCurrentUser() != null) {
+				PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
+			}
+
+			if (!attachmentList.isEmpty()) {
+				result.isAttachment = true;
+				ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
+				for (AttachmentItem item : attachmentList) {
+					if (AttachmentItem.UPLOAD_STATE_SUCCESS.equals(item.getUploadState())) {
+						HashMap<String, Object> attachmentData = new HashMap<>();
+						attachmentData.put("url", item.getCloudinaryUrl());
+						attachmentData.put("publicId", item.getPublicId());
+						try {
+							BitmapFactory.Options options = getBitmapOptions(item.getLocalPath());
+							attachmentData.put("width", options.outWidth > 0 ? options.outWidth : 100);
+							attachmentData.put("height", options.outHeight > 0 ? options.outHeight : 100);
+						} catch (Exception e) {
+							Log.w("ChatActivity", "Could not decode image dimensions for: " + item.getLocalPath());
+							attachmentData.put("width", 100);
+							attachmentData.put("height", 100);
+						}
+						successfulAttachments.add(attachmentData);
+					} else {
+						result.allUploadsSuccessful = false;
+					}
+				}
+
+				if (result.allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
+					result.uniqueMessageKey = main.push().getKey();
+
+					HashMap<String, Object> messageMap = new HashMap<>();
+					messageMap.put(UID_KEY, senderUid);
+					messageMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
+
+					try {
+						String encryptedMessageText = messageText.isEmpty() ? "" : e2eeHelper.encrypt(recipientUid, messageText);
+						messageMap.put(MESSAGE_TEXT_KEY, encryptedMessageText);
+
+						ArrayList<HashMap<String, Object>> encryptedAttachments = new ArrayList<>();
+						for (HashMap<String, Object> attachment : successfulAttachments) {
+							HashMap<String, Object> encryptedAttachment = new HashMap<>(attachment);
+							String url = (String) encryptedAttachment.get("url");
+							String publicId = (String) encryptedAttachment.get("publicId");
+
+							if (url != null) {
+								encryptedAttachment.put("url", e2eeHelper.encrypt(recipientUid, url));
+							}
+							if (publicId != null) {
+								encryptedAttachment.put("publicId", e2eeHelper.encrypt(recipientUid, publicId));
+							}
+							encryptedAttachments.add(encryptedAttachment);
+						}
+						messageMap.put(ATTACHMENTS_KEY, encryptedAttachments);
+						messageMap.put("isEncrypted", true);
+
+					} catch (Exception e) {
+						Log.e(TAG, "Failed to encrypt attachment message", e);
+						return result; // success is false
+					}
+
+					messageMap.put(MESSAGE_STATE_KEY, "sended");
+					if (!ReplyMessageID.equals("null")) messageMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
+					messageMap.put(KEY_KEY, result.uniqueMessageKey);
+					messageMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
+
+					result.messageToSend = messageMap;
+					result.lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
+					result.success = true;
+
+				}
+
+			} else if (!messageText.isEmpty()) {
+				result.isAttachment = false;
+				String uniqueMessageKey;
+				try {
+					String encryptedMessage = e2eeHelper.encrypt(recipientUid, messageText);
+					uniqueMessageKey = main.push().getKey();
+
+					HashMap<String, Object> messageMap = new HashMap<>();
+					messageMap.put(UID_KEY, senderUid);
+					messageMap.put(TYPE_KEY, MESSAGE_TYPE);
+					messageMap.put(MESSAGE_TEXT_KEY, encryptedMessage);
+					messageMap.put("isEncrypted", true);
+					messageMap.put(MESSAGE_STATE_KEY, "sended");
+					if (!ReplyMessageID.equals("null")) messageMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
+					messageMap.put(KEY_KEY, uniqueMessageKey);
+					messageMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
+
+					result.messageToSend = messageMap;
+					result.lastMessage = messageText;
+					result.uniqueMessageKey = uniqueMessageKey;
+					result.success = true;
+
+				} catch (Exception e) {
+					Log.e("ChatActivity", "Failed to encrypt and send message", e);
+					return result; // success is false
 				}
 			}
 
-			Log.d("ChatActivity", "All uploads successful: " + allUploadsSuccessful + ", Successful attachments: " + successfulAttachments.size());
+			return result;
+		}
 
-			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
-				String uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated message key: " + uniqueMessageKey);
+		@Override
+		protected void onPostExecute(SendMessageResult result) {
+			if (isFinishing() || isCancelled()) {
+				return;
+			}
 
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
+			if (result.success) {
+				String senderUid = result.messageToSend.get(UID_KEY).toString();
+				String recipientUid = getIntent().getStringExtra("uid");
 
-				try {
-					String encryptedMessageText = messageText.isEmpty() ? "" : e2eeHelper.encrypt(recipientUid, messageText);
-					ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessageText);
+				Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, result.uniqueMessageKey);
+				refs.first.setValue(result.messageToSend);
+				refs.second.setValue(result.messageToSend);
 
-					ArrayList<HashMap<String, Object>> encryptedAttachments = new ArrayList<>();
-					for (HashMap<String, Object> attachment : successfulAttachments) {
-						HashMap<String, Object> encryptedAttachment = new HashMap<>(attachment);
-						String url = (String) encryptedAttachment.get("url");
-						String publicId = (String) encryptedAttachment.get("publicId");
-
-						if (url != null) {
-							encryptedAttachment.put("url", e2eeHelper.encrypt(recipientUid, url));
-						}
-						if (publicId != null) {
-							encryptedAttachment.put("publicId", e2eeHelper.encrypt(recipientUid, publicId));
-						}
-						encryptedAttachments.add(encryptedAttachment);
-					}
-					ChatSendMap.put(ATTACHMENTS_KEY, encryptedAttachments);
-					ChatSendMap.put("isEncrypted", true);
-
-				} catch (Exception e) {
-					Log.e(TAG, "Failed to encrypt attachment message", e);
-					Toast.makeText(this, "Error: Could not send secure attachment message.", Toast.LENGTH_SHORT).show();
-					return;
-				}
-
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-
-				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
-				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
-
-				Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
-				refs.first.setValue(ChatSendMap);
-				refs.second.setValue(ChatSendMap);
-
-				// CRITICAL FIX: Immediately add the message to local list for instant feedback
-				ChatSendMap.put("isLocalMessage", true); // Mark as local message
-				messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-				// Add to the end since this is a new message being sent
-				ChatMessagesList.add(ChatSendMap);
+				result.messageToSend.put("isLocalMessage", true);
+				messageKeys.add(result.uniqueMessageKey);
+				ChatMessagesList.add(result.messageToSend);
 				int newPosition = ChatMessagesList.size() - 1;
-				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-				// Use more granular insertion notification for smooth updates
 				chatAdapter.notifyItemInserted(newPosition);
 
-				// Scroll to the new message immediately
-				ChatMessagesListRecycler.post(() -> {
-					scrollToBottom();
-				});
+				ChatMessagesListRecycler.post(() -> scrollToBottom());
 
-				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
-
-				// Enhanced Smart Notification Check with chat ID for deep linking
 				String chatId = senderUid + "_" + recipientUid;
 				String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
 				String notificationPreview;
-				if (!successfulAttachments.isEmpty()) {
+				if (result.isAttachment) {
+					String messageText = message_et.getText().toString().trim();
 					if (TextUtils.isEmpty(messageText)) {
 						notificationPreview = "Sent an attachment";
 					} else {
 						notificationPreview = messageText + " + Sent an attachment";
 					}
 				} else {
-					notificationPreview = messageText;
+					notificationPreview = result.lastMessage;
 				}
 				String notificationMessage = senderDisplayName + ": " + notificationPreview;
 				HashMap<String, String> data = new HashMap<>();
 				data.put("chatId", chatId);
 				NotificationHelper.sendNotification(
-					recipientUid,
-					senderUid,
-					notificationMessage,
-					"chat_message",
-					data
+						recipientUid,
+						senderUid,
+						notificationMessage,
+						"chat_message",
+						data
 				);
 
-				_updateInbox(lastMessage, ServerValue.TIMESTAMP);
+				_updateInbox(result.lastMessage, ServerValue.TIMESTAMP);
 
-				// Clear UI
-				Log.d("ChatActivity", "Clearing attachment map and UI");
 				message_et.setText("");
 				ReplyMessageID = "null";
 				mMessageReplyLayout.setVisibility(View.GONE);
 
-				// CRITICAL FIX: Reset attachment state completely
-				resetAttachmentState();
+				if (result.isAttachment) {
+					resetAttachmentState();
+				}
 
-				Log.d("ChatActivity", "=== ATTACHMENT MESSAGE SENT SUCCESSFULLY ===");
-
+				if (auth.getCurrentUser() != null) {
+					PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
+				}
 			} else {
-				Log.w("ChatActivity", "Cannot send message - All uploads successful: " + allUploadsSuccessful + ", Message text empty: " + messageText.isEmpty() + ", Attachments empty: " + successfulAttachments.isEmpty());
-				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
+				if (result.isAttachment && !result.allUploadsSuccessful) {
+					Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
+				} else if (!TextUtils.isEmpty(message_et.getText().toString()) || !attachmentList.isEmpty()) {
+					Toast.makeText(ChatActivity.this, "Error: Could not send message.", Toast.LENGTH_SHORT).show();
+				}
 			}
-
-		} else if (!messageText.isEmpty()) {
-			Log.d("ChatActivity", "Processing text-only message");
-			// Logic for sending text-only messages
-			String uniqueMessageKey;
-			try {
-				String encryptedMessage = e2eeHelper.encrypt(recipientUid, messageText);
-				uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated encrypted text message key: " + uniqueMessageKey);
-
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-				ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessage);
-				ChatSendMap.put("isEncrypted", true);
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-			} catch (Exception e) {
-				Log.e("ChatActivity", "Failed to encrypt and send message", e);
-				Toast.makeText(this, "Error: Could not send secure message.", Toast.LENGTH_SHORT).show();
-				return; // Don't proceed if encryption fails
-			}
-
-			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
-			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
-
-			Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
-			refs.first.setValue(ChatSendMap);
-			refs.second.setValue(ChatSendMap);
-
-			// CRITICAL FIX: Immediately add the message to local list for instant feedback
-			ChatSendMap.put("isLocalMessage", true); // Mark as local message
-			messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-			// Add to the end since this is a new message being sent
-			ChatMessagesList.add(ChatSendMap);
-			int newPosition = ChatMessagesList.size() - 1;
-			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			chatAdapter.notifyItemInserted(newPosition);
-
-			// Scroll to the new message immediately
-			ChatMessagesListRecycler.post(() -> {
-				scrollToBottom();
-			});
-
-			// Enhanced Smart Notification Check with chat ID for deep linking
-			String chatId = senderUid + "_" + recipientUid;
-			String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-			String notificationMessage = senderDisplayName + ": " + messageText;
-			HashMap<String, String> data = new HashMap<>();
-			data.put("chatId", chatId);
-			NotificationHelper.sendNotification(
-				recipientUid,
-				senderUid,
-				notificationMessage,
-				"chat_message",
-				data
-			);
-
-			_updateInbox(messageText, ServerValue.TIMESTAMP);
-
-			// Clear UI
-			message_et.setText("");
-			ReplyMessageID = "null";
-			mMessageReplyLayout.setVisibility(View.GONE);
-
-			Log.d("ChatActivity", "=== TEXT MESSAGE SENT SUCCESSFULLY ===");
-		} else {
-			Log.w("ChatActivity", "No message text and no attachments - nothing to send");
 		}
 	}
-
 
 	public void _Block(final String _uid) {
 		block = new HashMap<>();
@@ -2343,17 +2339,17 @@ public class ChatActivity extends AppCompatActivity {
 		final int itemPosition = (int) _position;
 
 		// Safety check for position bounds
-		if (itemPosition < 0 || itemPosition >= attactmentmap.size()) {
-			Log.e("ChatActivity", "Invalid position for upload: " + itemPosition + ", size: " + attactmentmap.size());
+		if (itemPosition < 0 || itemPosition >= attachmentList.size()) {
+			Log.e("ChatActivity", "Invalid position for upload: " + itemPosition + ", size: " + attachmentList.size());
 			return;
 		}
 
 		// Check for internet connection first.
 		if (!SketchwareUtil.isConnected(getApplicationContext())) {
 			try {
-				HashMap<String, Object> itemMap = attactmentmap.get(itemPosition);
-				if (itemMap != null) {
-					itemMap.put("uploadState", "failed");
+				AttachmentItem item = attachmentList.get(itemPosition);
+				if (item != null) {
+					item.setUploadState(AttachmentItem.UPLOAD_STATE_FAILED);
 					if (rv_attacmentList.getAdapter() != null) {
 						rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 					}
@@ -2364,22 +2360,22 @@ public class ChatActivity extends AppCompatActivity {
 			return;
 		}
 
-		HashMap<String, Object> itemMap = attactmentmap.get(itemPosition);
-		if (itemMap == null || !"pending".equals(itemMap.get("uploadState"))) {
+		AttachmentItem item = attachmentList.get(itemPosition);
+		if (item == null || !AttachmentItem.UPLOAD_STATE_PENDING.equals(item.getUploadState())) {
 			return;
 		}
 		
-		itemMap.put("uploadState", "uploading");
-		itemMap.put("uploadProgress", 0.0);
+		item.setUploadState(AttachmentItem.UPLOAD_STATE_UPLOADING);
+		item.setUploadProgress(0);
 		
 		if (rv_attacmentList.getAdapter() != null) {
 			rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 		}
 
-		String filePath = itemMap.get("localPath").toString();
+		String filePath = item.getLocalPath();
 		if (filePath == null || filePath.isEmpty()) {
 			Log.e("ChatActivity", "Invalid file path for upload");
-			itemMap.put("uploadState", "failed");
+			item.setUploadState(AttachmentItem.UPLOAD_STATE_FAILED);
 			if (rv_attacmentList.getAdapter() != null) {
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			}
@@ -2389,7 +2385,7 @@ public class ChatActivity extends AppCompatActivity {
 		File file = new File(filePath);
 		if (!file.exists()) {
 			Log.e("ChatActivity", "File does not exist: " + filePath);
-			itemMap.put("uploadState", "failed");
+			item.setUploadState(AttachmentItem.UPLOAD_STATE_FAILED);
 			if (rv_attacmentList.getAdapter() != null) {
 				rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 			}
@@ -2400,10 +2396,10 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onProgress(String filePath, int percent) {
 				try {
-					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
-						HashMap<String, Object> currentItem = attactmentmap.get(itemPosition);
-						if (currentItem != null && filePath.equals(currentItem.get("localPath"))) {
-							currentItem.put("uploadProgress", (double) percent);
+					if (itemPosition >= 0 && itemPosition < attachmentList.size()) {
+						AttachmentItem currentItem = attachmentList.get(itemPosition);
+						if (currentItem != null && filePath.equals(currentItem.getLocalPath())) {
+							currentItem.setUploadProgress(percent);
 							if (rv_attacmentList.getAdapter() != null) {
 								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 							}
@@ -2417,12 +2413,12 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onSuccess(String filePath, String url, String publicId) {
 				try {
-					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
-						HashMap<String, Object> mapToUpdate = attactmentmap.get(itemPosition);
-						if (mapToUpdate != null && filePath.equals(mapToUpdate.get("localPath"))) {
-							mapToUpdate.put("uploadState", "success");
-							mapToUpdate.put("cloudinaryUrl", url); // Keep this key for consistency in _send_btn
-							mapToUpdate.put("publicId", publicId);
+					if (itemPosition >= 0 && itemPosition < attachmentList.size()) {
+						AttachmentItem mapToUpdate = attachmentList.get(itemPosition);
+						if (mapToUpdate != null && filePath.equals(mapToUpdate.getLocalPath())) {
+							mapToUpdate.setUploadState(AttachmentItem.UPLOAD_STATE_SUCCESS);
+							mapToUpdate.setCloudinaryUrl(url);
+							mapToUpdate.setPublicId(publicId);
 							if (rv_attacmentList.getAdapter() != null) {
 								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 							}
@@ -2439,10 +2435,10 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onFailure(String filePath, String error) {
 				try {
-					if (itemPosition >= 0 && itemPosition < attactmentmap.size()) {
-						HashMap<String, Object> currentItem = attactmentmap.get(itemPosition);
-						if (currentItem != null && filePath.equals(currentItem.get("localPath"))) {
-							currentItem.put("uploadState", "failed");
+					if (itemPosition >= 0 && itemPosition < attachmentList.size()) {
+						AttachmentItem currentItem = attachmentList.get(itemPosition);
+						if (currentItem != null && filePath.equals(currentItem.getLocalPath())) {
+							currentItem.setUploadState(AttachmentItem.UPLOAD_STATE_FAILED);
 							if (rv_attacmentList.getAdapter() != null) {
 								rv_attacmentList.getAdapter().notifyItemChanged(itemPosition);
 							}
@@ -2470,9 +2466,9 @@ public class ChatActivity extends AppCompatActivity {
 		
 		// Update the attachment list adapter
 		if (rv_attacmentList.getAdapter() != null) {
-			int oldSize = attactmentmap.size();
+			int oldSize = attachmentList.size();
 			if (oldSize > 0) {
-				attactmentmap.clear();
+				attachmentList.clear();
 				rv_attacmentList.getAdapter().notifyItemRangeRemoved(0, oldSize);
 			}
 		}
@@ -2480,7 +2476,7 @@ public class ChatActivity extends AppCompatActivity {
 		// Reset the path variable
 		path = "";
 		
-		Log.d("ChatActivity", "Attachment state reset complete - Map size: " + attactmentmap.size() + ", Path: '" + path + "'");
+		Log.d("ChatActivity", "Attachment state reset complete - Map size: " + attachmentList.size() + ", Path: '" + path + "'");
 		Log.d("ChatActivity", "=== ATTACHMENT STATE RESET COMPLETE ===");
 	}
 
@@ -3186,189 +3182,10 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
-	public class Rv_attacmentListAdapter extends RecyclerView.Adapter<Rv_attacmentListAdapter.ViewHolder> {
-
-		ArrayList<HashMap<String, Object>> _data;
-
-		public Rv_attacmentListAdapter(ArrayList<HashMap<String, Object>> _arr) {
-			_data = _arr;
-		}
-
-		@Override
-		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-			LayoutInflater _inflater = getLayoutInflater();
-			View _v = _inflater.inflate(R.layout.chat_attactment, null);
-			// CRITICAL FIX: Ensure consistent dimensions to prevent height changes during upload
-			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(dpToPx(100), dpToPx(100));
-			_v.setLayoutParams(_lp);
-			return new ViewHolder(_v);
-		}
-
-		@Override
-		public void onBindViewHolder(ViewHolder _holder, final int _position) {
-			View _view = _holder.itemView;
-
-			final androidx.cardview.widget.CardView cardMediaItem = _view.findViewById(R.id.cardMediaItem);
-			final RelativeLayout imageWrapperRL = _view.findViewById(R.id.imageWrapperRL);
-			final ImageView previewIV = _view.findViewById(R.id.previewIV);
-			final LinearLayout overlayLL = _view.findViewById(R.id.overlayLL);
-			final com.google.android.material.progressindicator.CircularProgressIndicator uploadProgressCPI = _view.findViewById(R.id.uploadProgressCPI);
-			final ImageView closeIV = _view.findViewById(R.id.closeIV);
-
-			// Safety check for position bounds
-			if (_position < 0 || _position >= attactmentmap.size()) {
-				Log.w("ChatActivity", "Invalid position in attachment adapter: " + _position);
-				_view.setVisibility(View.GONE);
-				return;
-			}
-
-			// Get the data map using the block's parameters
-			HashMap<String, Object> itemData = attactmentmap.get(_position);
-			if (itemData == null) {
-				Log.w("ChatActivity", "Null item data at position: " + _position);
-				_view.setVisibility(View.GONE);
-				return;
-			}
-
-			// --- START: ROBUSTNESS FIX ---
-			// Safety Check: Verify that the required "localPath" key exists and is not null.
-			if (!itemData.containsKey("localPath") || itemData.get("localPath") == null) {
-				// If the data is invalid, hide this item completely to prevent a crash.
-				_view.setVisibility(View.GONE);
-				_view.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
-				return; // Stop processing this broken item.
-			}
-			// If we pass this check, we can safely proceed.
-			_view.setVisibility(View.VISIBLE);
-			// CRITICAL FIX: Maintain consistent dimensions regardless of upload state
-			_view.setLayoutParams(new RecyclerView.LayoutParams(dpToPx(100), dpToPx(100)));
-			// --- END: ROBUSTNESS FIX ---
-
-			// Set the image preview with error handling
-			String localPath = itemData.get("localPath").toString();
-			try {
-				// Clear previous image to prevent recycling issues
-				previewIV.setImageDrawable(null);
-				
-				// Load new image
-				previewIV.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(localPath, 1024, 1024));
-			} catch (Exception e) {
-				Log.e("ChatActivity", "Error loading image preview: " + e.getMessage());
-				// Set a placeholder image on error
-				previewIV.setImageResource(R.drawable.ph_imgbluredsqure);
-			}
-
-			// Get the upload state and progress.
-			String uploadState = itemData.getOrDefault("uploadState", "pending").toString();
-			int progress = 0;
-			if (itemData.containsKey("uploadProgress")) {
-				try {
-					progress = (int) Double.parseDouble(itemData.get("uploadProgress").toString());
-				} catch (NumberFormatException e) {
-					Log.w("ChatActivity", "Invalid upload progress value: " + itemData.get("uploadProgress"));
-					progress = 0;
-				}
-			}
-
-			// Update the UI by accessing views directly by their ID.
-			switch (uploadState) {
-				case "uploading":
-					overlayLL.setVisibility(View.VISIBLE);
-					overlayLL.setBackgroundColor(0x80000000);
-					uploadProgressCPI.setVisibility(View.VISIBLE);
-					uploadProgressCPI.setProgress(progress);
-					closeIV.setVisibility(View.GONE);
-					break;
-
-				case "success":
-					overlayLL.setVisibility(View.GONE);
-					uploadProgressCPI.setVisibility(View.GONE);
-					closeIV.setVisibility(View.VISIBLE);
-					break;
-
-				case "failed":
-					overlayLL.setVisibility(View.VISIBLE);
-					overlayLL.setBackgroundColor(0x80D32F2F);
-					uploadProgressCPI.setVisibility(View.GONE);
-					closeIV.setVisibility(View.VISIBLE);
-					break;
-
-				default: // "pending" state
-					overlayLL.setVisibility(View.GONE);
-					uploadProgressCPI.setVisibility(View.GONE);
-					closeIV.setVisibility(View.VISIBLE);
-					break;
-			}
-
-			// Set the click listener on the close icon with proper position handling
-			closeIV.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					// Use final position to avoid closure issues
-					final int finalPosition = _position;
-					
-					if (finalPosition < 0 || finalPosition >= attactmentmap.size()) {
-						Log.w("ChatActivity", "Invalid position for removal: " + finalPosition);
-						return;
-					}
-
-					HashMap<String, Object> currentItemData = attactmentmap.get(finalPosition);
-					if (currentItemData == null) {
-						Log.w("ChatActivity", "Null item data for removal at position: " + finalPosition);
-						return;
-					}
-
-					// Cancel upload if in progress
-					if ("uploading".equals(currentItemData.get("uploadState"))) {
-						String localPath = currentItemData.get("localPath").toString();
-						AsyncUploadService.cancelUpload(ChatActivity.this, localPath);
-					}
-					
-					// Remove the item
-					attactmentmap.remove(finalPosition);
-					
-					// Notify adapter of changes
-					if (rv_attacmentList.getAdapter() != null) {
-						rv_attacmentList.getAdapter().notifyItemRemoved(finalPosition);
-						// Update remaining items
-						rv_attacmentList.getAdapter().notifyItemRangeChanged(finalPosition, attactmentmap.size() - finalPosition);
-					}
-
-					// Delete from cloud storage if available
-					if (currentItemData.containsKey("publicId")) {
-						String publicId = currentItemData.get("publicId").toString();
-						if (publicId != null && !publicId.isEmpty()) {
-							UploadFiles.deleteByPublicId(publicId, new UploadFiles.DeleteCallback() {
-								@Override 
-								public void onSuccess() {
-									Log.d("ChatActivity", "Successfully deleted attachment: " + publicId);
-								}
-								@Override 
-								public void onFailure(String error) {
-									Log.e("ChatActivity", "Failed to delete attachment: " + error);
-								}
-							});
-						}
-					}
-
-					// Hide attachment holder if no more attachments
-					if (attactmentmap.isEmpty()) {
-						attachmentLayoutListHolder.setVisibility(View.GONE);
-					}
-				}
-			});
-		}
-
-		@Override
-		public int getItemCount() {
-			return _data.size();
-		}
-
-		public class ViewHolder extends RecyclerView.ViewHolder {
-			public ViewHolder(View v) {
-				super(v);
-			}
-		}
+	private BitmapFactory.Options getBitmapOptions(String path) {
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeFile(path, options);
+		return options;
 	}
-
 }

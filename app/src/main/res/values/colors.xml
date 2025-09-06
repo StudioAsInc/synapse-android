@@ -164,4 +164,5 @@
     <color name="semi_trans">#80FFFFFF</color>
     <color name="pureWhite">#FFFFFF</color>
     <color name="shimmer_placeholder">#DDDDDD</color>
+    <color name="upload_failed_overlay">#80D32F2F</color>
 </resources>
