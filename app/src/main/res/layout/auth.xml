@@ -38,7 +38,7 @@
 				android:layout_height="wrap_content"
 				android:layout_marginTop="15dp"
 				android:textSize="18sp"
-				android:textColor="#000000"
+				android:textColor="?attr/colorOnSurface"
 				android:fontFamily="@font/product_sans" />
 			<LinearLayout
 				android:id="@+id/mainHiddenLayout"
@@ -86,7 +86,7 @@
 									android:text="A"
 									android:textSize="20sp"
 									android:textStyle="bold"
-									android:textColor="?colorSurface" />
+									android:textColor="?attr/colorOnSurface" />
 							</LinearLayout>
 						</LinearLayout>
 						<LinearLayout
@@ -100,7 +100,7 @@
 								android:layout_height="wrap_content"
 								android:text="Nice to meet you, I'm..."
 								android:textSize="16sp"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								android:fontFamily="@font/product_sans" />
 							<LinearLayout
 								android:id="@+id/EditTextContainerLayout"
@@ -117,9 +117,9 @@
 									android:background="@android:color/transparent"
 									android:gravity="center_vertical"
 									android:textSize="18sp"
-									android:textColor="#000000"
+									android:textColor="?attr/colorOnSurface"
 									android:hint="Enter your name"
-									android:textColorHint="#9E9E9E"
+									android:textColorHint="?android:attr/textColorHint"
 									android:singleLine="true"
 									android:fontFamily="@font/product_sans" />
 							</LinearLayout>
@@ -158,7 +158,7 @@
 							android:text="@string/age_agreement"
 							android:textSize="12sp"
 							android:textStyle="bold"
-							android:textColor="?colorOnSurface"
+							android:textColor="?attr/colorOnSurface"
 							android:fontFamily="@font/product_sans" />
 					</LinearLayout>
 					<LinearLayout
@@ -175,7 +175,7 @@
 							android:padding="8dp"
 							android:text="Continue"
 							android:textSize="16sp"
-							android:textColor="?colorSurface"
+							android:textColor="?attr/colorOnPrimary"
 							style="@style/Widget.Material3.Button"
 							android:fontFamily="@font/product_sans_bold" />
 					</LinearLayout>
@@ -205,7 +205,7 @@
 					android:layout_marginTop="15dp"
 					android:text="Hello"
 					android:textSize="16sp"
-					android:textColor="#000000"
+					android:textColor="?attr/colorOnSurface"
 					android:fontFamily="@font/product_sans" />
 				<LinearLayout
 					android:id="@+id/linear4"
@@ -246,7 +246,7 @@
 								android:layout_height="wrap_content"
 								android:padding="4dp"
 								android:textSize="16sp"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 					</LinearLayout>
@@ -281,7 +281,7 @@
 								android:padding="4dp"
 								android:text="You own the content you share, but you give Synapse permission to display and share it inside the app. Do not post anything illegal, offensive, or harmful. Spamming, impersonation, hate speech, or harassment of any kind is not allowed and may lead to account suspension."
 								android:textSize="16sp"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 					</LinearLayout>
@@ -316,7 +316,7 @@
 								android:padding="4dp"
 								android:text="We respect your privacy. Synapse collects only the minimum data needed to run and improve the app. We do not sell your information. By continuing to use Synapse, you accept future updates to these terms. For questions, contact our support team."
 								android:textSize="16sp"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								android:fontFamily="@font/product_sans" />
 						</LinearLayout>
 					</LinearLayout>
@@ -329,7 +329,7 @@
 					android:padding="8dp"
 					android:text="I agree"
 					android:textSize="16sp"
-					android:textColor="?colorSurface"
+					android:textColor="?attr/colorOnPrimary"
 					style="@style/Widget.Material3.Button"
 					android:fontFamily="@font/product_sans_bold" />
 			</LinearLayout>
@@ -379,7 +379,7 @@
 									android:text="@"
 									android:textSize="20sp"
 									android:textStyle="bold"
-									android:textColor="?colorSurface" />
+									android:textColor="?attr/colorOnSurface" />
 							</LinearLayout>
 						</LinearLayout>
 						<LinearLayout
@@ -393,7 +393,7 @@
 								android:layout_height="wrap_content"
 								android:text="Give me your email address"
 								android:textSize="16sp"
-								android:textColor="#000000"
+								android:textColor="?attr/colorOnSurface"
 								android:fontFamily="@font/product_sans" />
 							<LinearLayout
 								android:id="@+id/linear22"
@@ -410,9 +410,9 @@
 									android:background="@android:color/transparent"
 									android:gravity="center_vertical"
 									android:textSize="18sp"
-									android:textColor="#000000"
+									android:textColor="?attr/colorOnSurface"
 									android:hint="Enter your email"
-									android:textColorHint="#9E9E9E"
+									android:textColorHint="?android:attr/textColorHint"
 									android:singleLine="true"
 									android:fontFamily="@font/product_sans" />
 							</LinearLayout>
@@ -464,7 +464,7 @@
 										android:text="A"
 										android:textSize="20sp"
 										android:textStyle="bold"
-										android:textColor="?colorSurface"
+										android:textColor="?attr/colorOnSurface"
 										android:fontFamily="@font/product_sans" />
 								</LinearLayout>
 							</LinearLayout>
@@ -479,7 +479,7 @@
 									android:layout_height="wrap_content"
 									android:text="Now, your password"
 									android:textSize="16sp"
-									android:textColor="#000000"
+									android:textColor="?attr/colorOnSurface"
 									android:fontFamily="@font/product_sans" />
 								<LinearLayout
 									android:id="@+id/linear60"
@@ -496,9 +496,9 @@
 										android:background="@android:color/transparent"
 										android:gravity="center_vertical"
 										android:textSize="18sp"
-										android:textColor="#000000"
+										android:textColor="?attr/colorOnSurface"
 										android:hint="Enter your password"
-										android:textColorHint="#9E9E9E"
+										android:textColorHint="?android:attr/textColorHint"
 										android:singleLine="true"
 										android:fontFamily="@font/product_sans" />
 								</LinearLayout>
@@ -519,7 +519,7 @@
 							android:padding="8dp"
 							android:text="Continue"
 							android:textSize="16sp"
-							android:textColor="?colorSurface"
+							android:textColor="?attr/colorOnPrimary"
 							style="@style/Widget.Material3.Button"
 							android:fontFamily="@font/product_sans_bold" />
 					</LinearLayout>
