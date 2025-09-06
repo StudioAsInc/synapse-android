@@ -1525,13 +1525,7 @@ public class ChatActivity extends AppCompatActivity {
 		int insertPosition = _findCorrectInsertPosition(newMessage);
 		ChatMessagesList.add(insertPosition, newMessage);
 		if (chatAdapter != null) {
-			chatAdapter.notifyItemInserted(insertPosition);
-			if (insertPosition > 0) {
-				chatAdapter.notifyItemChanged(insertPosition - 1);
-			}
-			if (insertPosition < ChatMessagesList.size() - 1) {
-				chatAdapter.notifyItemChanged(insertPosition + 1);
-			}
+			chatAdapter.notifyDataSetChanged();
 		}
 		if (insertPosition == ChatMessagesList.size() - 1 && ChatMessagesListRecycler != null) {
 			ChatMessagesListRecycler.post(this::scrollToBottom);
