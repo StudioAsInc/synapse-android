@@ -228,23 +228,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         if (holder.mProfileCard != null && holder.mProfileImage != null) {
-            if (!isMyMessage) {
-                String currUid = data != null && data.get("uid") != null ? String.valueOf(data.get("uid")) : "";
-                String prevUid = (position - 1 >= 0 && _data.get(position - 1) != null && _data.get(position - 1).get("uid") != null) ? String.valueOf(_data.get(position - 1).get("uid")) : "";
-                boolean isFirstOfGroup = (position == 0) || (position - 1 >= 0 && !prevUid.equals(currUid));
-                holder.mProfileCard.setVisibility(isFirstOfGroup ? View.VISIBLE : View.GONE);
-                if (isFirstOfGroup) {
-                    if (secondUserAvatarUrl != null && !secondUserAvatarUrl.isEmpty() && !secondUserAvatarUrl.equals("null_banned")) {
-                         Glide.with(_context).load(Uri.parse(secondUserAvatarUrl)).into(holder.mProfileImage);
-                    } else if ("null_banned".equals(secondUserAvatarUrl)) {
-                         holder.mProfileImage.setImageResource(R.drawable.banned_avatar);
-                    } else {
-                         holder.mProfileImage.setImageResource(R.drawable.avatar);
-                    }
-                }
-            } else {
-                holder.mProfileCard.setVisibility(View.GONE);
-            }
+            // Phase 1: Remove the inline profile picture for all messages.
+            // The avatar is now only shown in the top app bar.
+            holder.mProfileCard.setVisibility(View.GONE);
         }
         
         if (holder.mRepliedMessageLayout != null) {
@@ -369,32 +355,52 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         
         if (holder.messageBG != null) {
-            int cornerRadius = 27;
-            try { cornerRadius = (int) Double.parseDouble(appSettings.getString("ChatCornerRadius", "27")); } catch (Exception e) {}
-            
-            android.graphics.drawable.GradientDrawable bubbleDrawable = new android.graphics.drawable.GradientDrawable();
-            float density = _context.getResources().getDisplayMetrics().density;
-            bubbleDrawable.setCornerRadius(density * cornerRadius);
+            String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            String currentUid = String.valueOf(data.get("uid"));
+            boolean isMyMessage = currentUid.equals(myUid);
 
-            if (isMyMessage) {
-                bubbleDrawable.setColor(0xFF6B4CFF);
-                if(holder.message_text != null) holder.message_text.setTextColor(Color.WHITE);
-            } else {
-                bubbleDrawable.setColor(Color.WHITE);
-                bubbleDrawable.setStroke((int)(2 * density), 0xFFDFDFDF);
-                if(holder.message_text != null) holder.message_text.setTextColor(Color.BLACK);
+            String prevUid = (position > 0) ? String.valueOf(_data.get(position - 1).get("uid")) : null;
+
+            long currentTime = _getMessageTimestamp(data);
+            long prevTime = (position > 0) ? _getMessageTimestamp(_data.get(position - 1)) : 0;
+            boolean prevSameSender = (prevUid != null && prevUid.equals(currentUid) && (currentTime - prevTime) <= 60000);
+
+            boolean nextSameSender = false;
+            if (position < _data.size() - 1) {
+                HashMap<String, Object> nextData = _data.get(position + 1);
+                String nextUid = String.valueOf(nextData.get("uid"));
+                long nextTime = _getMessageTimestamp(nextData);
+                nextSameSender = (nextUid != null && nextUid.equals(currentUid) && (nextTime - currentTime) <= 60000);
             }
-            holder.messageBG.setBackground(bubbleDrawable);
 
-            // Rounded ripple foreground to match bubble corners
-            int rippleColor = isMyMessage ? 0x33FFFFFF : 0x22000000;
-            android.graphics.drawable.GradientDrawable rippleMask = new android.graphics.drawable.GradientDrawable();
-            rippleMask.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
-            rippleMask.setCornerRadius(density * cornerRadius);
-            rippleMask.setColor(Color.WHITE);
-            android.content.res.ColorStateList rippleColors = new android.content.res.ColorStateList(new int[][]{ new int[]{} }, new int[]{ rippleColor });
-            android.graphics.drawable.RippleDrawable ripple = new android.graphics.drawable.RippleDrawable(rippleColors, null, rippleMask);
-            holder.messageBG.setForeground(ripple);
+            int drawableResId;
+            if (isMyMessage) {
+                if (!prevSameSender && !nextSameSender) {
+                    drawableResId = R.drawable.shape_outgoing_bubble_single;
+                } else if (!prevSameSender && nextSameSender) {
+                    drawableResId = R.drawable.shape_outgoing_bubble_first;
+                } else if (prevSameSender && !nextSameSender) {
+                    drawableResId = R.drawable.shape_outgoing_bubble_last;
+                } else {
+                    drawableResId = R.drawable.shape_outgoing_bubble_middle;
+                }
+            } else {
+                if (!prevSameSender && !nextSameSender) {
+                    drawableResId = R.drawable.shape_incoming_bubble_single;
+                } else if (!prevSameSender && nextSameSender) {
+                    drawableResId = R.drawable.shape_incoming_bubble_first;
+                } else if (prevSameSender && !nextSameSender) {
+                    drawableResId = R.drawable.shape_incoming_bubble_last;
+                } else {
+                    drawableResId = R.drawable.shape_incoming_bubble_middle;
+                }
+            }
+            holder.messageBG.setBackgroundResource(drawableResId);
+
+            if(holder.message_text != null) {
+                holder.message_text.setTextColor(isMyMessage ? Color.WHITE : Color.BLACK);
+            }
+
             holder.messageBG.setClickable(true);
             holder.messageBG.setLongClickable(true);
         }
