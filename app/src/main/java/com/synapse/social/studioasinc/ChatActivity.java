@@ -25,6 +25,7 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Vibrator;
 import android.text.Editable;
 import android.text.Spannable;
@@ -108,6 +109,9 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
@@ -240,6 +244,8 @@ public class ChatActivity extends AppCompatActivity {
 	private SharedPreferences appSettings;
 	private Gemini gemini;
 	private E2EEHelper e2eeHelper;
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	private final Handler handler = new Handler(Looper.getMainLooper());
 
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -695,7 +701,7 @@ public class ChatActivity extends AppCompatActivity {
 
 					for (String filePath : resolvedFilePaths) {
 						try {
-							AttachmentItem item = new AttachmentItem(filePath);
+							AttachmentItem item = new AttachmentItem(filePath, AttachmentItem.UPLOAD_STATE_PENDING, 0, null, null);
 							attachmentList.add(item);
 						} catch (Exception e) {
 							Log.e("ChatActivity", "Error processing file: " + filePath + ", Error: " + e.getMessage());
@@ -2053,31 +2059,18 @@ public class ChatActivity extends AppCompatActivity {
 		final String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 		final String recipientUid = getIntent().getStringExtra("uid");
 
-		new SendMessageTask().execute(messageText, senderUid, recipientUid);
-	}
+		class SendMessageResult {
+			boolean success = false;
+			boolean allUploadsSuccessful = true;
+			HashMap<String, Object> messageToSend;
+			String lastMessage;
+			String uniqueMessageKey;
+			boolean isAttachment = false;
+		}
 
-	private static class SendMessageResult {
-		boolean success = false;
-		boolean allUploadsSuccessful = true;
-		HashMap<String, Object> messageToSend;
-		String lastMessage;
-		String uniqueMessageKey;
-		boolean isAttachment = false;
-	}
-
-	private class SendMessageTask extends AsyncTask<String, Void, SendMessageResult> {
-
-		@Override
-		protected SendMessageResult doInBackground(String... params) {
-			String messageText = params[0];
-			String senderUid = params[1];
-			String recipientUid = params[2];
-
+		executor.execute(() -> {
+			// Background work
 			SendMessageResult result = new SendMessageResult();
-
-			if (isCancelled()) {
-				return result;
-			}
 
 			if (auth.getCurrentUser() != null) {
 				PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
@@ -2136,18 +2129,19 @@ public class ChatActivity extends AppCompatActivity {
 
 					} catch (Exception e) {
 						Log.e(TAG, "Failed to encrypt attachment message", e);
-						return result; // success is false
+						result.success = false;
 					}
 
-					messageMap.put(MESSAGE_STATE_KEY, "sended");
-					if (!ReplyMessageID.equals("null")) messageMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-					messageMap.put(KEY_KEY, result.uniqueMessageKey);
-					messageMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
+					if (result.success) {
+						messageMap.put(MESSAGE_STATE_KEY, "sended");
+						if (!ReplyMessageID.equals("null"))
+							messageMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
+						messageMap.put(KEY_KEY, result.uniqueMessageKey);
+						messageMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
 
-					result.messageToSend = messageMap;
-					result.lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
-					result.success = true;
-
+						result.messageToSend = messageMap;
+						result.lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
+					}
 				}
 
 			} else if (!messageText.isEmpty()) {
@@ -2174,80 +2168,73 @@ public class ChatActivity extends AppCompatActivity {
 
 				} catch (Exception e) {
 					Log.e("ChatActivity", "Failed to encrypt and send message", e);
-					return result; // success is false
+					result.success = false;
 				}
 			}
 
-			return result;
-		}
+			handler.post(() -> {
+				if (isFinishing()) {
+					return;
+				}
 
-		@Override
-		protected void onPostExecute(SendMessageResult result) {
-			if (isFinishing() || isCancelled()) {
-				return;
-			}
+				if (result.success) {
+					Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, result.uniqueMessageKey);
+					refs.first.setValue(result.messageToSend);
+					refs.second.setValue(result.messageToSend);
 
-			if (result.success) {
-				String senderUid = result.messageToSend.get(UID_KEY).toString();
-				String recipientUid = getIntent().getStringExtra("uid");
+					result.messageToSend.put("isLocalMessage", true);
+					messageKeys.add(result.uniqueMessageKey);
+					ChatMessagesList.add(result.messageToSend);
+					int newPosition = ChatMessagesList.size() - 1;
+					chatAdapter.notifyItemInserted(newPosition);
 
-				Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, result.uniqueMessageKey);
-				refs.first.setValue(result.messageToSend);
-				refs.second.setValue(result.messageToSend);
+					ChatMessagesListRecycler.post(this::scrollToBottom);
 
-				result.messageToSend.put("isLocalMessage", true);
-				messageKeys.add(result.uniqueMessageKey);
-				ChatMessagesList.add(result.messageToSend);
-				int newPosition = ChatMessagesList.size() - 1;
-				chatAdapter.notifyItemInserted(newPosition);
-
-				ChatMessagesListRecycler.post(() -> scrollToBottom());
-
-				String chatId = senderUid + "_" + recipientUid;
-				String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-				String notificationPreview;
-				if (result.isAttachment) {
-					String messageText = message_et.getText().toString().trim();
-					if (TextUtils.isEmpty(messageText)) {
-						notificationPreview = "Sent an attachment";
+					String chatId = senderUid + "_" + recipientUid;
+					String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
+					String notificationPreview;
+					if (result.isAttachment) {
+						if (TextUtils.isEmpty(messageText)) {
+							notificationPreview = "Sent an attachment";
+						} else {
+							notificationPreview = messageText + " + Sent an attachment";
+						}
 					} else {
-						notificationPreview = messageText + " + Sent an attachment";
+						notificationPreview = result.lastMessage;
+					}
+					String notificationMessage = senderDisplayName + ": " + notificationPreview;
+					HashMap<String, String> data = new HashMap<>();
+					data.put("chatId", chatId);
+					NotificationHelper.sendNotification(
+							recipientUid,
+							senderUid,
+							notificationMessage,
+							"chat_message",
+							data
+					);
+
+					_updateInbox(result.lastMessage, ServerValue.TIMESTAMP);
+
+					message_et.setText("");
+					ReplyMessageID = "null";
+					mMessageReplyLayout.setVisibility(View.GONE);
+
+					if (result.isAttachment) {
+						resetAttachmentState();
+					}
+
+					if (auth.getCurrentUser() != null) {
+						PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
 					}
 				} else {
-					notificationPreview = result.lastMessage;
+					if (result.isAttachment && !result.allUploadsSuccessful) {
+						Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
+					} else if (!messageText.isEmpty() || !attachmentList.isEmpty()) {
+						Toast.makeText(ChatActivity.this, "Error: Could not send message.", Toast.LENGTH_SHORT).show();
+					}
 				}
-				String notificationMessage = senderDisplayName + ": " + notificationPreview;
-				HashMap<String, String> data = new HashMap<>();
-				data.put("chatId", chatId);
-				NotificationHelper.sendNotification(
-						recipientUid,
-						senderUid,
-						notificationMessage,
-						"chat_message",
-						data
-				);
-
-				_updateInbox(result.lastMessage, ServerValue.TIMESTAMP);
-
-				message_et.setText("");
-				ReplyMessageID = "null";
-				mMessageReplyLayout.setVisibility(View.GONE);
-
-				if (result.isAttachment) {
-					resetAttachmentState();
-				}
-
-				if (auth.getCurrentUser() != null) {
-					PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
-				}
-			} else {
-				if (result.isAttachment && !result.allUploadsSuccessful) {
-					Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
-				} else if (!TextUtils.isEmpty(message_et.getText().toString()) || !attachmentList.isEmpty()) {
-					Toast.makeText(ChatActivity.this, "Error: Could not send message.", Toast.LENGTH_SHORT).show();
-				}
-			}
-		}
+			});
+		});
 	}
 
 	public void _Block(final String _uid) {

@@ -1,6 +1,6 @@
 package com.synapse.social.studioasinc.model
 
-data class AttachmentItem(
+data class AttachmentItem @JvmOverloads constructor(
     val localPath: String,
     var uploadState: String = UPLOAD_STATE_PENDING,
     var uploadProgress: Int = 0,
