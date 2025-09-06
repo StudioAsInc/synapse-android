@@ -191,12 +191,6 @@ dependencies {
     implementation 'io.noties.markwon:html:4.6.2'
 
     // Testing
-    implementation 'junit:junit:4.13.2'
-    implementation 'androidx.test.ext:junit:1.1.5'
-    implementation 'androidx.test.espresso:espresso-core:3.5.1'
-    implementation('androidx.test.espresso:espresso-contrib:3.5.1') {
-        exclude group: 'com.google.protobuf', module: 'protobuf-lite'
-    }
 }
 
 // Apply Google Services plugin only if credentials file exists

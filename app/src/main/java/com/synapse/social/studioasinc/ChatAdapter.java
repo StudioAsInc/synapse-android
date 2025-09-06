@@ -228,8 +228,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         if (holder.mProfileCard != null && holder.mProfileImage != null) {
-            // Phase 1: Remove the inline profile picture for all messages.
-            // The avatar is now only shown in the top app bar.
+            // Profile image is no longer shown in the chat bubbles
             holder.mProfileCard.setVisibility(View.GONE);
         }
         
@@ -355,52 +354,60 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         
         if (holder.messageBG != null) {
-            String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
             String currentUid = String.valueOf(data.get("uid"));
-            boolean isMyMessage = currentUid.equals(myUid);
-
-            String prevUid = (position > 0) ? String.valueOf(_data.get(position - 1).get("uid")) : null;
-
             long currentTime = _getMessageTimestamp(data);
-            long prevTime = (position > 0) ? _getMessageTimestamp(_data.get(position - 1)) : 0;
-            boolean prevSameSender = (prevUid != null && prevUid.equals(currentUid) && (currentTime - prevTime) <= 60000);
 
-            boolean nextSameSender = false;
-            if (position < _data.size() - 1) {
-                HashMap<String, Object> nextData = _data.get(position + 1);
-                String nextUid = String.valueOf(nextData.get("uid"));
-                long nextTime = _getMessageTimestamp(nextData);
-                nextSameSender = (nextUid != null && nextUid.equals(currentUid) && (nextTime - currentTime) <= 60000);
-            }
-
-            int drawableResId;
-            if (isMyMessage) {
-                if (!prevSameSender && !nextSameSender) {
-                    drawableResId = R.drawable.shape_outgoing_bubble_single;
-                } else if (!prevSameSender && nextSameSender) {
-                    drawableResId = R.drawable.shape_outgoing_bubble_first;
-                } else if (prevSameSender && !nextSameSender) {
-                    drawableResId = R.drawable.shape_outgoing_bubble_last;
-                } else {
-                    drawableResId = R.drawable.shape_outgoing_bubble_middle;
-                }
+            boolean isFirstInGroup = false;
+            if (position == 0) {
+                isFirstInGroup = true;
             } else {
-                if (!prevSameSender && !nextSameSender) {
-                    drawableResId = R.drawable.shape_incoming_bubble_single;
-                } else if (!prevSameSender && nextSameSender) {
-                    drawableResId = R.drawable.shape_incoming_bubble_first;
-                } else if (prevSameSender && !nextSameSender) {
-                    drawableResId = R.drawable.shape_incoming_bubble_last;
-                } else {
-                    drawableResId = R.drawable.shape_incoming_bubble_middle;
+                HashMap<String, Object> prevMessage = _data.get(position - 1);
+                String prevUid = String.valueOf(prevMessage.get("uid"));
+                long prevTime = _getMessageTimestamp(prevMessage);
+                if (!prevUid.equals(currentUid) || (currentTime - prevTime) > 60000) {
+                    isFirstInGroup = true;
                 }
             }
-            holder.messageBG.setBackgroundResource(drawableResId);
 
-            if(holder.message_text != null) {
-                holder.message_text.setTextColor(isMyMessage ? Color.WHITE : Color.BLACK);
+            boolean isLastInGroup = false;
+            if (position == _data.size() - 1) {
+                isLastInGroup = true;
+            } else {
+                HashMap<String, Object> nextMessage = _data.get(position + 1);
+                String nextUid = String.valueOf(nextMessage.get("uid"));
+                long nextTime = _getMessageTimestamp(nextMessage);
+                if (!nextUid.equals(currentUid) || (nextTime - currentTime) > 60000) {
+                    isLastInGroup = true;
+                }
             }
 
+            int backgroundResource;
+
+            if (isMyMessage) { // Outgoing
+                if (isFirstInGroup && isLastInGroup) {
+                    backgroundResource = R.drawable.shape_outgoing_bubble_single;
+                } else if (isFirstInGroup) {
+                    backgroundResource = R.drawable.shape_outgoing_bubble_first;
+                } else if (isLastInGroup) {
+                    backgroundResource = R.drawable.shape_outgoing_bubble_last;
+                } else {
+                    backgroundResource = R.drawable.shape_outgoing_bubble_middle;
+                }
+                if(holder.message_text != null) holder.message_text.setTextColor(Color.WHITE);
+            } else { // Incoming
+                if (isFirstInGroup && isLastInGroup) {
+                    backgroundResource = R.drawable.shape_incoming_bubble_single;
+                } else if (isFirstInGroup) {
+                    backgroundResource = R.drawable.shape_incoming_bubble_first;
+                } else if (isLastInGroup) {
+                    backgroundResource = R.drawable.shape_incoming_bubble_last;
+                } else {
+                    backgroundResource = R.drawable.shape_incoming_bubble_middle;
+                }
+                if(holder.message_text != null) holder.message_text.setTextColor(Color.BLACK);
+            }
+
+            holder.messageBG.setBackgroundResource(backgroundResource);
             holder.messageBG.setClickable(true);
             holder.messageBG.setLongClickable(true);
         }
