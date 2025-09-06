@@ -1,0 +1,31 @@
+name: Gemini Auto Review
+
+on:
+  pull_request:
+    branches: ["**"]   # allow PRs from every branch
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Gemini CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/google-github-actions/run-gemini-cli/main/install.sh | sh
+          echo "${{ secrets.GEMINI_API_KEY }}" > ~/.gemini_api_key
+          export GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+
+      - name: Run Gemini Review
+        run: |
+          gemini review . --format markdown > review.md
+
+      - name: Post review as my account
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.PAT }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-file: review.md
