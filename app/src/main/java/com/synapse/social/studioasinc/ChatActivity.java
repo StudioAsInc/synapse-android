@@ -157,7 +157,7 @@ public class ChatActivity extends AppCompatActivity {
 	private HashMap<String, Object> ChatInboxSend2 = new HashMap<>();
 	private String SecondUserAvatar = "";
 	private HashMap<String, Object> typingSnd = new HashMap<>();
-	private String ReplyMessageID = "";
+	private String ReplyMessageID = null;
 	private String SecondUserName = "";
 	private String FirstUserName = "";
 	private String oldestMessageKey = null;
@@ -351,7 +351,7 @@ public class ChatActivity extends AppCompatActivity {
 		mMessageReplyLayoutBodyCancel.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				ReplyMessageID = "null";
+				ReplyMessageID = null;
 				mMessageReplyLayout.setVisibility(View.GONE);
 				vbr.vibrate((long)(48));
 			}
@@ -376,7 +376,7 @@ public class ChatActivity extends AppCompatActivity {
 					.concat("```");
 					callGemini(prompt, true);
 				} else {
-					if (ReplyMessageID != null && !ReplyMessageID.equals("null")) {
+					if (ReplyMessageID != null) {
 						int repliedMessageIndex = -1;
 						for (int i = 0; i < ChatMessagesList.size(); i++) {
 							if (ChatMessagesList.get(i).get(KEY_KEY).toString().equals(ReplyMessageID)) {
@@ -513,7 +513,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 
 		SecondUserAvatar = "null";
-		ReplyMessageID = "null";
+		ReplyMessageID = null;
 		path = "";
 		block_switch = 0;
 		// Set the Layout Manager
@@ -566,8 +566,7 @@ public class ChatActivity extends AppCompatActivity {
 		messageSender = new MessageSender(
 				e2eeHelper,
 				_firebase,
-				FirebaseAuth.getInstance().getCurrentUser().getUid(),
-				getApplicationContext()
+				FirebaseAuth.getInstance().getCurrentUser().getUid()
 		);
 
 		_setupSwipeToReply();
@@ -2076,23 +2075,21 @@ public class ChatActivity extends AppCompatActivity {
 			return; // Nothing to send
 		}
 
-		messageSender.sendMessage(
+		HashMap<String, Object> messageData = messageSender.sendMessage(
 				messageText,
 				recipientUid,
 				attachments,
 				ReplyMessageID,
+				FirstUserName,
 				new MessageSender.SendMessageCallback() {
 					@Override
-					public void onSuccess(HashMap<String, Object> messageData) {
+					public void onSuccess() {
+						// The message is already displayed optimistically.
+						// We could update the message state from "sending" to "sent" here.
+						// For now, we just clear the input fields as before.
 						runOnUiThread(() -> {
-							messageData.put("isLocalMessage", true);
-							messageKeys.add((String) messageData.get("key"));
-							ChatMessagesList.add(messageData);
-							chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
-							scrollToBottom();
-
 							message_et.setText("");
-							ReplyMessageID = "null";
+							ReplyMessageID = null;
 							mMessageReplyLayout.setVisibility(View.GONE);
 							resetAttachmentState();
 						});
@@ -2101,11 +2098,20 @@ public class ChatActivity extends AppCompatActivity {
 					@Override
 					public void onFailure(@NonNull Exception exception) {
 						runOnUiThread(() -> {
+							// We could update the message UI to show a "failed" state.
 							Toast.makeText(ChatActivity.this, "Error sending message: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
 						});
 					}
 				}
 		);
+
+		if (messageData != null && !messageData.isEmpty()) {
+			messageData.put("isLocalMessage", true);
+			messageKeys.add((String) messageData.get("key"));
+			ChatMessagesList.add(messageData);
+			chatAdapter.notifyItemInserted(ChatMessagesList.size() - 1);
+			scrollToBottom();
+		}
 	}
 
 
