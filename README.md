@@ -1,4 +1,5 @@
-[![Repository Size](https://img.shields.io/github/repo-size/StudioAsInc/synapse-android)](https://github.com/StudioAsInc/synapse-android)
+<div align="center">
+  <img src="https://i.postimg.cc/bJjpz6sk/deprecated-synapse-icon-square-blue-bg.png" width="120" height="120" style="border-radius:50%">
 
 <div align="center">
   
