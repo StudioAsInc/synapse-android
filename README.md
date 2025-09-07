@@ -16,9 +16,7 @@
 - **Real-time communication**: Chat, video calls (coming soon), and microblogs  
 - **Zero ads, non-profit model**: Prioritizing users over profits  
 - **35GB+ free storage**: For media, posts, and communities  
-- **Lightweight & optimized**: Runs smoothly on any device  
-
-> 🔧 *Under active development – expect frequent updates!*  
+- **Lightweight & optimized**: Runs smoothly on any device.
 
 ---
 
@@ -29,7 +27,7 @@ All project documentation is organized in the `Docs/` folder:
 - **[Source Map](Docs/Source%20Map.md)** - Complete project structure and architecture overview
 - **[Contributing Guidelines](Docs/CONTRIBUTE.md)** - How to contribute to the project
 - **[License](Docs/LICENSE.md)** - Project license and terms
-- **[Agent Instructions](Docs/agent.md)** - Guidelines for AI agents working on this project
+- **[Agent Instructions](Docs/Agent.md)** - Guidelines for AI agents working on this project
 
 ---
 
