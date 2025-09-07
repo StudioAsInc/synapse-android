@@ -641,6 +641,13 @@ public class HomeFragment extends Fragment {
                 final int storyPosition = position - 1;
                 com.synapse.social.studioasinc.models.Story story = _data.get(storyPosition);
 
+                if (story == null || story.getUid() == null || story.getUid().isEmpty()) {
+                    // Hide the item or show a placeholder
+                    holder.itemView.setVisibility(View.GONE);
+                    return;
+                }
+                holder.itemView.setVisibility(View.VISIBLE);
+
                 // Set seen/unseen border
                 String currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                 if (story.getSeenBy() != null && story.getSeenBy().containsKey(currentUid)) {
