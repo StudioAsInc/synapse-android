@@ -127,7 +127,7 @@ public class SynapseApp extends Application implements Application.ActivityLifec
 
     @Override
     public void onStart(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getDisplayName() != null && !mAuth.getCurrentUser().getDisplayName().isEmpty()) {
+        if (mAuth.getCurrentUser() != null) {
             PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
         }
         Activity activity = currentActivity.get();
@@ -144,7 +144,7 @@ public class SynapseApp extends Application implements Application.ActivityLifec
 
     @Override
     public void onStop(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getDisplayName() != null && !mAuth.getCurrentUser().getDisplayName().isEmpty()) {
+        if (mAuth.getCurrentUser() != null) {
             PresenceManager.goOffline(mAuth.getCurrentUser().getUid());
         }
     }
