@@ -415,7 +415,7 @@ class c {
 							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).removeValue();
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) - 1)));
 							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
-							btnFollow.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+							btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimary));
 							btnFollow.setText(getResources().getString(R.string.follow));
 							btnFollow.setTextColor(0xFFFFFFFF);
 						} else {
@@ -439,7 +439,7 @@ class c {
 							});
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
 							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
-							btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
+							btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurfaceContainer));
 							btnFollow.setText(getResources().getString(R.string.unfollow));
 							btnFollow.setTextColor(0xFF000000);
 						}
@@ -936,11 +936,11 @@ class c {
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if(dataSnapshot.exists()) {
 					btnFollow.setText(getResources().getString(R.string.unfollow));
-					btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
+					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurfaceContainer));
 					btnFollow.setTextColor(0xFF000000);
 				} else {
 					btnFollow.setText(getResources().getString(R.string.follow));
-					btnFollow.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimary));
 					btnFollow.setTextColor(0xFFFFFFFF);
 				}
 			}
