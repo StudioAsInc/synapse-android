@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Process;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import com.google.android.material.color.DynamicColors;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -54,6 +55,13 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         this.mExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         this.mCalendar = Calendar.getInstance();
         
+        // Apply Material 3 Dynamic Colors to the whole app if available
+        try {
+            DynamicColors.applyToActivitiesIfAvailable(this);
+        } catch (Throwable t) {
+            // no-op: dynamic colors not supported on this device
+        }
+
         // Initialize Firebase with disk persistence
         FirebaseApp.initializeApp(this);
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
