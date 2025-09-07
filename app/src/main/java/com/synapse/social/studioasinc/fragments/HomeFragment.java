@@ -526,7 +526,7 @@ public class HomeFragment extends Fragment {
                     if (_charSeq.length() == 0) {
                         holder.miniPostLayoutTextPostPublish.setVisibility(View.GONE);
                     } else {
-                        _viewGraphics(holder.miniPostLayoutTextPostPublish, com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(getContext(), com.google.android.material.R.attr.colorPrimary), 0xFFC5CAE9, 300, 0, Color.TRANSPARENT);
+                        _viewGraphics(holder.miniPostLayoutTextPostPublish, com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(getContext(), R.attr.colorPrimary), 0xFFC5CAE9, 300, 0, Color.TRANSPARENT);
                         holder.miniPostLayoutTextPostPublish.setVisibility(View.VISIBLE);
                     }
                 }
