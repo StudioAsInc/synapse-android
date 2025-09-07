@@ -10,8 +10,6 @@
   [Website](https://dl-synapse.pages.dev) • [Docs](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues/new?template=bug_report.md) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues/new?template=feature_request.md)
 </div>
 
-> **Note**: This project is no longer maintained by Humans, it's automated using agents
-
 ---
 
 ## 🚀 Introduction  
