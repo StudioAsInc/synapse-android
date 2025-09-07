@@ -223,7 +223,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (isMyMessage) {
                     String state = data.get("message_state") != null ? String.valueOf(data.get("message_state")) : "";
                     holder.message_state.setImageResource("seen".equals(state) ? R.drawable.icon_done_all_round : R.drawable.icon_done_round);
-                    holder.message_state.setColorFilter("seen".equals(state) ? com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(_context, R.attr.colorPrimary) : 0xFF424242, PorterDuff.Mode.SRC_ATOP);
+                    holder.message_state.setColorFilter("seen".equals(state) ? com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(_context, com.google.android.material.R.attr.colorPrimary) : 0xFF424242, PorterDuff.Mode.SRC_ATOP);
                 }
             }
         }
@@ -326,7 +326,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             if (holder.mRepliedMessageLayoutLeftBar != null) {
                                 android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
                                 leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
-                                leftBarDrawable.setColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(_context, R.attr.colorPrimary));
+                                leftBarDrawable.setColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(_context, com.google.android.material.R.attr.colorPrimary));
                                 int leftBarRadius = (int) _context.getResources().getDimension(R.dimen.left_bar_corner_radius);
                                 leftBarDrawable.setCornerRadius(leftBarRadius);
                                 holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
