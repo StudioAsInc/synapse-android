@@ -74,7 +74,7 @@
 							android:layout_width="4dp"
 							android:layout_height="match_parent"
 							android:layout_marginRight="8dp"
-							android:background="#2979FF"
+							android:background="?attr/colorPrimary"
 							android:orientation="vertical" />
 						<LinearLayout
 							android:id="@+id/mRepliedMessageLayoutRightBody"
@@ -88,7 +88,7 @@
 								android:layout_height="wrap_content"
 								android:text="@string/ph_username"
 								android:textSize="12sp"
-								android:textColor="#445E91"
+								android:textColor="?attr/colorPrimary"
 								android:singleLine="true" />
 							<!-- CRITICAL FIX: Add ImageView for reply image previews with rounded corners -->
 							<ImageView
@@ -112,7 +112,7 @@
 								android:autoLink="all"
 								android:maxLines="3"
 								android:ellipsize="end"
-								android:textColorLink="#FF0000" />
+								android:textColorLink="?attr/colorError" />
 						</LinearLayout>
 					</LinearLayout>
 				</com.google.android.material.card.MaterialCardView>
@@ -120,7 +120,7 @@
 					android:id="@+id/shimmer_container"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					app:shimmer_color="#9A9A9A">
+					app:shimmer_color="?attr/colorSurfaceVariant">
 					<TextView
 						android:id="@+id/message_text"
 						android:focusable="false"
@@ -129,7 +129,7 @@
 						android:text="@string/ph_message"
 						android:textSize="16sp"
 						android:autoLink="all"
-						android:textColorLink="#FF0000" />
+						android:textColorLink="?attr/colorError" />
 				</com.synapse.social.studioasinc.animations.ShimmerFrameLayout>
 			</LinearLayout>
 			<LinearLayout
@@ -151,7 +151,7 @@
 					android:layout_marginRight="4dp"
 					android:text="00:00"
 					android:textSize="12sp"
-					android:textColor="#000000" />
+					android:textColor="?attr/colorOnSurface" />
 				<ImageView
 					android:id="@+id/message_state"
 					android:focusable="false"

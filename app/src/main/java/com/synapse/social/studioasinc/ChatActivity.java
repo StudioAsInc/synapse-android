@@ -2017,7 +2017,7 @@ public class ChatActivity extends AppCompatActivity {
 		@Override
 		public void updateDrawState(TextPaint ds) {
 			ds.setUnderlineText(false);
-			ds.setColor(Color.parseColor("#FFFF00"));
+			ds.setColor(com.google.android.material.color.MaterialColors.getColor(ChatActivity.this, com.google.android.material.R.attr.colorSecondary, Color.BLACK));
 			ds.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 		}
 	}
@@ -2329,7 +2329,7 @@ public class ChatActivity extends AppCompatActivity {
 	public void _OpenWebView(final String _URL) {
 		AndroidDevelopersBlogURL = _URL;
 		CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-		builder.setToolbarColor(Color.parseColor("#242D39"));
+		builder.setToolbarColor(com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface, Color.BLACK));
 		CustomTabsIntent customtabsintent = builder.build();
 		customtabsintent.launchUrl(this, Uri.parse(AndroidDevelopersBlogURL));
 	}

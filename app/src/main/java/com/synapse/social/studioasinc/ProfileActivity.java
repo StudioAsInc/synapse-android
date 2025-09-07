@@ -347,9 +347,9 @@ class c {
 							UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString()) - 1)));
 							likeUserProfileButtonLikeCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString())));
 							likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_1);
-							_viewGraphics(likeUserProfileButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, 0xFF9E9E9E);
-							_ImageColor(likeUserProfileButtonIc, 0xFF000000);
-							likeUserProfileButtonLikeCount.setTextColor(0xFF616161);
+							_viewGraphics(likeUserProfileButton, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurface, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK), 300, 0, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOutline, Color.BLACK));
+							_ImageColor(likeUserProfileButtonIc, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK));
+							likeUserProfileButtonLikeCount.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK));
 						} else {
 							FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
 							com.synapse.social.studioasinc.util.UserUtils.getCurrentUserDisplayName(new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
@@ -371,9 +371,9 @@ class c {
 							UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
 							likeUserProfileButtonLikeCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString())));
 							likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_2);
-							_viewGraphics(likeUserProfileButton, 0xFFF50057, 0xFFC51162, 300, 0, 0xFF9E9E9E);
-							_ImageColor(likeUserProfileButtonIc, 0xFFFFFFFF);
-							likeUserProfileButtonLikeCount.setTextColor(0xFFFFFFFF);
+							_viewGraphics(likeUserProfileButton, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSecondary, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSecondary, Color.BLACK), 300, 0, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOutline, Color.BLACK));
+							_ImageColor(likeUserProfileButtonIc, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSecondary, Color.BLACK));
+							likeUserProfileButtonLikeCount.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSecondary, Color.BLACK));
 						}
 					}
 
@@ -415,9 +415,9 @@ class c {
 							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).removeValue();
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) - 1)));
 							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
-							btnFollow.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+							btnFollow.setBackgroundColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimary, Color.BLACK));
 							btnFollow.setText(getResources().getString(R.string.follow));
-							btnFollow.setTextColor(0xFFFFFFFF);
+							btnFollow.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnPrimary, Color.BLACK));
 						} else {
 							FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
 							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).setValue(getIntent().getStringExtra("uid"));
@@ -439,9 +439,9 @@ class c {
 							});
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
 							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
-							btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
+							btnFollow.setBackgroundColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurface, Color.BLACK));
 							btnFollow.setText(getResources().getString(R.string.unfollow));
-							btnFollow.setTextColor(0xFF000000);
+							btnFollow.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK));
 						}
 					}
 
@@ -669,15 +669,13 @@ class c {
 	private void initializeLogic() {
 		ProfilePageTabLayout.addTab(ProfilePageTabLayout.newTab().setText(getResources().getString(R.string.profile_tab)));
 		ProfilePageTabLayout.addTab(ProfilePageTabLayout.newTab().setText(getResources().getString(R.string.posts_tab)));
-		ProfilePageTabLayout.setTabTextColors(0xFF9E9E9E, 0xFF445E91);
-		ProfilePageTabLayout.setTabRippleColor(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_pressed}}, 
-		
-		new int[] {0xFFEEEEEE}));
-		ProfilePageTabLayout.setSelectedTabIndicatorColor(0xFF445E91);
+		ProfilePageTabLayout.setTabTextColors(getColor(R.color.material_on_surface_emphasis_medium), com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorPrimary, Color.BLACK));
+		ProfilePageTabLayout.setTabRippleColorResource(R.color.material_on_surface_emphasis_medium);
+		ProfilePageTabLayout.setSelectedTabIndicatorColor(com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorPrimary, Color.BLACK));
 		ProfilePageTabUserPostsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 		_loadRequest();
 		ProfilePageTabUserInfoNickname.setTypeface(Typeface.DEFAULT, 1);
-		ProfilePageNoInternetBodyRetry.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)0, 0xFFFFFDE7, 0xFF445E91));
+		ProfilePageNoInternetBodyRetry.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)100, (int)0, 0xFFFFFDE7, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimary, Color.BLACK)));
 		String intentUid = getIntent().getStringExtra("uid");
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		if (intentUid != null && currentUser != null && intentUid.equals(currentUser.getUid())) {
@@ -687,7 +685,7 @@ class c {
 			ProfilePageTabUserInfoSecondaryButtons.setVisibility(View.VISIBLE);
 			btnEditProfile.setVisibility(View.GONE);
 		}
-		_viewGraphics(likeUserProfileButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, 0xFF9E9E9E);
+		_viewGraphics(likeUserProfileButton, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK), 300, 0, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOutline, Color.BLACK));
 	}
 	
 	public void _ImageColor(final ImageView _image, final int _color) {
@@ -738,14 +736,14 @@ class c {
 					// Check user status
 					if (dataSnapshot.child("status").getValue(String.class).equals("online")) {
 						ProfilePageTabUserInfoStatus.setText(getResources().getString(R.string.online));
-						ProfilePageTabUserInfoStatus.setTextColor(0xFF2196F3);
+						ProfilePageTabUserInfoStatus.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimary, Color.BLACK));
 					} else {
 						if (dataSnapshot.child("status").getValue(String.class).equals("offline")) {
 							ProfilePageTabUserInfoStatus.setText(getResources().getString(R.string.offline));
 						} else {
 							_setUserLastSeen(Double.parseDouble(dataSnapshot.child("status").getValue(String.class)), ProfilePageTabUserInfoStatus);
 						}
-						ProfilePageTabUserInfoStatus.setTextColor(0xFF757575);
+						ProfilePageTabUserInfoStatus.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK));
 					}
 					ProfilePageTabUserInfoUsername.setText("@" + dataSnapshot.child("username").getValue(String.class));
 					if (dataSnapshot.child("nickname").getValue(String.class).equals("null")) {
@@ -936,12 +934,12 @@ class c {
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if(dataSnapshot.exists()) {
 					btnFollow.setText(getResources().getString(R.string.unfollow));
-					btnFollow.setBackgroundColor(getResources().getColor(R.color.bars_colors));
-					btnFollow.setTextColor(0xFF000000);
+					btnFollow.setBackgroundColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurface, Color.BLACK));
+					btnFollow.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK));
 				} else {
 					btnFollow.setText(getResources().getString(R.string.follow));
-					btnFollow.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-					btnFollow.setTextColor(0xFFFFFFFF);
+					btnFollow.setBackgroundColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimary, Color.BLACK));
+					btnFollow.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnPrimary, Color.BLACK));
 				}
 			}
 
@@ -956,14 +954,14 @@ class c {
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				if(dataSnapshot.exists()) {
 					likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_2);
-					_viewGraphics(likeUserProfileButton, 0xFFF50057, 0xFFC51162, 300, 0, 0xFF9E9E9E);
-					_ImageColor(likeUserProfileButtonIc, 0xFFFFFFFF);
-					likeUserProfileButtonLikeCount.setTextColor(0xFFFFFFFF);
+					_viewGraphics(likeUserProfileButton, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSecondary, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSecondary, Color.BLACK), 300, 0, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOutline, Color.BLACK));
+					_ImageColor(likeUserProfileButtonIc, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSecondary, Color.BLACK));
+					likeUserProfileButtonLikeCount.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSecondary, Color.BLACK));
 				} else {
 					likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_1);
-					_viewGraphics(likeUserProfileButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, 0xFF9E9E9E);
-					_ImageColor(likeUserProfileButtonIc, 0xFF000000);
-					likeUserProfileButtonLikeCount.setTextColor(0xFF616161);
+					_viewGraphics(likeUserProfileButton, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurface, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK), 300, 0, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOutline, Color.BLACK));
+					_ImageColor(likeUserProfileButtonIc, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK));
+					likeUserProfileButtonLikeCount.setTextColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK));
 				}
 			}
 
@@ -1070,7 +1068,7 @@ class c {
 			final TextView save_to_history = mProfileImageViewDialogView.findViewById(R.id.save_to_history);
 			
 			body.setVisibility(View.GONE);
-			_viewGraphics(save_to_history, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, Color.TRANSPARENT);
+			_viewGraphics(save_to_history, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurface, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK), 300, 0, Color.TRANSPARENT);
 			avatarCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)1000, Color.TRANSPARENT));
 			DatabaseReference getUserReference = FirebaseDatabase.getInstance().getReference("skyline/users").child(_uid);
 			getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1296,7 +1294,7 @@ class c {
 		@Override
 		public void updateDrawState(TextPaint ds) {
 			ds.setUnderlineText(false);
-			ds.setColor(Color.parseColor("#445E91"));
+			ds.setColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimary, Color.BLACK));
 			ds.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 		}
 	}
@@ -1314,7 +1312,7 @@ class c {
 	public void _OpenWebView(final String _URL) {
 		AndroidDevelopersBlogURL = _URL;
 		CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-		builder.setToolbarColor(Color.parseColor("#242D39"));
+		builder.setToolbarColor(com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurface, Color.BLACK));
 		CustomTabsIntent customtabsintent = builder.build();
 		customtabsintent.launchUrl(this, Uri.parse(AndroidDevelopersBlogURL));
 	}
@@ -1710,8 +1708,8 @@ class c {
 					postMoreBottomSheetDialog.show(getSupportFragmentManager(), postMoreBottomSheetDialog.getTag());
 				}
 			});
-			likeButton.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)300, (int)1, 0xFFE0E0E0, 0xFFF5F5F5));
-			commentsButton.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)300, (int)1, 0xFFE0E0E0, 0xFFF5F5F5));
+			likeButton.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)300, (int)1, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOutline, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurface, Color.BLACK)));
+			commentsButton.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)300, (int)1, com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorOutline, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurface, Color.BLACK)));
 			postImage.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View _view) {

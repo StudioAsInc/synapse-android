@@ -60,7 +60,7 @@
         android:layout_margin="24dp"
         android:src="@drawable/ic_download"
         android:contentDescription="Download image"
-        app:backgroundTint="@color/colorPrimary"
+        app:backgroundTint="?attr/colorPrimary"
         app:tint="#FFFFFF"
         app:elevation="8dp" />
 

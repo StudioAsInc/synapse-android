@@ -314,23 +314,23 @@ public class ProfileEditActivity extends AppCompatActivity {
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
 				final String _charSeq = _param1.toString();
 				if (_charSeq.trim().equals("")) {
-					mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFF44336, 0xFFFFFFFF));
+					setInputBackground(mUsernameInput, true);
 					((EditText)mUsernameInput).setError(getResources().getString(R.string.enter_username));
 					userNameErr = true;
 				} else {
 					if (_charSeq.matches("[a-z0-9_.]+")) {
 						if (_charSeq.contains("q") || (_charSeq.contains("w") || (_charSeq.contains("e") || (_charSeq.contains("r") || (_charSeq.contains("t") || (_charSeq.contains("y") || (_charSeq.contains("u") || (_charSeq.contains("i") || (_charSeq.contains("o") || (_charSeq.contains("p") || (_charSeq.contains("a") || (_charSeq.contains("s") || (_charSeq.contains("d") || (_charSeq.contains("f") || (_charSeq.contains("g") || (_charSeq.contains("h") || (_charSeq.contains("j") || (_charSeq.contains("k") || (_charSeq.contains("l") || (_charSeq.contains("z") || (_charSeq.contains("x") || (_charSeq.contains("c") || (_charSeq.contains("v") || (_charSeq.contains("b") || (_charSeq.contains("n") || _charSeq.contains("m")))))))))))))))))))))))))) {
 							if (mUsernameInput.getText().toString().length() < 3) {
-								mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFF44336, 0xFFFFFFFF));
+								setInputBackground(mUsernameInput, true);
 								((EditText)mUsernameInput).setError(getResources().getString(R.string.username_err_3_characters));
 								userNameErr = true;
 							} else {
 								if (mUsernameInput.getText().toString().length() > 25) {
-									mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFF44336, 0xFFFFFFFF));
+									setInputBackground(mUsernameInput, true);
 									((EditText)mUsernameInput).setError(getResources().getString(R.string.username_err_25_characters));
 									userNameErr = true;
 								} else {
-									mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
+									setInputBackground(mUsernameInput, false);
 									DatabaseReference checkUsernameRef = FirebaseDatabase.getInstance().getReference().child("skyline/users");
 									
 									Query checkUsernameQuery = checkUsernameRef.orderByChild("username").equalTo(_charSeq.trim());
@@ -341,16 +341,16 @@ public class ProfileEditActivity extends AppCompatActivity {
 												for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
 													String uid = childSnapshot.child("uid").getValue(String.class);
 													if (uid != null && uid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
-														mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
+														setInputBackground(mUsernameInput, false);
 														userNameErr = false;
 													} else {
-														mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)1, 0xFFF44336, 0xFFFFFFFF));
+														setInputBackground(mUsernameInput, true);
 														((EditText) mUsernameInput).setError(getResources().getString(R.string.username_err_already_taken));
 														userNameErr = true;
 													}
 												}
 											} else {
-												mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
+												setInputBackground(mUsernameInput, false);
 												userNameErr = false;
 											}
 										}
@@ -364,12 +364,12 @@ public class ProfileEditActivity extends AppCompatActivity {
 								}
 							}
 						} else {
-							mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFF44336, 0xFFFFFFFF));
+							setInputBackground(mUsernameInput, true);
 							((EditText)mUsernameInput).setError(getResources().getString(R.string.username_err_one_letter));
 							userNameErr = true;
 						}
 					} else {
-						mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFF44336, 0xFFFFFFFF));
+						setInputBackground(mUsernameInput, true);
 						((EditText)mUsernameInput).setError(getResources().getString(R.string.username_err_invalid_characters));
 						userNameErr = true;
 					}
@@ -392,11 +392,11 @@ public class ProfileEditActivity extends AppCompatActivity {
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
 				final String _charSeq = _param1.toString();
 				if (_charSeq.length() > 30) {
-					mNicknameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFF44336, 0xFFFFFFFF));
+					setInputBackground(mNicknameInput, true);
 					((EditText)mNicknameInput).setError(getResources().getString(R.string.nickname_err_30_characters));
 					nickNameErr = true;
 				} else {
-					mNicknameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
+					setInputBackground(mNicknameInput, false);
 					nickNameErr = false;
 				}
 			}
@@ -417,11 +417,11 @@ public class ProfileEditActivity extends AppCompatActivity {
 			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
 				final String _charSeq = _param1.toString();
 				if (_charSeq.length() > 250) {
-					mBiographyInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFF44336, 0xFFFFFFFF));
+					setInputBackground(mBiographyInput, true);
 					((EditText)mBiographyInput).setError(getResources().getString(R.string.biography_err_250_characters));
 					biographyErr = true;
 				} else {
-					mBiographyInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
+					setInputBackground(mBiographyInput, false);
 					biographyErr = false;
 				}
 			}
@@ -710,18 +710,18 @@ public class ProfileEditActivity extends AppCompatActivity {
 	private void initializeLogic() {
 		// UI related codings
 		_stateColor(0xFFFFFFFF, 0xFFF5F5F5);
-		_ImageColor(gender_male_ic, 0xFF2196F3);
-		_ImageColor(gender_female_ic, 0xFFE91E63);
-		_viewGraphics(region, 0xFFFFFFFF, 0xFFEEEEEE, 28, 3, 0xFFEEEEEE);
-		_viewGraphics(profile_image_history_stage, 0xFFFFFFFF, 0xFFEEEEEE, 28, 3, 0xFFEEEEEE);
-		_viewGraphics(cover_image_history_stage, 0xFFFFFFFF, 0xFFEEEEEE, 28, 3, 0xFFEEEEEE);
+		_ImageColor(gender_male_ic, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorPrimary, Color.BLACK));
+		_ImageColor(gender_female_ic, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorSecondary, Color.BLACK));
+		_viewGraphics(region, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK), 28, 3, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOutline, Color.BLACK));
+		_viewGraphics(profile_image_history_stage, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK), 28, 3, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOutline, Color.BLACK));
+		_viewGraphics(cover_image_history_stage, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface, Color.BLACK), 28, 3, com.google.android.material.color.MaterialColors.getColor(this, com.google.android.material.R.attr.colorOutline, Color.BLACK));
 		top.setElevation((float)4);
 		profileRelativeCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)28, Color.TRANSPARENT));
 		stage1RelativeUpProfileCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, Color.TRANSPARENT));
-		mUsernameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
-		mNicknameInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
-		mBiographyInput.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
-		gender.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
+		setInputBackground(mUsernameInput, false);
+		setInputBackground(mNicknameInput, false);
+		setInputBackground(mBiographyInput, false);
+		gender.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, com.google.android.material.color.MaterialColors.getColor(ProfileEditActivity.this, com.google.android.material.R.attr.colorOutline, Color.BLACK), com.google.android.material.color.MaterialColors.getColor(ProfileEditActivity.this, com.google.android.material.R.attr.colorSurface, Color.BLACK)));
 		mTitle.setTypeface(Typeface.DEFAULT, 1);
 		gender_title.setTypeface(Typeface.DEFAULT, 1);
 		region_title.setTypeface(Typeface.DEFAULT, 1);
