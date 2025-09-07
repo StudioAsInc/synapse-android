@@ -10,7 +10,6 @@
   [Website](https://dl-synapse.pages.dev) • [Docs](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues/new?template=bug_report.md) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues/new?template=feature_request.md)
 </div>
 
----
 
 ## 🚀 Introduction  
 **Synapse** is a revolutionary open-source social platform combining speed, privacy, and customization:  
