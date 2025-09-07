@@ -3,7 +3,7 @@
 
 <div align="center">
   
-  # Synapse
+  # **Synapse**
   
   **Express yourself in a better way ✨**
 
