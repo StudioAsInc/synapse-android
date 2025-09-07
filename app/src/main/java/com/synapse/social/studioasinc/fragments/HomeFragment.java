@@ -1,5 +1,6 @@
 package com.synapse.social.studioasinc.fragments;
 
+import com.synapse.social.studioasinc.R;
 import android.Manifest;
 import android.animation.*;
 import android.app.*;
@@ -71,7 +72,6 @@ import com.synapse.social.studioasinc.HomeActivity;
 import com.synapse.social.studioasinc.PostCommentsBottomSheetDialog;
 import com.synapse.social.studioasinc.PostMoreBottomSheetDialog;
 import com.synapse.social.studioasinc.ProfileActivity;
-import com.synapse.social.studioasinc.R;
 import com.synapse.social.studioasinc.SynapseApp;
 
 import java.io.*;

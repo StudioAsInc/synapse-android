@@ -45,6 +45,7 @@ import com.synapse.social.studioasinc.config.CloudinaryConfig;
 import com.synapse.social.studioasinc.model.Attachment;
 import com.synapse.social.studioasinc.crypto.E2EEHelper;
 import com.synapse.social.studioasinc.util.AttachmentUtils;
+import com.synapse.social.studioasinc.R;
 import com.synapse.social.studioasinc.util.UIUtils;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
