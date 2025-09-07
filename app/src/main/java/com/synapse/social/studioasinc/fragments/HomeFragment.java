@@ -110,6 +110,12 @@ public class HomeFragment extends Fragment {
     private FirebaseAuth auth;
     private Calendar cc = Calendar.getInstance();
 
+    private int getThemeColor(int attr) {
+        TypedValue typedValue = new TypedValue();
+        getContext().getTheme().resolveAttribute(attr, typedValue, true);
+        return typedValue.data;
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -526,7 +532,7 @@ public class HomeFragment extends Fragment {
                     if (_charSeq.length() == 0) {
                         holder.miniPostLayoutTextPostPublish.setVisibility(View.GONE);
                     } else {
-                        _viewGraphics(holder.miniPostLayoutTextPostPublish, getResources().getColor(R.color.colorPrimary), 0xFFC5CAE9, 300, 0, Color.TRANSPARENT);
+                        _viewGraphics(holder.miniPostLayoutTextPostPublish, getThemeColor(R.attr.colorPrimary), 0xFFC5CAE9, 300, 0, Color.TRANSPARENT);
                         holder.miniPostLayoutTextPostPublish.setVisibility(View.VISIBLE);
                     }
                 }

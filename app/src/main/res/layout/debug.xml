@@ -46,7 +46,7 @@
 			android:id="@+id/cardview1"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			app:cardBackgroundColor="@color/bars_colors"
+			app:cardBackgroundColor="?attr/colorSurface"
 			android:layout_weight="1"
 			app:cardElevation="1dp"
 			app:cardCornerRadius="20dp">
@@ -54,7 +54,7 @@
 				android:id="@+id/scroll"
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
-				android:background="@color/bars_colors"
+				android:background="?attr/colorSurface"
 				android:scrollbars="none">
 				<TextView
 					android:id="@+id/error_text"
@@ -78,7 +78,7 @@
 			android:padding="16dp"
 			android:text="@string/report_error"
 			android:textSize="16sp"
-			android:textColor="@color/colorControlHighlight"
+			android:textColor="?attr/colorPrimary"
 			style="@style/Widget.Material3Expressive.Button" />
 	</LinearLayout>
 </LinearLayout>

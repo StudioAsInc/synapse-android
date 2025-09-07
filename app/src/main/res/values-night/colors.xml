@@ -1,16 +1,4 @@
 <resources>
-    <color name="colorPrimary">#BB86FC</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC6</color>
-    <color name="colorBackground">#121212</color>
-    <color name="colorSurface">#1E1E1E</color>
-    <color name="colorError">#CF6679</color>
-    <color name="colorOnPrimary">#000000</color>
-    <color name="colorOnSecondary">#000000</color>
-    <color name="colorOnBackground">#E0E0E0</color>
-    <color name="colorOnSurface">#E0E0E0</color>
-    <color name="colorOnError">#000000</color>
-
     <!--M3-->
     <color name="md_theme_primary">#BB86FC</color>
     <color name="md_theme_onPrimary">#000000</color>

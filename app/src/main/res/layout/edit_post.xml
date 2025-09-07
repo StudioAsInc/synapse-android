@@ -73,7 +73,7 @@
 				android:paddingBottom="8dp"
 				android:text="Update"
 				android:textSize="16sp"
-				android:textColor="@color/colorSurface"
+				android:textColor="?attr/colorSurface"
 				style="@style/Widget.Material3.Button" />
 		</LinearLayout>
 		<LinearLayout

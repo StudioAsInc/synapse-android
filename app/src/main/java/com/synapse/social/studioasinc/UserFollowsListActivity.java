@@ -540,6 +540,12 @@ public class UserFollowsListActivity extends AppCompatActivity {
 									}
 								}
 							}
+
+	private int getThemeColor(int attr) {
+		TypedValue typedValue = new TypedValue();
+		getTheme().resolveAttribute(attr, typedValue, true);
+		return typedValue.data;
+	}
 						}
 					}
 					m_coordinator_layout.setVisibility(View.VISIBLE);
@@ -560,7 +566,7 @@ public class UserFollowsListActivity extends AppCompatActivity {
 	
 	public void _setTab(final double _id) {
 		if (_id == 0) {
-			_viewGraphics(tab_followers, getResources().getColor(R.color.colorPrimary), 0xFF3F51B5, 300, 0, Color.TRANSPARENT);
+			_viewGraphics(tab_followers, getThemeColor(R.attr.colorPrimary), 0xFF3F51B5, 300, 0, Color.TRANSPARENT);
 			_viewGraphics(tab_followings, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
 			tab_followers.setTextColor(0xFFFFFFFF);
 			tab_followings.setTextColor(0xFF616161);
@@ -569,7 +575,7 @@ public class UserFollowsListActivity extends AppCompatActivity {
 		}
 		if (_id == 1) {
 			_viewGraphics(tab_followers, 0xFFFFFFFF, 0xFFEEEEEE, 300, 2, 0xFFEEEEEE);
-			_viewGraphics(tab_followings, getResources().getColor(R.color.colorPrimary), 0xFF3949AB, 300, 0, Color.TRANSPARENT);
+			_viewGraphics(tab_followings, getThemeColor(R.attr.colorPrimary), 0xFF3949AB, 300, 0, Color.TRANSPARENT);
 			tab_followers.setTextColor(0xFF616161);
 			tab_followings.setTextColor(0xFFFFFFFF);
 			followers_layout.setVisibility(View.GONE);

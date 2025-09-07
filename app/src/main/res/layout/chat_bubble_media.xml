@@ -98,12 +98,12 @@
 							android:layout_marginBottom="4dp"
 							android:text="View all images"
 							android:textSize="14sp"
-							android:textColor="@color/colorPrimary"
+							android:textColor="?attr/colorPrimary"
 							android:visibility="gone"
 							app:iconGravity="textStart"
 							app:icon="@drawable/ic_image_multiple"
 							app:iconSize="18dp"
-							app:iconTint="@color/colorPrimary" />
+							app:iconTint="?attr/colorPrimary" />
 							
 					</LinearLayout>
 					

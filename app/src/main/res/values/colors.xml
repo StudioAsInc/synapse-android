@@ -1,24 +1,4 @@
 <resources>
-    <color name="colorPrimary">#445E91</color>
-    <color name="colorPrimaryDark">#445E91</color>
-    <color name="colorControlHighlight">#E0E7F5</color>
-    <color name="colorControlNormal">#445E91</color>
-    <color name="colorAccent">#445E91</color>
-    <color name="darkPrimaryBackground">#1A2536</color>
-    <color name="darkSecondaryBackground">#2D3C5A</color>
-    <color name="darkPrimaryText">#F0F3F8</color>
-    <color name="darkSecondaryText">#C2CCE0</color>
-    <color name="darkAccent">#6A8CD2</color>
-    <color name="colorBackground">#FFFFFF</color>
-    <color name="colorSurface">#FFFFFF</color>
-    <color name="colorError">#B00020</color>
-    <color name="colorOnPrimary">#FFFFFF</color>
-    <color name="colorOnSecondary">#000000</color>
-    <color name="colorOnBackground">#000000</color>
-    <color name="colorOnSurface">#000000</color>
-    <color name="colorOnError">#FFFFFF</color>
-    <color name="design_dark_default_color_background">#FFFFFF</color>
-    <color name="bars_colors">#EBF0F8</color>
     <!--M3-->
     <color name="md_theme_primary">#445E91</color>
     <color name="md_theme_onPrimary">#FFFFFF</color>
