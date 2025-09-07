@@ -3,26 +3,21 @@
 
 <div align="center">
   
-  # Synapse
+  # **Synapse**
   
-  **✨ Express yourself in a better way ✨**  
-  *A next-gen, open-source social platform*
+  **Express yourself in a better way ✨**
 
   [Website](https://dl-synapse.pages.dev) • [Docs](https://dl-synapse.pages.dev/docs) • [Report Bug](https://github.com/StudioAsInc/synapse-android/issues/new?template=bug_report.md) • [Request Feature](https://github.com/StudioAsInc/synapse-android/issues/new?template=feature_request.md)
 </div>
 
-> **Note**: This project is no longer maintained by Humans, it's automated using agents
-
----
+</div>
 
 ## 🚀 Introduction  
 **Synapse** is a revolutionary open-source social platform combining speed, privacy, and customization:  
 - **Real-time communication**: Chat, video calls (coming soon), and microblogs  
 - **Zero ads, non-profit model**: Prioritizing users over profits  
 - **35GB+ free storage**: For media, posts, and communities  
-- **Lightweight & optimized**: Runs smoothly on any device  
-
-> 🔧 *Under active development – expect frequent updates!*  
+- **Lightweight & optimized**: Runs smoothly on any device.
 
 ---
 
@@ -33,7 +28,7 @@ All project documentation is organized in the `Docs/` folder:
 - **[Source Map](Docs/Source%20Map.md)** - Complete project structure and architecture overview
 - **[Contributing Guidelines](Docs/CONTRIBUTE.md)** - How to contribute to the project
 - **[License](Docs/LICENSE.md)** - Project license and terms
-- **[Agent Instructions](Docs/agent.md)** - Guidelines for AI agents working on this project
+- **[Agent Instructions](Docs/Agent.md)** - Guidelines for AI agents working on this project
 
 ---
 
@@ -82,6 +77,4 @@ Special thanks to:
   **A Project by [StudioAs Inc.](https://studioas.dev)**  
   *"Empowering connections through transparency"*
 
-  [⭐ Star on GitHub](https://github.com/StudioAsInc/synapse-android) • [Join Our Community](https://web-synapse.pages.dev) • [Contact](mailto:mashikahamed0@gmail.com)  
-
-</div>
+  [⭐ Star on GitHub](https://github.com/StudioAsInc/synapse-android) • [Join Our Community](https://web-synapse.pages.dev) • [Contact](mailto:mashikahamed0@gmail.com)
