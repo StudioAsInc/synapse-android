@@ -137,6 +137,7 @@ public class ChatActivity extends AppCompatActivity {
 
 	private static final String MESSAGE_TYPE = "MESSAGE";
 	private static final String ATTACHMENT_MESSAGE_TYPE = "ATTACHMENT_MESSAGE";
+	private static final String LINK_PREVIEW_MESSAGE_TYPE = "LINK_PREVIEW_MESSAGE";
 
 	private static final String GEMINI_MODEL = "gemini-2.5-flash-lite";
 	private static final String GEMINI_EXPLANATION_MODEL = "gemini-2.5-flash";
@@ -2192,7 +2193,11 @@ public class ChatActivity extends AppCompatActivity {
 
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
+				if (LinkPreviewUtil.extractUrl(messageText) != null) {
+					ChatSendMap.put(TYPE_KEY, LINK_PREVIEW_MESSAGE_TYPE);
+				} else {
+					ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
+				}
 				ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessage);
 				ChatSendMap.put("isEncrypted", true);
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
