@@ -491,6 +491,9 @@ public class HomeFragment extends Fragment {
 	        holder.profileListener = new ValueEventListener() {
 	            @Override
 	            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+	                if (!isAdded()) {
+	                    return;
+	                }
 	                if(dataSnapshot.exists()) {
 	                    if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
 	                        Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(holder.miniPostLayoutProfileImage);
@@ -503,6 +506,9 @@ public class HomeFragment extends Fragment {
 	            }
 	            @Override
 	            public void onCancelled(@NonNull DatabaseError databaseError) {
+	                if (!isAdded()) {
+	                    return;
+	                }
 	                Toast.makeText(getContext(), "Error fetching user profile: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
 	                holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
 	            }
