@@ -1,0 +1,23 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ProfilePageTabUserPosts"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurfaceContainer"
+    android:orientation="vertical">
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/ProfilePageTabUserPostsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:listitem="@layout/synapse_post_cv" />
+    <TextView
+        android:id="@+id/ProfilePageTabUserPostsNoPostsSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal|center_vertical"
+        android:textSize="18sp"
+        android:textColor="?android:attr/textColorSecondary"
+        tools:replace="android:text"
+        android:text="@string/m_no_posts" />
+</LinearLayout>
