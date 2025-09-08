@@ -151,9 +151,14 @@ public class StoryViewerActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(@NonNull StoryViewHolder holder, int position) {
             Story story = stories.get(position);
-            Glide.with(holder.itemView.getContext())
-                    .load(Uri.parse(story.getUrl()))
-                    .into(holder.storyImageView);
+            if (story.getUrl() != null && !story.getUrl().isEmpty()) {
+                Glide.with(holder.itemView.getContext())
+                        .load(Uri.parse(story.getUrl()))
+                        .into(holder.storyImageView);
+            } else {
+                // Optionally, hide the view or set a placeholder
+                holder.storyImageView.setVisibility(View.GONE);
+            }
 
             fetchUserInfo(story.getUid(), holder);
 
