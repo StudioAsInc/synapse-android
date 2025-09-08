@@ -261,4 +261,9 @@ Please explain the following message from %3$s in detail, considering the contex
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="search_hint">Search users</string>
+    <string name="chat_settings_title">Chat</string>
+    <string name="message_text_size_title">Message text size</string>
+    <string name="chat_background_title">Chat background</string>
+    <string name="chat_background_summary">Default</string>
+    <string name="message_corner_radius_title">Message corner radius</string>
 </resources>

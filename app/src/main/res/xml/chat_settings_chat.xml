@@ -1,26 +1,27 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="Chat">
+    <PreferenceCategory app:title="@string/chat_settings_title">
 
         <SeekBarPreference
             app:key="message_text_size"
-            app:title="Message text size"
-            app:defaultValue="16"
+            app:title="@string/message_text_size_title"
+            android:defaultValue="16"
             app:min="12"
-            app:max="30"
+            android:max="30"
             app:showSeekBarValue="true"/>
 
         <Preference
             app:key="chat_background"
-            app:title="Chat background"
-            app:summary="Default"/>
+            app:title="@string/chat_background_title"
+            app:summary="@string/chat_background_summary"/>
 
         <SeekBarPreference
             app:key="message_corner_radius"
-            app:title="Message corner radius"
-            app:defaultValue="16"
+            app:title="@string/message_corner_radius_title"
+            android:defaultValue="16"
             app:min="0"
-            app:max="50"
+            android:max="50"
             app:showSeekBarValue="true"/>
 
     </PreferenceCategory>
