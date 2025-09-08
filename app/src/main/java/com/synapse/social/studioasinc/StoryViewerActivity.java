@@ -180,26 +180,28 @@ public class StoryViewerActivity extends AppCompatActivity {
         }
 
         private void fetchUserInfo(String uid, StoryViewHolder holder) {
-            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users").child(uid);
-            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if (snapshot.exists()) {
-                        User user = snapshot.getValue(User.class);
-                        if (user != null) {
-                            holder.storyUsername.setText(user.getUsername());
-                            Glide.with(holder.itemView.getContext())
-                                    .load(user.getImageurl())
-                                    .into(holder.storyProfileImage);
+            if (uid != null && !uid.isEmpty()) {
+                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users").child(uid);
+                userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            User user = snapshot.getValue(User.class);
+                            if (user != null) {
+                                holder.storyUsername.setText(user.getUsername());
+                                Glide.with(holder.itemView.getContext())
+                                        .load(user.getImageurl())
+                                        .into(holder.storyProfileImage);
+                            }
                         }
                     }
-                }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    // Handle error
-                }
-            });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        // Handle error
+                    }
+                });
+            }
         }
 
 

@@ -184,7 +184,7 @@ public class HomeFragment extends Fragment {
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot storySnap : dataSnapshot.getChildren()) {
                                 com.synapse.social.studioasinc.models.Story story = storySnap.getValue(com.synapse.social.studioasinc.models.Story.class);
-                                if (story != null) {
+                                if (story != null && story.getUid() != null && !story.getUid().isEmpty()) {
                                     storiesList.add(story);
                                 }
                             }
