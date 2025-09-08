@@ -115,13 +115,13 @@ public class ChatsettingsActivity extends AppCompatActivity implements SettingsA
 
         GradientDrawable messageBgDrawable = new GradientDrawable();
         messageBgDrawable.setShape(GradientDrawable.RECTANGLE);
-        messageBgDrawable.setColor(ThemeUtils.getThemeColor(this, com.google.android.material.R.attr.colorSurfaceVariant));
+        messageBgDrawable.setColor(ThemeUtils.getThemeColor(this, R.attr.colorSurfaceVariant));
         messageBgDrawable.setCornerRadius(cornerRadius);
         previewViewHolder.messageBG.setBackground(messageBgDrawable);
 
         GradientDrawable messageBg1Drawable = new GradientDrawable();
         messageBg1Drawable.setShape(GradientDrawable.RECTANGLE);
-        messageBg1Drawable.setColor(ThemeUtils.getThemeColor(this, com.google.android.material.R.attr.colorPrimary));
+        messageBg1Drawable.setColor(ThemeUtils.getThemeColor(this, R.attr.colorPrimary));
         messageBg1Drawable.setCornerRadius(cornerRadius);
         previewViewHolder.messageBG1.setBackground(messageBg1Drawable);
     }
