@@ -288,7 +288,7 @@ class c {
 		ProfilePageTopBarMenu.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), ChatsettingsActivity.class);
+				intent.setClass(getApplicationContext(), ChatSettingsActivity.class);
 				startActivity(intent);
 			}
 		});

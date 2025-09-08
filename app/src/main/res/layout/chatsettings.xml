@@ -15,7 +15,7 @@
 		<LinearLayout
 			android:id="@+id/top"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
+			android:layout_height="?attr/actionBarSize"
 			android:paddingLeft="8dp"
 			android:paddingTop="4dp"
 			android:paddingRight="8dp"
@@ -28,7 +28,7 @@
 				android:layout_width="48dp"
 				android:layout_height="48dp"
 				android:padding="12dp"
-				android:src="@drawable/ic_arrow_back_ios_new_48px"
+				android:src="?attr/homeAsUpIndicator"
 				android:scaleType="fitCenter" />
 			<TextView
 				android:id="@+id/mTitle"
