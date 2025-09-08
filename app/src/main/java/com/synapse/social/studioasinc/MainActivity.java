@@ -36,6 +36,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
+import com.synapse.social.studioasinc.util.UpdateManager;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
 import java.io.*;
@@ -280,6 +281,13 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 		// The update check is now handled by the UpdateManager
+		UpdateManager updateManager = new UpdateManager(this, new Runnable() {
+            @Override
+            public void run() {
+                proceedToAuthCheck();
+            }
+        });
+        updateManager.checkForUpdate();
 	}
 
 	// Helper method to encapsulate the delayed auth check logic
