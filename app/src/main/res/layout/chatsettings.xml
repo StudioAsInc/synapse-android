@@ -74,7 +74,7 @@
 					android:layout_marginBottom="8dp"
 					android:text="Chat"
 					android:textSize="14sp"
-					android:textColor="?android:attr/textColorSecondary" />
+					android:textColor="?attr/colorOnSurfaceVariant" />
 				<LinearLayout
 					android:id="@+id/application_stage"
 					android:layout_width="match_parent"
@@ -122,7 +122,7 @@
 								android:value="12"
 								android:valueFrom="16"
 								android:valueTo="30"
-								app:thumbColor="@color/colorPrimary"
+								app:thumbColor="?attr/colorPrimary"
 								app:thumbElevation="2dp"
 								app:thumbRadius="16dp"
 								app:trackHeight="16dp" />
@@ -334,7 +334,7 @@
 								android:padding="4dp"
 								android:text="Adjusting this font size doesn't effects the whole app."
 								android:textSize="12sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 					</LinearLayout>
 					<LinearLayout
@@ -372,7 +372,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Default"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<ImageView
 							android:id="@+id/imageview32"
@@ -423,7 +423,7 @@
 								android:value="16"
 								android:valueFrom="5"
 								android:valueTo="45"
-								app:thumbColor="@color/colorPrimary"
+								app:thumbColor="?attr/colorPrimary"
 								app:thumbElevation="2dp"
 								app:thumbRadius="16dp"
 								app:trackHeight="16dp" />
@@ -434,7 +434,7 @@
 								android:padding="3dp"
 								android:text="This doesn't affect other UI corners' radius"
 								android:textSize="12sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 					</LinearLayout>
 					<LinearLayout
@@ -473,7 +473,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Theme changes the whole apps overall interface, colours, fonts, and images as well"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 					</LinearLayout>
 				</LinearLayout>
@@ -485,7 +485,7 @@
 					android:layout_marginBottom="8dp"
 					android:text="App icon"
 					android:textSize="14sp"
-					android:textColor="?android:attr/textColorSecondary" />
+					android:textColor="?attr/colorOnSurfaceVariant" />
 				<androidx.recyclerview.widget.RecyclerView
 					android:id="@+id/recyclerview2"
 					android:layout_width="match_parent"
@@ -499,7 +499,7 @@
 					android:layout_marginBottom="8dp"
 					android:text="Chat list swipe gesture"
 					android:textSize="14sp"
-					android:textColor="?android:attr/textColorSecondary" />
+					android:textColor="?attr/colorOnSurfaceVariant" />
 				<TextView
 					android:id="@+id/textview22"
 					android:layout_width="wrap_content"
@@ -508,7 +508,7 @@
 					android:layout_marginBottom="8dp"
 					android:text="Media and sound"
 					android:textSize="14sp"
-					android:textColor="?android:attr/textColorSecondary" />
+					android:textColor="?attr/colorOnSurfaceVariant" />
 				<LinearLayout
 					android:id="@+id/account_stack_3"
 					android:layout_width="match_parent"
@@ -551,7 +551,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Tap near the edge of the screen while viewing media to navigate"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary"
+								android:textColor="?attr/colorOnSurfaceVariant"
 								android:lines="2" />
 						</LinearLayout>
 						<com.google.android.material.materialswitch.MaterialSwitch
@@ -601,7 +601,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Switch sound to the earpiece by raising the phone to your ear"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary"
+								android:textColor="?attr/colorOnSurfaceVariant"
 								android:lines="2" />
 						</LinearLayout>
 						<com.google.android.material.materialswitch.MaterialSwitch
@@ -650,7 +650,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Pause music when you start recording a video message"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary"
+								android:textColor="?attr/colorOnSurfaceVariant"
 								android:lines="2" />
 						</LinearLayout>
 						<com.google.android.material.materialswitch.MaterialSwitch
@@ -672,7 +672,7 @@
 					android:layout_marginBottom="8dp"
 					android:text="Security and services"
 					android:textSize="14sp"
-					android:textColor="?android:attr/textColorSecondary" />
+					android:textColor="?attr/colorOnSurfaceVariant" />
 				<LinearLayout
 					android:id="@+id/account_stack_2"
 					android:layout_width="match_parent"
@@ -755,7 +755,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Keep services running in background."
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<com.google.android.material.materialswitch.MaterialSwitch
 							android:id="@+id/switch6"
@@ -802,7 +802,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Keep processing with low power"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<com.google.android.material.materialswitch.MaterialSwitch
 							android:id="@+id/switch7"
@@ -849,7 +849,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Default"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 					</LinearLayout>
 				</LinearLayout>
@@ -861,7 +861,7 @@
 					android:layout_marginBottom="8dp"
 					android:text="App theming"
 					android:textSize="14sp"
-					android:textColor="?android:attr/textColorSecondary" />
+					android:textColor="?attr/colorOnSurfaceVariant" />
 				<LinearLayout
 					android:id="@+id/account_stage"
 					android:layout_width="match_parent"
@@ -905,7 +905,7 @@
 								android:layout_marginTop="5dp"
 								android:text="English (International)"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<ImageView
 							android:id="@+id/imageview30"
@@ -931,7 +931,7 @@
 					android:layout_marginBottom="8dp"
 					android:text="Storage and network"
 					android:textSize="14sp"
-					android:textColor="?android:attr/textColorSecondary" />
+					android:textColor="?attr/colorOnSurfaceVariant" />
 				<LinearLayout
 					android:id="@+id/linear45"
 					android:layout_width="match_parent"
@@ -974,7 +974,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Used 1% of your device storage"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<TextView
 							android:id="@+id/textview48"
@@ -1023,7 +1023,7 @@
 								android:layout_marginTop="5dp"
 								android:text="This data has been recorded since\nlast month"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<TextView
 							android:id="@+id/textview49"
@@ -1071,7 +1071,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Stream video without downloading"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 						<com.google.android.material.materialswitch.MaterialSwitch
 							android:id="@+id/switch10"
@@ -1091,7 +1091,7 @@
 					android:layout_marginBottom="8dp"
 					android:text="AI and automations"
 					android:textSize="14sp"
-					android:textColor="?android:attr/textColorSecondary" />
+					android:textColor="?attr/colorOnSurfaceVariant" />
 				<LinearLayout
 					android:id="@+id/linear52"
 					android:layout_width="match_parent"
@@ -1197,7 +1197,7 @@
 								android:layout_marginTop="5dp"
 								android:text="Setup your artificial intelligence settings"
 								android:textSize="14sp"
-								android:textColor="?android:attr/textColorSecondary" />
+								android:textColor="?attr/colorOnSurfaceVariant" />
 						</LinearLayout>
 					</androidx.cardview.widget.CardView>
 				</LinearLayout>

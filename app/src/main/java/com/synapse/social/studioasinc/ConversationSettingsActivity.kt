@@ -117,6 +117,7 @@ class ConversationSettingsActivity : AppCompatActivity() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         finish()
     }

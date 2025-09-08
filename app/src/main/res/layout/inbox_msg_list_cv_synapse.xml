@@ -124,7 +124,7 @@
 							android:layout_marginRight="8dp"
 							android:text="date"
 							android:textSize="12sp"
-							android:textColor="?android:attr/textColorSecondary" />
+							android:textColor="?attr/colorOnSurfaceVariant" />
 					</LinearLayout>
 					<LinearLayout
 						android:id="@+id/btnss"
@@ -140,7 +140,7 @@
 							android:layout_marginRight="8dp"
 							android:text="TextView"
 							android:textSize="16sp"
-							android:textColor="?android:attr/textColorSecondary"
+							android:textColor="?attr/colorOnSurfaceVariant"
 							android:singleLine="true"
 							android:layout_weight="1" />
 						<ImageView

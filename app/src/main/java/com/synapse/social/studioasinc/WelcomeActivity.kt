@@ -35,6 +35,7 @@ class WelcomeActivity : AppCompatActivity() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -44,6 +45,6 @@ class WelcomeActivity : AppCompatActivity() {
         askPermission.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {}
 }
