@@ -671,7 +671,7 @@ public class ChatsettingsActivity extends AppCompatActivity {
 		account_stack_2.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)35, 0xFFFFFFFF));
 		account_stack_3.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)35, 0xFFFFFFFF));
 		_getUserReference();
-		mRepliedMessageLayoutLeftBar.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ChatsettingsActivity.this, com.google.android.material.R.attr.colorPrimary)));
+		mRepliedMessageLayoutLeftBar.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)360, (int)0, Color.TRANSPARENT, com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ChatsettingsActivity.this, com.google.android.material.R.attr.colorPrimaryContainer)));
 		mProfileImage.setImageResource(R.drawable.ashik_dp);
 		_ImgRound(mProfileImage, 300);
 	}

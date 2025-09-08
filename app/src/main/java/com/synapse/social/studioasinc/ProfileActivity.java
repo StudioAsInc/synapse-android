@@ -416,7 +416,7 @@ class c {
 							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).removeValue();
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) - 1)));
 							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
-							btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimary));
+							btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimaryContainer));
 							btnFollow.setText(getResources().getString(R.string.follow));
 							btnFollow.setTextColor(0xFFFFFFFF);
 						} else {
@@ -941,7 +941,7 @@ class c {
 					btnFollow.setTextColor(0xFF000000);
 				} else {
 					btnFollow.setText(getResources().getString(R.string.follow));
-					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimary));
+					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimaryContainer));
 					btnFollow.setTextColor(0xFFFFFFFF);
 				}
 			}

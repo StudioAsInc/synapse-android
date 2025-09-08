@@ -320,8 +320,8 @@ app:indicatorSize="60dp"
 app:indicatorDirectionCircular="counterclockwise"
 */
 		noInternetBodySubtitle.setText(getResources().getString(R.string.reasons_may_be).concat("\n\n".concat(getResources().getString(R.string.err_no_internet).concat("\n".concat(getResources().getString(R.string.err_app_maintenance).concat("\n".concat(getResources().getString(R.string.err_problem_on_our_side))))))));
-		MessagesPageTabLayout.setTabTextColors(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(MessagesActivity.this, com.google.android.material.R.attr.colorOnSurfaceVariant), com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(MessagesActivity.this, com.google.android.material.R.attr.colorPrimary));
-		MessagesPageTabLayout.setSelectedTabIndicatorColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(MessagesActivity.this, com.google.android.material.R.attr.colorPrimary));
+		MessagesPageTabLayout.setTabTextColors(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(MessagesActivity.this, com.google.android.material.R.attr.colorOnSurfaceVariant), com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(MessagesActivity.this, com.google.android.material.R.attr.colorPrimaryContainer));
+		MessagesPageTabLayout.setSelectedTabIndicatorColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(MessagesActivity.this, com.google.android.material.R.attr.colorPrimaryContainer));
 		MessagesPageTabLayout.addTab(MessagesPageTabLayout.newTab().setText("CHATS"));
 		MessagesPageTabLayout.addTab(MessagesPageTabLayout.newTab().setText("CHANNELS"));
 		MessagesPageTabLayout.addTab(MessagesPageTabLayout.newTab().setText("GROUPS"));
