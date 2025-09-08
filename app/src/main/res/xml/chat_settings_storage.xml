@@ -1,0 +1,23 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Storage and network">
+
+        <Preference
+            app:key="storage_usage"
+            app:title="Storage uses"
+            app:summary="Used 1% of your device storage"/>
+
+        <Preference
+            app:key="data_usage"
+            app:title="Data uses"
+            app:summary="This data has been recorded since last month"/>
+
+        <SwitchPreferenceCompat
+            app:key="streaming_video"
+            app:title="Streming video"
+            app:summary="Stream video without downloading"
+            app:defaultValue="false"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

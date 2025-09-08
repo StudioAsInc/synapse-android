@@ -1,0 +1,16 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Appearance">
+
+        <Preference
+            app:key="theme_store"
+            app:title="Theme store"
+            app:summary="Theme changes the whole apps overall interface, colours, fonts, and images as well"/>
+
+        <Preference
+            app:key="app_icon"
+            app:title="App icon"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

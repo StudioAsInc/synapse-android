@@ -1,0 +1,25 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Media and sound">
+
+        <SwitchPreferenceCompat
+            app:key="tap_to_show_next_media"
+            app:title="Tap to show next media"
+            app:summary="Tap near the edge of the screen while viewing media to navigate"
+            app:defaultValue="true"/>
+
+        <SwitchPreferenceCompat
+            app:key="rise_to_listen"
+            app:title="Rise to Listen"
+            app:summary="Switch sound to the earpiece by raising the phone to your ear"
+            app:defaultValue="true"/>
+
+        <SwitchPreferenceCompat
+            app:key="pause_music_while_recording"
+            app:title="Pause music while recording"
+            app:summary="Pause music when you start recording a video message"
+            app:defaultValue="true"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
