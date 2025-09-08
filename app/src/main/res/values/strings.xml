@@ -301,7 +301,7 @@ Please explain the following message from %3$s in detail, considering the contex
     <string name="chat_settings_storage_uses_summary">Used 1% of your device storage</string>
     <string name="chat_settings_data_uses_title">Data uses</string>
     <string name="chat_settings_data_uses_summary">This data has been recorded since\nlast month</string>
-    <string name="chat_settings_streaming_video_title">Streming video</string>
+    <string name="chat_settings_streaming_video_title">Streaming video</string>
     <string name="chat_settings_streaming_video_summary">Stream video without downloading</string>
 
     <string name="chat_settings_header_ai_and_automations">AI and automations</string>
