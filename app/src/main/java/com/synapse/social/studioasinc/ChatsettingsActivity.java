@@ -63,13 +63,31 @@ public class ChatsettingsActivity extends AppCompatActivity implements SettingsA
         });
     }
 
+    private int getIntPref(String key, int defaultValue) {
+        try {
+            return appSettings.getInt(key, defaultValue);
+        } catch (ClassCastException e) {
+            String valueStr = appSettings.getString(key, String.valueOf(defaultValue));
+            try {
+                int valueInt = Integer.parseInt(valueStr);
+                // Save it back as an int for next time
+                appSettings.edit().putInt(key, valueInt).apply();
+                return valueInt;
+            } catch (NumberFormatException nfe) {
+                return defaultValue;
+            }
+        }
+    }
+
     private List<Setting> createSettingsList() {
         List<Setting> settings = new ArrayList<>();
 
         settings.add(new Setting("Chat"));
-        settings.add(new Setting(Setting.Type.SEEKBAR, "Message text size", "Adjusting this font size doesn't effects the whole app.", R.drawable.ic_text_fields_48px, appSettings.getInt("ChatTextSize", 16), 12, 30, "ChatTextSize"));
+        int chatTextSize = getIntPref("ChatTextSize", 16);
+        settings.add(new Setting(Setting.Type.SEEKBAR, "Message text size", "Adjusting this font size doesn't effects the whole app.", R.drawable.ic_text_fields_48px, chatTextSize, 12, 30, "ChatTextSize"));
         settings.add(new Setting(Setting.Type.PREVIEW));
-        settings.add(new Setting(Setting.Type.SEEKBAR, "Message corner round", "This doesn't affect other UI corners' radius", R.drawable.ic_rounded_corner, appSettings.getInt("ChatCornerRadius", 20), 0, 50, "ChatCornerRadius"));
+        int chatCornerRadius = getIntPref("ChatCornerRadius", 20);
+        settings.add(new Setting(Setting.Type.SEEKBAR, "Message corner round", "This doesn't affect other UI corners' radius", R.drawable.ic_rounded_corner, chatCornerRadius, 0, 50, "ChatCornerRadius"));
         settings.add(new Setting(Setting.Type.BUTTON, "Background wallpapers", "Default", R.drawable.ic_photo_library_48px, "background_wallpapers"));
         settings.add(new Setting(Setting.Type.BUTTON, "Theme store", "Theme changes the whole apps overall interface, colours, fonts, and images as well", R.drawable.ic_category, "theme_store"));
 
@@ -106,8 +124,8 @@ public class ChatsettingsActivity extends AppCompatActivity implements SettingsA
             return;
         }
 
-        int textSize = appSettings.getInt("ChatTextSize", 16);
-        int cornerRadius = appSettings.getInt("ChatCornerRadius", 20);
+        int textSize = getIntPref("ChatTextSize", 16);
+        int cornerRadius = getIntPref("ChatCornerRadius", 20);
 
         previewViewHolder.messageText.setTextSize(textSize);
         previewViewHolder.txtMsg1.setTextSize(textSize);
