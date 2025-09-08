@@ -113,15 +113,17 @@ public class ChatsettingsActivity extends AppCompatActivity implements SettingsA
         previewViewHolder.txtMsg1.setTextSize(textSize);
         previewViewHolder.repliedMessage.setTextSize(textSize);
 
+        // TODO: Investigate why theme attributes are not resolved correctly at compile time
+        // Using hardcoded colors as a workaround
         GradientDrawable messageBgDrawable = new GradientDrawable();
         messageBgDrawable.setShape(GradientDrawable.RECTANGLE);
-        messageBgDrawable.setColor(ThemeUtils.getThemeColor(this, R.attr.colorSurfaceVariant));
+        messageBgDrawable.setColor(0xFFE1E4D5); // md_theme_surfaceVariant
         messageBgDrawable.setCornerRadius(cornerRadius);
         previewViewHolder.messageBG.setBackground(messageBgDrawable);
 
         GradientDrawable messageBg1Drawable = new GradientDrawable();
         messageBg1Drawable.setShape(GradientDrawable.RECTANGLE);
-        messageBg1Drawable.setColor(ThemeUtils.getThemeColor(this, R.attr.colorPrimary));
+        messageBg1Drawable.setColor(0xFF4C662B); // md_theme_primary
         messageBg1Drawable.setCornerRadius(cornerRadius);
         previewViewHolder.messageBG1.setBackground(messageBg1Drawable);
     }
