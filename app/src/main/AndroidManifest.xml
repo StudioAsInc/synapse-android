@@ -22,6 +22,7 @@
 		android:roundIcon="@mipmap/ic_launcher_round">
 		<activity
 			android:name=".MainActivity"
+			android:exported="false"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"

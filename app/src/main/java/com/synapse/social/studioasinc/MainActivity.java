@@ -280,64 +280,11 @@ public class MainActivity extends AppCompatActivity {
 			);
 		}
 
-		// The update check is now handled by the UpdateManager
-		UpdateManager updateManager = new UpdateManager(this, new Runnable() {
-            @Override
-            public void run() {
-                proceedToAuthCheck();
-            }
-        });
-        updateManager.checkForUpdate();
+		// Auth check and update logic are no longer handled here.
+		// This is now just a splash screen.
 	}
 
-	// Helper method to encapsulate the delayed auth check logic
-	public void proceedToAuthCheck() {
-		new Handler(Looper.getMainLooper()).postDelayed(() -> {
-			FirebaseAuth auth = FirebaseAuth.getInstance();
-			if (auth.getCurrentUser() != null) {
-				// User logged in, check ban status
-				DatabaseReference userRef = FirebaseDatabase.getInstance()
-						.getReference("skyline/users")
-						.child(auth.getCurrentUser().getUid());
-
-				userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-					@Override
-					public void onDataChange(@NonNull DataSnapshot snapshot) {
-						if (snapshot.exists()) {
-							String banned = snapshot.child("banned").getValue(String.class);
-							if ("false".equals(banned)) {
-								// Not banned, redirect to HomeActivity
-								startActivity(new Intent(MainActivity.this, HomeActivity.class));
-								finish();
-							} else {
-								// Banned, show toast and sign out
-								Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show(); // Changed Toast message as per flowchart implies "Toast: Banned & Sign Out"
-								auth.signOut();
-								finish(); // Finish MainActivity after signing out (per flowchart)
-							}
-						} else {
-							// User data not found (maybe first login, or incomplete profile)
-							// This path leads to CompleteProfileActivity
-							startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
-							finish();
-						}
-					}
-
-					@Override
-					public void onCancelled(@NonNull DatabaseError error) {
-						Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-						// Handle database error, redirect to AuthActivity
-						startActivity(new Intent(MainActivity.this, AuthActivity.class));
-						finish();
-					}
-				});
-			} else {
-				// User not logged in, redirect to AuthActivity
-				startActivity(new Intent(MainActivity.this, AuthActivity.class));
-				finish();
-			}
-		}, 500); // 500ms delay
-	}
+	// The proceedToAuthCheck method has been removed as this logic is now handled by LauncherActivity.
 
 	@Override
 	public void onBackPressed() {
