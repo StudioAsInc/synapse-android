@@ -149,8 +149,7 @@ public class AuthActivity extends AppCompatActivity {
     }
 
     private void initializeFirebase() {
-        FirebaseApp.initializeApp(this);
-        fauth = FirebaseAuth.getInstance();
+        fauth = FirebaseAuth.getInstance(FirebaseApp.initializeApp(this));
     }
 
     private void setupListeners() {
