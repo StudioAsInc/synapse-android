@@ -852,7 +852,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 @Override
                 public void onPreviewDataFetched(LinkPreviewUtil.LinkData linkData) {
                     if (linkData != null) {
-                        holder.message_text.setVisibility(View.GONE);
                         if (holder.linkPreviewTitle != null) holder.linkPreviewTitle.setText(linkData.title);
                         if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText(linkData.description);
                         if (holder.linkPreviewDomain != null) holder.linkPreviewDomain.setText(linkData.domain);
