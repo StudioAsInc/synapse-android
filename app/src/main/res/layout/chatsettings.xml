@@ -11,14 +11,14 @@
 	<com.google.android.material.appbar.AppBarLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:background="?attr/colorSurface">
+		android:background="?attr/colorSurface"
+		app:liftOnScroll="true">
 
 		<com.google.android.material.appbar.MaterialToolbar
 			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
 			android:layout_height="?attr/actionBarSize"
-			app:title="Chat settings"
-			app:navigationIcon="@drawable/ic_arrow_back_ios_new_48px" />
+			app:title="@string/chat_settings_title" />
 
 	</com.google.android.material.appbar.AppBarLayout>
 

@@ -132,6 +132,10 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 setting.setEnabled(isChecked);
                 sharedPreferences.edit().putBoolean(setting.getKey(), isChecked).apply();
             });
+
+            itemView.setOnClickListener(v -> {
+                switchWidget.toggle();
+            });
         }
     }
 
@@ -193,7 +197,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     // ViewHolder for Preview
     public static class PreviewViewHolder extends RecyclerView.ViewHolder {
-        public View messageBG, messageBG1;
+        public View messageBG, messageBG1, repliedBar;
         public TextView messageText, txtMsg1, repliedMessage;
 
 
@@ -204,6 +208,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             messageText = itemView.findViewById(R.id.message_text);
             txtMsg1 = itemView.findViewById(R.id.txt_msg1);
             repliedMessage = itemView.findViewById(R.id.mRepliedMessageLayoutMessage);
+            repliedBar = itemView.findViewById(R.id.mRepliedMessageLayoutLeftBar);
         }
 
         void bind(Setting setting) {
