@@ -261,4 +261,52 @@ Please explain the following message from %3$s in detail, considering the contex
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="search_hint">Search users</string>
+
+    <!-- Chat Settings -->
+    <string name="chat_settings_title">Chat settings</string>
+
+    <string name="chat_settings_header_chat">Chat</string>
+    <string name="chat_settings_message_text_size_title">Message text size</string>
+    <string name="chat_settings_message_text_size_summary">Adjusting this font size doesn\'t effects the whole app.</string>
+    <string name="chat_settings_message_corner_round_title">Message corner round</string>
+    <string name="chat_settings_message_corner_round_summary">This doesn\'t affect other UI corners\' radius</string>
+    <string name="chat_settings_background_wallpapers_title">Background wallpapers</string>
+    <string name="chat_settings_background_wallpapers_summary">Default</string>
+    <string name="chat_settings_theme_store_title">Theme store</string>
+    <string name="chat_settings_theme_store_summary">Theme changes the whole apps overall interface, colours, fonts, and images as well</string>
+
+    <string name="chat_settings_header_media_and_sound">Media and sound</string>
+    <string name="chat_settings_tap_to_show_next_media_title">Tap to show next media</string>
+    <string name="chat_settings_tap_to_show_next_media_summary">Tap near the edge of the screen while viewing media to navigate</string>
+    <string name="chat_settings_rise_to_listen_title">Rise to Listen</string>
+    <string name="chat_settings_rise_to_listen_summary">Switch sound to the earpiece by raising the phone to your ear</string>
+    <string name="chat_settings_pause_music_while_recording_title">Pause music while recording</string>
+    <string name="chat_settings_pause_music_while_recording_summary">Pause music when you start recording a video message</string>
+
+    <string name="chat_settings_header_security_and_services">Security and services</string>
+    <string name="chat_settings_app_lock_title">App lock</string>
+    <string name="chat_settings_keep_alive_service_title">Keep-alive service</string>
+    <string name="chat_settings_keep_alive_service_summary">Keep services running in background.</string>
+    <string name="chat_settings_background_connection_title">Background connection</string>
+    <string name="chat_settings_background_connection_summary">Keep processing with low power</string>
+    <string name="chat_settings_theme_title">Theme</string>
+    <string name="chat_settings_theme_summary">Default</string>
+
+    <string name="chat_settings_header_app_theming">App theming</string>
+    <string name="chat_settings_language_title">Language</string>
+    <string name="chat_settings_language_summary">English (International)</string>
+
+    <string name="chat_settings_header_storage_and_network">Storage and network</string>
+    <string name="chat_settings_storage_uses_title">Storage uses</string>
+    <string name="chat_settings_storage_uses_summary">Used 1% of your device storage</string>
+    <string name="chat_settings_data_uses_title">Data uses</string>
+    <string name="chat_settings_data_uses_summary">This data has been recorded since\nlast month</string>
+    <string name="chat_settings_streaming_video_title">Streming video</string>
+    <string name="chat_settings_streaming_video_summary">Stream video without downloading</string>
+
+    <string name="chat_settings_header_ai_and_automations">AI and automations</string>
+    <string name="chat_settings_synapse_premium_title">Synapse Premium</string>
+    <string name="chat_settings_buy_credits_title">Buy Credits</string>
+    <string name="chat_settings_ai_settings_title">AI Settings</string>
+    <string name="chat_settings_ai_settings_summary">Setup your artificial intelligence settings</string>
 </resources>
