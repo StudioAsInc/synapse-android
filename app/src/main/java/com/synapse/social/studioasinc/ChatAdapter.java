@@ -96,8 +96,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return VIEW_TYPE_MEDIA_GRID;
         }
 
-        String messageText = String.valueOf(_data.get(position).getOrDefault("message_text", ""));
-        if (LinkPreviewUtil.extractUrl(messageText) != null) {
+        if ("LINK_PREVIEW_MESSAGE".equals(type)) {
             return VIEW_TYPE_LINK_PREVIEW;
         }
         
@@ -841,7 +840,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         String urlToPreview = LinkPreviewUtil.extractUrl(decryptedText);
         if (urlToPreview != null) {
-            // Check if link preview views exist before accessing them
+            if (holder.linkPreviewContainer != null) {
+                holder.linkPreviewContainer.setVisibility(View.VISIBLE);
+            }
             if (holder.linkPreviewImage != null) holder.linkPreviewImage.setVisibility(View.GONE);
             if (holder.linkPreviewTitle != null) holder.linkPreviewTitle.setText("Loading Preview...");
             if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText("");
@@ -850,7 +851,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             LinkPreviewUtil.fetchPreview(urlToPreview, new LinkPreviewUtil.LinkPreviewCallback() {
                 @Override
                 public void onPreviewDataFetched(LinkPreviewUtil.LinkData linkData) {
-                    if (linkData != null) { 
+                    if (linkData != null) {
                         if (holder.linkPreviewTitle != null) holder.linkPreviewTitle.setText(linkData.title);
                         if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText(linkData.description);
                         if (holder.linkPreviewDomain != null) holder.linkPreviewDomain.setText(linkData.domain);
@@ -860,17 +861,27 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 holder.linkPreviewImage.setVisibility(View.VISIBLE);
                             }
                         }
+                        if (holder.linkPreviewContainer != null) {
+                            holder.linkPreviewContainer.setOnClickListener(v -> {
+                                if (chatActivity != null) {
+                                    chatActivity._OpenWebView(linkData.url);
+                                }
+                            });
+                        }
                     }
                 }
                 @Override
                 public void onError(Exception e) {
                     Log.e(TAG, "Link preview error: " + e.getMessage());
-                    if (holder.linkPreviewTitle != null) holder.linkPreviewTitle.setText("Cannot load preview");
-                    if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText("");
-                    if (holder.linkPreviewDomain != null) holder.linkPreviewDomain.setText(urlToPreview);
-                    if (holder.linkPreviewImage != null) holder.linkPreviewImage.setVisibility(View.GONE);
+                    if (holder.linkPreviewContainer != null) {
+                        holder.linkPreviewContainer.setVisibility(View.GONE);
+                    }
                 }
             });
+        } else {
+            if (holder.linkPreviewContainer != null) {
+                holder.linkPreviewContainer.setVisibility(View.GONE);
+            }
         }
     }
     
