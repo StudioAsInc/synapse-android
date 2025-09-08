@@ -22,7 +22,7 @@
 			android:layout_height="wrap_content"
 			app:layout_scrollFlags="scroll|exitUntilCollapsed"
 			app:contentScrim="?attr/colorSurface"
-			app:statusBarScrim="?android:color/transparent"
+			app:statusBarScrim="@android:color/transparent"
 			app:titleEnabled="false">
 
 			<LinearLayout
