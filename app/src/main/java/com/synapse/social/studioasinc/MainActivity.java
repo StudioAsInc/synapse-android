@@ -105,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
 		super.onCreate(_savedInstanceState);
 		setContentView(R.layout.main);
 		initialize(_savedInstanceState);
-		FirebaseApp.initializeApp(this);
 		createNotificationChannels();
 		initializeLogic();
 		ask_permission = new AskPermission(this, new Runnable() {

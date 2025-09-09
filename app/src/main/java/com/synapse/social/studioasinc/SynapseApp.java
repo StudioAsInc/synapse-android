@@ -56,7 +56,11 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         
         // Initialize Firebase with disk persistence
         FirebaseApp.initializeApp(this);
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        try {
+            FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        } catch (Exception e) {
+            // Persistence already enabled
+        }
         
         // Create notification channels
         createNotificationChannels();
