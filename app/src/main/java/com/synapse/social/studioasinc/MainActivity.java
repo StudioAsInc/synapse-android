@@ -44,6 +44,7 @@ import java.text.*;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.*;
 import org.json.*;
 // Required imports
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
 	private FirebaseAuth.AuthStateListener authStateListener;
 	private ValueEventListener banCheckListener;
 	private DatabaseReference userRef;
+	private final AtomicBoolean navigationStarted = new AtomicBoolean(false);
 	private OnCompleteListener<AuthResult> _auth_create_user_listener;
 	private OnCompleteListener<AuthResult> _auth_sign_in_listener;
 	private OnCompleteListener<Void> _auth_reset_password_listener;
@@ -332,8 +334,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void navigateTo(Class<?> activityClass) {
-		if (!navigationStarted) {
-			navigationStarted = true;
+		if (navigationStarted.compareAndSet(false, true)) {
 			startActivity(new Intent(MainActivity.this, activityClass));
 			finish();
 		}
