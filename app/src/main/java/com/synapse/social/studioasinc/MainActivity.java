@@ -309,8 +309,18 @@ public class MainActivity extends AppCompatActivity {
 							@Override
 							public void onDataChange(@NonNull DataSnapshot snapshot) {
 								if (snapshot.exists()) {
-									String banned = snapshot.child("banned").getValue(String.class);
-									if ("false".equals(banned)) {
+									// Handle possible data shapes for "banned" and default to not banned if missing
+									Boolean bannedBool = snapshot.child("banned").getValue(Boolean.class);
+									String bannedStr = snapshot.child("banned").getValue(String.class);
+									boolean isBanned = false;
+
+									if (bannedBool != null) {
+										isBanned = bannedBool.booleanValue();
+									} else if (bannedStr != null) {
+										isBanned = bannedStr.equalsIgnoreCase("true") || bannedStr.equals("1");
+									}
+
+									if (!isBanned) {
 										// Not banned, redirect to HomeActivity
 										startActivity(new Intent(MainActivity.this, HomeActivity.class));
 										finish();
@@ -318,6 +328,7 @@ public class MainActivity extends AppCompatActivity {
 										// Banned, show toast and sign out
 										Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
 										auth.signOut();
+										startActivity(new Intent(MainActivity.this, AuthActivity.class));
 										finish();
 									}
 								} else {
@@ -331,15 +342,14 @@ public class MainActivity extends AppCompatActivity {
 							@Override
 							public void onCancelled(@NonNull DatabaseError error) {
 								Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-								// Handle database error, redirect to AuthActivity
-								startActivity(new Intent(MainActivity.this, AuthActivity.class));
+								// If database check fails, do not sign the user out. Proceed to Home for offline experience
+								startActivity(new Intent(MainActivity.this, HomeActivity.class));
 								finish();
 							}
 						});
 					} else {
-						// User token is invalid, redirect to AuthActivity
-						auth.signOut();
-						startActivity(new Intent(MainActivity.this, AuthActivity.class));
+						// Reload failed (e.g., network). Keep session and proceed to Home to avoid false sign-outs
+						startActivity(new Intent(MainActivity.this, HomeActivity.class));
 						finish();
 					}
 				});
