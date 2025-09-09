@@ -321,15 +321,6 @@ public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
 			WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 			);
 		}
-
-		// The update check is now handled by the UpdateManager
-		UpdateManager updateManager = new UpdateManager(this, new Runnable() {
-            @Override
-            public void run() {
-                // proceedToAuthCheck();
-            }
-        });
-        updateManager.checkForUpdate();
 	}
 
 	@Override
