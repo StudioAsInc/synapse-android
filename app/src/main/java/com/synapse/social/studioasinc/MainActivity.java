@@ -36,6 +36,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
+import com.synapse.social.studioasinc.permissionreq.AskPermission;
 import com.synapse.social.studioasinc.util.UpdateManager;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
@@ -84,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private FirebaseAuth auth;
 	private FirebaseAuth.AuthStateListener auth_listener;
+	private AskPermission ask_permission;
 	private OnCompleteListener<AuthResult> _auth_create_user_listener;
 	private OnCompleteListener<AuthResult> _auth_sign_in_listener;
 	private OnCompleteListener<Void> _auth_reset_password_listener;
@@ -106,6 +108,13 @@ public class MainActivity extends AppCompatActivity {
 		FirebaseApp.initializeApp(this);
 		createNotificationChannels();
 		initializeLogic();
+		ask_permission = new AskPermission(this, new Runnable() {
+			@Override
+			public void run() {
+				auth.addAuthStateListener(auth_listener);
+			}
+		});
+		ask_permission.checkAndRequestPermissions();
 	}
 
 	private void createNotificationChannels() {
@@ -326,7 +335,6 @@ public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
 	@Override
 	public void onStart() {
 		super.onStart();
-		auth.addAuthStateListener(auth_listener);
 	}
 
 	@Override
@@ -335,6 +343,12 @@ public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
 		if (auth_listener != null) {
 			auth.removeAuthStateListener(auth_listener);
 		}
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		ask_permission.onRequestPermissionsResult(requestCode, permissions, grantResults);
 	}
 
 	@Override

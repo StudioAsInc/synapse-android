@@ -10,7 +10,7 @@ import android.content.pm.PackageManager
 import com.synapse.social.studioasinc.MainActivity
 import java.util.ArrayList
 
-class AskPermission(private val activity: Activity) {
+class AskPermission(private val activity: Activity, private val onPermissionsGranted: Runnable) {
 
     private var permissionsToRequest = ArrayList<String>()
     private var currentPermissionIndex = 0
@@ -23,7 +23,7 @@ class AskPermission(private val activity: Activity) {
         permissionsToRequest = getNeededPermissions()
 
         if (permissionsToRequest.isEmpty()) {
-            startMainActivity()
+            onPermissionsGranted.run()
             return
         }
 
@@ -66,7 +66,7 @@ class AskPermission(private val activity: Activity) {
         } else {
             // All permissions have been requested
             if (areAllPermissionsGranted()) {
-                startMainActivity()
+                onPermissionsGranted.run()
             } else {
                 showPermissionDeniedMessage()
             }
@@ -84,12 +84,6 @@ class AskPermission(private val activity: Activity) {
         return getNeededPermissions().isEmpty()
     }
 
-
-    private fun startMainActivity() {
-        val intent = Intent(activity, MainActivity::class.java)
-        activity.startActivity(intent)
-        activity.finish()
-    }
 
     private fun showPermissionDeniedMessage() {
         // You can customize this message
