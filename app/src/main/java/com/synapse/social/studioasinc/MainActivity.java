@@ -69,6 +69,7 @@ import android.graphics.drawable.ColorDrawable;
 import com.google.gson.Gson; // Import Gson
 import com.google.gson.reflect.TypeToken; // Import TypeToken
 import android.content.pm.PackageManager; // Import PackageManager
+import com.google.firebase.auth.FirebaseAuth.AuthStateListener;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -83,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
 	private ImageView trademark_img;
 
 	private FirebaseAuth auth;
+	private AuthStateListener authStateListener;
 	private OnCompleteListener<AuthResult> _auth_create_user_listener;
 	private OnCompleteListener<AuthResult> _auth_sign_in_listener;
 	private OnCompleteListener<Void> _auth_reset_password_listener;
@@ -275,80 +277,65 @@ public class MainActivity extends AppCompatActivity {
 		// 1. Set Fullscreen Immersive Mode
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			getWindow().setFlags(
-			WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-			WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+					WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+					WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 			);
 		}
 
-		// The update check is now handled by the UpdateManager
-		UpdateManager updateManager = new UpdateManager(this, new Runnable() {
-            @Override
-            public void run() {
-                proceedToAuthCheck();
-            }
-        });
-        updateManager.checkForUpdate();
-	}
-
-	// Helper method to encapsulate the delayed auth check logic
-	public void proceedToAuthCheck() {
-		new Handler(Looper.getMainLooper()).postDelayed(() -> {
-			FirebaseAuth auth = FirebaseAuth.getInstance();
-			FirebaseUser currentUser = auth.getCurrentUser();
-			
+		authStateListener = firebaseAuth -> {
+			FirebaseUser currentUser = firebaseAuth.getCurrentUser();
 			if (currentUser != null) {
-				// User is logged in, verify the user is still valid
-				currentUser.reload().addOnCompleteListener(task -> {
-					if (task.isSuccessful()) {
-						// User is still valid, check ban status
-						DatabaseReference userRef = FirebaseDatabase.getInstance()
-								.getReference("skyline/users")
-								.child(currentUser.getUid());
+				// User is signed in, proceed to check ban status and navigate to HomeActivity
+				DatabaseReference userRef = FirebaseDatabase.getInstance()
+						.getReference("skyline/users")
+						.child(currentUser.getUid());
 
-						userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-							@Override
-							public void onDataChange(@NonNull DataSnapshot snapshot) {
-								if (snapshot.exists()) {
-									String banned = snapshot.child("banned").getValue(String.class);
-									if ("false".equals(banned)) {
-										// Not banned, redirect to HomeActivity
-										startActivity(new Intent(MainActivity.this, HomeActivity.class));
-										finish();
-									} else {
-										// Banned, show toast and sign out
-										Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
-										auth.signOut();
-										finish();
-									}
-								} else {
-									// User data not found (maybe first login, or incomplete profile)
-									// This path leads to CompleteProfileActivity
-									startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
-									finish();
-								}
-							}
-
-							@Override
-							public void onCancelled(@NonNull DatabaseError error) {
-								Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-								// Handle database error, redirect to AuthActivity
-								startActivity(new Intent(MainActivity.this, AuthActivity.class));
+				userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+					@Override
+					public void onDataChange(@NonNull DataSnapshot snapshot) {
+						if (snapshot.exists()) {
+							String banned = snapshot.child("banned").getValue(String.class);
+							if ("false".equals(banned)) {
+								startActivity(new Intent(MainActivity.this, HomeActivity.class));
+								finish();
+							} else {
+								Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
+								auth.signOut();
 								finish();
 							}
-						});
-					} else {
-						// User token is invalid, redirect to AuthActivity
-						auth.signOut();
+						} else {
+							startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
+							finish();
+						}
+					}
+
+					@Override
+					public void onCancelled(@NonNull DatabaseError error) {
+						Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
 						startActivity(new Intent(MainActivity.this, AuthActivity.class));
 						finish();
 					}
 				});
 			} else {
-				// User not logged in, redirect to AuthActivity
+				// User is signed out, navigate to AuthActivity
 				startActivity(new Intent(MainActivity.this, AuthActivity.class));
 				finish();
 			}
-		}, 500); // 500ms delay
+		};
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		auth.addAuthStateListener(authStateListener);
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		if (authStateListener != null) {
+			auth.removeAuthStateListener(authStateListener);
+		}
 	}
 
 	@Override
