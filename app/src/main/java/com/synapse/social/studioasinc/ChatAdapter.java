@@ -45,6 +45,7 @@ import com.synapse.social.studioasinc.config.CloudinaryConfig;
 import com.synapse.social.studioasinc.model.Attachment;
 import com.synapse.social.studioasinc.crypto.E2EEHelper;
 import com.synapse.social.studioasinc.util.AttachmentUtils;
+import com.synapse.social.studioasinc.R;
 import com.synapse.social.studioasinc.util.UIUtils;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -95,8 +96,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return VIEW_TYPE_MEDIA_GRID;
         }
 
-        String messageText = String.valueOf(_data.get(position).getOrDefault("message_text", ""));
-        if (LinkPreviewUtil.extractUrl(messageText) != null) {
+        if ("LINK_PREVIEW_MESSAGE".equals(type)) {
             return VIEW_TYPE_LINK_PREVIEW;
         }
         
@@ -222,7 +222,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (isMyMessage) {
                     String state = data.get("message_state") != null ? String.valueOf(data.get("message_state")) : "";
                     holder.message_state.setImageResource("seen".equals(state) ? R.drawable.icon_done_all_round : R.drawable.icon_done_round);
-                    holder.message_state.setColorFilter("seen".equals(state) ? _context.getResources().getColor(R.color.colorPrimary) : 0xFF424242, PorterDuff.Mode.SRC_ATOP);
+                    holder.message_state.setColorFilter("seen".equals(state) ? com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(_context, com.google.android.material.R.attr.colorPrimaryContainer) : 0xFF424242, PorterDuff.Mode.SRC_ATOP);
                 }
             }
         }
@@ -325,7 +325,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             if (holder.mRepliedMessageLayoutLeftBar != null) {
                                 android.graphics.drawable.GradientDrawable leftBarDrawable = new android.graphics.drawable.GradientDrawable();
                                 leftBarDrawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
-                                leftBarDrawable.setColor(_context.getResources().getColor(R.color.colorPrimary));
+                                leftBarDrawable.setColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(_context, com.google.android.material.R.attr.colorPrimaryContainer));
                                 int leftBarRadius = (int) _context.getResources().getDimension(R.dimen.left_bar_corner_radius);
                                 leftBarDrawable.setCornerRadius(leftBarRadius);
                                 holder.mRepliedMessageLayoutLeftBar.setBackground(leftBarDrawable);
@@ -417,13 +417,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         
         // Consolidated long click listener for the message context menu.
         View.OnLongClickListener longClickListener = v -> {
-            Log.d(TAG, "Long click detected on view: " + v.getClass().getSimpleName() + " at position: " + position);
+            int currentPosition = holder.getAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION) {
+                return false;
+            }
+            Log.d(TAG, "Long click detected on view: " + v.getClass().getSimpleName() + " at position: " + currentPosition);
             if (chatActivity != null) {
                 chatActivity.performHapticFeedbackLight();
             }
             // Use the message bubble (messageBG) as the anchor for the popup if it exists.
             View anchor = holder.messageBG != null ? holder.messageBG : holder.itemView;
-            chatActivity._messageOverviewPopup(anchor, position, _data);
+            chatActivity._messageOverviewPopup(anchor, currentPosition, _data);
             return true;
         };
 
@@ -836,7 +840,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         String urlToPreview = LinkPreviewUtil.extractUrl(decryptedText);
         if (urlToPreview != null) {
-            // Check if link preview views exist before accessing them
+            if (holder.linkPreviewContainer != null) {
+                holder.linkPreviewContainer.setVisibility(View.VISIBLE);
+            }
             if (holder.linkPreviewImage != null) holder.linkPreviewImage.setVisibility(View.GONE);
             if (holder.linkPreviewTitle != null) holder.linkPreviewTitle.setText("Loading Preview...");
             if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText("");
@@ -845,7 +851,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             LinkPreviewUtil.fetchPreview(urlToPreview, new LinkPreviewUtil.LinkPreviewCallback() {
                 @Override
                 public void onPreviewDataFetched(LinkPreviewUtil.LinkData linkData) {
-                    if (linkData != null) { 
+                    if (linkData != null) {
                         if (holder.linkPreviewTitle != null) holder.linkPreviewTitle.setText(linkData.title);
                         if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText(linkData.description);
                         if (holder.linkPreviewDomain != null) holder.linkPreviewDomain.setText(linkData.domain);
@@ -855,17 +861,27 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 holder.linkPreviewImage.setVisibility(View.VISIBLE);
                             }
                         }
+                        if (holder.linkPreviewContainer != null) {
+                            holder.linkPreviewContainer.setOnClickListener(v -> {
+                                if (chatActivity != null) {
+                                    chatActivity._OpenWebView(linkData.url);
+                                }
+                            });
+                        }
                     }
                 }
                 @Override
                 public void onError(Exception e) {
                     Log.e(TAG, "Link preview error: " + e.getMessage());
-                    if (holder.linkPreviewTitle != null) holder.linkPreviewTitle.setText("Cannot load preview");
-                    if (holder.linkPreviewDescription != null) holder.linkPreviewDescription.setText("");
-                    if (holder.linkPreviewDomain != null) holder.linkPreviewDomain.setText(urlToPreview);
-                    if (holder.linkPreviewImage != null) holder.linkPreviewImage.setVisibility(View.GONE);
+                    if (holder.linkPreviewContainer != null) {
+                        holder.linkPreviewContainer.setVisibility(View.GONE);
+                    }
                 }
             });
+        } else {
+            if (holder.linkPreviewContainer != null) {
+                holder.linkPreviewContainer.setVisibility(View.GONE);
+            }
         }
     }
     

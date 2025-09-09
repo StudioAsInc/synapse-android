@@ -137,6 +137,7 @@ public class ChatActivity extends AppCompatActivity {
 
 	private static final String MESSAGE_TYPE = "MESSAGE";
 	private static final String ATTACHMENT_MESSAGE_TYPE = "ATTACHMENT_MESSAGE";
+	private static final String LINK_PREVIEW_MESSAGE_TYPE = "LINK_PREVIEW_MESSAGE";
 
 	private static final String GEMINI_MODEL = "gemini-2.5-flash-lite";
 	private static final String GEMINI_EXPLANATION_MODEL = "gemini-2.5-flash";
@@ -247,11 +248,24 @@ public class ChatActivity extends AppCompatActivity {
 		FirebaseApp.initializeApp(this);
 		e2eeHelper = new E2EEHelper(this);
 
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);} else {
-			initializeLogic();
-		}
+		e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
+			@Override
+			public void onKeysInitialized() {
+				if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+				|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+					ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+				} else {
+					initializeLogic();
+				}
+			}
+
+			@Override
+			public void onKeyInitializationFailed(Exception e) {
+				Log.e(TAG, "Failed to initialize encryption keys", e);
+				Toast.makeText(ChatActivity.this, "Error: Could not initialize secure chat.", Toast.LENGTH_SHORT).show();
+				finish();
+			}
+		});
 	}
 
 	@Override
@@ -338,7 +352,7 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		});
 
-		View.OnClickListener profileClickListener = v -> startActivityWithUid(Chat2ndUserMoreSettingsActivity.class);
+		View.OnClickListener profileClickListener = v -> startActivityWithUid(ConversationSettingsActivity.class);
 		topProfileLayout.setOnClickListener(profileClickListener);
 		ic_more.setOnClickListener(profileClickListener);
 
@@ -2051,7 +2065,7 @@ public class ChatActivity extends AppCompatActivity {
 		Log.d("ChatActivity", "Sender: " + senderUid + ", Recipient: " + recipientUid);
 		Log.d("ChatActivity", "Attachment map size: " + attactmentmap.size());
 		Log.d("ChatActivity", "Attachment map content: " + attactmentmap.toString());
-		
+
 		if (!attactmentmap.isEmpty()) {
 			Log.d("ChatActivity", "Processing message with " + attactmentmap.size() + " attachments");
 			// Logic for sending messages with attachments
@@ -2074,11 +2088,11 @@ public class ChatActivity extends AppCompatActivity {
 			}
 
 			Log.d("ChatActivity", "All uploads successful: " + allUploadsSuccessful + ", Successful attachments: " + successfulAttachments.size());
-			
+
 			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
 				String uniqueMessageKey = main.push().getKey();
 				Log.d("ChatActivity", "Generated message key: " + uniqueMessageKey);
-				
+
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, senderUid);
 				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
@@ -2117,7 +2131,7 @@ public class ChatActivity extends AppCompatActivity {
 
 				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
 				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
-				
+
 				Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
 				refs.first.setValue(ChatSendMap);
 				refs.second.setValue(ChatSendMap);
@@ -2131,7 +2145,7 @@ public class ChatActivity extends AppCompatActivity {
 				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
 				// Use more granular insertion notification for smooth updates
 				chatAdapter.notifyItemInserted(newPosition);
-				
+
 				// Scroll to the new message immediately
 				ChatMessagesListRecycler.post(() -> {
 					scrollToBottom();
@@ -2163,17 +2177,17 @@ public class ChatActivity extends AppCompatActivity {
 					data
 				);
 
-				_updateInbox(lastMessage);
+				_updateInbox(lastMessage, ServerValue.TIMESTAMP);
 
 				// Clear UI
 				Log.d("ChatActivity", "Clearing attachment map and UI");
 				message_et.setText("");
 				ReplyMessageID = "null";
 				mMessageReplyLayout.setVisibility(View.GONE);
-				
+
 				// CRITICAL FIX: Reset attachment state completely
 				resetAttachmentState();
-				
+
 				Log.d("ChatActivity", "=== ATTACHMENT MESSAGE SENT SUCCESSFULLY ===");
 
 			} else {
@@ -2192,7 +2206,11 @@ public class ChatActivity extends AppCompatActivity {
 
 				ChatSendMap = new HashMap<>();
 				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
+				if (LinkPreviewUtil.extractUrl(messageText) != null) {
+					ChatSendMap.put(TYPE_KEY, LINK_PREVIEW_MESSAGE_TYPE);
+				} else {
+					ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
+				}
 				ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessage);
 				ChatSendMap.put("isEncrypted", true);
 				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
@@ -2207,7 +2225,7 @@ public class ChatActivity extends AppCompatActivity {
 
 			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
 			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
-			
+
 			Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
 			refs.first.setValue(ChatSendMap);
 			refs.second.setValue(ChatSendMap);
@@ -2220,7 +2238,7 @@ public class ChatActivity extends AppCompatActivity {
 			int newPosition = ChatMessagesList.size() - 1;
 			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
 			chatAdapter.notifyItemInserted(newPosition);
-			
+
 			// Scroll to the new message immediately
 			ChatMessagesListRecycler.post(() -> {
 				scrollToBottom();
@@ -2240,13 +2258,13 @@ public class ChatActivity extends AppCompatActivity {
 				data
 			);
 
-			_updateInbox(messageText);
+			_updateInbox(messageText, ServerValue.TIMESTAMP);
 
 			// Clear UI
 			message_et.setText("");
 			ReplyMessageID = "null";
 			mMessageReplyLayout.setVisibility(View.GONE);
-			
+
 			Log.d("ChatActivity", "=== TEXT MESSAGE SENT SUCCESSFULLY ===");
 		} else {
 			Log.w("ChatActivity", "No message text and no attachments - nothing to send");
@@ -2484,7 +2502,7 @@ public class ChatActivity extends AppCompatActivity {
 		Log.d("ChatActivity", "=== ATTACHMENT STATE RESET COMPLETE ===");
 	}
 
-	public void _updateInbox(final String _lastMessage) {
+	public void _updateInbox(final String _lastMessage, final Object _timestamp) {
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		if (currentUser == null) {
 			Log.e(TAG, "Cannot update inbox, user is not authenticated.");
@@ -2501,7 +2519,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatInboxSend.put(LAST_MESSAGE_UID_KEY, myUid);
 		ChatInboxSend.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
 		ChatInboxSend.put(LAST_MESSAGE_STATE_KEY, "sended");
-		ChatInboxSend.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+		ChatInboxSend.put(PUSH_DATE_KEY, _timestamp);
 		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(myUid).child(otherUid).setValue(ChatInboxSend);
 
 		// Update inbox for the other user
@@ -2510,7 +2528,7 @@ public class ChatActivity extends AppCompatActivity {
 		ChatInboxSend2.put(LAST_MESSAGE_UID_KEY, myUid);
 		ChatInboxSend2.put(LAST_MESSAGE_TEXT_KEY, _lastMessage); // <-- CORRECTED
 		ChatInboxSend2.put(LAST_MESSAGE_STATE_KEY, "sended");
-		ChatInboxSend2.put(PUSH_DATE_KEY, String.valueOf((long)(cc.getTimeInMillis())));
+		ChatInboxSend2.put(PUSH_DATE_KEY, _timestamp);
 		_firebase.getReference(SKYLINE_REF).child(INBOX_REF).child(otherUid).child(myUid).setValue(ChatInboxSend2);
 	}
 

@@ -180,7 +180,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:padding="8dp"
-			android:background="@color/colorPrimary"
+			android:background="?attr/colorPrimary"
 			android:gravity="center_horizontal|bottom"
 			android:text="@string/cant_reply"
 			android:textSize="14sp"

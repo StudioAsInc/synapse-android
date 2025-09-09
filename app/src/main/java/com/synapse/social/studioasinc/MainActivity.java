@@ -36,6 +36,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
+import com.synapse.social.studioasinc.util.UpdateManager;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
 import java.io.*;
@@ -280,45 +281,64 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 		// The update check is now handled by the UpdateManager
+		UpdateManager updateManager = new UpdateManager(this, new Runnable() {
+            @Override
+            public void run() {
+                proceedToAuthCheck();
+            }
+        });
+        updateManager.checkForUpdate();
 	}
 
 	// Helper method to encapsulate the delayed auth check logic
 	public void proceedToAuthCheck() {
 		new Handler(Looper.getMainLooper()).postDelayed(() -> {
 			FirebaseAuth auth = FirebaseAuth.getInstance();
-			if (auth.getCurrentUser() != null) {
-				// User logged in, check ban status
-				DatabaseReference userRef = FirebaseDatabase.getInstance()
-						.getReference("skyline/users")
-						.child(auth.getCurrentUser().getUid());
+			FirebaseUser currentUser = auth.getCurrentUser();
+			
+			if (currentUser != null) {
+				// User is logged in, verify the user is still valid
+				currentUser.reload().addOnCompleteListener(task -> {
+					if (task.isSuccessful()) {
+						// User is still valid, check ban status
+						DatabaseReference userRef = FirebaseDatabase.getInstance()
+								.getReference("skyline/users")
+								.child(currentUser.getUid());
 
-				userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-					@Override
-					public void onDataChange(@NonNull DataSnapshot snapshot) {
-						if (snapshot.exists()) {
-							String banned = snapshot.child("banned").getValue(String.class);
-							if ("false".equals(banned)) {
-								// Not banned, redirect to HomeActivity
-								startActivity(new Intent(MainActivity.this, HomeActivity.class));
-								finish();
-							} else {
-								// Banned, show toast and sign out
-								Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show(); // Changed Toast message as per flowchart implies "Toast: Banned & Sign Out"
-								auth.signOut();
-								finish(); // Finish MainActivity after signing out (per flowchart)
+						userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+							@Override
+							public void onDataChange(@NonNull DataSnapshot snapshot) {
+								if (snapshot.exists()) {
+									String banned = snapshot.child("banned").getValue(String.class);
+									if ("false".equals(banned)) {
+										// Not banned, redirect to HomeActivity
+										startActivity(new Intent(MainActivity.this, HomeActivity.class));
+										finish();
+									} else {
+										// Banned, show toast and sign out
+										Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
+										auth.signOut();
+										finish();
+									}
+								} else {
+									// User data not found (maybe first login, or incomplete profile)
+									// This path leads to CompleteProfileActivity
+									startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
+									finish();
+								}
 							}
-						} else {
-							// User data not found (maybe first login, or incomplete profile)
-							// This path leads to CompleteProfileActivity
-							startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
-							finish();
-						}
-					}
 
-					@Override
-					public void onCancelled(@NonNull DatabaseError error) {
-						Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-						// Handle database error, redirect to AuthActivity
+							@Override
+							public void onCancelled(@NonNull DatabaseError error) {
+								Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+								// Handle database error, redirect to AuthActivity
+								startActivity(new Intent(MainActivity.this, AuthActivity.class));
+								finish();
+							}
+						});
+					} else {
+						// User token is invalid, redirect to AuthActivity
+						auth.signOut();
 						startActivity(new Intent(MainActivity.this, AuthActivity.class));
 						finish();
 					}

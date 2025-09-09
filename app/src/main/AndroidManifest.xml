@@ -26,7 +26,13 @@
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
 			android:screenOrientation="portrait"
-			android:windowSoftInputMode="stateHidden" />
+			android:windowSoftInputMode="stateHidden"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
 		<activity
 			android:name=".HomeActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -117,7 +123,7 @@
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 		<activity
-			android:name=".Chat2ndUserMoreSettingsActivity"
+			android:name=".ConversationSettingsActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true" />
@@ -156,19 +162,7 @@
 			android:supportsPictureInPicture="true"
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
-		<activity
-			android:name=".LauncherActivity"
-			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
-			android:hardwareAccelerated="true"
-			android:supportsPictureInPicture="true"
-			android:windowSoftInputMode="stateHidden"
-			android:exported="true">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
-		<activity
+	<activity
 			android:name=".WelcomeActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
@@ -222,6 +216,13 @@
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
 			android:windowSoftInputMode="stateHidden" />
+		<activity
+			android:name=".StoryViewerActivity"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:theme="@style/Theme.AppCompat.NoActionBar"
+			android:screenOrientation="portrait" />
 		<provider
 			android:name="androidx.startup.InitializationProvider"
 			android:authorities="com.synapse.social.studioasinc.androidx-startup"
