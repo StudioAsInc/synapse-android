@@ -83,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
 	private ImageView trademark_img;
 
 	private FirebaseAuth auth;
+	private FirebaseAuth.AuthStateListener authStateListener;
+	private ValueEventListener banCheckListener;
+	private DatabaseReference userRef;
 	private OnCompleteListener<AuthResult> _auth_create_user_listener;
 	private OnCompleteListener<AuthResult> _auth_sign_in_listener;
 	private OnCompleteListener<Void> _auth_reset_password_listener;
@@ -151,6 +154,8 @@ public class MainActivity extends AppCompatActivity {
 		auth = FirebaseAuth.getInstance();
 		network = new RequestNetwork(this);
 		updateDialogBuilder = new AlertDialog.Builder(this); // Use the renamed variable
+
+		initializeListeners();
 
 		app_logo.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
@@ -271,6 +276,69 @@ public class MainActivity extends AppCompatActivity {
 		};
 	}
 
+	private void initializeListeners() {
+		// Initialize the ban check listener
+		banCheckListener = new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					String banned = snapshot.child("banned").getValue(String.class);
+					if ("false".equals(banned)) {
+						// Not banned, redirect to HomeActivity
+						navigateTo(HomeActivity.class);
+					} else {
+						// Banned, show toast and sign out
+						Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
+						auth.signOut();
+						// The AuthStateListener will handle navigation to AuthActivity on sign out
+					}
+				} else {
+					// User data not found (maybe first login, or incomplete profile)
+					navigateTo(CompleteProfileActivity.class);
+				}
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError error) {
+				Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+				navigateTo(AuthActivity.class);
+			}
+		};
+
+		// Initialize the auth state listener
+		authStateListener = firebaseAuth -> {
+			FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+			if (currentUser != null) {
+				// User is logged in, verify the user is still valid
+				currentUser.reload().addOnCompleteListener(task -> {
+					if (task.isSuccessful()) {
+						// User is still valid, check ban status
+						if (userRef != null) {
+							userRef.removeEventListener(banCheckListener); // Remove previous listener if any
+						}
+						userRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUser.getUid());
+						userRef.addListenerForSingleValueEvent(banCheckListener);
+					} else {
+						// User token is invalid, sign out and navigate to AuthActivity
+						auth.signOut();
+						navigateTo(AuthActivity.class);
+					}
+				});
+			} else {
+				// User not logged in, redirect to AuthActivity
+				navigateTo(AuthActivity.class);
+			}
+		};
+	}
+
+	private void navigateTo(Class<?> activityClass) {
+		if (!navigationStarted) {
+			navigationStarted = true;
+			startActivity(new Intent(MainActivity.this, activityClass));
+			finish();
+		}
+	}
+
 	private void initializeLogic() {
 		// 1. Set Fullscreen Immersive Mode
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -281,79 +349,30 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 		// The update check is now handled by the UpdateManager
-		UpdateManager updateManager = new UpdateManager(this, new Runnable() {
-            @Override
-            public void run() {
-                proceedToAuthCheck();
-            }
-        });
-        updateManager.checkForUpdate();
-	}
-
-	// Helper method to encapsulate the delayed auth check logic
-	public void proceedToAuthCheck() {
-		new Handler(Looper.getMainLooper()).postDelayed(() -> {
-			FirebaseAuth auth = FirebaseAuth.getInstance();
-			FirebaseUser currentUser = auth.getCurrentUser();
-			
-			if (currentUser != null) {
-				// User is logged in, verify the user is still valid
-				currentUser.reload().addOnCompleteListener(task -> {
-					if (task.isSuccessful()) {
-						// User is still valid, check ban status
-						DatabaseReference userRef = FirebaseDatabase.getInstance()
-								.getReference("skyline/users")
-								.child(currentUser.getUid());
-
-						userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-							@Override
-							public void onDataChange(@NonNull DataSnapshot snapshot) {
-								if (snapshot.exists()) {
-									String banned = snapshot.child("banned").getValue(String.class);
-									if ("false".equals(banned)) {
-										// Not banned, redirect to HomeActivity
-										startActivity(new Intent(MainActivity.this, HomeActivity.class));
-										finish();
-									} else {
-										// Banned, show toast and sign out
-										Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
-										auth.signOut();
-										finish();
-									}
-								} else {
-									// User data not found (maybe first login, or incomplete profile)
-									// This path leads to CompleteProfileActivity
-									startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
-									finish();
-								}
-							}
-
-							@Override
-							public void onCancelled(@NonNull DatabaseError error) {
-								Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-								// Handle database error, redirect to AuthActivity
-								startActivity(new Intent(MainActivity.this, AuthActivity.class));
-								finish();
-							}
-						});
-					} else {
-						// User token is invalid, redirect to AuthActivity
-						auth.signOut();
-						startActivity(new Intent(MainActivity.this, AuthActivity.class));
-						finish();
-					}
-				});
-			} else {
-				// User not logged in, redirect to AuthActivity
-				startActivity(new Intent(MainActivity.this, AuthActivity.class));
-				finish();
+		UpdateManager updateManager = new UpdateManager(this, () -> {
+			// This is the continuation after the update check.
+			// Register the auth state listener to start the auth flow.
+			if (authStateListener != null) {
+				auth.addAuthStateListener(authStateListener);
 			}
-		}, 500); // 500ms delay
+		});
+		updateManager.checkForUpdate();
 	}
+
 
 	@Override
 	public void onBackPressed() {
 		finishAffinity();
 	}
 
+	@Override
+	protected void onStop() {
+		super.onStop();
+		if (authStateListener != null) {
+			auth.removeAuthStateListener(authStateListener);
+		}
+		if (userRef != null && banCheckListener != null) {
+			userRef.removeEventListener(banCheckListener);
+		}
+	}
 }
