@@ -130,7 +130,7 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getDisplayName() != null && !mAuth.getCurrentUser().getDisplayName().isEmpty()) {
             PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
         }
-        Activity activity = currentActivity.get();
+        Activity activity = currentActivity != null ? currentActivity.get() : null;
         if (activity instanceof MainActivity) {
             UpdateManager updateManager = new UpdateManager(activity, new Runnable() {
                 @Override
