@@ -149,7 +149,6 @@ public class AuthActivity extends AppCompatActivity {
     }
 
     private void initializeFirebase() {
-        FirebaseApp.initializeApp(this);
         fauth = FirebaseAuth.getInstance();
     }
 

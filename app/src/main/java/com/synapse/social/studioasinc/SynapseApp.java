@@ -55,8 +55,8 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         this.mCalendar = Calendar.getInstance();
         
         // Initialize Firebase with disk persistence
-        FirebaseApp.initializeApp(this);
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        FirebaseApp.initializeApp(this);
         
         // Create notification channels
         createNotificationChannels();
