@@ -248,11 +248,24 @@ public class ChatActivity extends AppCompatActivity {
 		FirebaseApp.initializeApp(this);
 		e2eeHelper = new E2EEHelper(this);
 
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-		|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-			ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);} else {
-			initializeLogic();
-		}
+		e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
+			@Override
+			public void onKeysInitialized() {
+				if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+				|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+					ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+				} else {
+					initializeLogic();
+				}
+			}
+
+			@Override
+			public void onKeyInitializationFailed(Exception e) {
+				Log.e(TAG, "Failed to initialize encryption keys", e);
+				Toast.makeText(ChatActivity.this, "Error: Could not initialize secure chat.", Toast.LENGTH_SHORT).show();
+				finish();
+			}
+		});
 	}
 
 	@Override
