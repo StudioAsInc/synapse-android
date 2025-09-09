@@ -309,14 +309,13 @@ public class MainActivity extends AppCompatActivity {
 							@Override
 							public void onDataChange(@NonNull DataSnapshot snapshot) {
 								if (snapshot.exists()) {
-									// Handle possible data shapes for "banned" and default to not banned if missing
-									Boolean bannedBool = snapshot.child("banned").getValue(Boolean.class);
-									String bannedStr = snapshot.child("banned").getValue(String.class);
+									Object bannedObj = snapshot.child("banned").getValue();
 									boolean isBanned = false;
 
-									if (bannedBool != null) {
-										isBanned = bannedBool.booleanValue();
-									} else if (bannedStr != null) {
+									if (bannedObj instanceof Boolean) {
+										isBanned = (Boolean) bannedObj;
+									} else if (bannedObj instanceof String) {
+										String bannedStr = (String) bannedObj;
 										isBanned = bannedStr.equalsIgnoreCase("true") || bannedStr.equals("1");
 									}
 
