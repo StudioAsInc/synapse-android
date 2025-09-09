@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
 	private RequestNetwork network;
 	private RequestNetwork.RequestListener _network_request_listener;
 	private AlertDialog.Builder updateDialogBuilder; // Renamed to avoid confusion with Dialog object
+	private FirebaseAuth.AuthStateListener mAuthListener;
 
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -279,75 +280,64 @@ public class MainActivity extends AppCompatActivity {
 			);
 		}
 
-		// The update check is now handled by the UpdateManager
-		UpdateManager updateManager = new UpdateManager(this, new Runnable() {
-            @Override
-            public void run() {
-                proceedToAuthCheck();
-            }
-        });
-        updateManager.checkForUpdate();
-	}
+		mAuthListener = new FirebaseAuth.AuthStateListener() {
+			@Override
+			public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+				FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+				if (currentUser != null) {
+					// User is logged in, verify the user is still valid
+					currentUser.reload().addOnCompleteListener(task -> {
+						if (task.isSuccessful()) {
+							// User is still valid, check ban status
+							DatabaseReference userRef = FirebaseDatabase.getInstance()
+									.getReference("skyline/users")
+									.child(currentUser.getUid());
 
-	// Helper method to encapsulate the delayed auth check logic
-	public void proceedToAuthCheck() {
-		new Handler(Looper.getMainLooper()).postDelayed(() -> {
-			FirebaseAuth auth = FirebaseAuth.getInstance();
-			FirebaseUser currentUser = auth.getCurrentUser();
-			
-			if (currentUser != null) {
-				// User is logged in, verify the user is still valid
-				currentUser.reload().addOnCompleteListener(task -> {
-					if (task.isSuccessful()) {
-						// User is still valid, check ban status
-						DatabaseReference userRef = FirebaseDatabase.getInstance()
-								.getReference("skyline/users")
-								.child(currentUser.getUid());
-
-						userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-							@Override
-							public void onDataChange(@NonNull DataSnapshot snapshot) {
-								if (snapshot.exists()) {
-									String banned = snapshot.child("banned").getValue(String.class);
-									if ("false".equals(banned)) {
-										// Not banned, redirect to HomeActivity
-										startActivity(new Intent(MainActivity.this, HomeActivity.class));
-										finish();
+							userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+								@Override
+								public void onDataChange(@NonNull DataSnapshot snapshot) {
+									if (snapshot.exists()) {
+										String banned = snapshot.child("banned").getValue(String.class);
+										if ("false".equals(banned)) {
+											// Not banned, redirect to HomeActivity
+											startActivity(new Intent(MainActivity.this, HomeActivity.class));
+											finish();
+										} else {
+											// Banned, show toast and sign out
+											Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
+											auth.signOut();
+											finish();
+										}
 									} else {
-										// Banned, show toast and sign out
-										Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
-										auth.signOut();
+										// User data not found (maybe first login, or incomplete profile)
+										// This path leads to CompleteProfileActivity
+										startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
 										finish();
 									}
-								} else {
-									// User data not found (maybe first login, or incomplete profile)
-									// This path leads to CompleteProfileActivity
-									startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
+								}
+
+								@Override
+								public void onCancelled(@NonNull DatabaseError error) {
+									Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+									// Handle database error, redirect to AuthActivity
+									startActivity(new Intent(MainActivity.this, AuthActivity.class));
 									finish();
 								}
-							}
-
-							@Override
-							public void onCancelled(@NonNull DatabaseError error) {
-								Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-								// Handle database error, redirect to AuthActivity
-								startActivity(new Intent(MainActivity.this, AuthActivity.class));
-								finish();
-							}
-						});
-					} else {
-						// User token is invalid, redirect to AuthActivity
-						auth.signOut();
-						startActivity(new Intent(MainActivity.this, AuthActivity.class));
-						finish();
-					}
-				});
-			} else {
-				// User not logged in, redirect to AuthActivity
-				startActivity(new Intent(MainActivity.this, AuthActivity.class));
-				finish();
+							});
+						} else {
+							// User token is invalid, redirect to AuthActivity
+							auth.signOut();
+							startActivity(new Intent(MainActivity.this, AuthActivity.class));
+							finish();
+						}
+					});
+				} else {
+					// User not logged in, redirect to AuthActivity
+					startActivity(new Intent(MainActivity.this, AuthActivity.class));
+					finish();
+				}
 			}
-		}, 500); // 500ms delay
+		};
 	}
 
 	@Override
@@ -355,4 +345,17 @@ public class MainActivity extends AppCompatActivity {
 		finishAffinity();
 	}
 
+	@Override
+	public void onStart() {
+		super.onStart();
+		auth.addAuthStateListener(mAuthListener);
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		if (mAuthListener != null) {
+			auth.removeAuthStateListener(mAuthListener);
+		}
+	}
 }
