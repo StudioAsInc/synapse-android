@@ -66,7 +66,6 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         this.setUserStatusRef = FirebaseDatabase.getInstance().getReference(".info/connected");
         
         // Keep users data synced for offline use
-        getCheckUserReference.keepSynced(true);
         
         // Set up global exception handler
         Thread.setDefaultUncaughtExceptionHandler(
