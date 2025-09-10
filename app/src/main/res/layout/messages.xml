@@ -46,8 +46,8 @@
 							android:id="@+id/InboxRecyclerView"
 							android:layout_width="match_parent"
 							android:layout_height="match_parent"
-							android:listSelector="@drawable/no_highlight"/>
-							tools:listitem="@layout/inbox_msg_list_cv_synapse" />
+							android:listSelector="@drawable/no_highlight"
+							tools:listitem="@layout/item_inbox_message" />
 						<TextView
 							android:id="@+id/noInbox"
 							android:layout_width="match_parent"

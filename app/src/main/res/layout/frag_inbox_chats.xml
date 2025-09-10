@@ -93,6 +93,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:background="@android:color/transparent"
-			tools:listitem="@layout/inbox_msg_list_cv_synapse" />
+			tools:listitem="@layout/item_inbox_message" />
 	</LinearLayout>
 </LinearLayout>
