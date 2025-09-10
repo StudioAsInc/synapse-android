@@ -91,7 +91,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.service.studioasinc.AI.Gemini;
-import com.synapse.social.studioasinc.crypto.E2EEHelper;
+import com.synapse.social.studioasinc.crypto.TinkE2EEHelper;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
@@ -238,7 +238,7 @@ public class ChatActivity extends AppCompatActivity {
 	private Intent i = new Intent();
 	private SharedPreferences appSettings;
 	private Gemini gemini;
-	private E2EEHelper e2eeHelper;
+	private TinkE2EEHelper e2eeHelper;
 
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -246,26 +246,21 @@ public class ChatActivity extends AppCompatActivity {
 		setContentView(R.layout.chat);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
-		e2eeHelper = new E2EEHelper(this);
+		try {
+			e2eeHelper = new TinkE2EEHelper(this);
+		} catch (Exception e) {
+			Log.e(TAG, "Failed to initialize TinkE2EEHelper", e);
+			Toast.makeText(this, "Error: Could not initialize secure chat.", Toast.LENGTH_SHORT).show();
+			finish();
+			return;
+		}
 
-		e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
-			@Override
-			public void onKeysInitialized() {
-				if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+		if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
 				|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-					ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-				} else {
-					initializeLogic();
-				}
-			}
-
-			@Override
-			public void onKeyInitializationFailed(Exception e) {
-				Log.e(TAG, "Failed to initialize encryption keys", e);
-				Toast.makeText(ChatActivity.this, "Error: Could not initialize secure chat.", Toast.LENGTH_SHORT).show();
-				finish();
-			}
-		});
+			ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+		} else {
+			initializeLogic();
+		}
 	}
 
 	@Override
@@ -542,7 +537,6 @@ public class ChatActivity extends AppCompatActivity {
 		chatAdapter = new ChatAdapter(ChatMessagesList, repliedMessagesCache);
 		chatAdapter.setHasStableIds(true);
 		chatAdapter.setChatActivity(this);
-		chatAdapter.setE2EEHelper(e2eeHelper);
 		chatAdapter.setSecondUserUid(getIntent().getStringExtra("uid"));
 		ChatMessagesListRecycler.setAdapter(chatAdapter);
 		
@@ -600,7 +594,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 		// --- END: Critical Initialization ---
-		_getUserReference();
+		publishPublicKey();
 		message_input_outlined_round.setOrientation(LinearLayout.HORIZONTAL);
 		if (message_et.getText().toString().trim().equals("")) {
 			_TransitionManager(message_input_overall_container, 250);
@@ -1030,8 +1024,40 @@ public class ChatActivity extends AppCompatActivity {
 				}
 
 				try {
-					String encryptedText = e2eeHelper.encrypt(getIntent().getStringExtra("uid"), newText);
+					String recipientUid = getIntent().getStringExtra("uid");
+					DatabaseReference theirPublicKeyRef = _firebase.getReference(SKYLINE_REF).child("e2ee_public_keys").child(recipientUid).child("publicKey");
+					theirPublicKeyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+						@Override
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+							String theirPublicKey = dataSnapshot.getValue(String.class);
+							if (theirPublicKey == null) {
+								Toast.makeText(ChatActivity.this, "Error: Recipient's public key not found.", Toast.LENGTH_SHORT).show();
+								return;
+							}
+							try {
+								String encryptedText = e2eeHelper.encrypt(theirPublicKey, newText);
+								FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
+								String myUid = cu != null ? cu.getUid() : null;
+								if (myUid == null) return;
+								String otherUid = getIntent().getStringExtra("uid");
+								String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
+								if (otherUid == null || msgKey == null) return;
+								Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(myUid, otherUid, msgKey);
+								refs.first.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
+								refs.second.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
+								refs.first.child("isEncrypted").setValue(true);
+								refs.second.child("isEncrypted").setValue(true);
+							} catch (Exception e) {
+								Log.e(TAG, "Failed to encrypt and save edited message", e);
+								Toast.makeText(ChatActivity.this, "Error saving message", Toast.LENGTH_SHORT).show();
+							}
+						}
 
+						@Override
+						public void onCancelled(@NonNull DatabaseError databaseError) {
+							Toast.makeText(ChatActivity.this, "Error: Could not retrieve recipient's key.", Toast.LENGTH_SHORT).show();
+						}
+					});
 					FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
 					String myUid = cu != null ? cu.getUid() : null;
 					if (myUid == null) return;
@@ -1167,69 +1193,15 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 
-	public void _getUserReference() {
-		// The user profile data is now fetched via a persistent listener attached in onStart,
-		// so the addListenerForSingleValueEvent call is no longer needed here.
-		String otherUserUid = getIntent().getStringExtra("uid");
-		e2eeHelper.getPublicKey(otherUserUid, new E2EEHelper.PublicKeyListener() {
-			@Override
-			public void onPublicKeyReceived(byte[] publicKey) {
-				e2eeHelper.establishSession(otherUserUid, publicKey, new E2EEHelper.SessionEstablishmentListener() {
-					@Override
-					public void onSessionEstablished() {
-						Log.d("ChatActivity", "E2EE session established successfully.");
-					}
-
-					@Override
-					public void onSessionEstablishmentFailed(Exception e) {
-						Log.e("ChatActivity", "E2EE session establishment failed", e);
-						Toast.makeText(ChatActivity.this, "Failed to establish secure session.", Toast.LENGTH_SHORT).show();
-					}
-				});
-			}
-
-			@Override
-			public void onPublicKeyFailed(Exception e) {
-				Log.e("ChatActivity", "Failed to get other user's public key", e);
-				Toast.makeText(ChatActivity.this, "Could not get user's public key.", Toast.LENGTH_SHORT).show();
-			}
-		});
-
-		DatabaseReference getFirstUserName = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-		getFirstUserName.addListenerForSingleValueEvent(new ValueEventListener() {
-			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				try {
-					if (dataSnapshot.exists()) {
-						String nickname = dataSnapshot.child("nickname").getValue(String.class);
-						String username = dataSnapshot.child("username").getValue(String.class);
-						
-						if (nickname != null && !"null".equals(nickname)) {
-							FirstUserName = nickname;
-						} else if (username != null && !"null".equals(username)) {
-							FirstUserName = "@" + username;
-						} else {
-							FirstUserName = "Unknown User";
-							Log.w("ChatActivity", "Both nickname and username are null or 'null'");
-						}
-					} else {
-						Log.w("ChatActivity", "User data snapshot doesn't exist");
-						FirstUserName = "Unknown User";
-					}
-				} catch (Exception e) {
-					Log.e("ChatActivity", "Error processing user data: " + e.getMessage());
-					FirstUserName = "Unknown User";
-				}
-			}
-
-			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-				Log.e("ChatActivity", "Failed to get first user name: " + databaseError.getMessage());
-				FirstUserName = "Unknown User";
-			}
-		});
-
-		_getChatMessagesRef();
+	private void publishPublicKey() {
+		try {
+			String serializedPublicKey = e2eeHelper.getSerializedPublicKey();
+			DatabaseReference dbRef = _firebase.getReference(SKYLINE_REF).child("e2ee_public_keys").child(auth.getCurrentUser().getUid());
+			dbRef.child("publicKey").setValue(serializedPublicKey);
+			dbRef.child("timestamp").setValue(ServerValue.TIMESTAMP);
+		} catch (Exception e) {
+			Log.e(TAG, "Failed to publish public key", e);
+		}
 	}
 
 
@@ -2057,218 +2029,237 @@ public class ChatActivity extends AppCompatActivity {
 	 * The recipient's OneSignal Player ID is no longer needed.
 	 */
 	private void proceedWithMessageSending(String messageText, String senderUid, String recipientUid) {
-		if (auth.getCurrentUser() != null) {
-			PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
-		}
-		Log.d("ChatActivity", "=== MESSAGE SENDING START ===");
-		Log.d("ChatActivity", "Message text: '" + messageText + "'");
-		Log.d("ChatActivity", "Sender: " + senderUid + ", Recipient: " + recipientUid);
-		Log.d("ChatActivity", "Attachment map size: " + attactmentmap.size());
-		Log.d("ChatActivity", "Attachment map content: " + attactmentmap.toString());
-
-		if (!attactmentmap.isEmpty()) {
-			Log.d("ChatActivity", "Processing message with " + attactmentmap.size() + " attachments");
-			// Logic for sending messages with attachments
-			ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
-			boolean allUploadsSuccessful = true;
-			for (HashMap<String, Object> item : attactmentmap) {
-				Log.d("ChatActivity", "Checking attachment: " + item.toString());
-				if ("success".equals(item.get("uploadState"))) {
-					HashMap<String, Object> attachmentData = new HashMap<>();
-					attachmentData.put("url", item.get("cloudinaryUrl"));
-					attachmentData.put("publicId", item.get("publicId"));
-					attachmentData.put("width", item.get("width"));
-					attachmentData.put("height", item.get("height"));
-					successfulAttachments.add(attachmentData);
-					Log.d("ChatActivity", "Added successful attachment: " + attachmentData.toString());
-				} else {
-					Log.w("ChatActivity", "Attachment not ready: " + item.toString());
-					allUploadsSuccessful = false;
-				}
-			}
-
-			Log.d("ChatActivity", "All uploads successful: " + allUploadsSuccessful + ", Successful attachments: " + successfulAttachments.size());
-
-			if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
-				String uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated message key: " + uniqueMessageKey);
-
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
-
-				try {
-					String encryptedMessageText = messageText.isEmpty() ? "" : e2eeHelper.encrypt(recipientUid, messageText);
-					ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessageText);
-
-					ArrayList<HashMap<String, Object>> encryptedAttachments = new ArrayList<>();
-					for (HashMap<String, Object> attachment : successfulAttachments) {
-						HashMap<String, Object> encryptedAttachment = new HashMap<>(attachment);
-						String url = (String) encryptedAttachment.get("url");
-						String publicId = (String) encryptedAttachment.get("publicId");
-
-						if (url != null) {
-							encryptedAttachment.put("url", e2eeHelper.encrypt(recipientUid, url));
-						}
-						if (publicId != null) {
-							encryptedAttachment.put("publicId", e2eeHelper.encrypt(recipientUid, publicId));
-						}
-						encryptedAttachments.add(encryptedAttachment);
-					}
-					ChatSendMap.put(ATTACHMENTS_KEY, encryptedAttachments);
-					ChatSendMap.put("isEncrypted", true);
-
-				} catch (Exception e) {
-					Log.e(TAG, "Failed to encrypt attachment message", e);
-					Toast.makeText(this, "Error: Could not send secure attachment message.", Toast.LENGTH_SHORT).show();
+		DatabaseReference theirPublicKeyRef = _firebase.getReference(SKYLINE_REF).child("e2ee_public_keys").child(recipientUid).child("publicKey");
+		theirPublicKeyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				String theirPublicKey = dataSnapshot.getValue(String.class);
+				if (theirPublicKey == null) {
+					Toast.makeText(ChatActivity.this, "Error: Recipient's public key not found.", Toast.LENGTH_SHORT).show();
 					return;
 				}
 
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
+				if (auth.getCurrentUser() != null) {
+					PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
+				}
+				Log.d("ChatActivity", "=== MESSAGE SENDING START ===");
+				Log.d("ChatActivity", "Message text: '" + messageText + "'");
+				Log.d("ChatActivity", "Sender: " + senderUid + ", Recipient: " + recipientUid);
+				Log.d("ChatActivity", "Attachment map size: " + attactmentmap.size());
+				Log.d("ChatActivity", "Attachment map content: " + attactmentmap.toString());
 
-				Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
-				Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
-
-				Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
-				refs.first.setValue(ChatSendMap);
-				refs.second.setValue(ChatSendMap);
-
-				// CRITICAL FIX: Immediately add the message to local list for instant feedback
-				ChatSendMap.put("isLocalMessage", true); // Mark as local message
-				messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-				// Add to the end since this is a new message being sent
-				ChatMessagesList.add(ChatSendMap);
-				int newPosition = ChatMessagesList.size() - 1;
-				Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-				// Use more granular insertion notification for smooth updates
-				chatAdapter.notifyItemInserted(newPosition);
-
-				// Scroll to the new message immediately
-				ChatMessagesListRecycler.post(() -> {
-					scrollToBottom();
-				});
-
-				String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
-
-				// Enhanced Smart Notification Check with chat ID for deep linking
-				String chatId = senderUid + "_" + recipientUid;
-				String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-				String notificationPreview;
-				if (!successfulAttachments.isEmpty()) {
-					if (TextUtils.isEmpty(messageText)) {
-						notificationPreview = "Sent an attachment";
-					} else {
-						notificationPreview = messageText + " + Sent an attachment";
+				if (!attactmentmap.isEmpty()) {
+					Log.d("ChatActivity", "Processing message with " + attactmentmap.size() + " attachments");
+					// Logic for sending messages with attachments
+					ArrayList<HashMap<String, Object>> successfulAttachments = new ArrayList<>();
+					boolean allUploadsSuccessful = true;
+					for (HashMap<String, Object> item : attactmentmap) {
+						Log.d("ChatActivity", "Checking attachment: " + item.toString());
+						if ("success".equals(item.get("uploadState"))) {
+							HashMap<String, Object> attachmentData = new HashMap<>();
+							attachmentData.put("url", item.get("cloudinaryUrl"));
+							attachmentData.put("publicId", item.get("publicId"));
+							attachmentData.put("width", item.get("width"));
+							attachmentData.put("height", item.get("height"));
+							successfulAttachments.add(attachmentData);
+							Log.d("ChatActivity", "Added successful attachment: " + attachmentData.toString());
+						} else {
+							Log.w("ChatActivity", "Attachment not ready: " + item.toString());
+							allUploadsSuccessful = false;
+						}
 					}
+
+					Log.d("ChatActivity", "All uploads successful: " + allUploadsSuccessful + ", Successful attachments: " + successfulAttachments.size());
+
+					if (allUploadsSuccessful && (!messageText.isEmpty() || !successfulAttachments.isEmpty())) {
+						String uniqueMessageKey = main.push().getKey();
+						Log.d("ChatActivity", "Generated message key: " + uniqueMessageKey);
+
+						ChatSendMap = new HashMap<>();
+						ChatSendMap.put(UID_KEY, senderUid);
+						ChatSendMap.put(TYPE_KEY, ATTACHMENT_MESSAGE_TYPE);
+
+						try {
+							String encryptedMessageText = messageText.isEmpty() ? "" : e2eeHelper.encrypt(theirPublicKey, messageText);
+							ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessageText);
+
+							ArrayList<HashMap<String, Object>> encryptedAttachments = new ArrayList<>();
+							for (HashMap<String, Object> attachment : successfulAttachments) {
+								HashMap<String, Object> encryptedAttachment = new HashMap<>(attachment);
+								String url = (String) encryptedAttachment.get("url");
+								String publicId = (String) encryptedAttachment.get("publicId");
+
+								if (url != null) {
+									encryptedAttachment.put("url", e2eeHelper.encrypt(theirPublicKey, url));
+								}
+								if (publicId != null) {
+									encryptedAttachment.put("publicId", e2eeHelper.encrypt(theirPublicKey, publicId));
+								}
+								encryptedAttachments.add(encryptedAttachment);
+							}
+							ChatSendMap.put(ATTACHMENTS_KEY, encryptedAttachments);
+							ChatSendMap.put("isEncrypted", true);
+
+						} catch (Exception e) {
+							Log.e(TAG, "Failed to encrypt attachment message", e);
+							Toast.makeText(ChatActivity.this, "Error: Could not send secure attachment message.", Toast.LENGTH_SHORT).show();
+							return;
+						}
+
+						ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
+						if (!ReplyMessageID.equals("null"))
+							ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
+						ChatSendMap.put(KEY_KEY, uniqueMessageKey);
+						ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
+
+						Log.d("ChatActivity", "Sending attachment message to Firebase with key: " + uniqueMessageKey);
+						Log.d("ChatActivity", "Message data: " + ChatSendMap.toString());
+
+						Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
+						refs.first.setValue(ChatSendMap);
+						refs.second.setValue(ChatSendMap);
+
+						// CRITICAL FIX: Immediately add the message to local list for instant feedback
+						ChatSendMap.put("isLocalMessage", true); // Mark as local message
+						messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
+						// Add to the end since this is a new message being sent
+						ChatMessagesList.add(ChatSendMap);
+						int newPosition = ChatMessagesList.size() - 1;
+						Log.d("ChatActivity", "Added message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
+						// Use more granular insertion notification for smooth updates
+						chatAdapter.notifyItemInserted(newPosition);
+
+						// Scroll to the new message immediately
+						ChatMessagesListRecycler.post(() -> {
+							scrollToBottom();
+						});
+
+						String lastMessage = messageText.isEmpty() ? successfulAttachments.size() + " attachment(s)" : messageText;
+
+						// Enhanced Smart Notification Check with chat ID for deep linking
+						String chatId = senderUid + "_" + recipientUid;
+						String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
+						String notificationPreview;
+						if (!successfulAttachments.isEmpty()) {
+							if (TextUtils.isEmpty(messageText)) {
+								notificationPreview = "Sent an attachment";
+							} else {
+								notificationPreview = messageText + " + Sent an attachment";
+							}
+						} else {
+							notificationPreview = messageText;
+						}
+						String notificationMessage = senderDisplayName + ": " + notificationPreview;
+						HashMap<String, String> data = new HashMap<>();
+						data.put("chatId", chatId);
+						NotificationHelper.sendNotification(
+								recipientUid,
+								senderUid,
+								notificationMessage,
+								"chat_message",
+								data
+						);
+
+						_updateInbox(lastMessage, ServerValue.TIMESTAMP);
+
+						// Clear UI
+						Log.d("ChatActivity", "Clearing attachment map and UI");
+						message_et.setText("");
+						ReplyMessageID = "null";
+						mMessageReplyLayout.setVisibility(View.GONE);
+
+						// CRITICAL FIX: Reset attachment state completely
+						resetAttachmentState();
+
+						Log.d("ChatActivity", "=== ATTACHMENT MESSAGE SENT SUCCESSFULLY ===");
+
+					} else {
+						Log.w("ChatActivity", "Cannot send message - All uploads successful: " + allUploadsSuccessful + ", Message text empty: " + messageText.isEmpty() + ", Attachments empty: " + successfulAttachments.isEmpty());
+						Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
+					}
+
+				} else if (!messageText.isEmpty()) {
+					Log.d("ChatActivity", "Processing text-only message");
+					// Logic for sending text-only messages
+					String uniqueMessageKey;
+					try {
+						String encryptedMessage = e2eeHelper.encrypt(theirPublicKey, messageText);
+						uniqueMessageKey = main.push().getKey();
+						Log.d("ChatActivity", "Generated encrypted text message key: " + uniqueMessageKey);
+
+						ChatSendMap = new HashMap<>();
+						ChatSendMap.put(UID_KEY, senderUid);
+						if (LinkPreviewUtil.extractUrl(messageText) != null) {
+							ChatSendMap.put(TYPE_KEY, LINK_PREVIEW_MESSAGE_TYPE);
+						} else {
+							ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
+						}
+						ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessage);
+						ChatSendMap.put("isEncrypted", true);
+						ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
+						if (!ReplyMessageID.equals("null"))
+							ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
+						ChatSendMap.put(KEY_KEY, uniqueMessageKey);
+						ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
+					} catch (Exception e) {
+						Log.e("ChatActivity", "Failed to encrypt and send message", e);
+						Toast.makeText(ChatActivity.this, "Error: Could not send secure message.", Toast.LENGTH_SHORT).show();
+						return; // Don't proceed if encryption fails
+					}
+
+					Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
+					Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
+
+					Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
+					refs.first.setValue(ChatSendMap);
+					refs.second.setValue(ChatSendMap);
+
+					// CRITICAL FIX: Immediately add the message to local list for instant feedback
+					ChatSendMap.put("isLocalMessage", true); // Mark as local message
+					messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
+					// Add to the end since this is a new message being sent
+					ChatMessagesList.add(ChatSendMap);
+					int newPosition = ChatMessagesList.size() - 1;
+					Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
+					chatAdapter.notifyItemInserted(newPosition);
+
+					// Scroll to the new message immediately
+					ChatMessagesListRecycler.post(() -> {
+						scrollToBottom();
+					});
+
+					// Enhanced Smart Notification Check with chat ID for deep linking
+					String chatId = senderUid + "_" + recipientUid;
+					String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
+					String notificationMessage = senderDisplayName + ": " + messageText;
+					HashMap<String, String> data = new HashMap<>();
+					data.put("chatId", chatId);
+					NotificationHelper.sendNotification(
+							recipientUid,
+							senderUid,
+							notificationMessage,
+							"chat_message",
+							data
+					);
+
+					_updateInbox(messageText, ServerValue.TIMESTAMP);
+
+					// Clear UI
+					message_et.setText("");
+					ReplyMessageID = "null";
+					mMessageReplyLayout.setVisibility(View.GONE);
+
+					Log.d("ChatActivity", "=== TEXT MESSAGE SENT SUCCESSFULLY ===");
 				} else {
-					notificationPreview = messageText;
+					Log.w("ChatActivity", "No message text and no attachments - nothing to send");
 				}
-				String notificationMessage = senderDisplayName + ": " + notificationPreview;
-				HashMap<String, String> data = new HashMap<>();
-				data.put("chatId", chatId);
-				NotificationHelper.sendNotification(
-					recipientUid,
-					senderUid,
-					notificationMessage,
-					"chat_message",
-					data
-				);
-
-				_updateInbox(lastMessage, ServerValue.TIMESTAMP);
-
-				// Clear UI
-				Log.d("ChatActivity", "Clearing attachment map and UI");
-				message_et.setText("");
-				ReplyMessageID = "null";
-				mMessageReplyLayout.setVisibility(View.GONE);
-
-				// CRITICAL FIX: Reset attachment state completely
-				resetAttachmentState();
-
-				Log.d("ChatActivity", "=== ATTACHMENT MESSAGE SENT SUCCESSFULLY ===");
-
-			} else {
-				Log.w("ChatActivity", "Cannot send message - All uploads successful: " + allUploadsSuccessful + ", Message text empty: " + messageText.isEmpty() + ", Attachments empty: " + successfulAttachments.isEmpty());
-				Toast.makeText(getApplicationContext(), "Waiting for uploads to complete...", Toast.LENGTH_SHORT).show();
 			}
 
-		} else if (!messageText.isEmpty()) {
-			Log.d("ChatActivity", "Processing text-only message");
-			// Logic for sending text-only messages
-			String uniqueMessageKey;
-			try {
-				String encryptedMessage = e2eeHelper.encrypt(recipientUid, messageText);
-				uniqueMessageKey = main.push().getKey();
-				Log.d("ChatActivity", "Generated encrypted text message key: " + uniqueMessageKey);
-
-				ChatSendMap = new HashMap<>();
-				ChatSendMap.put(UID_KEY, senderUid);
-				if (LinkPreviewUtil.extractUrl(messageText) != null) {
-					ChatSendMap.put(TYPE_KEY, LINK_PREVIEW_MESSAGE_TYPE);
-				} else {
-					ChatSendMap.put(TYPE_KEY, MESSAGE_TYPE);
-				}
-				ChatSendMap.put(MESSAGE_TEXT_KEY, encryptedMessage);
-				ChatSendMap.put("isEncrypted", true);
-				ChatSendMap.put(MESSAGE_STATE_KEY, "sended");
-				if (!ReplyMessageID.equals("null")) ChatSendMap.put(REPLIED_MESSAGE_ID_KEY, ReplyMessageID);
-				ChatSendMap.put(KEY_KEY, uniqueMessageKey);
-				ChatSendMap.put(PUSH_DATE_KEY, ServerValue.TIMESTAMP);
-			} catch (Exception e) {
-				Log.e("ChatActivity", "Failed to encrypt and send message", e);
-				Toast.makeText(this, "Error: Could not send secure message.", Toast.LENGTH_SHORT).show();
-				return; // Don't proceed if encryption fails
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
+				Toast.makeText(ChatActivity.this, "Error: Could not retrieve recipient's key.", Toast.LENGTH_SHORT).show();
 			}
-
-			Log.d("ChatActivity", "Sending text message to Firebase with key: " + uniqueMessageKey);
-			Log.d("ChatActivity", "Text message data: " + ChatSendMap.toString());
-
-			Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(senderUid, recipientUid, uniqueMessageKey);
-			refs.first.setValue(ChatSendMap);
-			refs.second.setValue(ChatSendMap);
-
-			// CRITICAL FIX: Immediately add the message to local list for instant feedback
-			ChatSendMap.put("isLocalMessage", true); // Mark as local message
-			messageKeys.add(uniqueMessageKey); // Add key to set to prevent duplicates
-			// Add to the end since this is a new message being sent
-			ChatMessagesList.add(ChatSendMap);
-			int newPosition = ChatMessagesList.size() - 1;
-			Log.d("ChatActivity", "Added text message to local list at position " + newPosition + ", total messages: " + ChatMessagesList.size());
-			chatAdapter.notifyItemInserted(newPosition);
-
-			// Scroll to the new message immediately
-			ChatMessagesListRecycler.post(() -> {
-				scrollToBottom();
-			});
-
-			// Enhanced Smart Notification Check with chat ID for deep linking
-			String chatId = senderUid + "_" + recipientUid;
-			String senderDisplayName = TextUtils.isEmpty(FirstUserName) ? "Someone" : FirstUserName;
-			String notificationMessage = senderDisplayName + ": " + messageText;
-			HashMap<String, String> data = new HashMap<>();
-			data.put("chatId", chatId);
-			NotificationHelper.sendNotification(
-				recipientUid,
-				senderUid,
-				notificationMessage,
-				"chat_message",
-				data
-			);
-
-			_updateInbox(messageText, ServerValue.TIMESTAMP);
-
-			// Clear UI
-			message_et.setText("");
-			ReplyMessageID = "null";
-			mMessageReplyLayout.setVisibility(View.GONE);
-
-			Log.d("ChatActivity", "=== TEXT MESSAGE SENT SUCCESSFULLY ===");
-		} else {
-			Log.w("ChatActivity", "No message text and no attachments - nothing to send");
-		}
+		});
 	}
 
 
@@ -3136,7 +3127,7 @@ public class ChatActivity extends AppCompatActivity {
 
         if (isEncrypted) {
             try {
-                return e2eeHelper.decrypt(getIntent().getStringExtra("uid"), messageContent);
+                return e2eeHelper.decrypt(messageContent);
             } catch (Exception e) {
                 Log.e(TAG, "Failed to decrypt message for popup", e);
                 return "⚠️ Could not decrypt message";
