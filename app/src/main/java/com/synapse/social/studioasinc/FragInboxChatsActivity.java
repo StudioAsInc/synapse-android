@@ -77,6 +77,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.appcompat.app.AppCompatDelegate;
 import com.bumptech.glide.Glide;
+import com.synapse.social.studioasinc.animations.ShimmerFrameLayout;
 
 public class FragInboxChatsActivity extends Fragment {
 
@@ -96,6 +97,7 @@ public class FragInboxChatsActivity extends Fragment {
 	private Chip linear31;
 	private Chip linear32;
 	private Chip linear33;
+    private ShimmerFrameLayout shimmer_view_container;
 
 	private FirebaseAuth auth;
 	private OnCompleteListener<AuthResult> _auth_create_user_listener;
@@ -133,6 +135,7 @@ public class FragInboxChatsActivity extends Fragment {
 		linear31 = _view.findViewById(R.id.linear31);
 		linear32 = _view.findViewById(R.id.linear32);
 		linear33 = _view.findViewById(R.id.linear33);
+        shimmer_view_container = _view.findViewById(R.id.shimmer_view_container);
 		auth = FirebaseAuth.getInstance();
 
 		_main_child_listener = new ChildEventListener() {
@@ -321,10 +324,16 @@ public class FragInboxChatsActivity extends Fragment {
 
 
 	public void _getInboxReference() {
+		shimmer_view_container.startShimmer();
+		shimmer_view_container.setVisibility(View.VISIBLE);
+		inboxListRecyclerView.setVisibility(View.GONE);
 		Query getInboxRef = FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 		getInboxRef.addValueEventListener(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				shimmer_view_container.stopShimmer();
+				shimmer_view_container.setVisibility(View.GONE);
+				inboxListRecyclerView.setVisibility(View.VISIBLE);
 				if(dataSnapshot.exists()) {
 					inboxListRecyclerView.setVisibility(View.VISIBLE);
 					ChatInboxList.clear();
@@ -347,7 +356,9 @@ public class FragInboxChatsActivity extends Fragment {
 
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                shimmer_view_container.stopShimmer();
+                shimmer_view_container.setVisibility(View.GONE);
+                inboxListRecyclerView.setVisibility(View.VISIBLE);
 			}
 		});
 	}
