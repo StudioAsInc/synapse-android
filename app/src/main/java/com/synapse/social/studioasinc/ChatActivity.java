@@ -92,7 +92,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.service.studioasinc.AI.Gemini;
 import com.synapse.social.studioasinc.crypto.E2EEHelper;
 import com.synapse.social.studioasinc.FadeEditText;
-import com.synapse.social.studioasinc.FileUtil;
 import com.synapse.social.studioasinc.SketchwareUtil;
 import com.synapse.social.studioasinc.StorageUtil;
 import com.synapse.social.studioasinc.UploadFiles;
@@ -3267,7 +3266,7 @@ public class ChatActivity extends AppCompatActivity {
 				previewIV.setImageDrawable(null);
 				
 				// Load new image
-				previewIV.setImageBitmap(FileUtil.decodeSampleBitmapFromPath(localPath, 1024, 1024));
+				previewIV.setImageBitmap(StorageUtil.decodeSampledBitmapFromUri(getApplicationContext(), Uri.fromFile(new File(localPath)), 1024, 1024));
 			} catch (Exception e) {
 				Log.e("ChatActivity", "Error loading image preview: " + e.getMessage());
 				// Set a placeholder image on error

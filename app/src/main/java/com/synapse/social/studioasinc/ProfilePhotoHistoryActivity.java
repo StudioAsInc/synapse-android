@@ -63,11 +63,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
 import java.io.*;
@@ -96,7 +91,6 @@ import androidx.core.content.ContextCompat;
 public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 	
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
-	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
 	
 	private ProgressDialog SynapseLoadingDialog;
 	private FloatingActionButton _fab;
@@ -134,13 +128,6 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 	private OnCompleteListener<Void> auth_updateProfileListener;
 	private OnCompleteListener<AuthResult> auth_phoneAuthListener;
 	private OnCompleteListener<AuthResult> auth_googleSignInListener;
-	private StorageReference storage = _firebase_storage.getReference("/");
-	private OnCompleteListener<Uri> _storage_upload_success_listener;
-	private OnSuccessListener<FileDownloadTask.TaskSnapshot> _storage_download_success_listener;
-	private OnSuccessListener _storage_delete_success_listener;
-	private OnProgressListener _storage_upload_progress_listener;
-	private OnProgressListener _storage_download_progress_listener;
-	private OnFailureListener _storage_failure_listener;
 	private Intent intent = new Intent();
 	private Calendar cc = Calendar.getInstance();
 	private AlertDialog.Builder Dialogs;
@@ -544,7 +531,24 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 						mSendMap.clear();
 					}
 					if (_type.equals("local")) {
-						_firebase_storage.getReferenceFromUrl(_uri).delete().addOnSuccessListener(_storage_delete_success_listener).addOnFailureListener(_storage_failure_listener);
+						String publicId = "";
+						try {
+							String[] parts = _uri.split("/");
+							String lastPart = parts[parts.length - 1];
+							publicId = lastPart.substring(0, lastPart.lastIndexOf("."));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						UploadFiles.deleteByPublicId(publicId, new UploadFiles.DeleteCallback() {
+							@Override
+							public void onSuccess() {
+
+							}
+							@Override
+							public void onFailure(String error) {
+
+							}
+						});
 					}
 					maindb.child("skyline/profile-history/".concat(FirebaseAuth.getInstance().getCurrentUser().getUid().concat("/".concat(_key)))).removeValue();
 					_getReference();

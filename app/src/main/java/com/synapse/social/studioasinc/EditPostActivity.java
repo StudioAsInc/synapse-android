@@ -76,10 +76,11 @@ import java.util.HashMap;
 import java.util.regex.*;
 import org.json.*;
 import androidx.appcompat.widget.SwitchCompat;
-import com.synapse.social.studioasinc.ImageUploader;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import android.content.ClipData;
+import com.synapse.social.studioasinc.UploadFiles;
+import com.synapse.social.studioasinc.StorageUtil;
 
 
 public class EditPostActivity extends AppCompatActivity {
@@ -272,32 +273,14 @@ public class EditPostActivity extends AppCompatActivity {
 	protected void onActivityResult(int _requestCode, int _resultCode, Intent _data) {
 		super.onActivityResult(_requestCode, _resultCode, _data);
 		
-		switch (_requestCode) {
-			case REQ_CD_IMAGE_PICKER:
-			if (_resultCode == Activity.RESULT_OK) {
-				ArrayList<String> _filePath = new ArrayList<>();
-				if (_data != null) {
-					if (_data.getClipData() != null) {
-						for (int _index = 0; _index < _data.getClipData().getItemCount(); _index++) {
-							ClipData.Item _item = _data.getClipData().getItemAt(_index);
-							_filePath.add(FileUtil.convertUriToFilePath(getApplicationContext(), _item.getUri()));
-						}
-					}
-					else {
-						_filePath.add(FileUtil.convertUriToFilePath(getApplicationContext(), _data.getData()));
-					}
-				}
-				selectedImagePath = _filePath.get((int)(0));
+		if (_requestCode == REQ_CD_IMAGE_PICKER && _resultCode == Activity.RESULT_OK && _data != null) {
+			Uri imageUri = _data.getData();
+			if (imageUri != null) {
+				selectedImagePath = StorageUtil.getPathFromUri(getApplicationContext(), imageUri);
 				hasImage = true;
 				imageChanged = true;
 				_loadSelectedImage();
 			}
-			else {
-				
-			}
-			break;
-			default:
-			break;
 		}
 	}
 	
@@ -307,17 +290,7 @@ public class EditPostActivity extends AppCompatActivity {
 	}
 	
 	private void _openImagePicker() {
-		if (Build.VERSION.SDK_INT >= 23) {
-			if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED || checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED) {
-				requestPermissions(new String[] {android.Manifest.permission.READ_EXTERNAL_STORAGE,android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-			} else {
-				Intent sendImgInt = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-				startActivityForResult(sendImgInt, REQ_CD_IMAGE_PICKER);
-			}
-		} else {
-			Intent sendImgInt = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-			startActivityForResult(sendImgInt, REQ_CD_IMAGE_PICKER);
-		}
+		StorageUtil.pickSingleFile(this, "image/*", REQ_CD_IMAGE_PICKER);
 	}
 	
 	private void _loadOriginalImage() {
@@ -337,7 +310,7 @@ public class EditPostActivity extends AppCompatActivity {
 	}
 	
 	private void _updatePost() {
-		if (postDescription.getText().toString().trim().equals("") && !hasImage) {
+		if (postDescription.getText().toString().trim().isEmpty() && !hasImage) {
 			Toast.makeText(getApplicationContext(), "Please add some text or an image to your post", Toast.LENGTH_SHORT).show();
 			return;
 		}
@@ -345,17 +318,22 @@ public class EditPostActivity extends AppCompatActivity {
 		_LoadingDialog(true);
 		
 		if (imageChanged && hasImage) {
-			// Upload new image first, then update post
-			ImageUploader.uploadImage(selectedImagePath, new ImageUploader.UploadCallback() {
+			File file = new File(selectedImagePath);
+			UploadFiles.uploadFile(selectedImagePath, file.getName(), new UploadFiles.UploadCallback() {
 				@Override
-				public void onUploadComplete(String imageUrl) {
-					_updatePostInDatabase(imageUrl);
+				public void onProgress(int percent) {
+
+				}
+
+				@Override
+				public void onSuccess(String url, String publicId) {
+					_updatePostInDatabase(url);
 				}
 				
 				@Override
-				public void onUploadError(String errorMessage) {
+				public void onFailure(String error) {
 					_LoadingDialog(false);
-					Toast.makeText(getApplicationContext(), "Failed to upload image: " + errorMessage, Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "Failed to upload image: " + error, Toast.LENGTH_SHORT).show();
 				}
 			});
 		} else {
