@@ -5,10 +5,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.onesignal.OneSignal
 import com.onesignal.debug.LogLevel
+import com.onesignal.user.state.IPushSubscriptionObserver
 import com.onesignal.user.state.PushSubscriptionChangedState
 import com.onesignal.user.state.PushSubscriptionState
-
-import com.onesignal.user.state.IPushSubscriptionObserver
 
 object OneSignalManager {
 
