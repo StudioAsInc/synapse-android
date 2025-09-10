@@ -74,7 +74,7 @@ public class LabsActivity extends AppCompatActivity {
 		textview4.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), MessagesActivity.class);
+				intent.setClass(getApplicationContext(), InboxActivity.class);
 				startActivity(intent);
 			}
 		});
