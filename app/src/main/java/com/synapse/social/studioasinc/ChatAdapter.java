@@ -828,7 +828,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (isEncrypted) {
             try {
-                decryptedText = e2eeHelper.decrypt(secondUserUid, messageContent);
+                decryptedText = e2eeHelper.decrypt(messageContent);
             } catch (Exception e) {
                 Log.e(TAG, "Failed to decrypt message for link preview", e);
                 decryptedText = "⚠️ Could not decrypt message";

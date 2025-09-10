@@ -49,9 +49,8 @@ public class TinkE2EEHelper {
 
     public String getSerializedPublicKey() throws GeneralSecurityException, IOException {
         KeysetHandle publicKeysetHandle = privateKeysetHandle.getPublicKeysetHandle();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        TinkProtoKeysetFormat.serializeKeyset(publicKeysetHandle, outputStream, InsecureSecretKeyAccess.get());
-        return Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP);
+        byte[] serializedKeyset = TinkProtoKeysetFormat.serializeKeyset(publicKeysetHandle, InsecureSecretKeyAccess.get());
+        return Base64.encodeToString(serializedKeyset, Base64.NO_WRAP);
     }
 
     public String encrypt(String serializedTheirPublicKey, String plaintext) throws GeneralSecurityException, IOException {
