@@ -22,6 +22,7 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -60,8 +61,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onStart() {
         super.onStart();
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            PresenceManager.setActivity(FirebaseAuth.getInstance().getCurrentUser().getUid(), "In Home");
+        FirebaseUser currentUser = auth.getCurrentUser();
+        if (currentUser != null) {
+            PresenceManager.setActivity(currentUser.getUid(), "In Home");
         }
     }
 
@@ -96,6 +98,20 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             finish();
             return;
         }
+
+        FirebaseUser currentUser = auth.getCurrentUser();
+        if (currentUser == null) {
+            // This can happen if the Keystore is invalidated and Firebase can't restore the user.
+            // In this case, we should treat the user as logged out.
+            setLoggedIn(false); // Clear our own flag
+            Intent intent = new Intent(HomeActivity.this, AuthActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
+        String uid = currentUser.getUid();
 
         navigationView.setNavigationItemSelectedListener(this);
 
@@ -166,7 +182,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         android.widget.TextView userName = headerView.findViewById(R.id.user_name);
         android.widget.TextView userEmail = headerView.findViewById(R.id.user_email);
 
-        DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        DatabaseReference getReference = udb.child(uid);
         getReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -205,11 +221,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
+        FirebaseUser currentUser = auth.getCurrentUser();
 
         if (id == R.id.nav_my_profile) {
-            Intent profileIntent = new Intent(getApplicationContext(), ProfileActivity.class);
-            profileIntent.putExtra("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-            startActivity(profileIntent);
+            if (currentUser != null) {
+                Intent profileIntent = new Intent(getApplicationContext(), ProfileActivity.class);
+                profileIntent.putExtra("uid", currentUser.getUid());
+                startActivity(profileIntent);
+            }
         } else if (id == R.id.nav_settings) {
             Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
             startActivity(settingsIntent);
