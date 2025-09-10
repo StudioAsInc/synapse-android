@@ -141,7 +141,7 @@
 								android:layout_height="wrap_content"
 								android:text="@string/ph_username"
 								android:textSize="12sp"
-								android:textColor="?attr/colorPrimary"
+								android:textColor="?attr/colorOnSurfaceVariant"
 								android:singleLine="true" />
 							<!-- CRITICAL FIX: Add ImageView for reply image previews -->
 							<ImageView
@@ -161,6 +161,7 @@
 								android:paddingRight="4dp"
 								android:text="@string/ph_replied_message"
 								android:textSize="16sp"
+								android:textColor="?attr/colorOnSurfaceVariant"
 								android:autoLink="all"
 								android:maxLines="3"
 								android:ellipsize="end"
@@ -183,6 +184,7 @@
 						android:paddingRight="8dp"
 						android:text="Message caption"
 						android:textSize="16sp"
+						android:textColor="?attr/colorOnSurfaceVariant"
 						android:autoLink="all"
 						android:textColorLink="?attr/colorPrimary" />
 				</com.synapse.social.studioasinc.animations.ShimmerFrameLayout>
@@ -210,7 +212,8 @@
 					android:layout_width="14dp"
 					android:layout_height="14dp"
 					android:src="@drawable/ic_check_black"
-					android:scaleType="centerInside" />
+					android:scaleType="centerInside"
+					app:tint="?attr/colorOnSurfaceVariant" />
 			</LinearLayout>
 		</LinearLayout>
 	</LinearLayout>
