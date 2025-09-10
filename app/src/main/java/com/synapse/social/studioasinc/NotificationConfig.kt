@@ -16,7 +16,7 @@ object NotificationConfig {
     // ===== ONESIGNAL CONFIGURATION =====
     // IMPORTANT: Replace these placeholder values with your actual OneSignal credentials
     const val ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2"
-    const val ONESIGNAL_REST_API_KEY = "os_v2_app_arhbseljcfehdfpz2yaagabp4kjpeii7jqvuervkkbv3awuu5eunc7kekglutiqlwdwatnswfqvti7repqjoephn7scdvu6bwgtrlsy"
+    // The OneSignal REST API key has been moved to local.properties and is now accessed via BuildConfig.
     
     // ===== NOTIFICATION SETTINGS =====
     const val NOTIFICATION_TITLE = "New Message"
@@ -72,8 +72,8 @@ object NotificationConfig {
      */
     fun isConfigurationValid(): Boolean {
         return if (USE_CLIENT_SIDE_NOTIFICATIONS) {
-            ONESIGNAL_APP_ID != "YOUR_ONESIGNAL_APP_ID_HERE" && 
-            ONESIGNAL_REST_API_KEY != "YOUR_ONESIGNAL_REST_API_KEY_HERE"
+            ONESIGNAL_APP_ID.isNotBlank() && ONESIGNAL_APP_ID != "YOUR_ONESIGNAL_APP_ID_HERE" &&
+            BuildConfig.ONESIGNAL_REST_API_KEY.isNotBlank() && BuildConfig.ONESIGNAL_REST_API_KEY != "YOUR_ONESIGNAL_REST_API_KEY_HERE"
         } else {
             true // Server-side is always considered valid
         }

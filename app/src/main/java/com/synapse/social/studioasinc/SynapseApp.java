@@ -89,6 +89,7 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         // The IPushSubscriptionObserver has been removed.
         // User identification is now handled by calling OneSignalManager.loginUser(uid)
         // from AuthActivity and CompleteProfileActivity.
+        OneSignalManager.initialize();
 
         ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
         registerActivityLifecycleCallbacks(this);

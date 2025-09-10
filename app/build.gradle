@@ -12,6 +12,12 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localProperties.load(new FileInputStream(localPropertiesFile))
+}
+
 def getGitCommitHash = { ->
     def stdout = new ByteArrayOutputStream()
     exec {
@@ -54,6 +60,8 @@ android {
         multiDexEnabled = true
 
         vectorDrawables.useSupportLibrary = true
+
+        buildConfigField "String", "ONESIGNAL_REST_API_KEY", "\"${localProperties['ONESIGNAL_REST_API_KEY']}\""
 
         compileOptions {
             coreLibraryDesugaringEnabled = true
