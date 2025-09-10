@@ -1058,20 +1058,6 @@ public class ChatActivity extends AppCompatActivity {
 							Toast.makeText(ChatActivity.this, "Error: Could not retrieve recipient's key.", Toast.LENGTH_SHORT).show();
 						}
 					});
-					FirebaseUser cu = FirebaseAuth.getInstance().getCurrentUser();
-					String myUid = cu != null ? cu.getUid() : null;
-					if (myUid == null) return;
-
-					String otherUid = getIntent().getStringExtra("uid");
-					String msgKey = messageData.get(KEY_KEY) != null ? messageData.get(KEY_KEY).toString() : null;
-					if (otherUid == null || msgKey == null) return;
-
-					Pair<DatabaseReference, DatabaseReference> refs = getMutualChatReferences(myUid, otherUid, msgKey);
-					refs.first.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
-					refs.second.child(MESSAGE_TEXT_KEY).setValue(encryptedText);
-					refs.first.child("isEncrypted").setValue(true);
-					refs.second.child("isEncrypted").setValue(true);
-
 				} catch (Exception e) {
 					Log.e(TAG, "Failed to encrypt and save edited message", e);
 					Toast.makeText(this, "Error saving message", Toast.LENGTH_SHORT).show();

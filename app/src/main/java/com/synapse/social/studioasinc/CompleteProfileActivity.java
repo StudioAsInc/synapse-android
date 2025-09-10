@@ -84,7 +84,7 @@ import com.synapse.social.studioasinc.ImageUploader;
 import com.synapse.social.studioasinc.OneSignalManager;
 
 
-import com.synapse.social.studioasinc.crypto.E2EEHelper;
+import com.synapse.social.studioasinc.crypto.TinkE2EEHelper;
 
 public class CompleteProfileActivity extends AppCompatActivity {
 
@@ -799,25 +799,19 @@ public class CompleteProfileActivity extends AppCompatActivity {
 					// Login to OneSignal
 					OneSignalManager.loginUser(currentUser.getUid());
 
-					E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
-					e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
-						@Override
-						public void onKeysInitialized() {
-							Log.d("CompleteProfileActivity", "E2EE keys initialized successfully");
-							intent.setClass(getApplicationContext(), HomeActivity.class);
-							startActivity(intent);
-							finish();
-						}
+					try {
+						TinkE2EEHelper e2eeHelper = new TinkE2EEHelper(CompleteProfileActivity.this);
+						String serializedPublicKey = e2eeHelper.getSerializedPublicKey();
+						DatabaseReference dbRef = _firebase.getReference("skyline/e2ee_public_keys").child(currentUser.getUid());
+						dbRef.child("publicKey").setValue(serializedPublicKey);
+						dbRef.child("timestamp").setValue(ServerValue.TIMESTAMP);
+					} catch (Exception e) {
+						Log.e("CompleteProfileActivity", "Failed to initialize or publish E2EE keys", e);
+					}
 
-						@Override
-						public void onKeyInitializationFailed(Exception e) {
-							Log.e("CompleteProfileActivity", "Failed to initialize E2EE keys", e);
-							SketchwareUtil.showMessage(getApplicationContext(), "Failed to initialize secure keys. Please try again later.");
-							intent.setClass(getApplicationContext(), HomeActivity.class);
-							startActivity(intent);
-							finish();
-						}
-					});
+					intent.setClass(getApplicationContext(), HomeActivity.class);
+					startActivity(intent);
+					finish();
 				} else {
 					Log.e("CompleteProfileActivity", "Failed to push user data to Firebase: " + databaseError.getMessage(), databaseError.toException());
 					complete_button_title.setVisibility(View.VISIBLE);

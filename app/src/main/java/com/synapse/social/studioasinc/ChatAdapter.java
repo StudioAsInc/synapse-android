@@ -43,7 +43,7 @@ import android.app.Activity;
 import android.view.Gravity;
 import com.synapse.social.studioasinc.config.CloudinaryConfig;
 import com.synapse.social.studioasinc.model.Attachment;
-import com.synapse.social.studioasinc.crypto.E2EEHelper;
+import com.synapse.social.studioasinc.crypto.TinkE2EEHelper;
 import com.synapse.social.studioasinc.util.AttachmentUtils;
 import com.synapse.social.studioasinc.R;
 import com.synapse.social.studioasinc.util.UIUtils;
@@ -67,14 +67,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private SharedPreferences appSettings;
     // private TextStylingUtil textStylingUtil;
     private ChatActivity chatActivity;
-    private E2EEHelper e2eeHelper;
+    private TinkE2EEHelper e2eeHelper;
 
     public ChatAdapter(ArrayList<HashMap<String, Object>> _arr, HashMap<String, HashMap<String, Object>> repliedCache) {
         _data = _arr;
         this.repliedMessagesCache = repliedCache;
     }
     public void setChatActivity(ChatActivity activity) { this.chatActivity = activity; }
-    public void setE2EEHelper(E2EEHelper helper) { this.e2eeHelper = helper; }
+    public void setE2EEHelper(TinkE2EEHelper helper) { this.e2eeHelper = helper; }
     public void setSecondUserAvatar(String url) { this.secondUserAvatarUrl = url; }
     public void setFirstUserName(String name) { this.firstUserName = name; }
     public void setSecondUserName(String name) { this.secondUserName = name; }
@@ -279,7 +279,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                             if (isRepliedMsgEncrypted) {
                                 try {
-                                    repliedText = e2eeHelper.decrypt(secondUserUid, originalRepliedText);
+                                    repliedText = e2eeHelper.decrypt(originalRepliedText);
                                 } catch (Exception e) {
                                     Log.e(TAG, "Failed to decrypt replied message text", e);
                                     repliedText = "⚠️ This message could not be decrypted.";
@@ -453,7 +453,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (isEncrypted) {
             try {
-                String decryptedText = e2eeHelper.decrypt(secondUserUid, messageContent);
+                String decryptedText = e2eeHelper.decrypt(messageContent);
                 holder.message_text.setText(decryptedText);
             } catch (Exception e) {
                 Log.e(TAG, "Failed to decrypt message", e);
@@ -477,7 +477,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (isEncrypted) {
             try {
-                msgText = e2eeHelper.decrypt(secondUserUid, msgText);
+                msgText = e2eeHelper.decrypt(msgText);
             } catch (Exception e) {
                 Log.e(TAG, "Failed to decrypt message text in media view holder", e);
                 msgText = "⚠️ Could not decrypt message";
@@ -777,7 +777,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (isEncrypted) {
             try {
-                msgText = e2eeHelper.decrypt(secondUserUid, msgText);
+                msgText = e2eeHelper.decrypt(msgText);
             } catch (Exception e) {
                 Log.e(TAG, "Failed to decrypt message text in video view holder", e);
                 msgText = "⚠️ Could not decrypt message";
@@ -971,10 +971,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     String publicId = (String) decryptedAttachment.get("publicId");
 
                     if (url != null) {
-                        decryptedAttachment.put("url", e2eeHelper.decrypt(secondUserUid, url));
+                        decryptedAttachment.put("url", e2eeHelper.decrypt(url));
                     }
                     if (publicId != null) {
-                        decryptedAttachment.put("publicId", e2eeHelper.decrypt(secondUserUid, publicId));
+                        decryptedAttachment.put("publicId", e2eeHelper.decrypt(publicId));
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to decrypt attachment", e);

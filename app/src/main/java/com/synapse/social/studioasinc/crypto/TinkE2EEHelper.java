@@ -7,6 +7,7 @@ import android.util.Log;
 import com.google.crypto.tink.Aead;
 import com.google.crypto.tink.HybridDecrypt;
 import com.google.crypto.tink.HybridEncrypt;
+import com.google.crypto.tink.InsecureSecretKeyAccess;
 import com.google.crypto.tink.KeysetHandle;
 import com.google.crypto.tink.TinkProtoKeysetFormat;
 import com.google.crypto.tink.aead.AeadConfig;
@@ -49,13 +50,13 @@ public class TinkE2EEHelper {
     public String getSerializedPublicKey() throws GeneralSecurityException, IOException {
         KeysetHandle publicKeysetHandle = privateKeysetHandle.getPublicKeysetHandle();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        TinkProtoKeysetFormat.serializeKeyset(publicKeysetHandle, outputStream);
+        TinkProtoKeysetFormat.serializeKeyset(publicKeysetHandle, outputStream, InsecureSecretKeyAccess.get());
         return Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP);
     }
 
     public String encrypt(String serializedTheirPublicKey, String plaintext) throws GeneralSecurityException, IOException {
         byte[] theirPublicKeyBytes = Base64.decode(serializedTheirPublicKey, Base64.NO_WRAP);
-        KeysetHandle theirPublicKeysetHandle = TinkProtoKeysetFormat.parseKeyset(theirPublicKeyBytes);
+        KeysetHandle theirPublicKeysetHandle = TinkProtoKeysetFormat.parseKeyset(theirPublicKeyBytes, InsecureSecretKeyAccess.get());
 
         HybridEncrypt hybridEncrypt = theirPublicKeysetHandle.getPrimitive(HybridEncrypt.class);
 
