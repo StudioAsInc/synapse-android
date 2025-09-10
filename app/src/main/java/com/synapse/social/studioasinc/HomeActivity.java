@@ -28,6 +28,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.adapter.ViewPagerAdapter;
+import com.synapse.social.studioasinc.utils.SecurePreferences;
+import android.content.SharedPreferences;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -86,7 +88,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void initializeLogic() {
-        if (auth.getCurrentUser() == null) {
+        if (!isUserLoggedIn()) {
             // User is not signed in, redirect to AuthActivity
             Intent intent = new Intent(HomeActivity.this, AuthActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -192,6 +194,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
+    private boolean isUserLoggedIn() {
+        SharedPreferences sharedPreferences = SecurePreferences.getEncryptedSharedPreferences(getApplicationContext());
+        if (sharedPreferences != null) {
+            return sharedPreferences.getBoolean("isLoggedIn", false);
+        }
+        return false;
+    }
+
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
@@ -208,6 +218,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(callsIntent);
         } else if (id == R.id.nav_logout) {
             FirebaseAuth.getInstance().signOut();
+            setLoggedIn(false);
             Intent logoutIntent = new Intent(HomeActivity.this, AuthActivity.class);
             logoutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(logoutIntent);
@@ -238,5 +249,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     public ViewPager2 getViewPager() {
         return viewPager;
+    }
+
+    private void setLoggedIn(boolean isLoggedIn) {
+        SharedPreferences sharedPreferences = SecurePreferences.getEncryptedSharedPreferences(getApplicationContext());
+        if (sharedPreferences != null) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("isLoggedIn", isLoggedIn);
+            editor.apply();
+        }
     }
 }

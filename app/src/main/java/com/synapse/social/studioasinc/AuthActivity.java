@@ -38,6 +38,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.OneSignalManager;
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
 import com.synapse.social.studioasinc.animations.textview.TVeffects;
+import com.synapse.social.studioasinc.utils.SecurePreferences;
+import android.content.SharedPreferences;
 
 public class AuthActivity extends AppCompatActivity {
 
@@ -85,6 +87,12 @@ public class AuthActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (isUserLoggedIn()) {
+            navigateToHome();
+            return;
+        }
+
         setContentView(R.layout.auth);
         initializeViews();
         initializeServices();
@@ -92,6 +100,20 @@ public class AuthActivity extends AppCompatActivity {
         setupListeners();
         initializeFirebase();
         startIntroAnimation();
+    }
+
+    private boolean isUserLoggedIn() {
+        SharedPreferences sharedPreferences = SecurePreferences.getEncryptedSharedPreferences(getApplicationContext());
+        if (sharedPreferences != null) {
+            return sharedPreferences.getBoolean("isLoggedIn", false);
+        }
+        return false;
+    }
+
+    private void navigateToHome() {
+        Intent intent = new Intent(AuthActivity.this, HomeActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     private void initializeViews() {
@@ -286,6 +308,8 @@ public class AuthActivity extends AppCompatActivity {
         aiNameTextView.setFadeDuration(150L);
         aiNameTextView.startTyping("Creating your account...");
 
+        setLoggedIn(true);
+
         Intent intent = new Intent(AuthActivity.this, CompleteProfileActivity.class);
         startActivity(intent);
         finish();
@@ -341,15 +365,26 @@ public class AuthActivity extends AppCompatActivity {
                 // Login to OneSignal
                 OneSignalManager.loginUser(uid);
 
+                setLoggedIn(true);
                 navigateToHomeAfterDelay();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 showWelcomeMessage("I recognize you! Let's go...");
+                setLoggedIn(true);
                 navigateToHomeAfterDelay();
             }
         });
+    }
+
+    private void setLoggedIn(boolean isLoggedIn) {
+        SharedPreferences sharedPreferences = SecurePreferences.getEncryptedSharedPreferences(getApplicationContext());
+        if (sharedPreferences != null) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("isLoggedIn", isLoggedIn);
+            editor.apply();
+        }
     }
 
     private void showWelcomeMessage(String message) {
