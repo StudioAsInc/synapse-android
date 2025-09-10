@@ -61,11 +61,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
@@ -80,8 +75,9 @@ import java.util.HashMap;
 import java.util.regex.*;
 import org.json.*;
 import com.google.firebase.database.Query;
-import com.synapse.social.studioasinc.ImageUploader;
 import com.synapse.social.studioasinc.OneSignalManager;
+import com.synapse.social.studioasinc.UploadFiles;
+import com.synapse.social.studioasinc.StorageUtil;
 
 
 import com.synapse.social.studioasinc.crypto.E2EEHelper;
@@ -91,7 +87,6 @@ public class CompleteProfileActivity extends AppCompatActivity {
 	public final int REQ_CD_SELECTAVATAR = 101;
 
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
-	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
 
 	private boolean userNameErr = false;
 	private String avatarUri = ""; // This variable seems unused after refactoring, can be removed if confirmed.
@@ -140,7 +135,6 @@ public class CompleteProfileActivity extends AppCompatActivity {
 	private DatabaseReference main = _firebase.getReference("skyline");
 	private DatabaseReference pushusername = _firebase.getReference("synapse/username");
 	private Calendar getJoinTime = Calendar.getInstance();
-	private Intent SelectAvatar = new Intent(Intent.ACTION_GET_CONTENT);
 
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -195,8 +189,6 @@ public class CompleteProfileActivity extends AppCompatActivity {
 		complete_button_loader_bar = findViewById(R.id.complete_button_loader_bar);
 		vbr = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		auth = FirebaseAuth.getInstance();
-		SelectAvatar.setType("image/*");
-		SelectAvatar.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
 
 		profile_image_card.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
@@ -211,7 +203,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 		profile_image_card.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				startActivityForResult(SelectAvatar, REQ_CD_SELECTAVATAR);
+				StorageUtil.pickSingleFile(CompleteProfileActivity.this, "image/*", REQ_CD_SELECTAVATAR);
 			}
 		});
 
@@ -507,17 +499,21 @@ public class CompleteProfileActivity extends AppCompatActivity {
 			}
 
 			if (selectedImageUri != null) {
-				path = FileUtil.convertUriToFilePath(getApplicationContext(), selectedImageUri);
+				path = StorageUtil.getPathFromUri(getApplicationContext(), selectedImageUri);
 				Glide.with(getApplicationContext()).load(selectedImageUri).into(profile_image);
 
-				ImageUploader.uploadImage(path, new ImageUploader.UploadCallback() {
+				File file = new File(path);
+				UploadFiles.uploadFile(path, file.getName(), new UploadFiles.UploadCallback() {
 					@Override
-					public void onUploadComplete(String uploadedImageUrl) {
-						thedpurl = uploadedImageUrl;
+					public void onProgress(int percent) {
+					}
+					@Override
+					public void onSuccess(String url, String publicId) {
+						thedpurl = url;
 						FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 						if (currentUser != null) {
 							HashMap<String, Object> avatarUpdateMap = new HashMap<>();
-							avatarUpdateMap.put("avatar", uploadedImageUrl);
+							avatarUpdateMap.put("avatar", url);
 							avatarUpdateMap.put("avatar_history_type", "local");
 
 							main.child("users").child(currentUser.getUid()).updateChildren(avatarUpdateMap, new DatabaseReference.CompletionListener() {
@@ -538,9 +534,9 @@ public class CompleteProfileActivity extends AppCompatActivity {
 					}
 
 					@Override
-					public void onUploadError(String errorMessage) {
-						Log.e("CompleteProfileActivity", "Image upload failed: " + errorMessage);
-						SketchwareUtil.showMessage(getApplicationContext(), "Something went wrong during image upload: " + errorMessage);
+					public void onFailure(String error) {
+						Log.e("CompleteProfileActivity", "Image upload failed: " + error);
+						SketchwareUtil.showMessage(getApplicationContext(), "Something went wrong during image upload: " + error);
 						thedpurl = "null";
 						profile_image.setImageResource(R.drawable.avatar);
 					}

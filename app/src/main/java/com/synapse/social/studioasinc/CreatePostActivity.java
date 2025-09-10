@@ -47,11 +47,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.gridlayout.*;
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -63,11 +58,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.synapse.social.studioasinc.FadeEditText;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
@@ -82,10 +72,11 @@ import java.util.regex.*;
 import org.json.*;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.synapse.social.studioasinc.ImageUploader;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import android.content.ClipData;
+import com.synapse.social.studioasinc.UploadFiles;
+import com.synapse.social.studioasinc.StorageUtil;
 
 
 public class CreatePostActivity extends AppCompatActivity {
@@ -93,7 +84,6 @@ public class CreatePostActivity extends AppCompatActivity {
 	public final int REQ_CD_IMAGE_PICKER = 101;
 	
 	private FirebaseDatabase _firebase = FirebaseDatabase.getInstance();
-	private FirebaseStorage _firebase_storage = FirebaseStorage.getInstance();
 	
 	private ProgressDialog SynapseLoadingDialog;
 	private String UniquePostKey = "";
@@ -249,29 +239,16 @@ public class CreatePostActivity extends AppCompatActivity {
 	protected void onActivityResult(int _requestCode, int _resultCode, Intent _data) {
 		super.onActivityResult(_requestCode, _resultCode, _data);
 		
-		switch (_requestCode) {
-			case REQ_CD_IMAGE_PICKER:
-			if (_resultCode == Activity.RESULT_OK && _data != null) {
-				String imagePath = null;
-				
-				if (_data.getClipData() != null) {
-					// Multiple images selected, use only the first one
-					ClipData.Item item = _data.getClipData().getItemAt(0);
-					imagePath = FileUtil.convertUriToFilePath(getApplicationContext(), item.getUri());
-				} else if (_data.getData() != null) {
-					// Single image selected
-					imagePath = FileUtil.convertUriToFilePath(getApplicationContext(), _data.getData());
-				}
-				
+		if (_requestCode == REQ_CD_IMAGE_PICKER && _resultCode == Activity.RESULT_OK && _data != null) {
+			Uri imageUri = _data.getData();
+			if (imageUri != null) {
+				String imagePath = StorageUtil.getPathFromUri(getApplicationContext(), imageUri);
 				if (imagePath != null) {
 					selectedImagePath = imagePath;
 					hasImage = true;
 					_loadSelectedImage();
 				}
 			}
-			break;
-			default:
-			break;
 		}
 	}
 	
@@ -281,17 +258,7 @@ public class CreatePostActivity extends AppCompatActivity {
 	}
 	
 	private void _openImagePicker() {
-		if (Build.VERSION.SDK_INT >= 23) {
-			if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED || checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED) {
-				requestPermissions(new String[] {android.Manifest.permission.READ_EXTERNAL_STORAGE,android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-			} else {
-				Intent sendImgInt = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-				startActivityForResult(sendImgInt, REQ_CD_IMAGE_PICKER);
-			}
-		} else {
-			Intent sendImgInt = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-			startActivityForResult(sendImgInt, REQ_CD_IMAGE_PICKER);
-		}
+		StorageUtil.pickSingleFile(this, "image/*", REQ_CD_IMAGE_PICKER);
 	}
 	
 	private void _loadSelectedImage() {
@@ -303,30 +270,34 @@ public class CreatePostActivity extends AppCompatActivity {
 	}
 	
 	private void _createPost() {
-		if (postDescriptionEditText.getText().toString().trim().equals("") && !hasImage) {
+		if (postDescriptionEditText.getText().toString().trim().isEmpty() && !hasImage) {
 			Toast.makeText(getApplicationContext(), "Please add some text or an image to your post", Toast.LENGTH_SHORT).show();
 			return;
 		}
-		
+
 		UniquePostKey = maindb.push().getKey();
 		_LoadingDialog(true);
-		
+
 		if (hasImage) {
-			// Upload image first, then create post
-			ImageUploader.uploadImage(selectedImagePath, new ImageUploader.UploadCallback() {
+			File file = new File(selectedImagePath);
+			UploadFiles.uploadFile(selectedImagePath, file.getName(), new UploadFiles.UploadCallback() {
 				@Override
-				public void onUploadComplete(String imageUrl) {
-					_savePostToDatabase(imageUrl);
+				public void onProgress(int percent) {
+					// You can use this to show upload progress
 				}
-				
+
 				@Override
-				public void onUploadError(String errorMessage) {
+				public void onSuccess(String url, String publicId) {
+					_savePostToDatabase(url);
+				}
+
+				@Override
+				public void onFailure(String error) {
 					_LoadingDialog(false);
-					Toast.makeText(getApplicationContext(), "Failed to upload image: " + errorMessage, Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "Failed to upload image: " + error, Toast.LENGTH_SHORT).show();
 				}
 			});
 		} else {
-			// Create text-only post
 			_savePostToDatabase(null);
 		}
 	}
