@@ -421,7 +421,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 				final boolean _success = _param1.isSuccessful();
 				final String _errorMessage = _param1.getException() != null ? _param1.getException().getMessage() : "";
 				if (_success) {
-					intent.setClass(getApplicationContext(), MainActivity.class);
+					intent.setClass(getApplicationContext(), HomeActivity.class);
 					startActivity(intent);
 					finish();
 				} else {
