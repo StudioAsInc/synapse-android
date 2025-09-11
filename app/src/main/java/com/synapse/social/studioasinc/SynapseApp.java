@@ -20,20 +20,17 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.onesignal.OneSignal;
 import com.onesignal.debug.LogLevel;
+import com.onesignal.user.subscriptions.IPushSubscriptionObserver;
+import com.onesignal.user.subscriptions.PushSubscriptionChangedState;
 import java.util.Calendar;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.lifecycle.LifecycleOwner;
-import com.synapse.social.studioasinc.util.UpdateManager;
-import android.os.Bundle;
-import android.app.Activity;
-import java.lang.ref.WeakReference;
 
-public class SynapseApp extends Application implements Application.ActivityLifecycleCallbacks, DefaultLifecycleObserver {
+public class SynapseApp extends Application implements DefaultLifecycleObserver {
     
     private static Context mContext;
     private Thread.UncaughtExceptionHandler mExceptionHandler;
-    private WeakReference<Activity> currentActivity;
     
     public static FirebaseAuth mAuth;
     
@@ -81,70 +78,38 @@ public class SynapseApp extends Application implements Application.ActivityLifec
                 }
             });
         
+        ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
+
         // Initialize OneSignal
         final String ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
         OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
 
-        // The IPushSubscriptionObserver has been removed.
-        // User identification is now handled by calling OneSignalManager.loginUser(uid)
-        // from AuthActivity and CompleteProfileActivity.
-
-        ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
-        registerActivityLifecycleCallbacks(this);
-    }
-
-    @Override
-    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-    }
-
-    @Override
-    public void onActivityStarted(Activity activity) {
-        currentActivity = new WeakReference<>(activity);
-    }
-
-    @Override
-    public void onActivityResumed(Activity activity) {
-        currentActivity = new WeakReference<>(activity);
-    }
-
-    @Override
-    public void onActivityPaused(Activity activity) {
-        currentActivity.clear();
-    }
-
-    @Override
-    public void onActivityStopped(Activity activity) {
-    }
-
-    @Override
-    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-    }
-
-    @Override
-    public void onActivityDestroyed(Activity activity) {
+        // Add a subscription observer to get the Player ID and save it to Firestore
+        OneSignal.getUser().getPushSubscription().addObserver(new IPushSubscriptionObserver() {
+            @Override
+            public void onPushSubscriptionChange(@NonNull PushSubscriptionChangedState state) {
+                if (state.getCurrent().getOptedIn()) {
+                    String playerId = state.getCurrent().getId();
+                    if (mAuth.getCurrentUser() != null && playerId != null) {
+                        String userUid = mAuth.getCurrentUser().getUid();
+                        OneSignalManager.savePlayerIdToRealtimeDatabase(userUid, playerId);
+                    }
+                }
+            }
+        });
     }
 
     @Override
     public void onStart(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getDisplayName() != null && !mAuth.getCurrentUser().getDisplayName().isEmpty()) {
+        if (mAuth.getCurrentUser() != null) {
             PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
-        }
-        Activity activity = currentActivity != null ? currentActivity.get() : null;
-        if (activity instanceof MainActivity) {
-            UpdateManager updateManager = new UpdateManager(activity, new Runnable() {
-                @Override
-                public void run() {
-                    ((MainActivity) activity).proceedToAuthCheck();
-                }
-            });
-            updateManager.checkForUpdate();
         }
     }
 
     @Override
     public void onStop(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getDisplayName() != null && !mAuth.getCurrentUser().getDisplayName().isEmpty()) {
+        if (mAuth.getCurrentUser() != null) {
             PresenceManager.goOffline(mAuth.getCurrentUser().getUid());
         }
     }
