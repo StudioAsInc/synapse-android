@@ -27,12 +27,7 @@
 			android:supportsPictureInPicture="true"
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden"
-			android:exported="true">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
+			android:exported="true" />
 		<activity
 			android:name=".HomeActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -156,11 +151,17 @@
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="stateHidden" />
 	<activity
-			android:name=".WelcomeActivity"
+			android:name=".CheckpermissionActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
 			android:hardwareAccelerated="true"
 			android:supportsPictureInPicture="true"
-			android:windowSoftInputMode="stateHidden" />
+			android:windowSoftInputMode="stateHidden"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
 		<activity
 			android:name=".AuthActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -266,3 +267,4 @@
 </provider>
 	</application>
 </manifest>
+
