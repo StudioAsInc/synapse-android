@@ -185,6 +185,7 @@
     <string name="m_chat_tab_requests">REQUESTS</string>
     <string name="m_no_chat_requests">No pending chat requests</string>
     <string name="settings">Settings</string>
+    <string name="chat_settings_title">Chat Settings</string>
     <string name="shop">Shop</string>
     <string name="copy_link">Copy Link</string>
     <string name="settings_application_t">Application</string>
