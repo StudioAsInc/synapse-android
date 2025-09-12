@@ -946,9 +946,9 @@ public class HomeFragment extends Fragment {
             });
 
             likeButton.setOnClickListener(_view1 -> {
-                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                if (currentUser != null) {
-                    DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(currentUser.getUid());
+                FirebaseUser latestUser = FirebaseAuth.getInstance().getCurrentUser();
+                if (latestUser != null) {
+                    DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(latestUser.getUid());
                     likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -959,7 +959,7 @@ public class HomeFragment extends Fragment {
                                 _setCount(likeButtonCount, currentLikes - 1);
                                 likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
                             } else {
-                                likeRef.setValue(currentUser.getUid());
+                                likeRef.setValue(latestUser.getUid());
                                 com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get(_position).get("key").toString(), _data.get(_position).get("uid").toString());
                                 double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
                                 postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
@@ -990,9 +990,9 @@ public class HomeFragment extends Fragment {
                 startActivity(intent);
             });
             favoritePostButton.setOnClickListener(_view1 -> {
-                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                if (currentUser != null) {
-                    DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(currentUser.getUid()).child(_data.get(_position).get("key").toString());
+                FirebaseUser latestUser = FirebaseAuth.getInstance().getCurrentUser();
+                if (latestUser != null) {
+                    DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(latestUser.getUid()).child(_data.get(_position).get("key").toString());
                     favoriteRef.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
