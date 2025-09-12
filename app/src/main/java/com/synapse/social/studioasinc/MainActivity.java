@@ -37,6 +37,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
 import com.synapse.social.studioasinc.util.UpdateManager;
+import com.synapse.social.studioasinc.util.AuthStateManager;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
 import java.io.*;
@@ -293,71 +294,87 @@ public class MainActivity extends AppCompatActivity {
 	// Helper method to encapsulate the delayed auth check logic
 	public void proceedToAuthCheck() {
 		new Handler(Looper.getMainLooper()).postDelayed(() -> {
-			FirebaseAuth auth = FirebaseAuth.getInstance();
-			FirebaseUser currentUser = auth.getCurrentUser();
-			
-			if (currentUser != null) {
-				// User is logged in, verify the user is still valid
-				currentUser.reload().addOnCompleteListener(task -> {
-					if (task.isSuccessful()) {
-						// User is still valid, check ban status
-						DatabaseReference userRef = FirebaseDatabase.getInstance()
-								.getReference("skyline/users")
-								.child(currentUser.getUid());
-
-						userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-							@Override
-							public void onDataChange(@NonNull DataSnapshot snapshot) {
-								if (snapshot.exists()) {
-									Object bannedObj = snapshot.child("banned").getValue();
-									boolean isBanned = false;
-
-									if (bannedObj instanceof Boolean) {
-										isBanned = (Boolean) bannedObj;
-									} else if (bannedObj instanceof String) {
-										String bannedStr = (String) bannedObj;
-										isBanned = bannedStr.equalsIgnoreCase("true") || bannedStr.equals("1");
-									}
-
-									if (!isBanned) {
-										// Not banned, redirect to HomeActivity
-										startActivity(new Intent(MainActivity.this, HomeActivity.class));
-										finish();
-									} else {
-										// Banned, show toast and sign out
-										Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
-										auth.signOut();
-										startActivity(new Intent(MainActivity.this, AuthActivity.class));
-										finish();
-									}
-								} else {
-									// User data not found (maybe first login, or incomplete profile)
-									// This path leads to CompleteProfileActivity
-									startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
-									finish();
-								}
-							}
-
-							@Override
-							public void onCancelled(@NonNull DatabaseError error) {
-								Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-								// If database check fails, do not sign the user out. Proceed to Home for offline experience
-								startActivity(new Intent(MainActivity.this, HomeActivity.class));
-								finish();
-							}
-						});
+			if (AuthStateManager.isUserAuthenticated(this)) {
+				// User is logged in (either via Firebase or backup), verify the user is still valid
+				FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+				if (currentUser != null) {
+					currentUser.reload().addOnCompleteListener(task -> {
+						if (task.isSuccessful()) {
+							// User is still valid, check ban status
+							checkUserBanStatusAndProceed(currentUser.getUid());
+						} else {
+							// Reload failed (e.g., network). Keep session and proceed to Home to avoid false sign-outs
+							startActivity(new Intent(MainActivity.this, HomeActivity.class));
+							finish();
+						}
+					});
+				} else {
+					// Firebase user is null but we have backup authentication
+					// Try to get the stored UID and proceed
+					String storedUid = AuthStateManager.getUserUid(this);
+					if (storedUid != null) {
+						checkUserBanStatusAndProceed(storedUid);
 					} else {
-						// Reload failed (e.g., network). Keep session and proceed to Home to avoid false sign-outs
-						startActivity(new Intent(MainActivity.this, HomeActivity.class));
+						// No stored UID, clear authentication and go to auth
+						AuthStateManager.clearAuthenticationState(this);
+						startActivity(new Intent(MainActivity.this, AuthActivity.class));
 						finish();
 					}
-				});
+				}
 			} else {
 				// User not logged in, redirect to AuthActivity
 				startActivity(new Intent(MainActivity.this, AuthActivity.class));
 				finish();
 			}
 		}, 500); // 500ms delay
+	}
+	
+	private void checkUserBanStatusAndProceed(String uid) {
+		DatabaseReference userRef = FirebaseDatabase.getInstance()
+				.getReference("skyline/users")
+				.child(uid);
+
+		userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					Object bannedObj = snapshot.child("banned").getValue();
+					boolean isBanned = false;
+
+					if (bannedObj instanceof Boolean) {
+						isBanned = (Boolean) bannedObj;
+					} else if (bannedObj instanceof String) {
+						String bannedStr = (String) bannedObj;
+						isBanned = bannedStr.equalsIgnoreCase("true") || bannedStr.equals("1");
+					}
+
+					if (!isBanned) {
+						// Not banned, redirect to HomeActivity
+						startActivity(new Intent(MainActivity.this, HomeActivity.class));
+						finish();
+					} else {
+						// Banned, show toast and sign out
+						Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
+						AuthStateManager.signOut(MainActivity.this);
+						startActivity(new Intent(MainActivity.this, AuthActivity.class));
+						finish();
+					}
+				} else {
+					// User data not found (maybe first login, or incomplete profile)
+					// This path leads to CompleteProfileActivity
+					startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
+					finish();
+				}
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError error) {
+				Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+				// If database check fails, do not sign the user out. Proceed to Home for offline experience
+				startActivity(new Intent(MainActivity.this, HomeActivity.class));
+				finish();
+			}
+		});
 	}
 
 	@Override

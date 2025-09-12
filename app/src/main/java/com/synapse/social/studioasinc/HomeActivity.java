@@ -28,6 +28,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.adapter.ViewPagerAdapter;
+import com.synapse.social.studioasinc.util.AuthStateManager;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -58,8 +59,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onStart() {
         super.onStart();
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            PresenceManager.setActivity(FirebaseAuth.getInstance().getCurrentUser().getUid(), "In Home");
+        String userUid = AuthStateManager.getUserUid(this);
+        if (userUid != null) {
+            PresenceManager.setActivity(userUid, "In Home");
         }
     }
 
@@ -86,8 +88,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void initializeLogic() {
-        if (auth.getCurrentUser() == null) {
-            // User is not signed in, redirect to AuthActivity
+        if (!AuthStateManager.isUserAuthenticated(this)) {
+            // User is not signed in and no backup authentication, redirect to AuthActivity
             Intent intent = new Intent(HomeActivity.this, AuthActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -164,32 +166,37 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         android.widget.TextView userName = headerView.findViewById(R.id.user_name);
         android.widget.TextView userEmail = headerView.findViewById(R.id.user_email);
 
-        DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-        getReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()) {
-                    if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-                        Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profileImage);
-                    } else {
-                        profileImage.setImageResource(R.drawable.ic_account_circle_48px);
-                    }
-                    if (dataSnapshot.child("cover").getValue(String.class) != null && !dataSnapshot.child("cover").getValue(String.class).equals("null")) {
-                        Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("cover").getValue(String.class))).into(coverImage);
-                    }
-                    if (dataSnapshot.child("username").getValue(String.class) != null) {
-                        userName.setText(dataSnapshot.child("username").getValue(String.class));
-                    }
-                    if (dataSnapshot.child("email").getValue(String.class) != null) {
-                        userEmail.setText(dataSnapshot.child("email").getValue(String.class));
+        // Get user UID from Firebase or backup authentication
+        String userUid = AuthStateManager.getUserUid(this);
+
+        if (userUid != null) {
+            DatabaseReference getReference = udb.child(userUid);
+            getReference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if(dataSnapshot.exists()) {
+                        if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+                            Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profileImage);
+                        } else {
+                            profileImage.setImageResource(R.drawable.ic_account_circle_48px);
+                        }
+                        if (dataSnapshot.child("cover").getValue(String.class) != null && !dataSnapshot.child("cover").getValue(String.class).equals("null")) {
+                            Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("cover").getValue(String.class))).into(coverImage);
+                        }
+                        if (dataSnapshot.child("username").getValue(String.class) != null) {
+                            userName.setText(dataSnapshot.child("username").getValue(String.class));
+                        }
+                        if (dataSnapshot.child("email").getValue(String.class) != null) {
+                            userEmail.setText(dataSnapshot.child("email").getValue(String.class));
+                        }
                     }
                 }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle error
-            }
-        });
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    // Handle error
+                }
+            });
+        }
     }
 
     @Override
@@ -198,8 +205,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         if (id == R.id.nav_my_profile) {
             Intent profileIntent = new Intent(getApplicationContext(), ProfileActivity.class);
-            profileIntent.putExtra("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-            startActivity(profileIntent);
+            // Get user UID from Firebase or backup authentication
+            String userUid = AuthStateManager.getUserUid(this);
+            if (userUid != null) {
+                profileIntent.putExtra("uid", userUid);
+                startActivity(profileIntent);
+            }
         } else if (id == R.id.nav_settings) {
             Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
             startActivity(settingsIntent);
@@ -207,7 +218,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Intent callsIntent = new Intent(getApplicationContext(), CallActivity.class);
             startActivity(callsIntent);
         } else if (id == R.id.nav_logout) {
-            FirebaseAuth.getInstance().signOut();
+            AuthStateManager.signOut(this);
             Intent logoutIntent = new Intent(HomeActivity.this, AuthActivity.class);
             logoutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(logoutIntent);
