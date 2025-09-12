@@ -549,7 +549,9 @@ public class ChatActivity extends AppCompatActivity {
 		// Set up user reference
 		userRef = _firebase.getReference(SKYLINE_REF).child(USERS_REF).child(otherUserUid);
 		// Initialize with custom settings
+		String userApiKey = appSettings.getString("gemini_api_key", "");
 		gemini = new Gemini.Builder(this)
+		.userApiKey(userApiKey)
 		.model("gemini-1.5-flash")
 		.responseType("text")
 		.tone("friendly")
@@ -2856,7 +2858,9 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void callGeminiForAiFeature(AiFeatureParams params) {
+		String userApiKey = appSettings.getString("gemini_api_key", "");
 		Gemini.Builder builder = new Gemini.Builder(this)
+				.userApiKey(userApiKey)
 				.model(params.model)
 				.showThinking(true)
 				.systemInstruction(params.systemInstruction);
