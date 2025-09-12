@@ -34,6 +34,9 @@ public class E2EEHelper {
     private static final String TAG = "E2EEHelper";
     private static final String IDENTITY_KEY_ALIAS_PREFIX = "e2ee_identity_";
     private static final String E2EE_PUBLIC_KEYS_REF = "skyline/e2ee_public_keys";
+    // Temporary switch to disable encryption to avoid Keystore-related crashes.
+    // When true, all crypto operations will be no-ops and plaintext will be used.
+    private static final boolean ENCRYPTION_DISABLED = true;
 
     private Context context;
     private String uid;
@@ -51,6 +54,10 @@ public class E2EEHelper {
     }
 
     public void initializeKeys(final KeysInitializationListener listener) {
+        if (ENCRYPTION_DISABLED) {
+            if (listener != null) listener.onKeysInitialized();
+            return;
+        }
         if (uid == null) {
             listener.onKeyInitializationFailed(new IllegalStateException("User is not authenticated."));
             return;
@@ -150,6 +157,10 @@ public class E2EEHelper {
     }
 
     public void establishSession(String otherUserUid, byte[] otherUserPublicKeyBytes, final SessionEstablishmentListener listener) {
+        if (ENCRYPTION_DISABLED) {
+            if (listener != null) listener.onSessionEstablished();
+            return;
+        }
         try {
             ECPrivateKey myPrivateKey = loadPrivateKey();
             if (myPrivateKey == null) {
@@ -177,6 +188,9 @@ public class E2EEHelper {
     }
 
     public String encrypt(String otherUserUid, String plaintext) throws Exception {
+        if (ENCRYPTION_DISABLED) {
+            return plaintext;
+        }
         String sessionKeyBase64 = context.getSharedPreferences("e2ee_sessions", Context.MODE_PRIVATE)
                 .getString(otherUserUid, null);
 
@@ -206,6 +220,9 @@ public class E2EEHelper {
     }
 
     public String decrypt(String senderUid, String ciphertextAndIv) throws Exception {
+        if (ENCRYPTION_DISABLED) {
+            return ciphertextAndIv;
+        }
         String sessionKeyBase64 = context.getSharedPreferences("e2ee_sessions", Context.MODE_PRIVATE)
                 .getString(senderUid, null);
 
