@@ -177,8 +177,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     if (dataSnapshot.child("cover").getValue(String.class) != null && !dataSnapshot.child("cover").getValue(String.class).equals("null")) {
                         Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("cover").getValue(String.class))).into(coverImage);
                     }
-                    if (dataSnapshot.child("name").getValue(String.class) != null) {
-                        userName.setText(dataSnapshot.child("name").getValue(String.class));
+                    if (dataSnapshot.child("username").getValue(String.class) != null) {
+                        userName.setText(dataSnapshot.child("username").getValue(String.class));
                     }
                     if (dataSnapshot.child("email").getValue(String.class) != null) {
                         userEmail.setText(dataSnapshot.child("email").getValue(String.class));
