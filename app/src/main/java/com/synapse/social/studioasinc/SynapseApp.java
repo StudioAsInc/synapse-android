@@ -54,9 +54,11 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         this.mExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         this.mCalendar = Calendar.getInstance();
         
-        // Initialize Firebase with disk persistence
+        // Initialize Firebase with disabled encrypted storage to prevent keystore failures
+        FirebaseConfig.initializeFirebase(this);
         FirebaseApp.initializeApp(this);
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        FirebaseConfig.forceRegularStorage(this);
         
         // Create notification channels
         createNotificationChannels();
