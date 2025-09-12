@@ -26,11 +26,23 @@ public final class AuthStateManager {
      * @param uid User UID
      */
     public static void saveAuthenticationState(Context context, String uid) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit()
-                .putBoolean(KEY_IS_AUTHENTICATED, true)
-                .putString(KEY_USER_UID, uid)
-                .apply();
+        if (context == null) {
+            throw new IllegalArgumentException("Context cannot be null");
+        }
+        if (uid == null || uid.trim().isEmpty()) {
+            throw new IllegalArgumentException("UID cannot be null or empty");
+        }
+        
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean(KEY_IS_AUTHENTICATED, true)
+                    .putString(KEY_USER_UID, uid)
+                    .apply();
+        } catch (Exception e) {
+            // Log error but don't crash the app
+            android.util.Log.e("AuthStateManager", "Failed to save authentication state", e);
+        }
     }
     
     /**
@@ -38,8 +50,17 @@ public final class AuthStateManager {
      * @param context Application context
      */
     public static void clearAuthenticationState(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit().clear().apply();
+        if (context == null) {
+            throw new IllegalArgumentException("Context cannot be null");
+        }
+        
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().clear().apply();
+        } catch (Exception e) {
+            // Log error but don't crash the app
+            android.util.Log.e("AuthStateManager", "Failed to clear authentication state", e);
+        }
     }
     
     /**
@@ -48,14 +69,25 @@ public final class AuthStateManager {
      * @return true if user is authenticated
      */
     public static boolean isUserAuthenticated(Context context) {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            return true;
+        if (context == null) {
+            android.util.Log.w("AuthStateManager", "Context is null, returning false for authentication");
+            return false;
         }
         
-        // Check backup authentication
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getBoolean(KEY_IS_AUTHENTICATED, false);
+        try {
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                return true;
+            }
+            
+            // Check backup authentication
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            return prefs.getBoolean(KEY_IS_AUTHENTICATED, false);
+        } catch (Exception e) {
+            // Log error but don't crash the app
+            android.util.Log.e("AuthStateManager", "Failed to check authentication state", e);
+            return false;
+        }
     }
     
     /**
@@ -64,14 +96,25 @@ public final class AuthStateManager {
      * @return User UID or null if not authenticated
      */
     public static String getUserUid(Context context) {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            return currentUser.getUid();
+        if (context == null) {
+            android.util.Log.w("AuthStateManager", "Context is null, returning null UID");
+            return null;
         }
         
-        // Try to get UID from backup authentication
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getString(KEY_USER_UID, null);
+        try {
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                return currentUser.getUid();
+            }
+            
+            // Try to get UID from backup authentication
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            return prefs.getString(KEY_USER_UID, null);
+        } catch (Exception e) {
+            // Log error but don't crash the app
+            android.util.Log.e("AuthStateManager", "Failed to get user UID", e);
+            return null;
+        }
     }
     
     /**
@@ -79,8 +122,18 @@ public final class AuthStateManager {
      * @param context Application context
      */
     public static void signOut(Context context) {
-        FirebaseAuth.getInstance().signOut();
-        clearAuthenticationState(context);
+        if (context == null) {
+            android.util.Log.w("AuthStateManager", "Context is null, cannot sign out");
+            return;
+        }
+        
+        try {
+            FirebaseAuth.getInstance().signOut();
+            clearAuthenticationState(context);
+        } catch (Exception e) {
+            // Log error but don't crash the app
+            android.util.Log.e("AuthStateManager", "Failed to sign out", e);
+        }
     }
     
     /**
@@ -90,12 +143,6 @@ public final class AuthStateManager {
      * @return User UID or null if not authenticated
      */
     public static String getCurrentUserUidSafely(Context context) {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            return currentUser.getUid();
-        }
-        
-        // Try to get UID from backup authentication
         return getUserUid(context);
     }
 }

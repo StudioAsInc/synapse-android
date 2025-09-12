@@ -554,6 +554,15 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 				public void onBindViewHolder(ViewHolder _holder, final int _position) {
 						View _view = _holder.itemView;
 
+						HashMap<String, Object> com				public void onBindViewHolder(ViewHolder _holder, final int _position) {
+						View _view = _holder.itemView;
+
+						// Get current user UID once at the beginning to avoid repeated calls
+						String currentUserUid = AuthStateManager.getCurrentUserUidSafely(getContext());
+						if (currentUserUid == null) {
+								return; // Skip if no authenticated user
+						}
+
 						HashMap<String, Object> commentData = _data.get(_position);
 						if (commentData == null) {
 								// Skip this item if the data is null
@@ -573,7 +582,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						
 						DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
 						DatabaseReference getCommentsRef = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(key);
-						DatabaseReference checkCommentLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+						DatabaseReference checkCommentLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key).child(currentUserUid);
 						DatabaseReference getCommentsLikeCount = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key);
 						DatabaseReference commentCheckPublisherLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key).child(postPublisherUID);
 						
@@ -718,7 +727,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						body.setOnLongClickListener(new View.OnLongClickListener() {
 								@Override
 								public boolean onLongClick(View v) {
-										if (commentUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+										if (commentUid.equals(currentUserUid)) {
 												PopupMenu popup = new PopupMenu(getContext(), more);
 												popup.getMenu().add("Edit");
 												popup.getMenu().add("Delete");
