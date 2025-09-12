@@ -487,33 +487,44 @@ public class HomeFragment extends Fragment {
             _viewGraphics(holder.miniPostLayoutTextPostPublish, Color.TRANSPARENT, Color.TRANSPARENT, 300, 2, 0xFF616161);
             _loadStories(holder.storiesView, storiesList);
 
-            holder.profileRef = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-	        holder.profileListener = new ValueEventListener() {
-	            @Override
-	            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-	                if (!isAdded()) {
-	                    return;
-	                }
-	                if(dataSnapshot.exists()) {
-	                    if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-	                        Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(holder.miniPostLayoutProfileImage);
-	                    } else {
-	                        holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-	                    }
-	                } else {
-	                    holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-	                }
-	            }
-	            @Override
-	            public void onCancelled(@NonNull DatabaseError databaseError) {
-	                if (!isAdded()) {
-	                    return;
-	                }
-	                Toast.makeText(getContext(), "Error fetching user profile: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-	                holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
-	            }
-	        };
-            holder.profileRef.addValueEventListener(holder.profileListener);
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                holder.profileRef = udb.child(currentUser.getUid());
+                holder.profileListener = new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (!isAdded()) {
+                            return;
+                        }
+                        if(dataSnapshot.exists()) {
+                            if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+                                Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(holder.miniPostLayoutProfileImage);
+                            } else {
+                                holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+                            }
+                        } else {
+                            holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        if (!isAdded()) {
+                            return;
+                        }
+                        Toast.makeText(getContext(), "Error fetching user profile: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                        holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+                    }
+                };
+                holder.profileRef.addValueEventListener(holder.profileListener);
+            } else {
+                holder.miniPostLayoutProfileImage.setImageResource(R.drawable.avatar);
+                holder.miniPostLayoutTextPostInput.setEnabled(false);
+                holder.miniPostLayoutTextPostInput.setHint("Please log in to post.");
+                holder.miniPostLayoutImagePost.setEnabled(false);
+                holder.miniPostLayoutVideoPost.setEnabled(false);
+                holder.miniPostLayoutTextPost.setEnabled(false);
+                holder.miniPostLayoutMoreButton.setVisibility(View.GONE);
+            }
 
 	        holder.miniPostLayoutTextPostPublish.setVisibility(View.GONE);
 	        _ImageColor(holder.miniPostLayoutImagePost, 0xFF445E91);
@@ -555,6 +566,10 @@ public class HomeFragment extends Fragment {
             });
 
             holder.miniPostLayoutTextPostPublish.setOnClickListener(v -> {
+                if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+                    Toast.makeText(getContext(), "Please log in to post.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if (holder.miniPostLayoutTextPostInput.getText().toString().trim().equals("")) {
                     Toast.makeText(getContext(), getResources().getString(R.string.please_enter_text), Toast.LENGTH_SHORT).show();
                 } else {
