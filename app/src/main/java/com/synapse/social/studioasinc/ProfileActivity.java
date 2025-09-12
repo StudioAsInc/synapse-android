@@ -1662,7 +1662,7 @@ class c {
 					sendPostKey.putString("postKey", _data.get((int)_position).get("key").toString());
 					sendPostKey.putString("postPublisherUID", _data.get((int)_position).get("uid").toString());
 					sendPostKey.putString("postPublisherAvatar", UserInfoCacheMap.get("avatar-".concat(_data.get((int)_position).get("uid").toString())).toString());
-					PostCommentsBottomSheetDialog postCommentsBottomSheet = new PostCommentsBottomSheetDialog();
+					PostCommentsBottomSheetDialogFragment postCommentsBottomSheet = new PostCommentsBottomSheetDialogFragment();
 					postCommentsBottomSheet.setArguments(sendPostKey);
 					postCommentsBottomSheet.show(getSupportFragmentManager(), postCommentsBottomSheet.getTag());
 				}
@@ -1706,7 +1706,7 @@ class c {
 					sendPostKey.putString("postKey", _data.get((int)_position).get("key").toString());
 					sendPostKey.putString("postPublisherUID", _data.get((int)_position).get("uid").toString());
 					sendPostKey.putString("postType", _data.get((int)_position).get("post_type").toString());
-					PostMoreBottomSheetDialog postMoreBottomSheetDialog = new PostMoreBottomSheetDialog();
+					PostMoreBottomSheetDialogFragment postMoreBottomSheetDialog = new PostMoreBottomSheetDialogFragment();
 					postMoreBottomSheetDialog.setArguments(sendPostKey);
 					postMoreBottomSheetDialog.show(getSupportFragmentManager(), postMoreBottomSheetDialog.getTag());
 				}

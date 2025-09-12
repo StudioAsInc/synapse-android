@@ -69,8 +69,8 @@ import com.google.firebase.database.Query;
 import com.synapse.social.studioasinc.CreateLineVideoActivity;
 import com.synapse.social.studioasinc.CreatePostActivity;
 import com.synapse.social.studioasinc.HomeActivity;
-import com.synapse.social.studioasinc.PostCommentsBottomSheetDialog;
-import com.synapse.social.studioasinc.PostMoreBottomSheetDialog;
+import com.synapse.social.studioasinc.PostCommentsBottomSheetDialogFragment;
+import com.synapse.social.studioasinc.PostMoreBottomSheetDialogFragment;
 import com.synapse.social.studioasinc.ProfileActivity;
 import com.synapse.social.studioasinc.SynapseApp;
 
@@ -980,7 +980,7 @@ public class HomeFragment extends Fragment {
                 sendPostKey.putString("postKey", _data.get(_position).get("key").toString());
                 sendPostKey.putString("postPublisherUID", _data.get(_position).get("uid").toString());
                 sendPostKey.putString("postPublisherAvatar", UserInfoCacheMap.get("avatar-".concat(_data.get(_position).get("uid").toString())).toString());
-                PostCommentsBottomSheetDialog postCommentsBottomSheet = new PostCommentsBottomSheetDialog();
+                PostCommentsBottomSheetDialogFragment postCommentsBottomSheet = new PostCommentsBottomSheetDialogFragment();
                 postCommentsBottomSheet.setArguments(sendPostKey);
                 postCommentsBottomSheet.show(getParentFragmentManager(), postCommentsBottomSheet.getTag());
             });
@@ -1025,7 +1025,7 @@ public class HomeFragment extends Fragment {
                 if (_data.get(_position).containsKey("post_image") && _data.get(_position).get("post_image") != null && !_data.get(_position).get("post_image").toString().isEmpty()) {
                     sendPostKey.putString("postImg", _data.get(_position).get("post_image").toString());
                 }
-                PostMoreBottomSheetDialog postMoreBottomSheetDialog = new PostMoreBottomSheetDialog();
+                PostMoreBottomSheetDialogFragment postMoreBottomSheetDialog = new PostMoreBottomSheetDialogFragment();
                 postMoreBottomSheetDialog.setArguments(sendPostKey);
                 postMoreBottomSheetDialog.show(getParentFragmentManager(), postMoreBottomSheetDialog.getTag());
             });

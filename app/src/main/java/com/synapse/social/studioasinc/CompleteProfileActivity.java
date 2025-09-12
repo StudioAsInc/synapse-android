@@ -631,7 +631,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 	private void showConfirmationDialog(String title, String message, String positiveText, String negativeText, Runnable onPositive, Runnable onNegative) {
 		final AlertDialog NewCustomDialog = new AlertDialog.Builder(CompleteProfileActivity.this).create();
 		LayoutInflater NewCustomDialogLI = getLayoutInflater();
-		View NewCustomDialogCV = NewCustomDialogLI.inflate(R.layout.synapse_dialog_bg_view, null);
+		View NewCustomDialogCV = NewCustomDialogLI.inflate(R.layout.dialog_synapse_dialog_bg_view, null);
 		NewCustomDialog.setView(NewCustomDialogCV);
 		NewCustomDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
@@ -666,7 +666,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 	private void showInfoDialog(String title, String message, String positiveText, Runnable onPositive) {
 		final AlertDialog NewCustomDialog = new AlertDialog.Builder(CompleteProfileActivity.this).create();
 		LayoutInflater NewCustomDialogLI = getLayoutInflater();
-		View NewCustomDialogCV = NewCustomDialogLI.inflate(R.layout.synapse_dialog_bg_view, null);
+		View NewCustomDialogCV = NewCustomDialogLI.inflate(R.layout.dialog_synapse_dialog_bg_view, null);
 		NewCustomDialog.setView(NewCustomDialogCV);
 		NewCustomDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 

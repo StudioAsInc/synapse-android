@@ -123,7 +123,7 @@ public class UpdateManager {
     private void showUpdateDialog(final String title, final String versionName, final String changelog, final String updateLink, final boolean isCancelable) {
         AlertDialog.Builder updateDialogBuilder = new AlertDialog.Builder(activity);
         LayoutInflater inflater = activity.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.update_dialog, null);
+        View dialogView = inflater.inflate(R.layout.dialog_update_dialog, null);
 
         updateDialogBuilder.setView(dialogView);
         updateDialogBuilder.setCancelable(isCancelable);
@@ -178,7 +178,7 @@ public class UpdateManager {
     private void showErrorDialog(final String errorMessage) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         LayoutInflater inflater = activity.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.error_dialog, null);
+        View dialogView = inflater.inflate(R.layout.dialog_error_dialog, null);
 
         builder.setView(dialogView);
         builder.setCancelable(true);

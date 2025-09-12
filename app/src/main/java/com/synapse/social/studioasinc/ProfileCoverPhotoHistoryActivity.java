@@ -81,7 +81,8 @@ import java.util.regex.*;
 import org.json.*;
 import com.google.firebase.database.Query;
 import java.net.URL;
-import java.net.MalformedURLException;
+import java.net.MalformedURLException;
+
 
 public class ProfileCoverPhotoHistoryActivity extends AppCompatActivity {
 	
@@ -384,7 +385,8 @@ public class ProfileCoverPhotoHistoryActivity extends AppCompatActivity {
 	public void onBackPressed() {
 		finish();
 	}
-	
+	
+
 	public void _stateColor(final int _statusColor, final int _navigationColor) {
 		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		getWindow().setStatusBarColor(_statusColor);
@@ -507,7 +509,7 @@ public class ProfileCoverPhotoHistoryActivity extends AppCompatActivity {
 		{
 			final AlertDialog NewCustomDialog = new AlertDialog.Builder(ProfileCoverPhotoHistoryActivity.this).create();
 			LayoutInflater NewCustomDialogLI = getLayoutInflater();
-			View NewCustomDialogCV = (View) NewCustomDialogLI.inflate(R.layout.profile_cover_image_history_add_dialog, null);
+			View NewCustomDialogCV = (View) NewCustomDialogLI.inflate(R.layout.dialog_profile_cover_image_history_add_dialog, null);
 			NewCustomDialog.setView(NewCustomDialogCV);
 			NewCustomDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 			
@@ -586,7 +588,7 @@ public class ProfileCoverPhotoHistoryActivity extends AppCompatActivity {
 		{
 			final AlertDialog NewCustomDialog = new AlertDialog.Builder(ProfileCoverPhotoHistoryActivity.this).create();
 			LayoutInflater NewCustomDialogLI = getLayoutInflater();
-			View NewCustomDialogCV = (View) NewCustomDialogLI.inflate(R.layout.synapse_dialog_bg_view, null);
+			View NewCustomDialogCV = (View) NewCustomDialogLI.inflate(R.layout.dialog_synapse_dialog_bg_view, null);
 			NewCustomDialog.setView(NewCustomDialogCV);
 			NewCustomDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 			
@@ -714,4 +716,4 @@ public class ProfileCoverPhotoHistoryActivity extends AppCompatActivity {
 			}
 		}
 	}
-}
+}

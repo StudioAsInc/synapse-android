@@ -422,7 +422,7 @@ public class EditPostActivity extends AppCompatActivity {
 	
 	private void _showPostSettingsBottomSheet() {
 		BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
-		View bottomSheetView = getLayoutInflater().inflate(R.layout.bottomsheet_post_settings, null);
+		View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_bottomsheet_post_settings, null);
 		bottomSheetDialog.setContentView(bottomSheetView);
 		
 		// Initialize switches

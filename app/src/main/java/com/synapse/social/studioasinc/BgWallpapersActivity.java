@@ -153,7 +153,7 @@ public class BgWallpapersActivity extends AppCompatActivity {
             ViewHolder holder;
             
             if (convertView == null) {
-                convertView = LayoutInflater.from(context).inflate(R.layout.cv_item_wallpapers, parent, false);
+                convertView = LayoutInflater.from(context).inflate(R.layout.item_cv_item_wallpapers, parent, false);
                 holder = new ViewHolder();
                 holder.imageview1 = convertView.findViewById(R.id.imageview1);
                 holder.textview3 = convertView.findViewById(R.id.textview3);

@@ -343,7 +343,7 @@ public class LineVideosRecyclerViewAdapter extends RecyclerView.Adapter<LineVide
 					sendPostKey.putString("postKey", key);
 					sendPostKey.putString("postPublisherUID", uid);
 					sendPostKey.putString("postPublisherAvatar", String.valueOf(UserInfoCacheMap.get("avatar-".concat(uid))));
-					PostCommentsBottomSheetDialog postCommentsBottomSheet = new PostCommentsBottomSheetDialog();
+					PostCommentsBottomSheetDialogFragment postCommentsBottomSheet = new PostCommentsBottomSheetDialogFragment();
 					postCommentsBottomSheet.setArguments(sendPostKey);
 					postCommentsBottomSheet.show(postCommentsFragMng, postCommentsBottomSheet.getTag());
 				} catch (Exception e) {

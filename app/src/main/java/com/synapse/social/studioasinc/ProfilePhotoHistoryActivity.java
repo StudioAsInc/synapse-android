@@ -91,7 +91,8 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import com.google.android.material.card.*;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import androidx.core.content.ContextCompat;
+import androidx.core.content.ContextCompat;
+
 
 public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 	
@@ -397,7 +398,8 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 	public void onBackPressed() {
 		finish();
 	}
-	
+	
+
 	public void _ImageColor(final ImageView _image, final int _color) {
 		_image.setColorFilter(_color,PorterDuff.Mode.SRC_ATOP);
 	}
@@ -510,7 +512,7 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 		{
 			final AlertDialog NewCustomDialog = new AlertDialog.Builder(ProfilePhotoHistoryActivity.this).create();
 			LayoutInflater NewCustomDialogLI = getLayoutInflater();
-			View NewCustomDialogCV = (View) NewCustomDialogLI.inflate(R.layout.synapse_dialog_bg_view, null);
+			View NewCustomDialogCV = (View) NewCustomDialogLI.inflate(R.layout.dialog_synapse_dialog_bg_view, null);
 			NewCustomDialog.setView(NewCustomDialogCV);
 			NewCustomDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 			
@@ -561,7 +563,8 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 		MaterialAlertDialogBuilder Dialogs = new MaterialAlertDialogBuilder(ProfilePhotoHistoryActivity.this);
 		Dialogs.setTitle("Add image with link");
 		View EdittextDesign = LayoutInflater.from(ProfilePhotoHistoryActivity.this).inflate(R.layout.single_et, null);
-		Dialogs.setView(EdittextDesign);
+		Dialogs.setView(EdittextDesign);
+
 		final EditText edittext1 = EdittextDesign.findViewById(R.id.edittext1);
 		final TextInputLayout textinputlayout1 = EdittextDesign.findViewById(R.id.textinputlayout1);
 		edittext1.setFocusableInTouchMode(true);
@@ -682,4 +685,4 @@ public class ProfilePhotoHistoryActivity extends AppCompatActivity {
 			}
 		}
 	}
-}
+}
