@@ -4,6 +4,8 @@ import android.content.Context;
 import android.util.Log;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import java.io.IOException;
 
 /**
@@ -13,7 +15,7 @@ public class FirebaseConfig {
     private static final String TAG = "FirebaseConfig";
     
     /**
-     * Initialize Firebase with disabled encrypted storage
+     * Initialize Firebase with disabled encrypted storage and Firestore
      */
     public static void initializeFirebase(Context context) {
         try {
@@ -25,10 +27,35 @@ public class FirebaseConfig {
             // Clear any existing encrypted storage data
             clearEncryptedStorageData(context);
             
-            Log.d(TAG, "Firebase initialized with encrypted storage disabled");
+            // Initialize Firestore with optimized settings
+            initializeFirestore();
+            
+            Log.d(TAG, "Firebase initialized with encrypted storage disabled and Firestore configured");
             
         } catch (Exception e) {
             Log.e(TAG, "Failed to initialize Firebase with disabled encrypted storage", e);
+        }
+    }
+    
+    /**
+     * Initialize Firestore with optimized settings for better performance
+     */
+    public static void initializeFirestore() {
+        try {
+            FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+            
+            // Configure Firestore settings for better performance
+            FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                    .setPersistenceEnabled(true) // Enable offline persistence
+                    .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED) // Unlimited cache
+                    .build();
+            
+            firestore.setFirestoreSettings(settings);
+            
+            Log.d(TAG, "Firestore initialized with optimized settings");
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to initialize Firestore", e);
         }
     }
     

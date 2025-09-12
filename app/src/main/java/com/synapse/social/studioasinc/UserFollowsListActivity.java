@@ -71,7 +71,10 @@ import com.google.android.material.appbar.AppBarLayout;
 import android.os.Handler;
 import android.os.Looper;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Executors;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.synapse.social.studioasinc.FirestoreHelper;
 
 public class UserFollowsListActivity extends AppCompatActivity {
 	
@@ -403,24 +406,24 @@ public class UserFollowsListActivity extends AppCompatActivity {
 	}
 	
 	
-	public void _getFollowersReference() {
+	public void _getFollower	public void _getFollowersReference() {
 		followers_layout_list.setVisibility(View.GONE);
 		followers_layout_no_followers.setVisibility(View.GONE);
 		followers_layout_loading.setVisibility(View.VISIBLE);
-		Query getFollowersRef = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid"));
-		getFollowersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+		
+		FirestoreHelper.getFollowers(getIntent().getStringExtra("uid"), new FirestoreHelper.FirestoreCallback<QuerySnapshot>() {
 			@Override
-			public void onDataChange(DataSnapshot _dataSnapshot) {
-				if(_dataSnapshot.exists()) {
+			public void onSuccess(QuerySnapshot querySnapshot) {
+				if (!querySnapshot.isEmpty()) {
 					followers_layout_list.setVisibility(View.VISIBLE);
 					followers_layout_no_followers.setVisibility(View.GONE);
 					followers_layout_loading.setVisibility(View.GONE);
 					
 					mFollowersList.clear();
-					for (DataSnapshot snapshot : _dataSnapshot.getChildren()) {
-						String secondUid = snapshot.getKey();
+					for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+						String followerId = document.getString("follower_id");
 						HashMap<String, Object> map = new HashMap<>();
-						map.put("uid", secondUid);
+						map.put("uid", followerId);
 						mFollowersList.add(map);
 					}
 					
@@ -433,31 +436,32 @@ public class UserFollowsListActivity extends AppCompatActivity {
 			}
 			
 			@Override
-			public void onCancelled(DatabaseError _databaseError) {
-				
+			public void onFailure(Exception e) {
+				followers_layout_list.setVisibility(View.GONE);
+				followers_layout_no_followers.setVisibility(View.VISIBLE);
+				followers_layout_loading.setVisibility(View.GONE);
 			}
 		});
 	}
-	
 	
 	public void _getFollowingReference() {
 		following_layout_list.setVisibility(View.GONE);
 		following_layout_no_follow.setVisibility(View.GONE);
 		following_layout_loading.setVisibility(View.VISIBLE);
-		Query getFollowersRef = FirebaseDatabase.getInstance().getReference("skyline/following").child(getIntent().getStringExtra("uid"));
-		getFollowersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+		
+		FirestoreHelper.getFollowing(getIntent().getStringExtra("uid"), new FirestoreHelper.FirestoreCallback<QuerySnapshot>() {
 			@Override
-			public void onDataChange(DataSnapshot _dataSnapshot) {
-				if(_dataSnapshot.exists()) {
+			public void onSuccess(QuerySnapshot querySnapshot) {
+				if (!querySnapshot.isEmpty()) {
 					following_layout_list.setVisibility(View.VISIBLE);
 					following_layout_no_follow.setVisibility(View.GONE);
 					following_layout_loading.setVisibility(View.GONE);
 					
 					mFollowingList.clear();
-					for (DataSnapshot snapshot : _dataSnapshot.getChildren()) {
-						String secondUid = snapshot.getKey();
+					for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+						String followingId = document.getString("following_id");
 						HashMap<String, Object> map = new HashMap<>();
-						map.put("uid", secondUid);
+						map.put("uid", followingId);
 						mFollowingList.add(map);
 					}
 					
@@ -470,12 +474,13 @@ public class UserFollowsListActivity extends AppCompatActivity {
 			}
 			
 			@Override
-			public void onCancelled(DatabaseError _databaseError) {
-				
+			public void onFailure(Exception e) {
+				following_layout_list.setVisibility(View.GONE);
+				following_layout_no_follow.setVisibility(View.VISIBLE);
+				following_layout_loading.setVisibility(View.GONE);
 			}
 		});
 	}
-	
 	
 	public void _getUserReference() {
 		m_coordinator_layout.setVisibility(View.GONE);

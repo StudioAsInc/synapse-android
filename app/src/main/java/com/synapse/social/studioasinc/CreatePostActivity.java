@@ -83,9 +83,8 @@ import org.json.*;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.synapse.social.studioasinc.ImageUploader;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import android.content.ClipData;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.synapse.social.studioasinc.FirestoreHelper;
 
 
 public class CreatePostActivity extends AppCompatActivity {
@@ -377,20 +376,14 @@ public class CreatePostActivity extends AppCompatActivity {
 		PostSendMap.put("post_disable_comments", disableComments);
 		PostSendMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
 		
-		FirebaseDatabase.getInstance().getReference("skyline/posts").child(UniquePostKey).updateChildren(PostSendMap, new DatabaseReference.CompletionListener() {
-			@Override
-			public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-				if (databaseError == null) {
-					_sendNotificationsToFollowers(UniquePostKey, postDescriptionEditText.getText().toString().trim());
-					Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
-					_LoadingDialog(false);
-					finish();
-				} else {
-					Toast.makeText(getApplicationContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-					_LoadingDialog(false);
-				}
-			}
-		});
+		// Save to Firestore
+		FirestoreHelper.createPost(UniquePostKey, PostSendMap);
+		
+		// Send notifications to followers
+		_sendNotificationsToFollowers(UniquePostKey, postDescriptionEditText.getText().toString().trim());
+		Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
+		_LoadingDialog(false);
+		finish();
 	}
 	
 	private void _sendNotificationsToFollowers(String postKey, final String postText) {

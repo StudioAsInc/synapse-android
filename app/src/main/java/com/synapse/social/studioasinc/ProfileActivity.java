@@ -80,10 +80,10 @@ import java.util.TimerTask;
 import java.util.regex.*;
 import org.json.*;
 import androidx.core.widget.NestedScrollView;
-import com.google.firebase.database.Query;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import androidx.browser.customtabs.CustomTabsIntent;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.synapse.social.studioasinc.FirestoreHelper;
 
 public class ProfileActivity extends AppCompatActivity {
 	
@@ -339,24 +339,29 @@ class c {
 		likeUserProfileButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				DatabaseReference checkProfileLike = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-				checkProfileLike.addListenerForSingleValueEvent(new ValueEventListener() {
+				String targetUserId = getIntent().getStringExtra("uid");
+				String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+				
+				FirestoreHelper.checkProfileLike(targetUserId, currentUserId, new FirestoreHelper.FirestoreCallback<DocumentSnapshot>() {
 					@Override
-					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-						if(dataSnapshot.exists()) {
-							FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).removeValue();
-							UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString()) - 1)));
-							likeUserProfileButtonLikeCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString())));
+					public void onSuccess(DocumentSnapshot documentSnapshot) {
+						if (documentSnapshot.exists()) {
+							// Unlike profile
+							FirestoreHelper.unlikeProfile(targetUserId, currentUserId);
+							long newCount = Long.parseLong(UserInfoCacheMap.get("profile_like_count".concat(targetUserId)).toString()) - 1;
+							UserInfoCacheMap.put("profile_like_count".concat(targetUserId), String.valueOf(newCount));
+							likeUserProfileButtonLikeCount.setText(_getStyledNumber(newCount));
 							likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_1);
 							_viewGraphics(likeUserProfileButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, 0xFF9E9E9E);
 							_ImageColor(likeUserProfileButtonIc, 0xFF000000);
 							likeUserProfileButtonLikeCount.setTextColor(0xFF616161);
 						} else {
-							FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+							// Like profile
+							FirestoreHelper.likeProfile(targetUserId, currentUserId);
 							com.synapse.social.studioasinc.util.UserUtils.getCurrentUserDisplayName(new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
 								public void onResult(String displayName) {
-									String recipientUid = getIntent().getStringExtra("uid");
-									String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+									String recipientUid = targetUserId;
+									String senderUid = currentUserId;
 									String notificationMessage = displayName + " liked your profile.";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("sender_uid", senderUid);
@@ -369,8 +374,9 @@ class c {
 									);
 								}
 							});
-							UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
-							likeUserProfileButtonLikeCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString())));
+							long newCount = Long.parseLong(UserInfoCacheMap.get("profile_like_count".concat(targetUserId)).toString()) + 1;
+							UserInfoCacheMap.put("profile_like_count".concat(targetUserId), String.valueOf(newCount));
+							likeUserProfileButtonLikeCount.setText(_getStyledNumber(newCount));
 							likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_2);
 							_viewGraphics(likeUserProfileButton, 0xFFF50057, 0xFFC51162, 300, 0, 0xFF9E9E9E);
 							_ImageColor(likeUserProfileButtonIc, 0xFFFFFFFF);
@@ -379,8 +385,8 @@ class c {
 					}
 
 					@Override
-					public void onCancelled(@NonNull DatabaseError databaseError) {
-
+					public void onFailure(Exception e) {
+						// Handle error
 					}
 				});
 				vbr.vibrate((long)(28));
@@ -407,25 +413,41 @@ class c {
 		btnFollow.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				DatabaseReference checkUserFollow = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-				checkUserFollow.addListenerForSingleValueEvent(new ValueEventListener() {
+				String targetUserId = getIntent().getStringExtra("uid");
+				String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+				
+				// Check if already following
+				FirestoreHelper.getFollowers(targetUserId, new FirestoreHelper.FirestoreCallback<QuerySnapshot>() {
 					@Override
-					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-						if(dataSnapshot.exists()) {
-							FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).removeValue();
-							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).removeValue();
-							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) - 1)));
-							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
+					public void onSuccess(QuerySnapshot querySnapshot) {
+						boolean isFollowing = false;
+						for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+							if (doc.getString("follower_id").equals(currentUserId)) {
+								isFollowing = true;
+								break;
+							}
+						}
+						
+						if (isFollowing) {
+							// Unfollow
+							FirestoreHelper.removeFollower(targetUserId, currentUserId);
+							FirestoreHelper.removeFollowing(currentUserId, targetUserId);
+							
+							long newCount = Long.parseLong(UserInfoCacheMap.get("followers_count".concat(targetUserId)).toString()) - 1;
+							UserInfoCacheMap.put("followers_count".concat(targetUserId), String.valueOf(newCount));
+							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(newCount).concat(" ".concat(getResources().getString(R.string.followers))));
 							btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimaryContainer));
 							btnFollow.setText(getResources().getString(R.string.follow));
 							btnFollow.setTextColor(0xFFFFFFFF);
 						} else {
-							FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
-							FirebaseDatabase.getInstance().getReference("skyline/following").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(getIntent().getStringExtra("uid")).setValue(getIntent().getStringExtra("uid"));
+							// Follow
+							FirestoreHelper.addFollower(targetUserId, currentUserId);
+							FirestoreHelper.addFollowing(currentUserId, targetUserId);
+							
 							com.synapse.social.studioasinc.util.UserUtils.getCurrentUserDisplayName(new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
 								public void onResult(String displayName) {
-									String recipientUid = getIntent().getStringExtra("uid");
-									String senderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+									String recipientUid = targetUserId;
+									String senderUid = currentUserId;
 									String notificationMessage = displayName + " started following you.";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("sender_uid", senderUid);
@@ -438,8 +460,10 @@ class c {
 									);
 								}
 							});
-							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
-							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString())).concat(" ".concat(getResources().getString(R.string.followers))));
+							
+							long newCount = Long.parseLong(UserInfoCacheMap.get("followers_count".concat(targetUserId)).toString()) + 1;
+							UserInfoCacheMap.put("followers_count".concat(targetUserId), String.valueOf(newCount));
+							ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(newCount).concat(" ".concat(getResources().getString(R.string.followers))));
 							btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurfaceContainer));
 							btnFollow.setText(getResources().getString(R.string.unfollow));
 							btnFollow.setTextColor(0xFF000000);
@@ -447,8 +471,8 @@ class c {
 					}
 
 					@Override
-					public void onCancelled(@NonNull DatabaseError databaseError) {
-
+					public void onFailure(Exception e) {
+						// Handle error
 					}
 				});
 			}
@@ -707,67 +731,75 @@ class c {
 	
 	
 	public void _getUserReference() {
-		DatabaseReference getUserReference = FirebaseDatabase.getInstance().getReference("skyline/users").child(getIntent().getStringExtra("uid"));
-		getUserReference.addListenerForSingleValueEvent(new ValueEventListener() {
+		FirestoreHelper.getUser(getIntent().getStringExtra("uid"), new FirestoreHelper.FirestoreCallback<DocumentSnapshot>() {
 			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {
+			public void onSuccess(DocumentSnapshot documentSnapshot) {
+				if (documentSnapshot.exists()) {
 					ProfilePageSwipeLayout.setVisibility(View.VISIBLE);
 					ProfilePageNoInternetBody.setVisibility(View.GONE);
 					ProfilePageLoadingBody.setVisibility(View.GONE);
-					user_uid_layout_text.setText(dataSnapshot.child("uid").getValue(String.class));
-					JoinDateCC.setTimeInMillis((long)(Double.parseDouble(dataSnapshot.child("join_date").getValue(String.class))));
-					if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
+					
+					user_uid_layout_text.setText(documentSnapshot.getString("uid"));
+					JoinDateCC.setTimeInMillis(Long.parseLong(documentSnapshot.getString("join_date")));
+					
+					if (documentSnapshot.getString("banned").equals("true")) {
 						UserAvatarUri = "null";
 						ProfilePageTabUserInfoProfileImage.setImageResource(R.drawable.banned_avatar);
 						ProfilePageTabUserInfoCoverImage.setImageResource(R.drawable.banned_cover_photo);
 					} else {
 						_getUserPostsReference();
 						_getUserCountReference();
-						UserAvatarUri = dataSnapshot.child("avatar").getValue(String.class);
-						if (dataSnapshot.child("profile_cover_image").getValue(String.class).equals("null")) {
+						UserAvatarUri = documentSnapshot.getString("avatar");
+						
+						if (documentSnapshot.getString("profile_cover_image").equals("null")) {
 							ProfilePageTabUserInfoCoverImage.setImageResource(R.drawable.user_null_cover_photo);
 						} else {
-							Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("profile_cover_image").getValue(String.class))).into(ProfilePageTabUserInfoCoverImage);
+							Glide.with(getApplicationContext()).load(Uri.parse(documentSnapshot.getString("profile_cover_image"))).into(ProfilePageTabUserInfoCoverImage);
 						}
-						if (dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+						
+						if (documentSnapshot.getString("avatar").equals("null")) {
 							ProfilePageTabUserInfoProfileImage.setImageResource(R.drawable.avatar);
 						} else {
-							Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(ProfilePageTabUserInfoProfileImage);
+							Glide.with(getApplicationContext()).load(Uri.parse(documentSnapshot.getString("avatar"))).into(ProfilePageTabUserInfoProfileImage);
 						}
 					}
+					
 					// Check user status
-					if (dataSnapshot.child("status").getValue(String.class).equals("online")) {
+					if (documentSnapshot.getString("status").equals("online")) {
 						ProfilePageTabUserInfoStatus.setText(getResources().getString(R.string.online));
 						ProfilePageTabUserInfoStatus.setTextColor(0xFF2196F3);
 					} else {
-						if (dataSnapshot.child("status").getValue(String.class).equals("offline")) {
+						if (documentSnapshot.getString("status").equals("offline")) {
 							ProfilePageTabUserInfoStatus.setText(getResources().getString(R.string.offline));
 						} else {
-							_setUserLastSeen(Double.parseDouble(dataSnapshot.child("status").getValue(String.class)), ProfilePageTabUserInfoStatus);
+							_setUserLastSeen(Double.parseDouble(documentSnapshot.getString("status")), ProfilePageTabUserInfoStatus);
 						}
 						ProfilePageTabUserInfoStatus.setTextColor(0xFF757575);
 					}
-					ProfilePageTabUserInfoUsername.setText("@" + dataSnapshot.child("username").getValue(String.class));
-					if (dataSnapshot.child("nickname").getValue(String.class).equals("null")) {
-						ProfilePageTabUserInfoNickname.setText("@" + dataSnapshot.child("username").getValue(String.class));
+					
+					ProfilePageTabUserInfoUsername.setText("@" + documentSnapshot.getString("username"));
+					if (documentSnapshot.getString("nickname").equals("null")) {
+						ProfilePageTabUserInfoNickname.setText("@" + documentSnapshot.getString("username"));
 					} else {
-						ProfilePageTabUserInfoNickname.setText(dataSnapshot.child("nickname").getValue(String.class));
-						nickname = dataSnapshot.child("nickname").getValue(String.class);
+						ProfilePageTabUserInfoNickname.setText(documentSnapshot.getString("nickname"));
+						nickname = documentSnapshot.getString("nickname");
 					}
-					if (dataSnapshot.child("biography").getValue(String.class).equals("null")) {
+					
+					if (documentSnapshot.getString("biography").equals("null")) {
 						
 					} else {
-						ProfilePageTabUserInfoBioLayoutText.setText(dataSnapshot.child("biography").getValue(String.class));
+						ProfilePageTabUserInfoBioLayoutText.setText(documentSnapshot.getString("biography"));
 					}
-					// Removed the problematic commented-out block as requested.
 				} else {
+					// User not found
 				}
 			}
 
 			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-
+			public void onFailure(Exception e) {
+				ProfilePageSwipeLayout.setVisibility(View.GONE);
+				ProfilePageNoInternetBody.setVisibility(View.VISIBLE);
+				ProfilePageLoadingBody.setVisibility(View.GONE);
 			}
 		});
 		ProfilePageSwipeLayout.setRefreshing(false);
@@ -775,23 +807,33 @@ class c {
 	
 	
 	public void _getUserPostsReference() {
-		Query getUserPostsRef = FirebaseDatabase.getInstance().getReference("skyline/posts").orderByChild("uid").equalTo(getIntent().getStringExtra("uid"));
-		getUserPostsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+		FirestoreHelper.getPostsByUser(getIntent().getStringExtra("uid"), new FirestoreHelper.FirestoreCallback<QuerySnapshot>() {
 			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {
+			public void onSuccess(QuerySnapshot querySnapshot) {
+				if (!querySnapshot.isEmpty()) {
 					ProfilePageTabUserPostsRecyclerView.setVisibility(View.VISIBLE);
 					ProfilePageTabUserPostsNoPostsSubtitle.setVisibility(View.GONE);
 					UserPostsList.clear();
-					try {
-						GenericTypeIndicator<HashMap<String, Object>> _ind = new GenericTypeIndicator<HashMap<String, Object>>() {};
-						for (DataSnapshot _data : dataSnapshot.getChildren()) {
-							HashMap<String, Object> _map = _data.getValue(_ind);
-							UserPostsList.add(_map);
-						}
-					} catch (Exception _e) {
-						_e.printStackTrace();
+					
+					for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+						HashMap<String, Object> postMap = new HashMap<>();
+						postMap.put("key", document.getId());
+						postMap.put("uid", document.getString("uid"));
+						postMap.put("post_type", document.getString("post_type"));
+						postMap.put("post_text", document.getString("post_text"));
+						postMap.put("post_image", document.getString("post_image"));
+						postMap.put("post_visibility", document.getString("post_visibility"));
+						postMap.put("post_hide_like_count", document.getString("post_hide_like_count"));
+						postMap.put("post_hide_comments_count", document.getString("post_hide_comments_count"));
+						postMap.put("post_hide_views_count", document.getString("post_hide_views_count"));
+						postMap.put("post_disable_comments", document.getString("post_disable_comments"));
+						postMap.put("post_disable_favorite", document.getString("post_disable_favorite"));
+						postMap.put("post_region", document.getString("post_region"));
+						postMap.put("publish_date", document.getString("publish_date"));
+						
+						UserPostsList.add(postMap);
 					}
+					
 					SketchwareUtil.sortListMap(UserPostsList, "publish_date", false, false);
 					ProfilePageTabUserPostsRecyclerView.setAdapter(new ProfilePageTabUserPostsRecyclerViewAdapter(UserPostsList));
 				} else {
@@ -801,8 +843,9 @@ class c {
 			}
 
 			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-
+			public void onFailure(Exception e) {
+				ProfilePageTabUserPostsRecyclerView.setVisibility(View.GONE);
+				ProfilePageTabUserPostsNoPostsSubtitle.setVisibility(View.VISIBLE);
 			}
 		});
 	}
@@ -903,39 +946,49 @@ class c {
 	
 	
 	public void _getUserCountReference() {
-		Query getFollowersCount = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid"));
-		getFollowersCount.addListenerForSingleValueEvent(new ValueEventListener() {
+		// Get followers count
+		FirestoreHelper.getFollowers(getIntent().getStringExtra("uid"), new FirestoreHelper.FirestoreCallback<QuerySnapshot>() {
 			@Override
-			public void onDataChange(DataSnapshot dataSnapshot) {
-				long count = dataSnapshot.getChildrenCount();
+			public void onSuccess(QuerySnapshot querySnapshot) {
+				long count = querySnapshot.size();
 				ProfilePageTabUserInfoFollowersCount.setText(_getStyledNumber(count).concat(" ".concat(getResources().getString(R.string.followers))));
-				UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(count)));
+				UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf(count));
 			}
 
 			@Override
-			public void onCancelled(DatabaseError databaseError) {
-
+			public void onFailure(Exception e) {
+				// Handle error
 			}
 		});
-		DatabaseReference getFollowingCount = FirebaseDatabase.getInstance().getReference("skyline/following").child(getIntent().getStringExtra("uid"));
-		getFollowingCount.addListenerForSingleValueEvent(new ValueEventListener() {
+		
+		// Get following count
+		FirestoreHelper.getFollowing(getIntent().getStringExtra("uid"), new FirestoreHelper.FirestoreCallback<QuerySnapshot>() {
 			@Override
-			public void onDataChange(DataSnapshot dataSnapshot) {
-				long count = dataSnapshot.getChildrenCount();
+			public void onSuccess(QuerySnapshot querySnapshot) {
+				long count = querySnapshot.size();
 				ProfilePageTabUserInfoFollowingCount.setText(_getStyledNumber(count).concat(" ".concat(getResources().getString(R.string.following))));
-				UserInfoCacheMap.put("following_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(count)));
+				UserInfoCacheMap.put("following_count".concat(getIntent().getStringExtra("uid")), String.valueOf(count));
 			}
 
 			@Override
-			public void onCancelled(DatabaseError databaseError) {
-
+			public void onFailure(Exception e) {
+				// Handle error
 			}
 		});
-		Query checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-		checkFollowUser.addValueEventListener(new ValueEventListener() {
+		
+		// Check if current user follows this user
+		FirestoreHelper.getFollowers(getIntent().getStringExtra("uid"), new FirestoreHelper.FirestoreCallback<QuerySnapshot>() {
 			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {
+			public void onSuccess(QuerySnapshot querySnapshot) {
+				boolean isFollowing = false;
+				for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+					if (doc.getString("follower_id").equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+						isFollowing = true;
+						break;
+					}
+				}
+				
+				if (isFollowing) {
 					btnFollow.setText(getResources().getString(R.string.unfollow));
 					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurfaceContainer));
 					btnFollow.setTextColor(0xFF000000);
@@ -947,15 +1000,37 @@ class c {
 			}
 
 			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-
+			public void onFailure(Exception e) {
+				// Handle error
 			}
 		});
-		Query checkProfileLike = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-		checkProfileLike.addListenerForSingleValueEvent(new ValueEventListener() {
+		
+		// Check if current user liked this profile
+		FirestoreHelper.checkProfileLike(getIntent().getStringExtra("uid"), FirebaseAuth.getInstance().getCurrentUser().getUid(), new FirestoreHelper.FirestoreCallback<DocumentSnapshot>() {
 			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {
+			public void onSuccess(DocumentSnapshot documentSnapshot) {
+				if (documentSnapshot.exists()) {
+					btnFollow.setText(getResources().getString(R.string.unfollow));
+					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurfaceContainer));
+					btnFollow.setTextColor(0xFF000000);
+				} else {
+					btnFollow.setText(getResources().getString(R.string.follow));
+					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimaryContainer));
+					btnFollow.setTextColor(0xFFFFFFFF);
+				}
+			}
+
+			@Override
+			public void onFailure(Exception e) {
+				// Handle error
+			}
+		});
+		
+		// Check if current user liked this profile
+		FirestoreHelper.checkProfileLike(getIntent().getStringExtra("uid"), FirebaseAuth.getInstance().getCurrentUser().getUid(), new FirestoreHelper.FirestoreCallback<DocumentSnapshot>() {
+			@Override
+			public void onSuccess(DocumentSnapshot documentSnapshot) {
+				if (documentSnapshot.exists()) {
 					likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_2);
 					_viewGraphics(likeUserProfileButton, 0xFFF50057, 0xFFC51162, 300, 0, 0xFF9E9E9E);
 					_ImageColor(likeUserProfileButtonIc, 0xFFFFFFFF);
@@ -969,22 +1044,23 @@ class c {
 			}
 
 			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
-
+			public void onFailure(Exception e) {
+				// Handle error
 			}
 		});
-		DatabaseReference getProfileLikesCount = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid"));
-		getProfileLikesCount.addListenerForSingleValueEvent(new ValueEventListener() {
+		
+		// Get profile likes count
+		FirestoreHelper.getProfileLikesCount(getIntent().getStringExtra("uid"), new FirestoreHelper.FirestoreCallback<QuerySnapshot>() {
 			@Override
-			public void onDataChange(DataSnapshot dataSnapshot) {
-				long count = dataSnapshot.getChildrenCount();
+			public void onSuccess(QuerySnapshot querySnapshot) {
+				long count = querySnapshot.size();
 				likeUserProfileButtonLikeCount.setText(_getStyledNumber(count));
-				UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(count)));
+				UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf(count));
 			}
 
 			@Override
-			public void onCancelled(DatabaseError databaseError) {
-
+			public void onFailure(Exception e) {
+				// Handle error
 			}
 		});
 	}
