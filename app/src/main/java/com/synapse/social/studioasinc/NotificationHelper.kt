@@ -212,12 +212,7 @@ object NotificationHelper {
             }
             
             jsonBody.put("priority", NotificationConfig.NOTIFICATION_PRIORITY)
-            // Only include android_channel_id if it looks like a valid OneSignal channel ID (UUID). Otherwise omit to avoid 400s
-            val channelId = NotificationConfig.NOTIFICATION_CHANNEL_ID
-            val looksLikeUuid = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
-            if (looksLikeUuid.matches(channelId)) {
-                jsonBody.put("android_channel_id", channelId)
-            }
+            jsonBody.put("android_channel_id", NotificationConfig.NOTIFICATION_CHANNEL_ID)
             
         } catch (e: Exception) {
             Log.e(TAG, "Failed to create JSON for client-side notification", e)
