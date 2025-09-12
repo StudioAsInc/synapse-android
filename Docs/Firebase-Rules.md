@@ -1,4 +1,4 @@
-# Real-time Database Rules
+### Real-time Database Rules v1.0
 ```
 {
   "rules": {
