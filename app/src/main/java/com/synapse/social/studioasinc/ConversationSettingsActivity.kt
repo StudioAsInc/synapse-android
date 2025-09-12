@@ -174,9 +174,4 @@ class ConversationSettingsActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        super.onBackPressed()
-        finish()
-    }
 }

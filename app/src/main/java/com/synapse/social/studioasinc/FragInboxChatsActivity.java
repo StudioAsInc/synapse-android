@@ -77,6 +77,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.appcompat.app.AppCompatDelegate;
 import com.bumptech.glide.Glide;
+import com.synapse.social.studioasinc.animations.ShimmerFrameLayout;
 
 public class FragInboxChatsActivity extends Fragment {
 
@@ -96,6 +97,7 @@ public class FragInboxChatsActivity extends Fragment {
 	private Chip linear31;
 	private Chip linear32;
 	private Chip linear33;
+    private ShimmerFrameLayout shimmer_view_container;
 
 	private FirebaseAuth auth;
 	private OnCompleteListener<AuthResult> _auth_create_user_listener;
@@ -133,6 +135,7 @@ public class FragInboxChatsActivity extends Fragment {
 		linear31 = _view.findViewById(R.id.linear31);
 		linear32 = _view.findViewById(R.id.linear32);
 		linear33 = _view.findViewById(R.id.linear33);
+        shimmer_view_container = _view.findViewById(R.id.shimmer_view_container);
 		auth = FirebaseAuth.getInstance();
 
 		_main_child_listener = new ChildEventListener() {
@@ -321,10 +324,16 @@ public class FragInboxChatsActivity extends Fragment {
 
 
 	public void _getInboxReference() {
+		shimmer_view_container.startShimmer();
+		shimmer_view_container.setVisibility(View.VISIBLE);
+		inboxListRecyclerView.setVisibility(View.GONE);
 		Query getInboxRef = FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 		getInboxRef.addValueEventListener(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				shimmer_view_container.stopShimmer();
+				shimmer_view_container.setVisibility(View.GONE);
+				inboxListRecyclerView.setVisibility(View.VISIBLE);
 				if(dataSnapshot.exists()) {
 					inboxListRecyclerView.setVisibility(View.VISIBLE);
 					ChatInboxList.clear();
@@ -347,7 +356,9 @@ public class FragInboxChatsActivity extends Fragment {
 
 			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                shimmer_view_container.stopShimmer();
+                shimmer_view_container.setVisibility(View.GONE);
+                inboxListRecyclerView.setVisibility(View.VISIBLE);
 			}
 		});
 	}
@@ -381,9 +392,7 @@ public class FragInboxChatsActivity extends Fragment {
 		@Override
 		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 			LayoutInflater _inflater = getActivity().getLayoutInflater();
-			View _v = _inflater.inflate(R.layout.inbox_msg_list_cv_synapse, null);
-			RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-			_v.setLayoutParams(_lp);
+			View _v = _inflater.inflate(R.layout.item_inbox_message, parent, false);
 			return new ViewHolder(_v);
 		}
 
@@ -391,20 +400,9 @@ public class FragInboxChatsActivity extends Fragment {
 		public void onBindViewHolder(ViewHolder _holder, final int _position) {
 			View _view = _holder.itemView;
 
-			final androidx.cardview.widget.CardView cardview1 = _view.findViewById(R.id.cardview1);
-			final LinearLayout main = _view.findViewById(R.id.main);
-			final LinearLayout body = _view.findViewById(R.id.body);
-			final LinearLayout spcBottom = _view.findViewById(R.id.spcBottom);
-			final RelativeLayout profileCardRelative = _view.findViewById(R.id.profileCardRelative);
-			final LinearLayout lin = _view.findViewById(R.id.lin);
-			final androidx.cardview.widget.CardView profileCard = _view.findViewById(R.id.profileCard);
-			final LinearLayout ProfileRelativeUp = _view.findViewById(R.id.ProfileRelativeUp);
+			final RelativeLayout main = _view.findViewById(R.id.main);
 			final ImageView profileCardImage = _view.findViewById(R.id.profileCardImage);
 			final LinearLayout userStatusCircleBG = _view.findViewById(R.id.userStatusCircleBG);
-			final LinearLayout userStatusCircleIN = _view.findViewById(R.id.userStatusCircleIN);
-			final LinearLayout usr = _view.findViewById(R.id.usr);
-			final LinearLayout btnss = _view.findViewById(R.id.btnss);
-			final LinearLayout spc = _view.findViewById(R.id.spc);
 			final TextView push = _view.findViewById(R.id.push);
 			final TextView username = _view.findViewById(R.id.username);
 			final ImageView genderBadge = _view.findViewById(R.id.genderBadge);
@@ -414,11 +412,7 @@ public class FragInboxChatsActivity extends Fragment {
 			final TextView unread_messages_count_badge = _view.findViewById(R.id.unread_messages_count_badge);
 
 			try{
-				RecyclerView.LayoutParams _lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-				_view.setLayoutParams(_lp);
-				_viewGraphics(main, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, Color.TRANSPARENT);
 				userStatusCircleBG.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFFFFFFFF));
-				userStatusCircleIN.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, 0xFF388E3C));
 				unread_messages_count_badge.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b) { this.setCornerRadius(a); this.setColor(b); return this; } }.getIns((int)300, com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(getContext(), com.google.android.material.R.attr.colorPrimaryContainer)));
 				unread_messages_count_badge.setVisibility(View.GONE);
 				main.setVisibility(View.GONE);
@@ -430,8 +424,10 @@ public class FragInboxChatsActivity extends Fragment {
 				if (_data.get((int)_position).get("last_message_uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 					if (_data.get((int)_position).get("last_message_state").toString().equals("sended")) {
 						message_state.setImageResource(R.drawable.icon_done_round);
+                        message_state.setContentDescription("Message sent");
 					} else {
 						message_state.setImageResource(R.drawable.icon_done_all_round);
+                        message_state.setContentDescription("Message read");
 					}
 					last_message.setTextColor(0xFF616161);
 					push.setTextColor(0xFF616161);
@@ -509,8 +505,10 @@ public class FragInboxChatsActivity extends Fragment {
 					if (isNullOrEmpty(nicknameObj != null ? nicknameObj.toString() : null)) {
 						Object usernameObj = UserInfoCacheMap.get("username-".concat(uid));
 						username.setText("@" + (usernameObj != null ? usernameObj.toString() : "unknown"));
+                        profileCardImage.setContentDescription("Profile picture of " + username.getText().toString());
 					} else {
 						username.setText(nicknameObj.toString());
+                        profileCardImage.setContentDescription("Profile picture of " + username.getText().toString());
 					}
 					
 					// Handle status with null check
@@ -527,8 +525,10 @@ public class FragInboxChatsActivity extends Fragment {
 						String gender = genderObj.toString();
 						if (gender.equals("male")) {
 							genderBadge.setImageResource(R.drawable.male_badge);
+                            genderBadge.setContentDescription("Male");
 						} else if (gender.equals("female")) {
 							genderBadge.setImageResource(R.drawable.female_badge);
+                            genderBadge.setContentDescription("Female");
 						}
 					}
 					
@@ -542,27 +542,34 @@ public class FragInboxChatsActivity extends Fragment {
 						if (accountType.equals("admin")) {
 							verifiedBadge.setImageResource(R.drawable.admin_badge);
 							verifiedBadge.setVisibility(View.VISIBLE);
+                            verifiedBadge.setContentDescription("Admin badge");
 						} else if (accountType.equals("moderator")) {
 							verifiedBadge.setImageResource(R.drawable.moderator_badge);
 							verifiedBadge.setVisibility(View.VISIBLE);
+                            verifiedBadge.setContentDescription("Moderator badge");
 						} else if (accountType.equals("support")) {
 							verifiedBadge.setImageResource(R.drawable.support_badge);
 							verifiedBadge.setVisibility(View.VISIBLE);
+                            verifiedBadge.setContentDescription("Support badge");
 						} else if (premiumObj != null && premiumObj.toString().equals("true")) {
 							verifiedBadge.setImageResource(R.drawable.premium_badge);
 							verifiedBadge.setVisibility(View.VISIBLE);
+                            verifiedBadge.setContentDescription("Premium badge");
 						} else if (verifyObj != null && verifyObj.toString().equals("true")) {
 							verifiedBadge.setImageResource(R.drawable.verified_badge);
 							verifiedBadge.setVisibility(View.VISIBLE);
+                            verifiedBadge.setContentDescription("Verified badge");
 						} else {
 							verifiedBadge.setVisibility(View.GONE);
 						}
 					} else if (premiumObj != null && premiumObj.toString().equals("true")) {
 						verifiedBadge.setImageResource(R.drawable.premium_badge);
 						verifiedBadge.setVisibility(View.VISIBLE);
+                        verifiedBadge.setContentDescription("Premium badge");
 					} else if (verifyObj != null && verifyObj.toString().equals("true")) {
 						verifiedBadge.setImageResource(R.drawable.verified_badge);
 						verifiedBadge.setVisibility(View.VISIBLE);
+                        verifiedBadge.setContentDescription("Verified badge");
 					} else {
 						verifiedBadge.setVisibility(View.GONE);
 					}
@@ -615,8 +622,10 @@ public class FragInboxChatsActivity extends Fragment {
 
 													if (isNullOrEmpty(nickname)) {
 														username.setText("@" + (usernameValue != null ? usernameValue : ""));
+                                                        profileCardImage.setContentDescription("Profile picture of " + username.getText().toString());
 													} else {
 														username.setText(nickname);
+                                                        profileCardImage.setContentDescription("Profile picture of " + username.getText().toString());
 													}
 
 													if ("online".equals(status)) {
@@ -631,9 +640,11 @@ public class FragInboxChatsActivity extends Fragment {
 														if ("male".equals(gender)) {
 															genderBadge.setImageResource(R.drawable.male_badge);
 															genderBadge.setVisibility(View.VISIBLE);
+                                                            genderBadge.setContentDescription("Male");
 														} else if ("female".equals(gender)) {
 															genderBadge.setImageResource(R.drawable.female_badge);
 															genderBadge.setVisibility(View.VISIBLE);
+                                                            genderBadge.setContentDescription("Female");
 														}
 													}
 
@@ -641,18 +652,23 @@ public class FragInboxChatsActivity extends Fragment {
 													if ("admin".equals(accountType)) {
 														verifiedBadge.setImageResource(R.drawable.admin_badge);
 														verifiedBadge.setVisibility(View.VISIBLE);
+                                                        verifiedBadge.setContentDescription("Admin badge");
 													} else if ("moderator".equals(accountType)) {
 														verifiedBadge.setImageResource(R.drawable.moderator_badge);
 														verifiedBadge.setVisibility(View.VISIBLE);
+                                                        verifiedBadge.setContentDescription("Moderator badge");
 													} else if ("support".equals(accountType)) {
 														verifiedBadge.setImageResource(R.drawable.support_badge);
 														verifiedBadge.setVisibility(View.VISIBLE);
+                                                        verifiedBadge.setContentDescription("Support badge");
 													} else if ("true".equals(accountPremium)) {
 														verifiedBadge.setImageResource(R.drawable.premium_badge);
 														verifiedBadge.setVisibility(View.VISIBLE);
+                                                        verifiedBadge.setContentDescription("Premium badge");
 													} else if ("true".equals(verify)) {
 														verifiedBadge.setImageResource(R.drawable.verified_badge);
 														verifiedBadge.setVisibility(View.VISIBLE);
+                                                        verifiedBadge.setContentDescription("Verified badge");
 													}
 												} else {
 												}

@@ -64,7 +64,6 @@ synapse-android/
 
 #### Messaging System
 - **`InboxActivity.java`** - Message inbox interface
-- **`MessagesActivity.java`** - Chat interface
 - **`ChatActivity.java`** - Individual chat conversations
 - **`ChatAdapter.java`** - Message display adapter
 - **`FragInboxChatsActivity.java`** - Chat list fragment
