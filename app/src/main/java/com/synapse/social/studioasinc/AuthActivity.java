@@ -361,6 +361,9 @@ public class AuthActivity extends AppCompatActivity {
                 // Save authentication state to SharedPreferences as backup even if username fetch fails
                 AuthStateManager.saveAuthenticationState(AuthActivity.this, uid);
                 
+                // Login to OneSignal for consistent behavior
+                OneSignalManager.loginUser(uid);
+                
                 navigateToHomeAfterDelay();
             }
         });

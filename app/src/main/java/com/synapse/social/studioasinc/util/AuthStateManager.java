@@ -9,11 +9,16 @@ import com.google.firebase.auth.FirebaseUser;
  * Utility class to manage authentication state with backup mechanism
  * This helps ensure authentication persists even when Firebase Auth fails
  */
-public class AuthStateManager {
+public final class AuthStateManager {
     
     private static final String PREFS_NAME = "auth_prefs";
     private static final String KEY_IS_AUTHENTICATED = "is_authenticated";
     private static final String KEY_USER_UID = "user_uid";
+    
+    // Prevent instantiation
+    private AuthStateManager() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
     
     /**
      * Save authentication state to SharedPreferences as backup
@@ -34,10 +39,7 @@ public class AuthStateManager {
      */
     public static void clearAuthenticationState(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit()
-                .remove(KEY_IS_AUTHENTICATED)
-                .remove(KEY_USER_UID)
-                .apply();
+        prefs.edit().clear().apply();
     }
     
     /**

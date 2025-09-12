@@ -46,12 +46,19 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private ImageView navSearchIc;
     private ImageView navInboxIc;
     private View topBar;
+    
+    // Cache user UID to avoid redundant lookups
+    private String cachedUserUid;
 
     @Override
     protected void onCreate(Bundle _savedInstanceState) {
         super.onCreate(_savedInstanceState);
         setContentView(R.layout.home);
         FirebaseApp.initializeApp(this);
+        
+        // Cache user UID once at startup
+        cachedUserUid = AuthStateManager.getUserUid(this);
+        
         initialize();
         initializeLogic();
     }
@@ -59,9 +66,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onStart() {
         super.onStart();
-        String userUid = AuthStateManager.getUserUid(this);
-        if (userUid != null) {
-            PresenceManager.setActivity(userUid, "In Home");
+        if (cachedUserUid != null) {
+            PresenceManager.setActivity(cachedUserUid, "In Home");
         }
     }
 
@@ -166,8 +172,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         android.widget.TextView userName = headerView.findViewById(R.id.user_name);
         android.widget.TextView userEmail = headerView.findViewById(R.id.user_email);
 
-        // Get user UID from Firebase or backup authentication
-        String userUid = AuthStateManager.getUserUid(this);
+        // Get user UID from cache
+        String userUid = cachedUserUid;
 
         if (userUid != null) {
             DatabaseReference getReference = udb.child(userUid);
@@ -205,10 +211,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         if (id == R.id.nav_my_profile) {
             Intent profileIntent = new Intent(getApplicationContext(), ProfileActivity.class);
-            // Get user UID from Firebase or backup authentication
-            String userUid = AuthStateManager.getUserUid(this);
-            if (userUid != null) {
-                profileIntent.putExtra("uid", userUid);
+            // Use cached user UID
+            if (cachedUserUid != null) {
+                profileIntent.putExtra("uid", cachedUserUid);
                 startActivity(profileIntent);
             }
         } else if (id == R.id.nav_settings) {
