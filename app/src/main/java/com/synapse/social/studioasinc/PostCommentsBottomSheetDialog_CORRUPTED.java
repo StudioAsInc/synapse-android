@@ -64,6 +64,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.Query;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.synapse.social.studioasinc.util.AuthStateManager;
 
 import java.io.*;
 import java.text.*;
@@ -132,6 +133,12 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 		private Handler handler;
 		
 		private HashMap<String, Object> UserInfoCacheMap = new HashMap<>();
+		
+		// Helper method to get current user UID safely
+		private String getCurrentUserUid() {
+			return AuthStateManager.getCurrentUserUidSafely(getContext());
+		}
+		
 		private HashMap<String, Object> postCommentLikeCountCache = new HashMap<>();
 		private HashMap<String, Object> sendCommentMap = new HashMap<>();
 		
@@ -306,7 +313,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 												cc = Calendar.getInstance();
 												sendCommentMap = new HashMap<>();
 												pushKey = main.push().getKey();
-												sendCommentMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+												sendCommentMap.put("uid", getCurrentUserUid());
 												sendCommentMap.put("comment", comment_send_input.getText().toString());
 												sendCommentMap.put("push_time", String.valueOf((long)(cc.getTimeInMillis())));
 												sendCommentMap.put("key", pushKey);
@@ -320,7 +327,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 												cc = Calendar.getInstance();
 												sendCommentMap = new HashMap<>();
 												pushKey = main.push().getKey();
-												sendCommentMap.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+												sendCommentMap.put("uid", getCurrentUserUid());
 												sendCommentMap.put("comment", comment_send_input.getText().toString());
 												sendCommentMap.put("push_time", String.valueOf((long)(cc.getTimeInMillis())));
 												sendCommentMap.put("key", pushKey);
@@ -452,13 +459,10 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 		}
 
 		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
-			FirebaseUser currentUser = FirebaseAuth.getIn		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
-			String currentUid = AuthStateManager.getCurrentUserUidSafely(getContext());
-			if (currentUid == null) {
-				return;
-			}
+			FirebaseUser currentUser = FirebaseAu		}
 
-			FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("username").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
+			String currentUid = AuthStateManager.getCurrentUserUidSafely(getContext());ld("username").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
 				@Override
 				public void onSuccess(DataSnapshot dataSnapshot) {
 					String senderName = dataSnapshot.getValue(String.class);
@@ -477,15 +481,20 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 					);
 				}
 			});
+		}			NotificationHelper.sendNotification(
+					commentAuthorUid,
+					currentUid,
+					message,
+					NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_COMMENT,
+					data
+					);
+				}
+			});
 		}
-		
+
 		public void getMyUserData(String uid) {
-			DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
-			getUserDetails.addListenerForSingleValueEvent(new ValueEventListener() {
-						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-								if(dataSnapshot.exists()) {
-										if (!dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+				DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
+				getUserDetails.addListenerForSingleValueEvent(new ValueEventListener() { (!dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
 												Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profile_image_x);
 										} else {
 												profile_image_x.setImageResource(R.drawable.avatar);
@@ -572,7 +581,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						
 						DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
 						DatabaseReference getCommentsRef = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(key);
-						DatabaseReference checkCommentLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+						DatabaseReference checkCommentLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key).child(getCurrentUserUid());
 						DatabaseReference getCommentsLikeCount = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key);
 						DatabaseReference commentCheckPublisherLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key).child(postPublisherUID);
 						
@@ -717,7 +726,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						body.setOnLongClickListener(new View.OnLongClickListener() {
 								@Override
 								public boolean onLongClick(View v) {
-										if (commentUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+										if (commentUid.equals(getCurrentUserUid())) {
 												PopupMenu popup = new PopupMenu(getContext(), more);
 												popup.getMenu().add("Edit");
 												popup.getMenu().add("Delete");
@@ -1041,7 +1050,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		currentLikes--;
 																		postCommentLikeCountCache.put(key, String.valueOf(currentLikes));
 																		_setCommentLikeCount(like_count, currentLikes);
-																		if (postPublisherUID.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+																		if (postPublisherUID.equals(getCurrentUserUid())) {
 																				ObjectAnimator setGoneAlphaAnim = new ObjectAnimator();
 																				setGoneAlphaAnim.addListener(new Animator.AnimatorListener() {
 																						@Override
@@ -1068,12 +1077,12 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		}
 																		like_unlike_ic.setImageResource(R.drawable.post_icons_1_1);
 																} else {
-																		getCommentsLikeCount.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+																		getCommentsLikeCount.child(getCurrentUserUid()).setValue(getCurrentUserUid());
 																		_sendCommentLikeNotification(key, uid);
 																		currentLikes++;
 																		postCommentLikeCountCache.put(key, String.valueOf(currentLikes));
 																		_setCommentLikeCount(like_count, currentLikes);
-																		if (postPublisherUID.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+																		if (postPublisherUID.equals(getCurrentUserUid())) {
 																				ObjectAnimator setVisibleAlphaAnim = new ObjectAnimator();
 																				setVisibleAlphaAnim.addListener(new Animator.AnimatorListener() {
 																						@Override
@@ -1185,7 +1194,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						
 						DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
 						DatabaseReference getCommentsRef = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-replies").child(postKey).child(replyKey).child(key);
-						DatabaseReference checkCommentLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-replies-like").child(postKey).child(key).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+						DatabaseReference checkCommentLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-replies-like").child(postKey).child(key).child(getCurrentUserUid());
 						DatabaseReference getCommentsLikeCount = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-replies-like").child(postKey).child(key);
 						DatabaseReference commentCheckPublisherLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-replies-like").child(postKey).child(key).child(postPublisherUID);
 						
@@ -1507,7 +1516,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		currentLikes--;
 																		postCommentLikeCountCache.put(key, String.valueOf(currentLikes));
 																		_setCommentLikeCount(like_count, currentLikes);
-																		if (postPublisherUID.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+																		if (postPublisherUID.equals(getCurrentUserUid())) {
 																				ObjectAnimator setGoneAlphaAnim = new ObjectAnimator();
 																				setGoneAlphaAnim.addListener(new Animator.AnimatorListener() {
 																						@Override
@@ -1534,11 +1543,11 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		}
 																		like_unlike_ic.setImageResource(R.drawable.post_icons_1_1);
 																} else {
-																		getCommentsLikeCount.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
+																		getCommentsLikeCount.child(getCurrentUserUid()).setValue(getCurrentUserUid());
 																		currentLikes++;
 																		postCommentLikeCountCache.put(key, String.valueOf(currentLikes));
 																		_setCommentLikeCount(like_count, currentLikes);
-																		if (postPublisherUID.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+																		if (postPublisherUID.equals(getCurrentUserUid())) {
 																				ObjectAnimator setVisibleAlphaAnim = new ObjectAnimator();
 																				setVisibleAlphaAnim.addListener(new Animator.AnimatorListener() {
 																						@Override
