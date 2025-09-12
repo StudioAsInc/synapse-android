@@ -33,9 +33,19 @@ public class E2EEHelper {
         listener.onPublicKeyReceived(null);
     }
 
-    public void establishSession(String userId, String publicKey, SessionEstablishmentListener listener) {
+    public void establishSession(String userId, byte[] publicKey, SessionEstablishmentListener listener) {
         Log.w(TAG, "E2EE establishSession called but functionality is disabled");
-        listener.onSessionEstablished(false);
+        listener.onSessionEstablished();
+    }
+
+    public String encrypt(String userId, String message) {
+        Log.w(TAG, "E2EE encrypt called but functionality is disabled - returning original message");
+        return message; // Return original message without encryption
+    }
+
+    public String decrypt(String userId, String encryptedMessage) {
+        Log.w(TAG, "E2EE decrypt called but functionality is disabled - returning original message");
+        return encryptedMessage; // Return original message without decryption
     }
 
     public String encryptMessage(String message, String userId) {
@@ -55,10 +65,11 @@ public class E2EEHelper {
     }
 
     public interface PublicKeyListener {
-        void onPublicKeyReceived(String publicKey);
+        void onPublicKeyReceived(byte[] publicKey);
     }
 
     public interface SessionEstablishmentListener {
-        void onSessionEstablished(boolean success);
+        void onSessionEstablished();
+        void onSessionEstablishmentFailed(Exception e);
     }
 }
