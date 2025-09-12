@@ -889,23 +889,43 @@ public class HomeFragment extends Fragment {
                 });
             }
 
-            DatabaseReference getLikeCheck = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
             DatabaseReference getCommentsCount = _firebase.getReference("skyline/posts-comments").child(_data.get(_position).get("key").toString());
             DatabaseReference getLikesCount = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString());
-            DatabaseReference getFavoriteCheck = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position).get("key").toString());
 
-            getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if(dataSnapshot.exists()) {
-                        likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
-                    } else {
-                        likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                DatabaseReference getLikeCheck = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(currentUser.getUid());
+                getLikeCheck.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.exists()) {
+                            likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
+                        } else {
+                            likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
+                        }
                     }
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {}
-            });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {}
+                });
+
+                DatabaseReference getFavoriteCheck = _firebase.getReference("skyline/favorite-posts").child(currentUser.getUid()).child(_data.get(_position).get("key").toString());
+                getFavoriteCheck.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.exists()) {
+                            favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
+                        } else {
+                            favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {}
+                });
+            } else {
+                likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
+                favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
+            }
+
             getCommentsCount.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -924,43 +944,36 @@ public class HomeFragment extends Fragment {
                 @Override
                 public void onCancelled(DatabaseError databaseError) {}
             });
-            getFavoriteCheck.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if(dataSnapshot.exists()) {
-                        favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
-                    } else {
-                        favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
-                    }
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {}
-            });
 
             likeButton.setOnClickListener(_view1 -> {
-                DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.exists()) {
-                            likeRef.removeValue();
-                            double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
-                            postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes - 1)));
-                            _setCount(likeButtonCount, currentLikes - 1);
-                            likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
-                        } else {
-                            likeRef.setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                            com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get(_position).get("key").toString(), _data.get(_position).get("uid").toString());
-                            double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
-                            postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
-                            _setCount(likeButtonCount, currentLikes + 1);
-                            likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null) {
+                    DatabaseReference likeRef = _firebase.getReference("skyline/posts-likes").child(_data.get(_position).get("key").toString()).child(user.getUid());
+                    likeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if(dataSnapshot.exists()) {
+                                likeRef.removeValue();
+                                double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
+                                postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes - 1)));
+                                _setCount(likeButtonCount, currentLikes - 1);
+                                likeButtonIc.setImageResource(R.drawable.post_icons_1_1);
+                            } else {
+                                likeRef.setValue(user.getUid());
+                                com.synapse.social.studioasinc.util.NotificationUtils.sendPostLikeNotification(_data.get(_position).get("key").toString(), _data.get(_position).get("uid").toString());
+                                double currentLikes = Double.parseDouble(postLikeCountCache.get(_data.get(_position).get("key").toString()).toString());
+                                postLikeCountCache.put(_data.get(_position).get("key").toString(), String.valueOf((long)(currentLikes + 1)));
+                                _setCount(likeButtonCount, currentLikes + 1);
+                                likeButtonIc.setImageResource(R.drawable.post_icons_1_2);
+                            }
                         }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {}
-                });
-                vbr.vibrate((long)(24));
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {}
+                    });
+                    vbr.vibrate((long)(24));
+                } else {
+                    Toast.makeText(getContext(), "Please log in to like posts", Toast.LENGTH_SHORT).show();
+                }
             });
             commentsButton.setOnClickListener(_view1 -> {
                 Bundle sendPostKey = new Bundle();
@@ -977,22 +990,27 @@ public class HomeFragment extends Fragment {
                 startActivity(intent);
             });
             favoritePostButton.setOnClickListener(_view1 -> {
-                DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get(_position).get("key").toString());
-                favoriteRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.exists()) {
-                            favoriteRef.removeValue();
-                            favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
-                        } else {
-                            favoriteRef.setValue(_data.get(_position).get("key").toString());
-                            favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null) {
+                    DatabaseReference favoriteRef = _firebase.getReference("skyline/favorite-posts").child(user.getUid()).child(_data.get(_position).get("key").toString());
+                    favoriteRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if(dataSnapshot.exists()) {
+                                favoriteRef.removeValue();
+                                favoritePostButton.setImageResource(R.drawable.add_favorite_post_ic);
+                            } else {
+                                favoriteRef.setValue(_data.get(_position).get("key").toString());
+                                favoritePostButton.setImageResource(R.drawable.delete_favorite_post_ic);
+                            }
                         }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {}
-                });
-                vbr.vibrate((long)(24));
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {}
+                    });
+                    vbr.vibrate((long)(24));
+                } else {
+                    Toast.makeText(getContext(), "Please log in to save posts", Toast.LENGTH_SHORT).show();
+                }
             });
             topMoreButton.setOnClickListener(_view1 -> {
                 Bundle sendPostKey = new Bundle();
