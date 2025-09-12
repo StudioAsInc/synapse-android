@@ -82,4 +82,20 @@ public final class AuthStateManager {
         FirebaseAuth.getInstance().signOut();
         clearAuthenticationState(context);
     }
+    
+    /**
+     * Safely get current user UID with fallback to backup authentication
+     * This method should be used instead of FirebaseAuth.getInstance().getCurrentUser().getUid()
+     * @param context Application context
+     * @return User UID or null if not authenticated
+     */
+    public static String getCurrentUserUidSafely(Context context) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            return currentUser.getUid();
+        }
+        
+        // Try to get UID from backup authentication
+        return getUserUid(context);
+    }
 }

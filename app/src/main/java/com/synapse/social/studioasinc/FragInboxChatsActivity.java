@@ -78,6 +78,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.appcompat.app.AppCompatDelegate;
 import com.bumptech.glide.Glide;
 import com.synapse.social.studioasinc.animations.ShimmerFrameLayout;
+import com.synapse.social.studioasinc.util.AuthStateManager;
 
 public class FragInboxChatsActivity extends Fragment {
 
@@ -327,7 +328,18 @@ public class FragInboxChatsActivity extends Fragment {
 		shimmer_view_container.startShimmer();
 		shimmer_view_container.setVisibility(View.VISIBLE);
 		inboxListRecyclerView.setVisibility(View.GONE);
-		Query getInboxRef = FirebaseDatabase.getInstance().getReference("skyline/inbox").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		
+		// Get current user UID safely
+		String userUid = AuthStateManager.getCurrentUserUidSafely(getContext());
+		if (userUid == null) {
+			// No authentication available, hide shimmer and show empty state
+			shimmer_view_container.stopShimmer();
+			shimmer_view_container.setVisibility(View.GONE);
+			inboxListRecyclerView.setVisibility(View.GONE);
+			return;
+		}
+		
+		Query getInboxRef = FirebaseDatabase.getInstance().getReference("skyline/inbox").child(userUid);
 		getInboxRef.addValueEventListener(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -421,7 +433,10 @@ public class FragInboxChatsActivity extends Fragment {
 				} else {
 					last_message.setText(_data.get((int)_position).get("last_message_text").toString());
 				}
-				if (_data.get((int)_position).get("last_message_uid").toString().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+				// Get current user UID safely
+				String currentUserUid = AuthStateManager.getCurrentUserUidSafely(getContext());
+				
+				if (currentUserUid != null && _data.get((int)_position).get("last_message_uid").toString().equals(currentUserUid)) {
 					if (_data.get((int)_position).get("last_message_state").toString().equals("sended")) {
 						message_state.setImageResource(R.drawable.icon_done_round);
                         message_state.setContentDescription("Message sent");
@@ -442,8 +457,12 @@ public class FragInboxChatsActivity extends Fragment {
 						mExecutorService.execute(new Runnable() {
 							@Override
 							public void run() {
-								Query getUnreadMessagesCount = FirebaseDatabase.getInstance().getReference("skyline/chats").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(_data.get((int)_position).get("uid").toString()).orderByChild("message_state").equalTo("sended");
-								getUnreadMessagesCount.addValueEventListener(new ValueEventListener() {
+								// Get current user UID safely
+								String currentUserUid = AuthStateManager.getCurrentUserUidSafely(getContext());
+								
+								if (currentUserUid != null) {
+									Query getUnreadMessagesCount = FirebaseDatabase.getInstance().getReference("skyline/chats").child(currentUserUid).child(_data.get((int)_position).get("uid").toString()).orderByChild("message_state").equalTo("sended");
+									getUnreadMessagesCount.addValueEventListener(new ValueEventListener() {
 									@Override
 									public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 										mMainHandler.post(new Runnable() {
@@ -473,6 +492,7 @@ public class FragInboxChatsActivity extends Fragment {
 										
 									}
 								});
+								}
 							}
 						});
 					}
