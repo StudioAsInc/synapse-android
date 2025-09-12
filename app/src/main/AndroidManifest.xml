@@ -20,6 +20,9 @@
 		android:usesCleartextTraffic="true"
 		android:theme="@style/AppTheme"
 		android:roundIcon="@mipmap/ic_launcher_round">
+		
+		<!-- Disable Firebase encrypted storage to prevent keystore failures -->
+		<meta-data android:name="firebase_auth_disable_encrypted_storage" android:value="true" />
 		<activity
 			android:name=".MainActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
