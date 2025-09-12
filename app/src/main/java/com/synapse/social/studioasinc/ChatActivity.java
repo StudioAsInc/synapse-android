@@ -246,26 +246,42 @@ public class ChatActivity extends AppCompatActivity {
 		setContentView(R.layout.chat);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
-		e2eeHelper = new E2EEHelper(this);
-
-		e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
-			@Override
-			public void onKeysInitialized() {
-				if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-				|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-					ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-				} else {
-					initializeLogic();
+		// Initialize E2EE helper with graceful error handling
+		try {
+			e2eeHelper = new E2EEHelper(this);
+			e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
+				@Override
+				public void onKeysInitialized() {
+					if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+					|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+						ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+					} else {
+						initializeLogic();
+					}
 				}
-			}
 
-			@Override
-			public void onKeyInitializationFailed(Exception e) {
-				Log.e(TAG, "Failed to initialize encryption keys", e);
-				Toast.makeText(ChatActivity.this, "Error: Could not initialize secure chat.", Toast.LENGTH_SHORT).show();
-				finish();
+				@Override
+				public void onKeyInitializationFailed(Exception e) {
+					Log.w(TAG, "E2EE initialization failed, continuing without encryption", e);
+					// Continue without encryption instead of crashing
+					if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+					|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+						ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+					} else {
+						initializeLogic();
+					}
+				}
+			});
+		} catch (Exception e) {
+			Log.w(TAG, "E2EE helper creation failed, continuing without encryption", e);
+			// Continue without encryption
+			if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+			|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+				ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+			} else {
+				initializeLogic();
 			}
-		});
+		}
 	}
 
 	@Override

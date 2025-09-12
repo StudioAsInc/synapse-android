@@ -729,7 +729,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						body.setOnLongClickListener(new View.OnLongClickListener() {
 								@Override
 								public boolean onLongClick(View v) {
-										FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 										if (currentUser != null && commentUid.equals(currentUser.getUid())) {
 												PopupMenu popup = new PopupMenu(getContext(), more);
 												popup.getMenu().add("Edit");
@@ -1054,7 +1053,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		currentLikes--;
 																		postCommentLikeCountCache.put(key, String.valueOf(currentLikes));
 																		_setCommentLikeCount(like_count, currentLikes);
-																		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 																		if (currentUser != null && postPublisherUID.equals(currentUser.getUid())) {
 																				ObjectAnimator setGoneAlphaAnim = new ObjectAnimator();
 																				setGoneAlphaAnim.addListener(new Animator.AnimatorListener() {
@@ -1082,7 +1080,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		}
 																		like_unlike_ic.setImageResource(R.drawable.post_icons_1_1);
 																} else {
-																		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 																		if (currentUser != null) {
 																			getCommentsLikeCount.child(currentUser.getUid()).setValue(currentUser.getUid());
 																		}
@@ -1090,7 +1087,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		currentLikes++;
 																		postCommentLikeCountCache.put(key, String.valueOf(currentLikes));
 																		_setCommentLikeCount(like_count, currentLikes);
-																		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 																		if (currentUser != null && postPublisherUID.equals(currentUser.getUid())) {
 																				ObjectAnimator setVisibleAlphaAnim = new ObjectAnimator();
 																				setVisibleAlphaAnim.addListener(new Animator.AnimatorListener() {
@@ -1527,7 +1523,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		currentLikes--;
 																		postCommentLikeCountCache.put(key, String.valueOf(currentLikes));
 																		_setCommentLikeCount(like_count, currentLikes);
-																		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 																		if (currentUser != null && postPublisherUID.equals(currentUser.getUid())) {
 																				ObjectAnimator setGoneAlphaAnim = new ObjectAnimator();
 																				setGoneAlphaAnim.addListener(new Animator.AnimatorListener() {
@@ -1555,14 +1550,12 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 																		}
 																		like_unlike_ic.setImageResource(R.drawable.post_icons_1_1);
 																} else {
-																		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 																		if (currentUser != null) {
 																			getCommentsLikeCount.child(currentUser.getUid()).setValue(currentUser.getUid());
 																		}
 																		currentLikes++;
 																		postCommentLikeCountCache.put(key, String.valueOf(currentLikes));
 																		_setCommentLikeCount(like_count, currentLikes);
-																		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 																		if (currentUser != null && postPublisherUID.equals(currentUser.getUid())) {
 																				ObjectAnimator setVisibleAlphaAnim = new ObjectAnimator();
 																				setVisibleAlphaAnim.addListener(new Animator.AnimatorListener() {
