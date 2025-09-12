@@ -1,0 +1,210 @@
+================================================================================
+ANDROID PROJECT REFACTORING REPORT
+================================================================================
+
+📁 FILE RENAMES:
+----------------------------------------
+• synapse_dialog.xml → dialog_synapse_dialog.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• update_dialog.xml → dialog_update_dialog.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• profile_cover_image_history_add_dialog.xml → dialog_profile_cover_image_history_add_dialog.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• story_item.xml → item_story_item.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• bottomsheet_post_settings.xml → bottom_sheet_bottomsheet_post_settings.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• error_dialog.xml → dialog_error_dialog.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• synapse_dialog_bg_view.xml → dialog_synapse_dialog_bg_view.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• notification_item.xml → item_notification_item.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• add_image_from_url_dialog.xml → dialog_add_image_from_url_dialog.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• cv_item_wallpapers.xml → item_cv_item_wallpapers.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• inbox_item_placeholder.xml → item_inbox_item_placeholder.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• delete_chat_c_dialog.xml → dialog_delete_chat_c_dialog.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• banned_dialog.xml → dialog_banned_dialog.xml
+  Type: layout
+  Reason: Follow Android layout naming convention
+
+• UserProfileMoreBottomSheet.java → UserProfileMoreBottomSheetFragment.java
+  Type: java/kotlin
+  Reason: Follow Android class naming convention
+
+• PostCommentsBottomSheetDialog.java → PostCommentsBottomSheetDialogFragment.java
+  Type: java/kotlin
+  Reason: Follow Android class naming convention
+
+• PostMoreBottomSheetDialog.java → PostMoreBottomSheetDialogFragment.java
+  Type: java/kotlin
+  Reason: Follow Android class naming convention
+
+• rounded_corner_background.xml → bg_rounded_corner_background.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• gradient_overlay_top.xml → bg_gradient_overlay_top.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• auto_delete_24px.xml → ic_auto_delete_24px.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• credit_card_heart_24px.xml → ic_credit_card_heart_24px.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• circular_background_black_alpha.xml → bg_circular_background_black_alpha.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• edittext_background.xml → ic_edittext_background.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• user_status_background.xml → bg_user_status_background.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• image_placeholder_background.xml → bg_image_placeholder_background.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• drag_handle_shape.xml → bg_drag_handle_shape.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• rounded_background.xml → bg_rounded_background.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• inbox_item_background.xml → bg_inbox_item_background.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• circle_background_dark.xml → bg_circle_background_dark.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• circular_background_primary.xml → bg_circular_background_primary.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• bottom_sheet_background.xml → bg_bottom_sheet_background.xml
+  Type: drawable
+  Reason: Follow Android drawable naming convention
+
+• drawer_menu.xml → menu_drawer_menu.xml
+  Type: menu
+  Reason: Follow Android menu naming convention
+
+• bottom_navigation_menu.xml → menu_bottom_navigation_menu.xml
+  Type: menu
+  Reason: Follow Android menu naming convention
+
+• top_app_bar_menu.xml → menu_top_app_bar_menu.xml
+  Type: menu
+  Reason: Follow Android menu naming convention
+
+🔗 REFERENCE UPDATES:
+----------------------------------------
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/CompleteProfileActivity.java:
+  Line 634: R.layout.synapse_dialog → R.layout.dialog_synapse_dialog
+  Line 669: R.layout.synapse_dialog → R.layout.dialog_synapse_dialog
+  Line 634: R.layout.synapse_dialog_bg_view → R.layout.dialog_synapse_dialog_bg_view
+  Line 669: R.layout.synapse_dialog_bg_view → R.layout.dialog_synapse_dialog_bg_view
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/ProfileCoverPhotoHistoryActivity.java:
+  Line 591: R.layout.synapse_dialog → R.layout.dialog_synapse_dialog
+  Line 512: R.layout.profile_cover_image_history_add_dialog → R.layout.dialog_profile_cover_image_history_add_dialog
+  Line 591: R.layout.synapse_dialog_bg_view → R.layout.dialog_synapse_dialog_bg_view
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/ProfilePhotoHistoryActivity.java:
+  Line 515: R.layout.synapse_dialog → R.layout.dialog_synapse_dialog
+  Line 515: R.layout.synapse_dialog_bg_view → R.layout.dialog_synapse_dialog_bg_view
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/PostMoreBottomSheetDialog.java:
+  Line 267: R.layout.synapse_dialog → R.layout.dialog_synapse_dialog
+  Line 267: R.layout.synapse_dialog_bg_view → R.layout.dialog_synapse_dialog_bg_view
+  Line 71: PostMoreBottomSheetDialog → PostMoreBottomSheetDialogFragment
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/util/UpdateManager.java:
+  Line 126: R.layout.update_dialog → R.layout.dialog_update_dialog
+  Line 181: R.layout.error_dialog → R.layout.dialog_error_dialog
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/StoryViewerActivity.java:
+  Line 147: R.layout.story_item → R.layout.item_story_item
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/EditPostActivity.java:
+  Line 425: R.layout.bottomsheet_post_settings → R.layout.bottom_sheet_bottomsheet_post_settings
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/CreatePostActivity.java:
+  Line 473: R.layout.bottomsheet_post_settings → R.layout.bottom_sheet_bottomsheet_post_settings
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/adapter/NotificationAdapter.java:
+  Line 27: R.layout.notification_item → R.layout.item_notification_item
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/BgWallpapersActivity.java:
+  Line 156: R.layout.cv_item_wallpapers → R.layout.item_cv_item_wallpapers
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/UserProfileMoreBottomSheet.java:
+  Line 69: UserProfileMoreBottomSheet → UserProfileMoreBottomSheetFragment
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/PostCommentsBottomSheetDialog.java:
+  Line 81: PostCommentsBottomSheetDialog → PostCommentsBottomSheetDialogFragment
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/ProfileActivity.java:
+  Line 1665: PostCommentsBottomSheetDialog → PostCommentsBottomSheetDialogFragment
+  Line 1709: PostMoreBottomSheetDialog → PostMoreBottomSheetDialogFragment
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/LineVideosRecyclerViewAdapter.java:
+  Line 346: PostCommentsBottomSheetDialog → PostCommentsBottomSheetDialogFragment
+
+📄 /workspace/app/src/main/java/com/synapse/social/studioasinc/fragments/HomeFragment.java:
+  Line 72: PostCommentsBottomSheetDialog → PostCommentsBottomSheetDialogFragment
+  Line 983: PostCommentsBottomSheetDialog → PostCommentsBottomSheetDialogFragment
+  Line 73: PostMoreBottomSheetDialog → PostMoreBottomSheetDialogFragment
+  Line 1028: PostMoreBottomSheetDialog → PostMoreBottomSheetDialogFragment
+
+📊 STATISTICS:
+----------------------------------------
+Total files renamed: 33
+Total references updated: 28
+
+Breakdown by file type:
+  layout: 13 files
+  java/kotlin: 3 files
+  drawable: 14 files
+  menu: 3 files
+
+================================================================================
