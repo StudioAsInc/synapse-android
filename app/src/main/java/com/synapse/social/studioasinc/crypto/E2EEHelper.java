@@ -66,6 +66,7 @@ public class E2EEHelper {
 
     public interface PublicKeyListener {
         void onPublicKeyReceived(byte[] publicKey);
+        void onPublicKeyFailed(Exception e);
     }
 
     public interface SessionEstablishmentListener {
