@@ -1,5 +1,6 @@
 package com.synapse.social.studioasinc;
 
+import com.synapse.social.studioasinc.util.AuthStateManager;
 import android.Manifest;
 import android.animation.*;
 import android.app.*;
@@ -798,6 +799,9 @@ public class CompleteProfileActivity extends AppCompatActivity {
 
 					// Login to OneSignal
 					OneSignalManager.loginUser(currentUser.getUid());
+
+					// Save authentication state to SharedPreferences as backup
+					AuthStateManager.saveAuthenticationState(CompleteProfileActivity.this, currentUser.getUid());
 
 					E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
 					e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {

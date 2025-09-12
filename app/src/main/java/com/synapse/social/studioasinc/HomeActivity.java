@@ -28,6 +28,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.adapter.ViewPagerAdapter;
+import com.synapse.social.studioasinc.util.AuthStateManager;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -45,12 +46,19 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private ImageView navSearchIc;
     private ImageView navInboxIc;
     private View topBar;
+    
+    // Cache user UID to avoid redundant lookups
+    private String cachedUserUid;
 
     @Override
     protected void onCreate(Bundle _savedInstanceState) {
         super.onCreate(_savedInstanceState);
         setContentView(R.layout.home);
         FirebaseApp.initializeApp(this);
+        
+        // Cache user UID once at startup
+        cachedUserUid = AuthStateManager.getUserUid(this);
+        
         initialize();
         initializeLogic();
     }
@@ -58,8 +66,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onStart() {
         super.onStart();
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            PresenceManager.setActivity(FirebaseAuth.getInstance().getCurrentUser().getUid(), "In Home");
+        if (cachedUserUid != null) {
+            PresenceManager.setActivity(cachedUserUid, "In Home");
         }
     }
 
@@ -86,8 +94,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void initializeLogic() {
-        if (auth.getCurrentUser() == null) {
-            // User is not signed in, redirect to AuthActivity
+        if (!AuthStateManager.isUserAuthenticated(this)) {
+            // User is not signed in and no backup authentication, redirect to AuthActivity
             Intent intent = new Intent(HomeActivity.this, AuthActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -164,32 +172,37 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         android.widget.TextView userName = headerView.findViewById(R.id.user_name);
         android.widget.TextView userEmail = headerView.findViewById(R.id.user_email);
 
-        DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-        getReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()) {
-                    if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-                        Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profileImage);
-                    } else {
-                        profileImage.setImageResource(R.drawable.ic_account_circle_48px);
-                    }
-                    if (dataSnapshot.child("cover").getValue(String.class) != null && !dataSnapshot.child("cover").getValue(String.class).equals("null")) {
-                        Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("cover").getValue(String.class))).into(coverImage);
-                    }
-                    if (dataSnapshot.child("name").getValue(String.class) != null) {
-                        userName.setText(dataSnapshot.child("name").getValue(String.class));
-                    }
-                    if (dataSnapshot.child("email").getValue(String.class) != null) {
-                        userEmail.setText(dataSnapshot.child("email").getValue(String.class));
+        // Get user UID from cache
+        String userUid = cachedUserUid;
+
+        if (userUid != null) {
+            DatabaseReference getReference = udb.child(userUid);
+            getReference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if(dataSnapshot.exists()) {
+                        if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+                            Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profileImage);
+                        } else {
+                            profileImage.setImageResource(R.drawable.ic_account_circle_48px);
+                        }
+                        if (dataSnapshot.child("cover").getValue(String.class) != null && !dataSnapshot.child("cover").getValue(String.class).equals("null")) {
+                            Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("cover").getValue(String.class))).into(coverImage);
+                        }
+                        if (dataSnapshot.child("username").getValue(String.class) != null) {
+                            userName.setText(dataSnapshot.child("username").getValue(String.class));
+                        }
+                        if (dataSnapshot.child("email").getValue(String.class) != null) {
+                            userEmail.setText(dataSnapshot.child("email").getValue(String.class));
+                        }
                     }
                 }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle error
-            }
-        });
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    // Handle error
+                }
+            });
+        }
     }
 
     @Override
@@ -198,8 +211,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         if (id == R.id.nav_my_profile) {
             Intent profileIntent = new Intent(getApplicationContext(), ProfileActivity.class);
-            profileIntent.putExtra("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-            startActivity(profileIntent);
+            // Use cached user UID
+            if (cachedUserUid != null) {
+                profileIntent.putExtra("uid", cachedUserUid);
+                startActivity(profileIntent);
+            }
         } else if (id == R.id.nav_settings) {
             Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
             startActivity(settingsIntent);
@@ -207,7 +223,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Intent callsIntent = new Intent(getApplicationContext(), CallActivity.class);
             startActivity(callsIntent);
         } else if (id == R.id.nav_logout) {
-            FirebaseAuth.getInstance().signOut();
+            AuthStateManager.signOut(this);
             Intent logoutIntent = new Intent(HomeActivity.this, AuthActivity.class);
             logoutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(logoutIntent);
