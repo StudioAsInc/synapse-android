@@ -208,6 +208,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(callsIntent);
         } else if (id == R.id.nav_logout) {
             FirebaseAuth.getInstance().signOut();
+            // Clear the session
+            getSharedPreferences("session", MODE_PRIVATE).edit().remove("uid").apply();
             Intent logoutIntent = new Intent(HomeActivity.this, AuthActivity.class);
             logoutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(logoutIntent);

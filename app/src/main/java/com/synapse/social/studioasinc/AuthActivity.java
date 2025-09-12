@@ -286,6 +286,9 @@ public class AuthActivity extends AppCompatActivity {
         aiNameTextView.setFadeDuration(150L);
         aiNameTextView.startTyping("Creating your account...");
 
+        // Save the session
+        getSharedPreferences("session", MODE_PRIVATE).edit().putString("uid", fauth.getCurrentUser().getUid()).apply();
+
         Intent intent = new Intent(AuthActivity.this, CompleteProfileActivity.class);
         startActivity(intent);
         finish();
@@ -337,6 +340,9 @@ public class AuthActivity extends AppCompatActivity {
                 } else {
                     showWelcomeMessage("I recognize you! Let's go...");
                 }
+
+                // Save the session
+                getSharedPreferences("session", MODE_PRIVATE).edit().putString("uid", uid).apply();
 
                 // Login to OneSignal
                 OneSignalManager.loginUser(uid);

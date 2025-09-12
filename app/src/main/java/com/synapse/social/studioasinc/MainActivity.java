@@ -293,52 +293,44 @@ public class MainActivity extends AppCompatActivity {
 	// Helper method to encapsulate the delayed auth check logic
 	public void proceedToAuthCheck() {
 		new Handler(Looper.getMainLooper()).postDelayed(() -> {
-			FirebaseAuth auth = FirebaseAuth.getInstance();
-			FirebaseUser currentUser = auth.getCurrentUser();
+			// Use manual session management to bypass the crashing encrypted storage
+			String uid = getSharedPreferences("session", MODE_PRIVATE).getString("uid", null);
 			
-			if (currentUser != null) {
-				// User is logged in, verify the user is still valid
-				currentUser.reload().addOnCompleteListener(task -> {
-					if (task.isSuccessful()) {
-						// User is still valid, check ban status
-						DatabaseReference userRef = FirebaseDatabase.getInstance()
-								.getReference("skyline/users")
-								.child(currentUser.getUid());
+			if (uid != null) {
+				// User was logged in before. Now, let's check their status.
+				DatabaseReference userRef = FirebaseDatabase.getInstance()
+						.getReference("skyline/users")
+						.child(uid);
 
-						userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-							@Override
-							public void onDataChange(@NonNull DataSnapshot snapshot) {
-								if (snapshot.exists()) {
-									String banned = snapshot.child("banned").getValue(String.class);
-									if ("false".equals(banned)) {
-										// Not banned, redirect to HomeActivity
-										startActivity(new Intent(MainActivity.this, HomeActivity.class));
-										finish();
-									} else {
-										// Banned, show toast and sign out
-										Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
-										auth.signOut();
-										finish();
-									}
-								} else {
-									// User data not found (maybe first login, or incomplete profile)
-									// This path leads to CompleteProfileActivity
-									startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
-									finish();
-								}
-							}
-
-							@Override
-							public void onCancelled(@NonNull DatabaseError error) {
-								Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-								// Handle database error, redirect to AuthActivity
-								startActivity(new Intent(MainActivity.this, AuthActivity.class));
+				userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+					@Override
+					public void onDataChange(@NonNull DataSnapshot snapshot) {
+						if (snapshot.exists()) {
+							String banned = snapshot.child("banned").getValue(String.class);
+							if ("false".equals(banned)) {
+								// Not banned, redirect to HomeActivity
+								startActivity(new Intent(MainActivity.this, HomeActivity.class));
+								finish();
+							} else {
+								// Banned, show toast and sign out
+								Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
+								// Also clear the manual session
+								getSharedPreferences("session", MODE_PRIVATE).edit().remove("uid").apply();
+								FirebaseAuth.getInstance().signOut();
 								finish();
 							}
-						});
-					} else {
-						// User token is invalid, redirect to AuthActivity
-						auth.signOut();
+						} else {
+							// User data not found (maybe first login, or incomplete profile)
+							// This path leads to CompleteProfileActivity
+							startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
+							finish();
+						}
+					}
+
+					@Override
+					public void onCancelled(@NonNull DatabaseError error) {
+						Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+						// Handle database error, redirect to AuthActivity
 						startActivity(new Intent(MainActivity.this, AuthActivity.class));
 						finish();
 					}
