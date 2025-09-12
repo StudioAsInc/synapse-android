@@ -459,13 +459,10 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 		}
 
 		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
-			FirebaseUser currentUser = FirebaseAuth.getI		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
-			String currentUid = AuthStateManager.getCurrentUserUidSafely(getContext());
-			if (currentUid == null) {
-				return;
-			}
+			FirebaseUser currentUser = FirebaseAu		}
 
-			FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("username").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
+			String currentUid = AuthStateManager.getCurrentUserUidSafely(getContext());ld("username").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
 				@Override
 				public void onSuccess(DataSnapshot dataSnapshot) {
 					String senderName = dataSnapshot.getValue(String.class);
@@ -484,15 +481,20 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 					);
 				}
 			});
+		}			NotificationHelper.sendNotification(
+					commentAuthorUid,
+					currentUid,
+					message,
+					NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_COMMENT,
+					data
+					);
+				}
+			});
 		}
-		
+
 		public void getMyUserData(String uid) {
 				DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
-				getUserDetails.addListenerForSingleValueEvent(new ValueEventListener() {
-						@Override
-						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-								if(dataSnapshot.exists()) {
-										if (!dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+				getUserDetails.addListenerForSingleValueEvent(new ValueEventListener() { (!dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
 												Glide.with(getContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profile_image_x);
 										} else {
 												profile_image_x.setImageResource(R.drawable.avatar);
