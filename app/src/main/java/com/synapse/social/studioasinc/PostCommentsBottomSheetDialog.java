@@ -339,7 +339,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						}
 				});
 				
-				getMyUserData(AuthStateManager.getCurrentUserUidSafely(getContext()));
+				getMyUserData(FirebaseAuth.getInstance().getCurrentUser().getUid());
 				body.setLayoutParams(params);
 				dialogStyles();
 				
@@ -347,10 +347,11 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 		}
 		
 		private void _sendCommentNotification(boolean isReply, String commentKey) {
-			String currentUid = AuthStateManager.getCurrentUserUidSafely(getContext());
-			if (currentUid == null) {
+			FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+			if (currentUser == null) {
 				return;
 			}
+			String currentUid = currentUser.getUid();
 
 			Task<DataSnapshot> senderNameTask = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("username").get();
 
@@ -453,13 +454,11 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 		}
 
 		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
-			FirebaseUser currentUser = FirebaseAuth.getIn		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
+			FirebaseUser currentUser = FirebaseAuth.getInstance(		private void _sendCommentLikeNotification(String commentKey, String commentAuthorUid) {
 			String currentUid = AuthStateManager.getCurrentUserUidSafely(getContext());
 			if (currentUid == null) {
 				return;
-			}
-
-			FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("username").get().addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+			}d.gms.tasks.OnSuccessListener<DataSnapshot>() {
 				@Override
 				public void onSuccess(DataSnapshot dataSnapshot) {
 					String senderName = dataSnapshot.getValue(String.class);
@@ -481,8 +480,8 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 		}
 		
 		public void getMyUserData(String uid) {
-			DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
-			getUserDetails.addListenerForSingleValueEvent(new ValueEventListener() {
+				DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
+				getUserDetails.addListenerForSingleValueEvent(new ValueEventListener() {
 						@Override
 						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 								if(dataSnapshot.exists()) {
@@ -554,15 +553,6 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 				public void onBindViewHolder(ViewHolder _holder, final int _position) {
 						View _view = _holder.itemView;
 
-						HashMap<String, Object> com				public void onBindViewHolder(ViewHolder _holder, final int _position) {
-						View _view = _holder.itemView;
-
-						// Get current user UID once at the beginning to avoid repeated calls
-						String currentUserUid = AuthStateManager.getCurrentUserUidSafely(getContext());
-						if (currentUserUid == null) {
-								return; // Skip if no authenticated user
-						}
-
 						HashMap<String, Object> commentData = _data.get(_position);
 						if (commentData == null) {
 								// Skip this item if the data is null
@@ -582,7 +572,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						
 						DatabaseReference getUserDetails = FirebaseDatabase.getInstance().getReference("skyline/users").child(uid);
 						DatabaseReference getCommentsRef = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(key);
-						DatabaseReference checkCommentLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key).child(currentUserUid);
+						DatabaseReference checkCommentLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 						DatabaseReference getCommentsLikeCount = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key);
 						DatabaseReference commentCheckPublisherLike = FirebaseDatabase.getInstance().getReference("skyline/posts-comments-like").child(postKey).child(key).child(postPublisherUID);
 						
@@ -727,7 +717,7 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 						body.setOnLongClickListener(new View.OnLongClickListener() {
 								@Override
 								public boolean onLongClick(View v) {
-										if (commentUid.equals(currentUserUid)) {
+										if (commentUid.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 												PopupMenu popup = new PopupMenu(getContext(), more);
 												popup.getMenu().add("Edit");
 												popup.getMenu().add("Delete");
