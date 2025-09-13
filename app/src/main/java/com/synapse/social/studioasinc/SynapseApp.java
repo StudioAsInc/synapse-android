@@ -88,6 +88,18 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
 
+        // Set up OneSignal user state change listener to handle Player ID updates
+        OneSignal.getUser().addObserver(state -> {
+            String currentUserId = state.getCurrent().getExternalId();
+            String playerId = state.getCurrent().getOnesignalId();
+            
+            if (currentUserId != null && !currentUserId.isEmpty() && playerId != null && !playerId.isEmpty()) {
+                // Update Player ID in Firebase when it changes
+                OneSignalManager.updatePlayerIdInFirebase(currentUserId);
+                android.util.Log.i("SynapseApp", "OneSignal user state changed - User: " + currentUserId + ", Player ID: " + playerId);
+            }
+        });
+
         // The IPushSubscriptionObserver has been removed.
         // User identification is now handled by calling OneSignalManager.loginUser(uid)
         // from AuthActivity and CompleteProfileActivity.

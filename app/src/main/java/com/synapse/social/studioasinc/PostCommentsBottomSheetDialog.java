@@ -376,20 +376,24 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 							data.put("postId", postKey);
 							data.put("commentId", commentKey);
 							NotificationHelper.sendNotification(
-							originalCommenterUid,
-							currentUid,
-							message,
-							NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
-							data
-							);
-						}
-					}
-				});
-				} else {
-				senderNameTask.addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+							originalCo							// Send notification with validation
+							try {
+								if (NotificationHelper.isNotificationSystemConfigured()) {
+									NotificationHelper.sendNotification(
+										originalCommenterUid,
+										currentUid,
+										message,
+										NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
+										data
+									);
+								} else {
+									Log.e("PostCommentsDialog", "Notification system not configured properly");
+								}
+							} catch (Exception e) {
+								Log.e("PostCommentsDialog", "Failed to send reply notification", e);
+							}dOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
 					@Override
-					public void onSuccess(DataSnapshot dataSnapshot) {
-						String senderName = dataSnapshot.getValue(String.class);
+					public void onSuccess(DataSnapshot dataSnapshot) {;
 						String message = senderName + " commented on your post";
 						HashMap<String, String> data = new HashMap<>();
 						data.put("postId", postKey);

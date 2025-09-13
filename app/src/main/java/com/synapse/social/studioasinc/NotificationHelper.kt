@@ -44,51 +44,98 @@ object NotificationHelper {
     ) {
         if (recipientUid == senderUid) {
             // Don't send notification to self
+            Log.d(TAG, "Skipping notification to self: $recipientUid")
             return
         }
 
+        if (recipientUid.isBlank() || senderUid.isBlank() || message.isBlank()) {
+            Log.w(TAG, "Invalid notification parameters: recipientUid=$recipientUid, senderUid=$senderUid, message=$message")
+            return
+        }
+
+        Log.d(TAG, "Attempting to send notification to $recipientUid from $senderUid")
+
         val userDb = FirebaseDatabase.getInstance().getReference("skyline/users")
-        userDb.child(recipientUid).child("oneSignalPlayerId").get().addOnSuccessListener {
-            val recipientOneSignalPlayerId = it.getValue(String::class.java)
-            if (recipientOneSignalPlayerId.isNullOrBlank()) {
-                Log.w(TAG, "Recipient OneSignal Player ID is blank. Cannot send notification.")
-                return@addOnSuccessListener
+        
+        // First, try to get the Player ID with retry mechanism
+        getPlayerIdWithRetry(userDb, recipientUid, 0) { playerId ->
+            if (playerId.isNullOrBlank()) {
+                Log.e(TAG, "Failed to get valid Player ID for recipient: $recipientUid after retries")
+                // Still save to database for later processing
+                saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
+                return@getPlayerIdWithRetry
             }
 
+            Log.d(TAG, "Got Player ID for $recipientUid: $playerId")
+
+            // Check recipient status (optional - can proceed without this)
             val recipientStatusRef = FirebaseDatabase.getInstance().getReference("/skyline/users/$recipientUid/status")
 
             recipientStatusRef.get().addOnSuccessListener { dataSnapshot ->
-            // Smart suppression logic removed as per user request.
-
-                if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                    sendClientSideNotification(
-                        recipientOneSignalPlayerId,
-                        message,
-                        senderUid,
-                        notificationType,
-                        data
-                    )
-                } else {
-                    sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
-                }
+                // Smart suppression logic removed as per user request.
+                sendNotificationWithPlayerId(playerId, message, senderUid, notificationType, data)
                 saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
             }.addOnFailureListener { e ->
                 Log.e(TAG, "Status check failed. Defaulting to send notification.", e)
-                if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                     sendClientSideNotification(
-                        recipientOneSignalPlayerId,
-                        message,
-                        senderUid,
-                        notificationType,
-                        data
-                    )
-                } else {
-                    sendServerSideNotification(recipientOneSignalPlayerId, message, notificationType, data)
-                }
+                // Still send notification even if status check fails
+                sendNotificationWithPlayerId(playerId, message, senderUid, notificationType, data)
                 saveNotificationToDatabase(recipientUid, senderUid, message, notificationType, data)
             }
-        }.addOnFailureListener {
-            Log.e(TAG, "Failed to get recipient's OneSignal Player ID.", it)
+        }
+    }
+
+    /**
+     * Gets Player ID with retry mechanism to handle cases where it's not immediately available.
+     */
+    private fun getPlayerIdWithRetry(
+        userDb: com.google.firebase.database.DatabaseReference,
+        recipientUid: String,
+        retryCount: Int,
+        callback: (String?) -> Unit
+    ) {
+        userDb.child(recipientUid).child("oneSignalPlayerId").get()
+            .addOnSuccessListener { snapshot ->
+                val playerId = snapshot.getValue(String::class.java)
+                if (!playerId.isNullOrBlank()) {
+                    callback(playerId)
+                } else if (retryCount < 2) {
+                    Log.w(TAG, "Player ID is blank for $recipientUid, retrying... (attempt ${retryCount + 1})")
+                    // Retry after delay
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        getPlayerIdWithRetry(userDb, recipientUid, retryCount + 1, callback)
+                    }, (retryCount + 1) * 1500L)
+                } else {
+                    Log.e(TAG, "Player ID is still blank after retries for $recipientUid")
+                    callback(null)
+                }
+            }
+            .addOnFailureListener { e ->
+                if (retryCount < 2) {
+                    Log.w(TAG, "Failed to get Player ID for $recipientUid, retrying... (attempt ${retryCount + 1})", e)
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        getPlayerIdWithRetry(userDb, recipientUid, retryCount + 1, callback)
+                    }, (retryCount + 1) * 1500L)
+                } else {
+                    Log.e(TAG, "Failed to get Player ID after retries for $recipientUid", e)
+                    callback(null)
+                }
+            }
+    }
+
+    /**
+     * Sends notification using the provided Player ID.
+     */
+    private fun sendNotificationWithPlayerId(
+        playerId: String,
+        message: String,
+        senderUid: String?,
+        notificationType: String,
+        data: Map<String, String>?
+    ) {
+        if (NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
+            sendClientSideNotification(playerId, message, senderUid, notificationType, data)
+        } else {
+            sendServerSideNotification(playerId, message, notificationType, data)
         }
     }
 
@@ -186,10 +233,26 @@ object NotificationHelper {
         notificationType: String,
         data: Map<String, String>? = null
     ) {
-        val client = OkHttpClient()
-        val jsonBody = JSONObject()
+        if (recipientPlayerId.isBlank()) {
+            Log.e(TAG, "Cannot send client-side notification: Player ID is blank")
+            return
+        }
 
-        Log.d(TAG, "Attempting to send notification with channel ID: ${NotificationConfig.NOTIFICATION_CHANNEL_ID}")
+        if (!NotificationConfig.isConfigurationValid()) {
+            Log.e(TAG, "OneSignal configuration is invalid. Cannot send client-side notification.")
+            return
+        }
+
+        Log.d(TAG, "Sending client-side notification to Player ID: $recipientPlayerId")
+        Log.d(TAG, "Notification type: $notificationType, Message: $message")
+
+        val client = OkHttpClient.Builder()
+            .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+        
+        val jsonBody = JSONObject()
         
         try {
             jsonBody.put("app_id", NotificationConfig.ONESIGNAL_APP_ID)
@@ -197,8 +260,14 @@ object NotificationHelper {
             jsonBody.put("include_player_ids", JSONArray().put(recipientPlayerId))
             jsonBody.put("contents", JSONObject().put("en", message))
             jsonBody.put("headings", JSONObject().put("en", NotificationConfig.getTitleForNotificationType(notificationType)))
-            jsonBody.put("subtitle", JSONObject().put("en", NotificationConfig.NOTIFICATION_SUBTITLE))
             
+            // Add subtitle only if it's not empty
+            val subtitle = NotificationConfig.NOTIFICATION_SUBTITLE
+            if (subtitle.isNotBlank()) {
+                jsonBody.put("subtitle", JSONObject().put("en", subtitle))
+            }
+            
+            // Add custom data for deep linking and notification handling
             if (NotificationConfig.ENABLE_DEEP_LINKING) {
                 val dataJson = JSONObject()
                 if (senderUid != null) {
@@ -211,13 +280,29 @@ object NotificationHelper {
                 jsonBody.put("data", dataJson)
             }
             
+            // Set notification priority
             jsonBody.put("priority", NotificationConfig.NOTIFICATION_PRIORITY)
-            // Only include android_channel_id if it looks like a valid OneSignal channel ID (UUID). Otherwise omit to avoid 400s
+            
+            // Add Android-specific settings
+            val androidSettings = JSONObject()
+            androidSettings.put("sound", "default")
+            androidSettings.put("accent_color", "FF0000FF") // Blue accent
+            
+            // Only include android_channel_id if it looks like a valid OneSignal channel ID (UUID)
             val channelId = NotificationConfig.NOTIFICATION_CHANNEL_ID
             val looksLikeUuid = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
             if (looksLikeUuid.matches(channelId)) {
-                jsonBody.put("android_channel_id", channelId)
+                androidSettings.put("channel_for_external_user_ids", channelId)
+            } else {
+                // Use the standard Android channel ID for messages
+                androidSettings.put("existing_android_channel_id", "messages")
             }
+            
+            jsonBody.put("android_accent_color", "FF0000FF")
+            jsonBody.put("android_sound", "default")
+            jsonBody.put("android_visibility", 1) // Public visibility
+            
+            Log.d(TAG, "OneSignal payload: ${jsonBody.toString()}")
             
         } catch (e: Exception) {
             Log.e(TAG, "Failed to create JSON for client-side notification", e)
@@ -234,19 +319,49 @@ object NotificationHelper {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "Failed to send client-side notification", e)
+                Log.e(TAG, "Network failure sending client-side notification to $recipientPlayerId", e)
                 if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
-                    Log.i(TAG, "Falling back to server-side notification due to client-side failure")
+                    Log.i(TAG, "Falling back to server-side notification due to client-side network failure")
                     sendServerSideNotification(recipientPlayerId, message, notificationType, data)
                 }
             }
 
             override fun onResponse(call: Call, response: Response) {
                 response.use {
+                    val responseBody = it.body?.string() ?: ""
                     if (it.isSuccessful) {
-                        Log.i(TAG, "Client-side notification sent successfully.")
+                        Log.i(TAG, "Client-side notification sent successfully to $recipientPlayerId")
+                        Log.d(TAG, "OneSignal response: $responseBody")
+                        
+                        // Parse response to check if notification was actually sent
+                        try {
+                            val responseJson = JSONObject(responseBody)
+                            val recipients = responseJson.optInt("recipients", 0)
+                            if (recipients == 0) {
+                                Log.w(TAG, "Notification sent but no recipients reached. Player ID might be invalid.")
+                            } else {
+                                Log.i(TAG, "Notification delivered to $recipients recipient(s)")
+                            }
+                        } catch (e: Exception) {
+                            Log.d(TAG, "Could not parse OneSignal response JSON: $e")
+                        }
                     } else {
-                        Log.e(TAG, "Failed to send client-side notification: ${it.code} - ${it.body?.string()}")
+                        Log.e(TAG, "Failed to send client-side notification: ${it.code}")
+                        Log.e(TAG, "Response body: $responseBody")
+                        
+                        // Try to extract error details
+                        try {
+                            val errorJson = JSONObject(responseBody)
+                            val errors = errorJson.optJSONArray("errors")
+                            if (errors != null) {
+                                for (i in 0 until errors.length()) {
+                                    Log.e(TAG, "OneSignal error: ${errors.getString(i)}")
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.d(TAG, "Could not parse error response: $e")
+                        }
+                        
                         if (NotificationConfig.ENABLE_FALLBACK_MECHANISMS && NotificationConfig.USE_CLIENT_SIDE_NOTIFICATIONS) {
                             Log.i(TAG, "Falling back to server-side notification due to client-side error")
                             sendServerSideNotification(recipientPlayerId, message, notificationType, data)
