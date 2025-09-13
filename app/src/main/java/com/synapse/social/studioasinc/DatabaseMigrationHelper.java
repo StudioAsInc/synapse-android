@@ -510,13 +510,9 @@ public class DatabaseMigrationHelper {
         
         // Wait for all migrations to complete
         Tasks.whenAll(migrationTasks)
-            .addOnSuccessListener(results -> {
-                StringBuilder summary = new StringBuilder("Migration completed successfully:\n");
-                for (Object result : results) {
-                    summary.append(result.toString()).append("\n");
-                }
+            .addOnSuccessListener(aVoid -> {
                 Log.d(TAG, "Complete migration finished successfully");
-                callback.onSuccess(summary.toString());
+                callback.onSuccess("Migration completed successfully");
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Migration failed", e);
