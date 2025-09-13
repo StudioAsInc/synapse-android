@@ -34,6 +34,7 @@ import android.widget.TextView;
 import androidx.annotation.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.*;
+import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.cardview.widget.CardView;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.DialogFragment;
