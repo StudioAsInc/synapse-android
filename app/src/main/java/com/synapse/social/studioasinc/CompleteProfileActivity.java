@@ -488,7 +488,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 		username_input.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
 		nickname_input.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
 		biography_input.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
-		_progressBarColor(complete_button_loader_bar, 0xFFFFFFFF);
+		// _progressBarColor(complete_button_loader_bar, 0xFFFFFFFF); // Not needed for MaterialButton
 		_progressBarColor(cancel_create_account_progress, 0xFF000000);
 		_viewGraphics(email_verification_send, 0xFF445E91, 0xFF445E91, 300, 0, Color.TRANSPARENT);
 		// Initialize buttons as disabled (will be updated by updateEmailVerificationUI)
@@ -782,16 +782,16 @@ public class CompleteProfileActivity extends AppCompatActivity {
 			return;
 		}
 
-		complete_button_title.setVisibility(View.GONE);
-		complete_button_loader_bar.setVisibility(View.VISIBLE);
+		complete_button.setText("Creating account...");
+		complete_button.setEnabled(false);
 		username_input.setEnabled(false);
 
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		if (currentUser == null) {
 			Log.e("CompleteProfileActivity", "Current user is null when trying to push data.");
 			SketchwareUtil.showMessage(getApplicationContext(), "User not logged in. Please log in again.");
-			complete_button_title.setVisibility(View.VISIBLE);
-			complete_button_loader_bar.setVisibility(View.GONE);
+			complete_button.setText(getResources().getString(R.string.continue_button));
+			complete_button.setEnabled(true);
 			username_input.setEnabled(true);
 			return;
 		}
@@ -874,8 +874,8 @@ public class CompleteProfileActivity extends AppCompatActivity {
 					});
 				} else {
 					Log.e("CompleteProfileActivity", "Failed to push user data to Firebase: " + databaseError.getMessage(), databaseError.toException());
-					complete_button_title.setVisibility(View.VISIBLE);
-					complete_button_loader_bar.setVisibility(View.GONE);
+					complete_button.setText(getResources().getString(R.string.continue_button));
+					complete_button.setEnabled(true);
 					username_input.setEnabled(true);
 
 					if ("Permission denied".equals(databaseError.getMessage())) {

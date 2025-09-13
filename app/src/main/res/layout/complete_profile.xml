@@ -303,23 +303,21 @@
 					app:iconGravity="end"
 					app:iconSize="24dp"
 					android:enabled="false"
-					style="@style/Widget.Material3.Button.UnelevatedButton">
+					style="@style/Widget.Material3.Button.UnelevatedButton" />
 
-					<!-- Hidden views for compatibility -->
-					<TextView
-						android:id="@+id/complete_button_title"
-						android:layout_width="0dp"
-						android:layout_height="0dp"
-						android:visibility="gone" />
+				<!-- Hidden views for compatibility -->
+				<TextView
+					android:id="@+id/complete_button_title"
+					android:layout_width="0dp"
+					android:layout_height="0dp"
+					android:visibility="gone" />
 
-					<ProgressBar
-						android:id="@+id/complete_button_loader_bar"
-						android:layout_width="0dp"
-						android:layout_height="0dp"
-						android:visibility="gone"
-						style="?android:progressBarStyle" />
-
-				</com.google.android.material.button.MaterialButton>
+				<ProgressBar
+					android:id="@+id/complete_button_loader_bar"
+					android:layout_width="0dp"
+					android:layout_height="0dp"
+					android:visibility="gone"
+					style="?android:progressBarStyle" />
 
 				<!-- Secondary Skip Button -->
 				<com.google.android.material.button.MaterialButton
