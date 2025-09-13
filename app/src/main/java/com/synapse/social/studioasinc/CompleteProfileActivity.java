@@ -256,8 +256,27 @@ public class CompleteProfileActivity extends AppCompatActivity {
 							@Override
 							public void onFailure(Exception e) {
 								Log.e("CompleteProfileActivity", "Firestore username check failed: " + e.getMessage(), e);
-								SketchwareUtil.showMessage(getApplicationContext(), "Error checking username: " + e.getMessage());
-								_setUsernameError(getResources().getString(R.string.something_went_wrong));
+								// Fallback to Realtime Database if Firestore fails
+								DatabaseReference checkUsernameRef = FirebaseDatabase.getInstance().getReference().child("skyline/users");
+								Query checkUsernameQuery = checkUsernameRef.orderByChild("username").equalTo(_charSeq);
+								checkUsernameQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+									@Override
+									public void onDataChange(DataSnapshot dataSnapshot) {
+										if (dataSnapshot.exists()) {
+											_setUsernameError(getResources().getString(R.string.username_err_already_taken));
+										} else {
+											username_input.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
+											((EditText)username_input).setError(null);
+											userNameErr = false;
+										}
+									}
+
+									@Override
+									public void onCancelled(DatabaseError databaseError) {
+										Log.e("CompleteProfileActivity", "RTDB username check also failed: " + databaseError.getMessage(), databaseError.toException());
+										_setUsernameError(getResources().getString(R.string.something_went_wrong));
+									}
+								});
 							}
 						});
 					}
@@ -845,11 +864,52 @@ public class CompleteProfileActivity extends AppCompatActivity {
 			@Override
 			public void onFailure(Exception e) {
 				Log.e("CompleteProfileActivity", "Failed to create user profile in Firestore: " + e.getMessage(), e);
-				complete_button_title.setVisibility(View.VISIBLE);
-				complete_button_loader_bar.setVisibility(View.GONE);
-				username_input.setEnabled(true);
-				nickname_input.setEnabled(true);
-				SketchwareUtil.showMessage(getApplicationContext(), "Failed to create profile. Please try again.");
+				// Fallback to Realtime Database if Firestore fails
+				main.child("users").child(currentUser.getUid()).updateChildren(createUserMap, new DatabaseReference.CompletionListener() {
+					@Override
+					public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+						if (databaseError == null) {
+							HashMap<String, Object> usernameIndexMap = new HashMap<>();
+							usernameIndexMap.put("uid", currentUser.getUid());
+							usernameIndexMap.put("email", currentUser.getEmail());
+							usernameIndexMap.put("username", username_input.getText().toString().trim());
+							pushusername.child(username_input.getText().toString().trim()).updateChildren(usernameIndexMap);
+
+							// Login to OneSignal
+							OneSignalManager.loginUser(currentUser.getUid());
+
+							// Save authentication state to SharedPreferences as backup
+							AuthStateManager.saveAuthenticationState(CompleteProfileActivity.this, currentUser.getUid());
+
+							E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
+							e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
+								@Override
+								public void onKeysInitialized() {
+									Log.d("CompleteProfileActivity", "E2EE keys initialized successfully");
+									intent.setClass(getApplicationContext(), HomeActivity.class);
+									startActivity(intent);
+									finish();
+								}
+
+								@Override
+								public void onKeyInitializationFailed(Exception e) {
+									Log.e("CompleteProfileActivity", "Failed to initialize E2EE keys", e);
+									SketchwareUtil.showMessage(getApplicationContext(), "Failed to initialize secure keys. Please try again later.");
+									intent.setClass(getApplicationContext(), HomeActivity.class);
+									startActivity(intent);
+									finish();
+								}
+							});
+						} else {
+							Log.e("CompleteProfileActivity", "Failed to create user profile in RTDB fallback: " + databaseError.getMessage(), databaseError.toException());
+							complete_button_title.setVisibility(View.VISIBLE);
+							complete_button_loader_bar.setVisibility(View.GONE);
+							username_input.setEnabled(true);
+							nickname_input.setEnabled(true);
+							SketchwareUtil.showMessage(getApplicationContext(), "Failed to create profile. Please try again.");
+						}
+					}
+				});
 			}
 		});
 	}
