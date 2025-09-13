@@ -249,7 +249,13 @@ public class ChatManager {
             .get());
             
         return Tasks.whenAllSuccess(tasks).continueWith(task -> {
-            List<DataSnapshot> results = task.getResult();
+            List<Object> resultObjects = task.getResult();
+            List<DataSnapshot> results = new ArrayList<>();
+            for (Object obj : resultObjects) {
+                if (obj instanceof DataSnapshot) {
+                    results.add((DataSnapshot) obj);
+                }
+            }
             return results.get(0).exists() || results.get(1).exists();
         });
     }

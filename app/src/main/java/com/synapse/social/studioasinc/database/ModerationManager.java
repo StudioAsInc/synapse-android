@@ -197,7 +197,7 @@ public class ModerationManager {
                     "Your account has received a warning for violating community guidelines.",
                     null,
                     null
-                );
+                ).continueWith(task -> null);
                 
             case ACTION_CONTENT_REMOVED:
                 // Content removal would be handled separately based on content type

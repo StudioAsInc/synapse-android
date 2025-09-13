@@ -224,7 +224,13 @@ public class FeedManager {
                     throw task.getException();
                 }
                 
-                List<DataSnapshot> results = task.getResult();
+                List<Object> resultObjects = task.getResult();
+                List<DataSnapshot> results = new ArrayList<>();
+                for (Object obj : resultObjects) {
+                    if (obj instanceof DataSnapshot) {
+                        results.add((DataSnapshot) obj);
+                    }
+                }
                 Map<String, Object> updates = new HashMap<>();
                 
                 // Aggregate all posts
