@@ -254,7 +254,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 							}
 
 							@Override
-							public void onError(Exception e) {
+							public void onFailure(Exception e) {
 								Log.e("CompleteProfileActivity", "Firestore username check failed: " + e.getMessage(), e);
 								SketchwareUtil.showMessage(getApplicationContext(), "Error checking username: " + e.getMessage());
 								_setUsernameError(getResources().getString(R.string.something_went_wrong));
