@@ -367,7 +367,7 @@ class c {
 												recipientUid,
 												senderUid,
 												notificationMessage,
-												"profile_like",
+												NotificationConfig.NOTIFICATION_TYPE_PROFILE_LIKE,
 												data
 											);
 										} else {
@@ -445,7 +445,7 @@ class c {
 												recipientUid,
 												senderUid,
 												notificationMessage,
-												"new_follower",
+												NotificationConfig.NOTIFICATION_TYPE_NEW_FOLLOWER,
 												data
 											);
 										} else {

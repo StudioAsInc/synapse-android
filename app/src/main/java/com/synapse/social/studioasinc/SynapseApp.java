@@ -47,6 +47,15 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         return mContext;
     }
     
+    /**
+     * Gets the current active activity for notification click handling.
+     * @return WeakReference to the current activity, or null if none available
+     */
+    public static WeakReference<Activity> getCurrentActivity() {
+        SynapseApp app = (SynapseApp) mContext;
+        return app.currentActivity;
+    }
+    
     @Override
     public void onCreate() {
         super.onCreate();
@@ -87,6 +96,9 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         final String ONESIGNAL_APP_ID = "044e1911-6911-4871-95f9-d60003002fe2";
         OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
+
+        // Register notification click handler for deep linking
+        NotificationClickHandler.register();
 
         // OneSignal user state observer removed due to API compatibility issues
 

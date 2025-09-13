@@ -3454,7 +3454,7 @@ public class ChatActivity extends AppCompatActivity {
 				recipientUid,
 				senderUid,
 				message,
-				"chat_message",
+				NotificationConfig.NOTIFICATION_TYPE_CHAT_MESSAGE,
 				data
 			);
 		} catch (Exception e) {

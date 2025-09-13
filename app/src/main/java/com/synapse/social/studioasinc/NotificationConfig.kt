@@ -25,6 +25,7 @@ object NotificationConfig {
     const val NOTIFICATION_PRIORITY = 10 // High priority
 
     // ===== NOTIFICATION TYPES =====
+    const val NOTIFICATION_TYPE_CHAT_MESSAGE = "chat_message"
     const val NOTIFICATION_TYPE_NEW_POST = "NEW_POST"
     const val NOTIFICATION_TYPE_NEW_COMMENT = "NEW_COMMENT"
     const val NOTIFICATION_TYPE_NEW_REPLY = "NEW_REPLY"
@@ -35,6 +36,7 @@ object NotificationConfig {
     const val NOTIFICATION_TYPE_MENTION_POST = "mention_post"
 
     // ===== NOTIFICATION TITLES =====
+    const val NOTIFICATION_TITLE_CHAT_MESSAGE = "New Message"
     const val NOTIFICATION_TITLE_NEW_POST = "New Post"
     const val NOTIFICATION_TITLE_NEW_COMMENT = "New Comment"
     const val NOTIFICATION_TITLE_NEW_REPLY = "New Reply"
@@ -85,6 +87,7 @@ object NotificationConfig {
      */
     fun getTitleForNotificationType(type: String): String {
         return when (type) {
+            NOTIFICATION_TYPE_CHAT_MESSAGE -> NOTIFICATION_TITLE_CHAT_MESSAGE
             NOTIFICATION_TYPE_NEW_POST -> NOTIFICATION_TITLE_NEW_POST
             NOTIFICATION_TYPE_NEW_COMMENT -> NOTIFICATION_TITLE_NEW_COMMENT
             NOTIFICATION_TYPE_NEW_REPLY -> NOTIFICATION_TITLE_NEW_REPLY
