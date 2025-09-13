@@ -734,24 +734,49 @@ class c {
 					ProfilePageNoInternetBody.setVisibility(View.GONE);
 					ProfilePageLoadingBody.setVisibility(View.GONE);
 					user_uid_layout_text.setText(dataSnapshot.child("uid").getValue(String.class));
-					JoinDateCC.setTimeInMillis((long)(Double.parseDouble(dataSnapshot.child("join_date").getValue(String.class))));
-					if (dataSnapshot.child("banned").getValue(String.class).equals("true")) {
+					// Handle join_date as either Long (new structure) or String (old structure)
+					Object joinDateValue = dataSnapshot.child("join_date").getValue();
+					if (joinDateValue instanceof Long) {
+						JoinDateCC.setTimeInMillis((Long) joinDateValue);
+					} else if (joinDateValue instanceof String) {
+						try {
+							JoinDateCC.setTimeInMillis((long)(Double.parseDouble((String) joinDateValue)));
+						} catch (NumberFormatException e) {
+							JoinDateCC.setTimeInMillis(System.currentTimeMillis());
+						}
+					} else {
+						JoinDateCC.setTimeInMillis(System.currentTimeMillis());
+					}
+					// Handle banned status
+					String bannedStatus = dataSnapshot.hasChild("banned") ? dataSnapshot.child("banned").getValue(String.class) : 
+										(dataSnapshot.hasChild("account_status") && "banned".equals(dataSnapshot.child("account_status").getValue(String.class)) ? "true" : "false");
+					
+					if ("true".equals(bannedStatus)) {
 						UserAvatarUri = "null";
 						ProfilePageTabUserInfoProfileImage.setImageResource(R.drawable.banned_avatar);
 						ProfilePageTabUserInfoCoverImage.setImageResource(R.drawable.banned_cover_photo);
 					} else {
 						_getUserPostsReference();
 						_getUserCountReference();
-						UserAvatarUri = dataSnapshot.child("avatar").getValue(String.class);
-						if (dataSnapshot.child("profile_cover_image").getValue(String.class).equals("null")) {
+						
+						// Handle avatar - check both old and new field names
+						UserAvatarUri = dataSnapshot.hasChild("avatar") ? dataSnapshot.child("avatar").getValue(String.class) : 
+										(dataSnapshot.hasChild("avatar_url") ? dataSnapshot.child("avatar_url").getValue(String.class) : "null");
+						
+						// Handle cover image - check both old and new field names
+						String coverUrl = dataSnapshot.hasChild("profile_cover_image") ? dataSnapshot.child("profile_cover_image").getValue(String.class) : 
+										  (dataSnapshot.hasChild("cover_url") ? dataSnapshot.child("cover_url").getValue(String.class) : "null");
+						
+						if (coverUrl == null || coverUrl.equals("null") || coverUrl.isEmpty()) {
 							ProfilePageTabUserInfoCoverImage.setImageResource(R.drawable.user_null_cover_photo);
 						} else {
-							Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("profile_cover_image").getValue(String.class))).into(ProfilePageTabUserInfoCoverImage);
+							Glide.with(getApplicationContext()).load(Uri.parse(coverUrl)).into(ProfilePageTabUserInfoCoverImage);
 						}
-						if (dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+						
+						if (UserAvatarUri == null || UserAvatarUri.equals("null") || UserAvatarUri.isEmpty()) {
 							ProfilePageTabUserInfoProfileImage.setImageResource(R.drawable.avatar);
 						} else {
-							Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(ProfilePageTabUserInfoProfileImage);
+							Glide.with(getApplicationContext()).load(Uri.parse(UserAvatarUri)).into(ProfilePageTabUserInfoProfileImage);
 						}
 					}
 					// Check user status

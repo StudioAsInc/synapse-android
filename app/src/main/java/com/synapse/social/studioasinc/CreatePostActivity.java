@@ -78,6 +78,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.regex.*;
 import org.json.*;
 import com.google.android.material.materialswitch.MaterialSwitch;
@@ -288,10 +291,12 @@ public class CreatePostActivity extends AppCompatActivity {
 				requestPermissions(new String[] {android.Manifest.permission.READ_EXTERNAL_STORAGE,android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
 			} else {
 				Intent sendImgInt = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+				sendImgInt.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
 				startActivityForResult(sendImgInt, REQ_CD_IMAGE_PICKER);
 			}
 		} else {
 			Intent sendImgInt = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+			sendImgInt.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
 			startActivityForResult(sendImgInt, REQ_CD_IMAGE_PICKER);
 		}
 	}
@@ -334,10 +339,6 @@ public class CreatePostActivity extends AppCompatActivity {
 	}
 	
 	private void _savePostToDatabase(String imageUrl) {
-		cc = Calendar.getInstance();
-		PostSendMap = new HashMap<>();
-		PostSendMap.put("key", UniquePostKey);
-		
 		// Check if user is logged in
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		if (currentUser == null) {
@@ -345,52 +346,61 @@ public class CreatePostActivity extends AppCompatActivity {
 			_LoadingDialog(false);
 			return;
 		}
-		PostSendMap.put("uid", currentUser.getUid());
 		
-		if (hasImage) {
-			PostSendMap.put("post_type", "IMAGE");
-			PostSendMap.put("post_image", imageUrl);
-		} else {
-			PostSendMap.put("post_type", "TEXT");
+		String caption = postDescriptionEditText.getText().toString().trim();
+		String visibility = hidePostFromEveryone ? DatabaseStructure.VISIBILITY_PRIVATE : DatabaseStructure.VISIBILITY_PUBLIC;
+		
+		// Prepare media items if image exists
+		List<Map<String, Object>> mediaItems = null;
+		if (hasImage && imageUrl != null) {
+			mediaItems = new ArrayList<>();
+			Map<String, Object> mediaItem = new HashMap<>();
+			mediaItem.put("type", "image");
+			mediaItem.put("url", imageUrl);
+			mediaItems.add(mediaItem);
 		}
 		
-		if (!postDescriptionEditText.getText().toString().trim().equals("")) {
-			PostSendMap.put("post_text", postDescriptionEditText.getText().toString().trim());
-		}
-		
-		if (appSavedData.contains("user_region_data") && !appSavedData.getString("user_region_data", "").equals("none")) {
-			PostSendMap.put("post_region", appSavedData.getString("user_region_data", ""));
-		} else {
-			PostSendMap.put("post_region", "none");
-		}
-		
-		// Apply post settings
-		PostSendMap.put("post_hide_views_count", hideViewsCount);
-		PostSendMap.put("post_hide_like_count", hideLikesCount);
-		PostSendMap.put("post_hide_comments_count", hideCommentsCount);
-		
-		if (hidePostFromEveryone) {
-			PostSendMap.put("post_visibility", "private");
-		} else {
-			PostSendMap.put("post_visibility", "public");
-		}
-		
-		PostSendMap.put("post_disable_favorite", disableSaveToFavorites);
-		PostSendMap.put("post_disable_comments", disableComments);
-		PostSendMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
-		
-		FirebaseDatabase.getInstance().getReference("skyline/posts").child(UniquePostKey).updateChildren(PostSendMap, new DatabaseReference.CompletionListener() {
-			@Override
-			public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-				if (databaseError == null) {
-					_sendNotificationsToFollowers(UniquePostKey, postDescriptionEditText.getText().toString().trim());
-					Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
-					_LoadingDialog(false);
-					finish();
-				} else {
-					Toast.makeText(getApplicationContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-					_LoadingDialog(false);
+		// Extract hashtags from caption
+		Map<String, Boolean> topicTags = null;
+		if (!caption.isEmpty()) {
+			topicTags = new HashMap<>();
+			String[] words = caption.split("\\s+");
+			for (String word : words) {
+				if (word.startsWith("#") && word.length() > 1) {
+					String tag = word.substring(1).toLowerCase();
+					topicTags.put(tag, true);
 				}
+			}
+		}
+		
+		// Create post using ContentManager
+		ContentManager.createPost(
+			currentUser.getUid(),
+			caption,
+			visibility,
+			mediaItems,
+			null, // tagged users
+			topicTags,
+			null  // location
+		).addOnCompleteListener(task -> {
+			if (task.isSuccessful()) {
+				String postId = task.getResult();
+				// Update post config for additional settings
+				Map<String, Object> configUpdates = new HashMap<>();
+				configUpdates.put("config/comments_disabled", disableComments);
+				configUpdates.put("config/likes_hidden", hideLikesCount);
+				
+				DatabaseStructure.getContentRef().child(postId).updateChildren(configUpdates)
+					.addOnCompleteListener(updateTask -> {
+						_sendNotificationsToFollowers(postId, caption);
+						Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
+						_LoadingDialog(false);
+						finish();
+					});
+			} else {
+				String error = task.getException() != null ? task.getException().getMessage() : "Unknown error";
+				Toast.makeText(getApplicationContext(), error, Toast.LENGTH_SHORT).show();
+				_LoadingDialog(false);
 			}
 		});
 	}
