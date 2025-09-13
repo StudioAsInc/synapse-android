@@ -66,118 +66,27 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 return;
             }
             
-            switch (notificationType) {
-                case NotificationConfig.NOTIFICATION_TYPE_CHAT_MESSAGE:
-                    handleChatMessage(notification);
-                    break;
-                case NotificationConfig.NOTIFICATION_TYPE_NEW_FOLLOWER:
-                    handleNewFollower(notification);
-                    break;
-                case NotificationConfig.NOTIFICATION_TYPE_PROFILE_LIKE:
-                    handleProfileLike(notification);
-                    break;
-                default:
-                    // Handle post-related notifications (likes, comments, replies, new posts, mentions)
-                    if (notificationType.equals(NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_POST) ||
-                        notificationType.equals(NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT) ||
-                        notificationType.equals(NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY) ||
-                        notificationType.equals(NotificationConfig.NOTIFICATION_TYPE_NEW_POST) ||
-                        notificationType.equals(NotificationConfig.NOTIFICATION_TYPE_MENTION_POST)) {
-                        handlePostNotification(notification);
-                    } else {
-                        Log.w("NotificationAdapter", "Unknown notification type: " + notificationType + ", opening HomeActivity");
-                        openHomeActivity();
-                    }
-                    break;
+            // Create notification data map
+            java.util.Map<String, String> notificationData = new java.util.HashMap<>();
+            if (notification.getFrom() != null) {
+                notificationData.put("sender_uid", notification.getFrom());
             }
+            if (notification.getPostId() != null) {
+                notificationData.put("postId", notification.getPostId());
+            }
+            if (notification.getCommentId() != null) {
+                notificationData.put("commentId", notification.getCommentId());
+            }
+            
+            // Use the centralized notification click handler
+            com.synapse.social.studioasinc.NotificationClickHandler.handleNotificationClick(
+                context, 
+                notificationType, 
+                notificationData
+            );
             
         } catch (Exception e) {
             Log.e("NotificationAdapter", "Error handling notification click", e);
-            openHomeActivity();
-        }
-    }
-    
-    private void handleChatMessage(Notification notification) {
-        try {
-            String senderUid = notification.getFrom();
-            if (senderUid == null || senderUid.isEmpty()) {
-                Log.e("NotificationAdapter", "Chat notification missing sender UID");
-                openHomeActivity();
-                return;
-            }
-            
-            Intent intent = new Intent(context, ChatActivity.class);
-            intent.putExtra("uid", senderUid);
-            intent.putExtra("origin", "NotificationClick");
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            context.startActivity(intent);
-            
-        } catch (Exception e) {
-            Log.e("NotificationAdapter", "Error handling chat message notification", e);
-            openHomeActivity();
-        }
-    }
-    
-    private void handleNewFollower(Notification notification) {
-        try {
-            String senderUid = notification.getFrom();
-            if (senderUid == null || senderUid.isEmpty()) {
-                Log.e("NotificationAdapter", "New follower notification missing sender UID");
-                openHomeActivity();
-                return;
-            }
-            
-            Intent intent = new Intent(context, ProfileActivity.class);
-            intent.putExtra("uid", senderUid);
-            intent.putExtra("origin", "NotificationClick");
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            context.startActivity(intent);
-            
-        } catch (Exception e) {
-            Log.e("NotificationAdapter", "Error handling new follower notification", e);
-            openHomeActivity();
-        }
-    }
-    
-    private void handleProfileLike(Notification notification) {
-        try {
-            String senderUid = notification.getFrom();
-            if (senderUid == null || senderUid.isEmpty()) {
-                Log.e("NotificationAdapter", "Profile like notification missing sender UID");
-                openHomeActivity();
-                return;
-            }
-            
-            Intent intent = new Intent(context, ProfileActivity.class);
-            intent.putExtra("uid", senderUid);
-            intent.putExtra("origin", "NotificationClick");
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            context.startActivity(intent);
-            
-        } catch (Exception e) {
-            Log.e("NotificationAdapter", "Error handling profile like notification", e);
-            openHomeActivity();
-        }
-    }
-    
-    private void handlePostNotification(Notification notification) {
-        try {
-            String postId = notification.getPostId();
-            String senderUid = notification.getFrom();
-            
-            Intent intent = new Intent(context, HomeActivity.class);
-            if (postId != null && !postId.isEmpty()) {
-                intent.putExtra("postId", postId);
-            }
-            if (senderUid != null && !senderUid.isEmpty()) {
-                intent.putExtra("senderUid", senderUid);
-            }
-            intent.putExtra("origin", "NotificationClick");
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            context.startActivity(intent);
-            
-        } catch (Exception e) {
-            Log.e("NotificationAdapter", "Error handling post notification", e);
             openHomeActivity();
         }
     }

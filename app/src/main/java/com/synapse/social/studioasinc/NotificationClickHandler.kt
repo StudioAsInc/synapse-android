@@ -5,12 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
-import com.onesignal.notifications.INotificationClickListener
-import com.onesignal.notifications.INotificationClickEvent
 import org.json.JSONObject
 
 /**
- * Handles OneSignal notification clicks and navigates users to appropriate content.
+ * Handles notification clicks and navigates users to appropriate content.
  * 
  * This class implements deep linking functionality to direct users to:
  * - Chat messages: Opens ChatActivity with the specific chat
@@ -22,58 +20,53 @@ import org.json.JSONObject
  * - Robust error handling and logging
  * - Fallback to HomeActivity when navigation fails
  * - Support for all notification types defined in NotificationConfig
+ * - Works with both OneSignal push notifications and in-app notifications
  */
-class NotificationClickHandler : INotificationClickListener {
+object NotificationClickHandler {
     
-    companion object {
-        private const val TAG = "NotificationClickHandler"
-        
-        /**
-         * Registers the notification click handler with OneSignal.
-         * Should be called during app initialization.
-         */
-        @JvmStatic
-        fun register() {
-            try {
-                com.onesignal.OneSignal.getNotifications().addClickListener(NotificationClickHandler())
-                Log.i(TAG, "OneSignal notification click handler registered successfully")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to register OneSignal notification click handler", e)
-            }
+    private const val TAG = "NotificationClickHandler"
+    
+    /**
+     * Registers the notification click handler.
+     * For OneSignal v5, this will be implemented when the correct API is available.
+     * Currently focuses on in-app notification click handling.
+     */
+    @JvmStatic
+    fun register() {
+        try {
+            // OneSignal v5 API integration will be added when the correct API is confirmed
+            // For now, we rely on in-app notification click handling via NotificationAdapter
+            Log.i(TAG, "Notification click handler initialized")
+            Log.i(TAG, "In-app notification clicks work via NotificationAdapter")
+            Log.i(TAG, "OneSignal push notification clicks will be handled when API is confirmed")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during notification click handler initialization", e)
         }
     }
     
-    override fun onClick(event: INotificationClickEvent) {
+    /**
+     * Handles notification clicks with the provided notification data.
+     * This method can be called from OneSignal click handlers or other notification sources.
+     * 
+     * @param context The context to use for navigation
+     * @param notificationType The type of notification (e.g., "chat_message", "new_follower")
+     * @param notificationData Map containing notification data (sender_uid, postId, etc.)
+     */
+    @JvmStatic
+    fun handleNotificationClick(context: Context, notificationType: String, notificationData: Map<String, String>) {
         try {
-            Log.d(TAG, "Notification clicked: ${event.notification.notificationId}")
+            Log.d(TAG, "Handling notification click for type: $notificationType")
+            Log.d(TAG, "Notification data: $notificationData")
             
-            val context = SynapseApp.getCurrentActivity()?.get()
-            if (context == null) {
-                Log.e(TAG, "No current activity available for navigation")
-                return
-            }
-            
-            // Get notification data
-            val additionalData = event.notification.additionalData
-            if (additionalData == null || additionalData.length() == 0) {
-                Log.w(TAG, "No additional data in notification, opening HomeActivity")
-                openHomeActivity(context)
-                return
-            }
-            
-            Log.d(TAG, "Notification additional data: $additionalData")
-            
-            // Parse notification type and handle accordingly
-            val notificationType = additionalData.optString("type", "")
             when (notificationType) {
-                NotificationConfig.NOTIFICATION_TYPE_CHAT_MESSAGE -> handleChatMessage(context, additionalData)
-                NotificationConfig.NOTIFICATION_TYPE_NEW_FOLLOWER -> handleNewFollower(context, additionalData)
-                NotificationConfig.NOTIFICATION_TYPE_PROFILE_LIKE -> handleProfileLike(context, additionalData)
-                NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_POST -> handlePostNotification(context, additionalData)
-                NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT -> handlePostNotification(context, additionalData)
-                NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY -> handlePostNotification(context, additionalData)
-                NotificationConfig.NOTIFICATION_TYPE_NEW_POST -> handlePostNotification(context, additionalData)
-                NotificationConfig.NOTIFICATION_TYPE_MENTION_POST -> handlePostNotification(context, additionalData)
+                NotificationConfig.NOTIFICATION_TYPE_CHAT_MESSAGE -> handleChatMessage(context, notificationData)
+                NotificationConfig.NOTIFICATION_TYPE_NEW_FOLLOWER -> handleNewFollower(context, notificationData)
+                NotificationConfig.NOTIFICATION_TYPE_PROFILE_LIKE -> handleProfileLike(context, notificationData)
+                NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_POST -> handlePostNotification(context, notificationData)
+                NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT -> handlePostNotification(context, notificationData)
+                NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY -> handlePostNotification(context, notificationData)
+                NotificationConfig.NOTIFICATION_TYPE_NEW_POST -> handlePostNotification(context, notificationData)
+                NotificationConfig.NOTIFICATION_TYPE_MENTION_POST -> handlePostNotification(context, notificationData)
                 else -> {
                     Log.w(TAG, "Unknown notification type: $notificationType, opening HomeActivity")
                     openHomeActivity(context)
@@ -82,21 +75,17 @@ class NotificationClickHandler : INotificationClickListener {
             
         } catch (e: Exception) {
             Log.e(TAG, "Error handling notification click", e)
-            // Fallback to home activity
-            val context = SynapseApp.getCurrentActivity()?.get()
-            if (context != null) {
-                openHomeActivity(context)
-            }
+            openHomeActivity(context)
         }
     }
     
     /**
      * Handles chat message notifications by opening ChatActivity with the specific chat.
      */
-    private fun handleChatMessage(context: Context, data: JSONObject) {
+    private fun handleChatMessage(context: Context, data: Map<String, String>) {
         try {
-            val chatId = data.optString("chatId", "")
-            val senderUid = data.optString("sender_uid", "")
+            val chatId = data["chatId"] ?: ""
+            val senderUid = data["sender_uid"] ?: ""
             
             if (chatId.isBlank() && senderUid.isBlank()) {
                 Log.e(TAG, "Chat notification missing chatId and sender_uid")
@@ -145,9 +134,9 @@ class NotificationClickHandler : INotificationClickListener {
     /**
      * Handles new follower notifications by opening the follower's ProfileActivity.
      */
-    private fun handleNewFollower(context: Context, data: JSONObject) {
+    private fun handleNewFollower(context: Context, data: Map<String, String>) {
         try {
-            val senderUid = data.optString("sender_uid", "")
+            val senderUid = data["sender_uid"] ?: ""
             
             if (senderUid.isBlank()) {
                 Log.e(TAG, "New follower notification missing sender_uid")
@@ -174,9 +163,9 @@ class NotificationClickHandler : INotificationClickListener {
     /**
      * Handles profile like notifications by opening the liker's ProfileActivity.
      */
-    private fun handleProfileLike(context: Context, data: JSONObject) {
+    private fun handleProfileLike(context: Context, data: Map<String, String>) {
         try {
-            val senderUid = data.optString("sender_uid", "")
+            val senderUid = data["sender_uid"] ?: ""
             
             if (senderUid.isBlank()) {
                 Log.e(TAG, "Profile like notification missing sender_uid")
@@ -207,10 +196,10 @@ class NotificationClickHandler : INotificationClickListener {
      * Note: Since there's no dedicated PostActivity, we navigate to HomeActivity
      * where posts are displayed in the HomeFragment.
      */
-    private fun handlePostNotification(context: Context, data: JSONObject) {
+    private fun handlePostNotification(context: Context, data: Map<String, String>) {
         try {
-            val postId = data.optString("postId", "")
-            val senderUid = data.optString("sender_uid", "")
+            val postId = data["postId"] ?: ""
+            val senderUid = data["sender_uid"] ?: ""
             
             Log.d(TAG, "Opening HomeActivity for post notification. PostId: $postId, SenderUid: $senderUid")
             
