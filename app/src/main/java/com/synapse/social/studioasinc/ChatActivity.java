@@ -100,6 +100,8 @@ import com.synapse.social.studioasinc.UploadFiles;
 import com.synapse.social.studioasinc.AsyncUploadService;
 import com.synapse.social.studioasinc.NotificationHelper;
 import com.synapse.social.studioasinc.util.NotificationPermissionHelper;
+import com.synapse.social.studioasinc.database.DatabaseStructure;
+import com.synapse.social.studioasinc.database.ChatManager;
 
 import java.io.File;
 import java.io.IOException;
