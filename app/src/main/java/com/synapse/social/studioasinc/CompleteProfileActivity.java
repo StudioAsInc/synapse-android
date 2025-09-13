@@ -39,6 +39,7 @@ import androidx.annotation.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.*;
 import androidx.cardview.widget.CardView;
+import com.google.android.material.appbar.MaterialToolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
@@ -104,6 +105,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 
 	private String path = ""; // Path of the selected image file
 
+	private MaterialToolbar toolbar;
 	private ScrollView scroll;
 	private LinearLayout body;
 	private LinearLayout top;
@@ -166,6 +168,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 	}
 
 	private void initialize(Bundle _savedInstanceState) {
+		toolbar = findViewById(R.id.toolbar);
 		scroll = findViewById(R.id.scroll);
 		body = findViewById(R.id.body);
 		top = findViewById(R.id.top);
@@ -308,6 +311,14 @@ public class CompleteProfileActivity extends AppCompatActivity {
 			public void afterTextChanged(Editable _param1) { }
 		});
 
+		// Set up Material Toolbar navigation
+		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				onBackPressed();
+			}
+		});
+
 		back.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
@@ -374,11 +385,35 @@ public class CompleteProfileActivity extends AppCompatActivity {
 			}
 		});
 
+		skip_button.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+				if (currentUser != null && currentUser.getEmail() != null) {
+					// Check if email ends with @synapse.com
+					if (currentUser.getEmail().endsWith("@synapse.com")) {
+						// Allow skip for @synapse.com emails
+						_pushdata();
+					} else {
+						SketchwareUtil.showMessage(getApplicationContext(), "Skip is only available for @synapse.com email addresses. Please verify your email to continue.");
+						vbr.vibrate((long)(48));
+					}
+				} else {
+					SketchwareUtil.showMessage(getApplicationContext(), "Unable to verify email domain. Please verify your email to continue.");
+					vbr.vibrate((long)(48));
+				}
+			}
+		});
+
 		complete_button.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
+				FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 				if (userNameErr) {
 					SketchwareUtil.showMessage(getApplicationContext(), getResources().getString(R.string.username_err_invalid));
+					vbr.vibrate((long)(48));
+				} else if (currentUser != null && !currentUser.isEmailVerified()) {
+					SketchwareUtil.showMessage(getApplicationContext(), "Please verify your email address before continuing.");
 					vbr.vibrate((long)(48));
 				} else {
 					_pushdata();
@@ -456,8 +491,9 @@ public class CompleteProfileActivity extends AppCompatActivity {
 		_progressBarColor(complete_button_loader_bar, 0xFFFFFFFF);
 		_progressBarColor(cancel_create_account_progress, 0xFF000000);
 		_viewGraphics(email_verification_send, 0xFF445E91, 0xFF445E91, 300, 0, Color.TRANSPARENT);
-		_viewGraphics(skip_button, 0xFFFFFFFF, 0xFFEEEEEE, 300, 3, 0xFFEEEEEE);
-		_viewGraphics(complete_button, 0xFF445E91, 0xFF445E91, 300, 0, Color.TRANSPARENT);
+		// Initialize buttons as disabled (will be updated by updateEmailVerificationUI)
+		skip_button.setEnabled(false);
+		complete_button.setEnabled(false);
 		if (getIntent().hasExtra("findedUsername")) {
 			username_input.setText(getIntent().getStringExtra("findedUsername"));
 		} else {
@@ -609,6 +645,8 @@ public class CompleteProfileActivity extends AppCompatActivity {
 				email_verification_status.setTextColor(0xFF4CAF50);
 				email_verification_status.setText(getResources().getString(R.string.email_verified));
 				email_verification_send.setVisibility(View.GONE);
+				// Enable continue button when email is verified
+				complete_button.setEnabled(true);
 			} else {
 				email_verification_status_refresh.setVisibility(View.VISIBLE);
 				email_verification_error_ic.setVisibility(View.VISIBLE);
@@ -616,6 +654,15 @@ public class CompleteProfileActivity extends AppCompatActivity {
 				email_verification_status.setTextColor(0xFFF44336);
 				email_verification_status.setText(getResources().getString(R.string.email_not_verified));
 				email_verification_send.setVisibility(View.VISIBLE);
+				// Disable continue button when email is not verified
+				complete_button.setEnabled(false);
+			}
+			
+			// Update skip button availability based on email domain
+			if (user.getEmail() != null && user.getEmail().endsWith("@synapse.com")) {
+				skip_button.setEnabled(true);
+			} else {
+				skip_button.setEnabled(false);
 			}
 		} else {
 			email_verification_status_refresh.setVisibility(View.GONE);
@@ -624,6 +671,9 @@ public class CompleteProfileActivity extends AppCompatActivity {
 			email_verification_status.setTextColor(0xFFF44336);
 			email_verification_status.setText("User not available or logged out.");
 			email_verification_send.setVisibility(View.GONE);
+			// Disable both buttons when user is not available
+			complete_button.setEnabled(false);
+			skip_button.setEnabled(false);
 		}
 	}
 
