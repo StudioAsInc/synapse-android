@@ -98,6 +98,8 @@ import com.synapse.social.studioasinc.SketchwareUtil;
 import com.synapse.social.studioasinc.StorageUtil;
 import com.synapse.social.studioasinc.UploadFiles;
 import com.synapse.social.studioasinc.AsyncUploadService;
+import com.synapse.social.studioasinc.NotificationHelper;
+import com.synapse.social.studioasinc.util.NotificationPermissionHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -246,6 +248,9 @@ public class ChatActivity extends AppCompatActivity {
 		setContentView(R.layout.chat);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
+		
+		// Check and request notification permissions for Android 13+
+		NotificationPermissionHelper.requestNotificationPermissionIfNeeded(this);
 		// Initialize E2EE helper with graceful error handling
 		try {
 			e2eeHelper = new E2EEHelper(this);
@@ -287,6 +292,17 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		
+		// Handle notification permission result
+		NotificationPermissionHelper.handlePermissionResult(requestCode, permissions, grantResults, (Boolean granted) -> {
+			if (granted) {
+				Log.i(TAG, "Notification permission granted - notifications will work properly");
+			} else {
+				Log.w(TAG, "Notification permission denied - notifications may not work");
+			}
+			return null;
+		});
+		
 		if (requestCode == 1000) {
 			initializeLogic();
 		}
@@ -2185,13 +2201,8 @@ public class ChatActivity extends AppCompatActivity {
 				String notificationMessage = senderDisplayName + ": " + notificationPreview;
 				HashMap<String, String> data = new HashMap<>();
 				data.put("chatId", chatId);
-				NotificationHelper.sendNotification(
-					recipientUid,
-					senderUid,
-					notificationMessage,
-					"chat_message",
-					data
-				);
+				// Send notification with validation and error handling
+				sendChatNotificationSafely(recipientUid, senderUid, notificationMessage, data);
 
 				_updateInbox(lastMessage, ServerValue.TIMESTAMP);
 
@@ -2266,13 +2277,8 @@ public class ChatActivity extends AppCompatActivity {
 			String notificationMessage = senderDisplayName + ": " + messageText;
 			HashMap<String, String> data = new HashMap<>();
 			data.put("chatId", chatId);
-			NotificationHelper.sendNotification(
-				recipientUid,
-				senderUid,
-				notificationMessage,
-				"chat_message",
-				data
-			);
+			// Send notification with validation and error handling
+			sendChatNotificationSafely(recipientUid, senderUid, notificationMessage, data);
 
 			_updateInbox(messageText, ServerValue.TIMESTAMP);
 
@@ -3402,6 +3408,57 @@ public class ChatActivity extends AppCompatActivity {
 			public ViewHolder(View v) {
 				super(v);
 			}
+		}
+	}
+
+	/**
+	 * Safely sends a chat notification with comprehensive validation and error handling.
+	 * This method ensures the notification system is properly configured before sending.
+	 *
+	 * @param recipientUid The UID of the recipient
+	 * @param senderUid The UID of the sender
+	 * @param message The notification message
+	 * @param data Additional data for the notification
+	 */
+	private void sendChatNotificationSafely(String recipientUid, String senderUid, String message, HashMap<String, String> data) {
+		if (recipientUid == null || recipientUid.trim().isEmpty()) {
+			Log.e(TAG, "Cannot send notification: Recipient UID is null or empty");
+			return;
+		}
+		
+		if (senderUid == null || senderUid.trim().isEmpty()) {
+			Log.e(TAG, "Cannot send notification: Sender UID is null or empty");
+			return;
+		}
+		
+		if (message == null || message.trim().isEmpty()) {
+			Log.e(TAG, "Cannot send notification: Message is null or empty");
+			return;
+		}
+		
+		// Check if notification permissions are granted (Android 13+)
+		if (!NotificationPermissionHelper.hasNotificationPermission(this)) {
+			Log.w(TAG, "Notification permission not granted - attempting to send anyway");
+		}
+		
+		// Check if OneSignal is properly configured
+		if (!NotificationHelper.isNotificationSystemConfigured()) {
+			Log.e(TAG, "Notification system is not properly configured - cannot send notification");
+			return;
+		}
+		
+		Log.d(TAG, "Sending chat notification from " + senderUid + " to " + recipientUid + ": " + message);
+		
+		try {
+			NotificationHelper.sendNotification(
+				recipientUid,
+				senderUid,
+				message,
+				"chat_message",
+				data
+			);
+		} catch (Exception e) {
+			Log.e(TAG, "Exception occurred while sending notification", e);
 		}
 	}
 

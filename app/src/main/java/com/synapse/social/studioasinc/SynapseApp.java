@@ -88,6 +88,8 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
 
+        // OneSignal user state observer removed due to API compatibility issues
+
         // The IPushSubscriptionObserver has been removed.
         // User identification is now handled by calling OneSignalManager.loginUser(uid)
         // from AuthActivity and CompleteProfileActivity.

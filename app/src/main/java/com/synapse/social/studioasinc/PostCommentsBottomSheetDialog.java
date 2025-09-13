@@ -2,6 +2,7 @@ package com.synapse.social.studioasinc;
 
 import android.animation.*;
 import android.animation.ObjectAnimator;
+import android.util.Log;
 import android.view.animation.*;
 import android.view.animation.LinearInterpolator;
 import android.view.inputmethod.InputMethodManager;
@@ -354,57 +355,79 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 				return dialog;
 		}
 		
-		private void _sendCommentNotification(boolean isReply, String commentKey) {
-			FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-			if (currentUser == null) {
-				return;
-			}
-			String currentUid = currentUser.getUid();
+	private void _sendCommentNotification(boolean isReply, String commentKey) {
+		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+		if (currentUser == null) {
+			return;
+		}
+		String currentUid = currentUser.getUid();
 
-			Task<DataSnapshot> senderNameTask = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("username").get();
+		Task<DataSnapshot> senderNameTask = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("username").get();
 
-			if (isReply) {
-				Task<DataSnapshot> originalCommenterTask = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(replyToCommentKey).child("uid").get();
-				com.google.android.gms.tasks.Tasks.whenAllSuccess(senderNameTask, originalCommenterTask).addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<List<Object>>() {
-					@Override
-					public void onSuccess(List<Object> list) {
-						String senderName = ((DataSnapshot) list.get(0)).getValue(String.class);
-						String originalCommenterUid = ((DataSnapshot) list.get(1)).getValue(String.class);
-						if (originalCommenterUid != null) {
-							String message = senderName + " replied to your comment";
-							HashMap<String, String> data = new HashMap<>();
-							data.put("postId", postKey);
-							data.put("commentId", commentKey);
-							NotificationHelper.sendNotification(
-							originalCommenterUid,
-							currentUid,
-							message,
-							NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
-							data
-							);
-						}
-					}
-				});
-				} else {
-				senderNameTask.addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
-					@Override
-					public void onSuccess(DataSnapshot dataSnapshot) {
-						String senderName = dataSnapshot.getValue(String.class);
-						String message = senderName + " commented on your post";
+		if (isReply) {
+			// Handle reply notifications
+			Task<DataSnapshot> originalCommenterTask = FirebaseDatabase.getInstance().getReference("skyline/posts-comments").child(postKey).child(replyToCommentKey).child("uid").get();
+			com.google.android.gms.tasks.Tasks.whenAllSuccess(senderNameTask, originalCommenterTask).addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<List<Object>>() {
+				@Override
+				public void onSuccess(List<Object> list) {
+					String senderName = ((DataSnapshot) list.get(0)).getValue(String.class);
+					String originalCommenterUid = ((DataSnapshot) list.get(1)).getValue(String.class);
+					if (originalCommenterUid != null) {
+						String message = senderName + " replied to your comment";
 						HashMap<String, String> data = new HashMap<>();
 						data.put("postId", postKey);
 						data.put("commentId", commentKey);
-						NotificationHelper.sendNotification(
-						postPublisherUID,
-						currentUid,
-						message,
-						NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT,
-						data
-						);
+						
+						// Send notification with validation
+						try {
+							if (NotificationHelper.isNotificationSystemConfigured()) {
+								NotificationHelper.sendNotification(
+									originalCommenterUid,
+									currentUid,
+									message,
+									NotificationConfig.NOTIFICATION_TYPE_NEW_REPLY,
+									data
+								);
+							} else {
+								Log.e("PostCommentsDialog", "Notification system not configured properly");
+							}
+						} catch (Exception e) {
+							Log.e("PostCommentsDialog", "Failed to send reply notification", e);
+						}
 					}
-				});
-			}
+				}
+			});
+		} else {
+			// Handle new comment notifications
+			senderNameTask.addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<DataSnapshot>() {
+				@Override
+				public void onSuccess(DataSnapshot dataSnapshot) {
+					String senderName = dataSnapshot.getValue(String.class);
+					String message = senderName + " commented on your post";
+					HashMap<String, String> data = new HashMap<>();
+					data.put("postId", postKey);
+					data.put("commentId", commentKey);
+					
+					// Send notification with validation
+					try {
+						if (NotificationHelper.isNotificationSystemConfigured()) {
+							NotificationHelper.sendNotification(
+								postPublisherUID,
+								currentUid,
+								message,
+								NotificationConfig.NOTIFICATION_TYPE_NEW_COMMENT,
+								data
+							);
+						} else {
+							Log.e("PostCommentsDialog", "Notification system not configured properly");
+						}
+					} catch (Exception e) {
+						Log.e("PostCommentsDialog", "Failed to send comment notification", e);
+					}
+				}
+			});
 		}
+	}
 
 		public void getCommentsRef(String key, boolean increaseLimit) {
 			if (increaseLimit) {
@@ -478,13 +501,22 @@ public class PostCommentsBottomSheetDialog extends DialogFragment {
 					data.put("postId", postKey);
 					data.put("commentId", commentKey);
 
-					NotificationHelper.sendNotification(
-					commentAuthorUid,
-					currentUid,
-					message,
-					NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_COMMENT,
-					data
-					);
+					// Send notification with validation
+					try {
+						if (NotificationHelper.isNotificationSystemConfigured()) {
+							NotificationHelper.sendNotification(
+								commentAuthorUid,
+								currentUid,
+								message,
+								NotificationConfig.NOTIFICATION_TYPE_NEW_LIKE_COMMENT,
+								data
+							);
+						} else {
+							Log.e("PostCommentsDialog", "Notification system not configured properly");
+						}
+					} catch (Exception e) {
+						Log.e("PostCommentsDialog", "Failed to send comment like notification", e);
+					}
 				}
 			});
 		}
