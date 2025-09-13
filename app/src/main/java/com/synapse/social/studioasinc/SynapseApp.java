@@ -54,6 +54,22 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         this.mExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         this.mCalendar = Calendar.getInstance();
         
+        // Aggressively disable all Firebase crypto and encrypted storage
+        System.setProperty("firebase.auth.disable.encrypted.storage", "true");
+        System.setProperty("firebase.storage.disable.encryption", "true");
+        System.setProperty("firebase.database.disable.encryption", "true");
+        System.setProperty("firebase.firestore.disable.encryption", "true");
+        System.setProperty("firebase.disable.keystore", "true");
+        System.setProperty("firebase.disable.crypto", "true");
+        
+        // Clear any existing crypto preferences
+        try {
+            getSharedPreferences("firebear_storage_crypto", Context.MODE_PRIVATE).edit().clear().apply();
+            getSharedPreferences("com.google.firebase.auth", Context.MODE_PRIVATE).edit().clear().apply();
+        } catch (Exception e) {
+            Log.w("SynapseApp", "Could not clear crypto prefs", e);
+        }
+        
         // Initialize Firebase with disabled encrypted storage to prevent keystore failures
         FirebaseConfig.initializeFirebase(this);
         FirebaseApp.initializeApp(this);

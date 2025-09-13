@@ -253,41 +253,14 @@ public class ChatActivity extends AppCompatActivity {
 		
 		// Check and request notification permissions for Android 13+
 		NotificationPermissionHelper.requestNotificationPermissionIfNeeded(this);
-		// Initialize E2EE helper with graceful error handling
-		try {
-			e2eeHelper = new E2EEHelper(this);
-			e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
-				@Override
-				public void onKeysInitialized() {
-					if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-					|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-						ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-					} else {
-						initializeLogic();
-					}
-				}
-
-				@Override
-				public void onKeyInitializationFailed(Exception e) {
-					Log.w(TAG, "E2EE initialization failed, continuing without encryption", e);
-					// Continue without encryption instead of crashing
-					if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-					|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-						ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-					} else {
-						initializeLogic();
-					}
-				}
-			});
-		} catch (Exception e) {
-			Log.w(TAG, "E2EE helper creation failed, continuing without encryption", e);
-			// Continue without encryption
-			if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-			|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-				ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-			} else {
-				initializeLogic();
-			}
+		// E2EE disabled - initialize directly
+		e2eeHelper = new E2EEHelper(this); // This just returns messages as-is, no crypto
+		
+		if (ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+		|| ContextCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+			ActivityCompat.requestPermissions(ChatActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+		} else {
+			initializeLogic();
 		}
 	}
 

@@ -781,25 +781,35 @@ class c {
 						}
 					}
 					// Check user status
-					if (dataSnapshot.child("status").getValue(String.class).equals("online")) {
+					String userStatus = dataSnapshot.child("status").getValue(String.class);
+					if ("online".equals(userStatus)) {
 						ProfilePageTabUserInfoStatus.setText(getResources().getString(R.string.online));
 						ProfilePageTabUserInfoStatus.setTextColor(0xFF2196F3);
-					} else {
-						if (dataSnapshot.child("status").getValue(String.class).equals("offline")) {
+					} else if ("offline".equals(userStatus)) {
+						ProfilePageTabUserInfoStatus.setText(getResources().getString(R.string.offline));
+						ProfilePageTabUserInfoStatus.setTextColor(0xFF757575);
+					} else if (userStatus != null) {
+						try {
+							_setUserLastSeen(Double.parseDouble(userStatus), ProfilePageTabUserInfoStatus);
+						} catch (NumberFormatException e) {
 							ProfilePageTabUserInfoStatus.setText(getResources().getString(R.string.offline));
-						} else {
-							_setUserLastSeen(Double.parseDouble(dataSnapshot.child("status").getValue(String.class)), ProfilePageTabUserInfoStatus);
 						}
 						ProfilePageTabUserInfoStatus.setTextColor(0xFF757575);
+					} else {
+						ProfilePageTabUserInfoStatus.setText(getResources().getString(R.string.offline));
+						ProfilePageTabUserInfoStatus.setTextColor(0xFF757575);
 					}
-					ProfilePageTabUserInfoUsername.setText("@" + dataSnapshot.child("username").getValue(String.class));
-					if (dataSnapshot.child("nickname").getValue(String.class).equals("null")) {
-						ProfilePageTabUserInfoNickname.setText("@" + dataSnapshot.child("username").getValue(String.class));
+					String username = dataSnapshot.child("username").getValue(String.class);
+					ProfilePageTabUserInfoUsername.setText("@" + (username != null ? username : "user"));
+					String nickname = dataSnapshot.child("nickname").getValue(String.class);
+					if (nickname == null || "null".equals(nickname)) {
+						ProfilePageTabUserInfoNickname.setText("@" + (username != null ? username : "user"));
 					} else {
 						ProfilePageTabUserInfoNickname.setText(dataSnapshot.child("nickname").getValue(String.class));
 						nickname = dataSnapshot.child("nickname").getValue(String.class);
 					}
-					if (dataSnapshot.child("biography").getValue(String.class).equals("null")) {
+					String biography = dataSnapshot.child("biography").getValue(String.class);
+					if (biography == null || "null".equals(biography)) {
 						
 					} else {
 						ProfilePageTabUserInfoBioLayoutText.setText(dataSnapshot.child("biography").getValue(String.class));
