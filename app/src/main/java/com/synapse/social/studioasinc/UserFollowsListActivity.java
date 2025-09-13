@@ -406,7 +406,7 @@ public class UserFollowsListActivity extends AppCompatActivity {
 	}
 	
 	
-	public void _getFollower	public void _getFollowersReference() {
+	public void _getFollowersReference() {
 		followers_layout_list.setVisibility(View.GONE);
 		followers_layout_no_followers.setVisibility(View.GONE);
 		followers_layout_loading.setVisibility(View.VISIBLE);
