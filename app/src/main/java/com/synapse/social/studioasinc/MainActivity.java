@@ -1,6 +1,5 @@
 package com.synapse.social.studioasinc;
 
-import com.synapse.social.studioasinc.CheckpermissionActivity;
 import android.animation.*;
 import android.app.*;
 import android.app.AlertDialog;
@@ -37,6 +36,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
+import com.synapse.social.studioasinc.util.UpdateManager;
+import com.synapse.social.studioasinc.util.AuthStateManager;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
 import java.io.*;
@@ -280,244 +281,113 @@ public class MainActivity extends AppCompatActivity {
 			);
 		}
 
-		// 2. Get current app version
-		final int currentVersionCode; // Made final to be accessible in anonymous inner class
-		try {
-			currentVersionCode = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-		} catch (PackageManager.NameNotFoundException e) {
-			_showErrorDialog("Version check failed: " + e.getMessage());
-			e.printStackTrace();
-			// If version code cannot be obtained, proceed with normal flow after delay
-			proceedToAuthCheck();
-			return; // Exit method to prevent further execution in initializeLogic
-		}
-
-		// 3. Check for updates (only if online)
-		if (isNetworkAvailable()) {
-			network.startRequestNetwork(
-			RequestNetworkController.GET,
-			"https://pastebin.com/raw/sQuaciVv",
-			"update",
-			new RequestNetwork.RequestListener() {
-				@Override
-				public void onResponse(String tag, String response, HashMap<String, Object> _responseHeaders) {
-					try {
-						HashMap<String, Object> updateMap = new Gson().fromJson(
-						response,
-						new TypeToken<HashMap<String, Object>>(){}.getType()
-						);
-
-						double latestVersionCode = 0;
-						if (updateMap.containsKey("versionCode")) {
-							Object vc = updateMap.get("versionCode");
-							if (vc instanceof Double) {
-								latestVersionCode = (Double) vc;
-							} else if (vc instanceof String) {
-								latestVersionCode = Double.parseDouble((String) vc);
-							} else if (vc instanceof Number) {
-								latestVersionCode = ((Number) vc).doubleValue();
-							}
-						}
-
-						if (latestVersionCode > currentVersionCode) {
-							// New update available, show dialog
-							String title = updateMap.get("title").toString();
-							String versionName = updateMap.get("versionName").toString();
-							String changelog = updateMap.get("whatsNew").toString().replace("\\n", "\n");
-							String updateLink = updateMap.get("updateLink").toString();
-							boolean isCancelable = false;
-							if (updateMap.containsKey("isCancelable")) {
-								Object ic = updateMap.get("isCancelable");
-								if (ic instanceof Boolean) {
-									isCancelable = (Boolean) ic;
-								} else if (ic instanceof String) {
-									isCancelable = Boolean.parseBoolean((String) ic);
-								}
-							}
-
-							_showUpdateDialog(title, versionName, changelog, updateLink, isCancelable);
-							// IMPORTANT: DO NOT call proceedToAuthCheck() here.
-                            // It will be called by the dialog's 'Later' button if cancelable.
-                            // If not cancelable, the app will effectively pause until the user updates.
-						} else {
-							// Already on latest version, proceed to auth check after delay
-						//	SketchwareUtil.showMessage(getApplicationContext(), "You have the latest version.");
-							proceedToAuthCheck();
-						}
-					} catch (Exception e) {
-						_showErrorDialog("Update parsing error: " + e.getMessage());
-						e.printStackTrace();
-						// On parsing error, proceed to auth check after delay
-						proceedToAuthCheck();
-					}
-				}
-
-				@Override
-				public void onErrorResponse(String tag, String message) {
-					// Error fetching update, proceed to auth check after delay
-					proceedToAuthCheck();
-				}
-			}
-			);
-		} else {
-			// No internet, proceed to auth check after delay
-			proceedToAuthCheck();
-		}
+		// The update check is now handled by the UpdateManager
+		UpdateManager updateManager = new UpdateManager(this, new Runnable() {
+            @Override
+            public void run() {
+                proceedToAuthCheck();
+            }
+        });
+        updateManager.checkForUpdate();
 	}
 
-    // Helper method to encapsulate the delayed auth check logic
-    private void proceedToAuthCheck() {
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            FirebaseAuth auth = FirebaseAuth.getInstance();
-            if (auth.getCurrentUser() != null) {
-                // User logged in, check ban status
-                DatabaseReference userRef = FirebaseDatabase.getInstance()
-                .getReference("skyline/users")
-                .child(auth.getCurrentUser().getUid());
+	// Helper method to encapsulate the delayed auth check logic
+	public void proceedToAuthCheck() {
+		// Ensure Firebase is properly initialized before proceeding
+		com.synapse.social.studioasinc.util.FirebaseInitializationHelper.waitForFirebaseInitialization(this, () -> {
+			try {
+				if (AuthStateManager.isUserAuthenticated(this)) {
+					// User is logged in (either via Firebase or backup), verify the user is still valid
+					FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+					if (currentUser != null) {
+						currentUser.reload().addOnCompleteListener(task -> {
+							if (task.isSuccessful()) {
+								// User is still valid, check ban status
+								checkUserBanStatusAndProceed(currentUser.getUid());
+							} else {
+								// Reload failed (e.g., network). Keep session and proceed to Home to avoid false sign-outs
+								startActivity(new Intent(MainActivity.this, HomeActivity.class));
+								finish();
+							}
+						});
+					} else {
+						// Firebase user is null but we have backup authentication
+						// Try to get the stored UID and proceed
+						String storedUid = AuthStateManager.getUserUid(this);
+						if (storedUid != null) {
+							checkUserBanStatusAndProceed(storedUid);
+						} else {
+							// No stored UID, clear authentication and go to auth
+							AuthStateManager.clearAuthenticationState(this);
+							startActivity(new Intent(MainActivity.this, AuthActivity.class));
+							finish();
+						}
+					}
+				} else {
+					// User not logged in, redirect to AuthActivity
+					startActivity(new Intent(MainActivity.this, AuthActivity.class));
+					finish();
+				}
+			} catch (Exception e) {
+				Log.e("MainActivity", "Error during auth check", e);
+				// Fallback to AuthActivity on any error
+				startActivity(new Intent(MainActivity.this, AuthActivity.class));
+				finish();
+			}
+		}, 3); // Max 3 retries with 500ms delay each
+	}
+	
+	private void checkUserBanStatusAndProceed(String uid) {
+		DatabaseReference userRef = FirebaseDatabase.getInstance()
+				.getReference("skyline/users")
+				.child(uid);
 
-                userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (snapshot.exists()) {
-                            String banned = snapshot.child("banned").getValue(String.class);
-                            if ("false".equals(banned)) {
-                                // Not banned, redirect to HomeActivity
-                                startActivity(new Intent(MainActivity.this, HomeActivity.class));
-                                finish();
-                            } else {
-                                // Banned, show toast and sign out
-                                Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show(); // Changed Toast message as per flowchart implies "Toast: Banned & Sign Out"
-                                auth.signOut();
-                                finish(); // Finish MainActivity after signing out (per flowchart)
-                            }
-                        } else {
-                            // User data not found (maybe first login, or incomplete profile)
-                            // This path leads to CompleteProfileActivity
-                            startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
-                            finish();
-                        }
-                    }
+		userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot snapshot) {
+				if (snapshot.exists()) {
+					Object bannedObj = snapshot.child("banned").getValue();
+					boolean isBanned = false;
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                        // Handle database error, redirect to AuthActivity
-                        startActivity(new Intent(MainActivity.this, AuthActivity.class));
-                        finish();
-                    }
-                });
-            } else {
-                // User not logged in, redirect to AuthActivity
-                startActivity(new Intent(MainActivity.this, AuthActivity.class));
-                finish();
-            }
-        }, 500); // 500ms delay
-    }
+					if (bannedObj instanceof Boolean) {
+						isBanned = (Boolean) bannedObj;
+					} else if (bannedObj instanceof String) {
+						String bannedStr = (String) bannedObj;
+						isBanned = bannedStr.equalsIgnoreCase("true") || bannedStr.equals("1");
+					}
 
-	// Helper method to check internet connectivity
-	private boolean isNetworkAvailable() {
-		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		if (cm == null) return false;
-		NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-		return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+					if (!isBanned) {
+						// Not banned, redirect to HomeActivity
+						startActivity(new Intent(MainActivity.this, HomeActivity.class));
+						finish();
+					} else {
+						// Banned, show toast and sign out
+						Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
+						AuthStateManager.signOut(MainActivity.this);
+						startActivity(new Intent(MainActivity.this, AuthActivity.class));
+						finish();
+					}
+				} else {
+					// User data not found (maybe first login, or incomplete profile)
+					// This path leads to CompleteProfileActivity
+					startActivity(new Intent(MainActivity.this, CompleteProfileActivity.class));
+					finish();
+				}
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError error) {
+				Toast.makeText(MainActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+				// If database check fails, do not sign the user out. Proceed to Home for offline experience
+				startActivity(new Intent(MainActivity.this, HomeActivity.class));
+				finish();
+			}
+		});
 	}
 
 	@Override
 	public void onBackPressed() {
 		finishAffinity();
-	}
-
-	public void _showUpdateDialog(final String _title, final String _versionName, final String _changelog, final String _updateLink, final boolean _isCancelable) {
-
-		LayoutInflater inflater = getLayoutInflater();
-		View dialogView = inflater.inflate(R.layout.update_dialog, null);
-
-		updateDialogBuilder.setView(dialogView);
-		updateDialogBuilder.setCancelable(_isCancelable); // Set cancelable property
-
-		TextView tvTitle = dialogView.findViewById(R.id.update_title);
-		TextView tvVersion = dialogView.findViewById(R.id.update_version);
-		TextView tvChangelog = dialogView.findViewById(R.id.update_changelog);
-		MaterialButton btnUpdate = dialogView.findViewById(R.id.button_update);
-		MaterialButton btnLater = dialogView.findViewById(R.id.button_later);
-
-		tvTitle.setText(_title);
-		tvVersion.setText("Version " + _versionName);
-		tvChangelog.setText(_changelog);
-
-		final AlertDialog dialog = updateDialogBuilder.create();
-
-		btnUpdate.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(_updateLink));
-				startActivity(intent);
-				dialog.dismiss(); // Dismiss dialog when update button is clicked
-				finish(); // Finish MainActivity, as user is likely leaving the app to update
-			}
-		});
-
-		btnLater.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				dialog.dismiss();
-				// ONLY call proceedToAuthCheck if the dialog was cancelable and user chose "Later"
-                // If not cancelable, this button is hidden.
-                if (_isCancelable) {
-                    proceedToAuthCheck();
-                }
-			}
-		});
-
-		if (!_isCancelable) {
-			btnLater.setVisibility(View.GONE);
-            // If not cancelable, make sure user cannot dismiss the dialog by back press or tapping outside
-            dialog.setCanceledOnTouchOutside(false);
-		} else {
-            btnLater.setVisibility(View.VISIBLE); // Ensure it's visible if cancelable
-            dialog.setCanceledOnTouchOutside(true); // Allow dismiss by touch if cancelable
-        }
-
-		if (dialog.getWindow() != null) {
-			dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
-		}
-
-		dialog.show();
-	}
-
-
-	public void _showErrorDialog(final String _errorMessage) {
-		LayoutInflater inflater = getLayoutInflater();
-		View dialogView = inflater.inflate(R.layout.error_dialog, null);
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setView(dialogView);
-		builder.setCancelable(true);
-
-
-		TextView tvErrorMessage = dialogView.findViewById(R.id.error_message_textview);
-		MaterialButton btnOk = dialogView.findViewById(R.id.ok_button);
-
-		tvErrorMessage.setText(_errorMessage);
-
-		final AlertDialog dialog = builder.create();
-
-		btnOk.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				dialog.dismiss();
-                // If this error dialog implies that the app cannot proceed normally (e.g., version check failed critically)
-                // you might want to call proceedToAuthCheck() here, or even finish the app.
-                // For now, let's assume it's a minor error and the app should try to proceed.
-                proceedToAuthCheck(); // Assuming _showErrorDialog doesn't block the main flow.
-			}
-		});
-
-		if (dialog.getWindow() != null) {
-			dialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
-		}
-
-		dialog.show();
 	}
 
 }

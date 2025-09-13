@@ -10,7 +10,7 @@
 		android:id="@+id/body"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="#000000"
+		android:background="?attr/colorSurface"
 		android:orientation="vertical">
 		<RelativeLayout
 			android:id="@+id/middleRelative"
@@ -64,7 +64,7 @@
 								android:text="Something went wrong!"
 								android:textSize="20sp"
 								android:textStyle="bold"
-								android:textColor="#FFFFFF" />
+								android:textColor="?attr/colorOnSurface" />
 							<TextView
 								android:id="@+id/noInternetBodySubtitle"
 								android:layout_width="wrap_content"
@@ -72,7 +72,7 @@
 								android:layout_marginBottom="16dp"
 								android:text="Reasons may be:\n\n• You have no or weak internet connection.\n• The application may be under maintenance.\n• There may be technical problems on our side."
 								android:textSize="14sp"
-								android:textColor="#EEEEEE" />
+								android:textColor="?android:attr/textColorSecondary" />
 							<TextView
 								android:id="@+id/noInternetBodyRetry"
 								android:layout_width="wrap_content"
@@ -81,9 +81,9 @@
 								android:paddingTop="8dp"
 								android:paddingRight="14dp"
 								android:paddingBottom="8dp"
-								android:background="#212121"
+								android:background="?attr/colorSurfaceVariant"
 								android:textSize="18sp"
-								android:textColor="#FFFFFF"
+								android:textColor="?attr/colorOnSurface"
 								tools:replace="android:text"
 								android:text="@string/retry" />
 						</LinearLayout>

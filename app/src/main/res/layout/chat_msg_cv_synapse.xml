@@ -77,7 +77,7 @@
 						android:layout_height="match_parent"
 						android:layout_marginRight="8dp"
 						android:padding="8dp"
-						android:background="#2979FF"
+						android:background="?attr/colorPrimary"
 						android:orientation="vertical" />
 					<LinearLayout
 						android:id="@+id/mRepliedMessageLayoutRightBody"
@@ -90,7 +90,7 @@
 							android:layout_height="wrap_content"
 							android:text="@string/ph_username"
 							android:textSize="12sp"
-							android:textColor="#445E91"
+							android:textColor="?attr/colorPrimary"
 							android:singleLine="true"
 							android:focusable="false" />
 						<TextView
@@ -100,7 +100,7 @@
 							android:paddingRight="4dp"
 							android:text="@string/ph_replied_message"
 							android:textSize="16sp"
-							android:textColor="#424242"
+							android:textColor="?android:attr/textColorSecondary"
 							android:focusable="false"
 							android:autoLink="all"
 							android:maxLines="2"
@@ -141,7 +141,7 @@
 					android:textSize="16sp"
 					android:focusable="false"
 					android:autoLink="all"
-					android:textColorLink="#FFFF00" />
+					android:textColorLink="?attr/colorPrimary" />
 			</LinearLayout>
 			<LinearLayout
 				android:id="@+id/my_message_info"
@@ -160,7 +160,7 @@
 					android:layout_marginLeft="4dp"
 					android:layout_marginRight="4dp"
 					android:text="00:00"
-					android:textColor="#000000"
+					android:textColor="?attr/colorOnSurface"
 					android:focusable="false"
 					tools:replace="android:textSize" />
 				<ImageView

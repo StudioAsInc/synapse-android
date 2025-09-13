@@ -131,19 +131,19 @@
     <string name="m_no_chats">You don’t have any chats with this user yet</string>
     <string name="explore">Explore</string>
     <string name="statistics_settings">Statistics Settings</string>
-    <string name="hide_the_number_of_views">Hide the number of views</string>
-    <string name="hide_the_number_of_views_subtitle">Activate this to hide the number of views</string>
-    <string name="hide_the_number_of_likes">Hide the number of likes</string>
-    <string name="hide_the_number_of_likes_subtitle">Activate this to hide the number of likes</string>
-    <string name="hide_the_number_of_comments">Hide the number of comments</string>
-    <string name="hide_the_number_of_comments_subtitle">Activate this to hide the number of comments</string>
+    <string name="hide_the_number_of_views">Hide view count</string>
+    <string name="hide_the_number_of_views_subtitle">View count will be hidden.</string>
+    <string name="hide_the_number_of_likes">Hide like count</string>
+    <string name="hide_the_number_of_likes_subtitle">Like count will be hidden.</string>
+    <string name="hide_the_number_of_comments">Hide comment count</string>
+    <string name="hide_the_number_of_comments_subtitle">Comment count will be hidden.</string>
     <string name="privacy_settings">Privacy Settings</string>
-    <string name="hide_post_from_everyone">Hide post from everyone</string>
-    <string name="hide_post_from_everyone_subtitle">Enable this to hide the post from everyone but comments are not supported on private posts and all comments will be deleted if you have already created this post.</string>
-    <string name="disable_saving_to_favorites">Disable saving to favorites</string>
-    <string name="disable_saving_to_favorites_subtitle">Enable this if you don’t want users to favorite this post.</string>
+    <string name="hide_post_from_everyone">Make post private</string>
+    <string name="hide_post_from_everyone_subtitle">Only you will be able to see this post.</string>
+    <string name="disable_saving_to_favorites">Disable saving</string>
+    <string name="disable_saving_to_favorites_subtitle">Users won\'t be able to save this post to their favorites.</string>
     <string name="disable_comments">Disable comments</string>
-    <string name="disable_comments_subtitle">Enable this to turn off comments. If your post already has comments, activating it will not delete previous comments.</string>
+    <string name="disable_comments_subtitle">No one will be able to comment on this post.</string>
     <string name="use_url">Use Url</string>
     <string name="profile_image_url">Profile Image Url</string>
     <string name="profile_cover_image_url">Cover Image Url</string>
@@ -258,4 +258,55 @@ Please explain the following message from %3$s in detail, considering the contex
 %5$s
 ---
 </string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="search_hint">Search users</string>
+
+    <!-- Chat Settings -->
+    <string name="chat_settings_title">Chat settings</string>
+
+    <string name="chat_settings_header_chat">Chat</string>
+    <string name="chat_settings_message_text_size_title">Message text size</string>
+    <string name="chat_settings_message_text_size_summary">Adjusting this font size doesn\'t effects the whole app.</string>
+    <string name="chat_settings_message_corner_round_title">Message corner round</string>
+    <string name="chat_settings_message_corner_round_summary">This doesn\'t affect other UI corners\' radius</string>
+    <string name="chat_settings_background_wallpapers_title">Background wallpapers</string>
+    <string name="chat_settings_background_wallpapers_summary">Default</string>
+    <string name="chat_settings_theme_store_title">Theme store</string>
+    <string name="chat_settings_theme_store_summary">Theme changes the whole apps overall interface, colours, fonts, and images as well</string>
+
+    <string name="chat_settings_header_media_and_sound">Media and sound</string>
+    <string name="chat_settings_tap_to_show_next_media_title">Tap to show next media</string>
+    <string name="chat_settings_tap_to_show_next_media_summary">Tap near the edge of the screen while viewing media to navigate</string>
+    <string name="chat_settings_rise_to_listen_title">Rise to Listen</string>
+    <string name="chat_settings_rise_to_listen_summary">Switch sound to the earpiece by raising the phone to your ear</string>
+    <string name="chat_settings_pause_music_while_recording_title">Pause music while recording</string>
+    <string name="chat_settings_pause_music_while_recording_summary">Pause music when you start recording a video message</string>
+
+    <string name="chat_settings_header_security_and_services">Security and services</string>
+    <string name="chat_settings_app_lock_title">App lock</string>
+    <string name="chat_settings_keep_alive_service_title">Keep-alive service</string>
+    <string name="chat_settings_keep_alive_service_summary">Keep services running in background.</string>
+    <string name="chat_settings_background_connection_title">Background connection</string>
+    <string name="chat_settings_background_connection_summary">Keep processing with low power</string>
+    <string name="chat_settings_theme_title">Theme</string>
+    <string name="chat_settings_theme_summary">Default</string>
+
+    <string name="chat_settings_header_app_theming">App theming</string>
+    <string name="chat_settings_language_title">Language</string>
+    <string name="chat_settings_language_summary">English (International)</string>
+
+    <string name="chat_settings_header_storage_and_network">Storage and network</string>
+    <string name="chat_settings_storage_uses_title">Storage uses</string>
+    <string name="chat_settings_storage_uses_summary">Used 1% of your device storage</string>
+    <string name="chat_settings_data_uses_title">Data uses</string>
+    <string name="chat_settings_data_uses_summary">This data has been recorded since\nlast month</string>
+    <string name="chat_settings_streaming_video_title">Streaming video</string>
+    <string name="chat_settings_streaming_video_summary">Stream video without downloading</string>
+
+    <string name="chat_settings_header_ai_and_automations">AI and automations</string>
+    <string name="chat_settings_synapse_premium_title">Synapse Premium</string>
+    <string name="chat_settings_buy_credits_title">Buy Credits</string>
+    <string name="chat_settings_ai_settings_title">AI Settings</string>
+    <string name="chat_settings_ai_settings_summary">Setup your artificial intelligence settings</string>
 </resources>

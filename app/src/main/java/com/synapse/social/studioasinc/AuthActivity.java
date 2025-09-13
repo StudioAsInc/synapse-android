@@ -35,8 +35,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.synapse.social.studioasinc.OneSignalManager;
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
 import com.synapse.social.studioasinc.animations.textview.TVeffects;
+import com.synapse.social.studioasinc.util.AuthStateManager;
 
 public class AuthActivity extends AppCompatActivity {
 
@@ -285,6 +287,12 @@ public class AuthActivity extends AppCompatActivity {
         aiNameTextView.setFadeDuration(150L);
         aiNameTextView.startTyping("Creating your account...");
 
+        // Save authentication state to SharedPreferences as backup
+        FirebaseUser user = fauth.getCurrentUser();
+        if (user != null) {
+            AuthStateManager.saveAuthenticationState(this, user.getUid());
+        }
+
         Intent intent = new Intent(AuthActivity.this, CompleteProfileActivity.class);
         startActivity(intent);
         finish();
@@ -336,12 +344,26 @@ public class AuthActivity extends AppCompatActivity {
                 } else {
                     showWelcomeMessage("I recognize you! Let's go...");
                 }
+
+                // Save authentication state to SharedPreferences as backup
+                AuthStateManager.saveAuthenticationState(AuthActivity.this, uid);
+
+                // Login to OneSignal
+                OneSignalManager.loginUser(uid);
+
                 navigateToHomeAfterDelay();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 showWelcomeMessage("I recognize you! Let's go...");
+                
+                // Save authentication state to SharedPreferences as backup even if username fetch fails
+                AuthStateManager.saveAuthenticationState(AuthActivity.this, uid);
+                
+                // Login to OneSignal for consistent behavior
+                OneSignalManager.loginUser(uid);
+                
                 navigateToHomeAfterDelay();
             }
         });

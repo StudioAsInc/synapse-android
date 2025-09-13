@@ -1,21 +1,23 @@
 package com.synapse.social.studioasinc;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.FirebaseApp;
@@ -26,27 +28,37 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.adapter.ViewPagerAdapter;
+import com.synapse.social.studioasinc.util.AuthStateManager;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final int REELS_TAB_POSITION = 1;
     private FirebaseAuth auth;
     private FirebaseDatabase _firebase;
     private DatabaseReference udb;
-    private ImageView settings_button;
-    private ImageView nav_search_ic;
-    private ImageView nav_inbox_ic;
-    private ImageView nav_profile_ic;
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
     private AppBarLayout app_bar_layout;
+    private DrawerLayout drawerLayout;
+    private NavigationView navigationView;
+    private ImageView menuButton;
+    private ImageView addPostButton;
+    private ImageView navSearchIc;
+    private ImageView navInboxIc;
     private View topBar;
+    
+    // Cache user UID to avoid redundant lookups
+    private String cachedUserUid;
 
     @Override
     protected void onCreate(Bundle _savedInstanceState) {
         super.onCreate(_savedInstanceState);
         setContentView(R.layout.home);
         FirebaseApp.initializeApp(this);
+        
+        // Cache user UID once at startup
+        cachedUserUid = AuthStateManager.getUserUid(this);
+        
         initialize();
         initializeLogic();
     }
@@ -54,8 +66,8 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            PresenceManager.setActivity(FirebaseAuth.getInstance().getCurrentUser().getUid(), "In Home");
+        if (cachedUserUid != null) {
+            PresenceManager.setActivity(cachedUserUid, "In Home");
         }
     }
 
@@ -71,15 +83,45 @@ public class HomeActivity extends AppCompatActivity {
 
         tabLayout = findViewById(R.id.tab_layout);
         viewPager = findViewById(R.id.view_pager);
-        settings_button = findViewById(R.id.settings_button);
-        nav_search_ic = findViewById(R.id.nav_search_ic);
-        nav_inbox_ic = findViewById(R.id.nav_inbox_ic);
-        nav_profile_ic = findViewById(R.id.nav_profile_ic);
         app_bar_layout = findViewById(R.id.app_bar_layout);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.navigation_view);
+        menuButton = findViewById(R.id.menu_button);
+        addPostButton = findViewById(R.id.add_post_button);
+        navSearchIc = findViewById(R.id.nav_search_ic);
+        navInboxIc = findViewById(R.id.nav_inbox_ic);
         topBar = findViewById(R.id.topBar);
     }
 
     private void initializeLogic() {
+        if (!AuthStateManager.isUserAuthenticated(this)) {
+            // User is not signed in and no backup authentication, redirect to AuthActivity
+            Intent intent = new Intent(HomeActivity.this, AuthActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
+        navigationView.setNavigationItemSelectedListener(this);
+
+        menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.END));
+
+        addPostButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), CreatePostActivity.class);
+            startActivity(intent);
+        });
+
+        navSearchIc.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
+            startActivity(intent);
+        });
+
+        navInboxIc.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), InboxActivity.class);
+            startActivity(intent);
+        });
+
         viewPager.setAdapter(new ViewPagerAdapter(this));
 
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
@@ -123,60 +165,94 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        nav_search_ic.setOnClickListener(_view -> {
-            Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
-            startActivity(intent);
-        });
+        // Setup drawer header
+        View headerView = navigationView.getHeaderView(0);
+        ImageView profileImage = headerView.findViewById(R.id.profile_image);
+        ImageView coverImage = headerView.findViewById(R.id.cover_image);
+        android.widget.TextView userName = headerView.findViewById(R.id.user_name);
+        android.widget.TextView userEmail = headerView.findViewById(R.id.user_email);
 
-        nav_inbox_ic.setOnClickListener(_view -> {
-            Intent intent = new Intent(getApplicationContext(), InboxActivity.class);
-            startActivity(intent);
-        });
+        // Get user UID from cache
+        String userUid = cachedUserUid;
 
-        nav_profile_ic.setOnClickListener(_view -> {
-            Intent intent = new Intent(getApplicationContext(), ProfileActivity.class);
-            intent.putExtra("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-            startActivity(intent);
-        });
-
-        settings_button.setOnClickListener(_view -> {
-            FirebaseAuth.getInstance().signOut();
-            Intent intent = new Intent(HomeActivity.this, AuthActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        });
-
-        DatabaseReference getReference = udb.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-        getReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()) {
-                    if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
-                        Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(nav_profile_ic);
-                    } else {
-                        nav_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
+        if (userUid != null) {
+            DatabaseReference getReference = udb.child(userUid);
+            getReference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if(dataSnapshot.exists()) {
+                        if (dataSnapshot.child("avatar").getValue(String.class) != null && !dataSnapshot.child("avatar").getValue(String.class).equals("null")) {
+                            Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("avatar").getValue(String.class))).into(profileImage);
+                        } else {
+                            profileImage.setImageResource(R.drawable.ic_account_circle_48px);
+                        }
+                        if (dataSnapshot.child("cover").getValue(String.class) != null && !dataSnapshot.child("cover").getValue(String.class).equals("null")) {
+                            Glide.with(getApplicationContext()).load(Uri.parse(dataSnapshot.child("cover").getValue(String.class))).into(coverImage);
+                        }
+                        if (dataSnapshot.child("username").getValue(String.class) != null) {
+                            userName.setText(dataSnapshot.child("username").getValue(String.class));
+                        }
+                        if (dataSnapshot.child("email").getValue(String.class) != null) {
+                            userEmail.setText(dataSnapshot.child("email").getValue(String.class));
+                        }
                     }
-                } else {
-                    nav_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
                 }
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    // Handle error
+                }
+            });
+        }
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.nav_my_profile) {
+            Intent profileIntent = new Intent(getApplicationContext(), ProfileActivity.class);
+            // Use cached user UID
+            if (cachedUserUid != null) {
+                profileIntent.putExtra("uid", cachedUserUid);
+                startActivity(profileIntent);
             }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                nav_profile_ic.setImageResource(R.drawable.ic_account_circle_48px);
-            }
-        });
+        } else if (id == R.id.nav_settings) {
+            Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
+            startActivity(settingsIntent);
+        } else if (id == R.id.nav_calls) {
+            Intent callsIntent = new Intent(getApplicationContext(), CallActivity.class);
+            startActivity(callsIntent);
+        } else if (id == R.id.nav_logout) {
+            AuthStateManager.signOut(this);
+            Intent logoutIntent = new Intent(HomeActivity.this, AuthActivity.class);
+            logoutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(logoutIntent);
+            finish();
+        } else {
+            Toast.makeText(this, "This is a mock item", Toast.LENGTH_SHORT).show();
+        }
+
+        drawerLayout.closeDrawer(GravityCompat.END);
+        return true;
     }
 
     @Override
     public void onBackPressed() {
-        new MaterialAlertDialogBuilder(HomeActivity.this)
-                .setTitle("Exit Synapse")
-                .setMessage("Are you certain you wish to terminate the Synapse session? Please confirm your decision.")
-                .setIcon(R.drawable.baseline_logout_black_48dp)
-                .setPositiveButton("Exit", (_dialog, _which) -> finishAffinity())
-                .setNegativeButton("Cancel", null)
-                .create()
-                .show();
+        if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
+            drawerLayout.closeDrawer(GravityCompat.END);
+        } else {
+            new MaterialAlertDialogBuilder(HomeActivity.this)
+                    .setTitle("Exit Synapse")
+                    .setMessage("Are you certain you wish to terminate the Synapse session? Please confirm your decision.")
+                    .setIcon(R.drawable.baseline_logout_black_48dp)
+                    .setPositiveButton("Exit", (_dialog, _which) -> finishAffinity())
+                    .setNegativeButton("Cancel", null)
+                    .create()
+                    .show();
+        }
+    }
+
+    public ViewPager2 getViewPager() {
+        return viewPager;
     }
 }

@@ -21,8 +21,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/storiesView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            tools:listitem="@layout/synapse_story_cv" />
+            android:layout_height="150dp" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/miniPostLayout"

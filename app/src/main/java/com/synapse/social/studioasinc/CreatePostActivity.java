@@ -37,7 +37,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.annotation.*;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
 import androidx.browser.*;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
@@ -80,7 +80,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.regex.*;
 import org.json.*;
-import androidx.appcompat.widget.SwitchCompat;
+import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.synapse.social.studioasinc.ImageUploader;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
@@ -100,23 +101,16 @@ public class CreatePostActivity extends AppCompatActivity {
 	private String selectedImagePath = "";
 	private boolean hasImage = false;
 	
-	private LinearLayout main;
-	private LinearLayout top;
-	private LinearLayout topSpace;
-	private ScrollView scroll;
-	private ImageView back;
-	private LinearLayout topSpc;
+	private MaterialToolbar toolbar;
 	private Button postButton;
-	private TextView title;
-	private LinearLayout scrollBody;
-	private LinearLayout PostInfoTop1;
-	private LinearLayout topSpace2;
-	private LinearLayout spc2;
-	private CardView imageCard;
-	private FadeEditText postDescription;
+	private Button settingsButton;
+	private ScrollView scrollView;
+	private LinearLayout scrollBodyLayout;
+	private FadeEditText postDescriptionEditText;
+	private CardView imageCardView;
+	private LinearLayout imagePlaceholderLayout;
 	private ImageView postImageView;
-	private LinearLayout imagePlaceholder;
-	private LinearLayout settingsButton;
+
 	private DatabaseReference maindb = _firebase.getReference("skyline");
 	private Calendar cc = Calendar.getInstance();
 	private SharedPreferences appSavedData;
@@ -133,7 +127,7 @@ public class CreatePostActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
-		setContentView(R.layout.create_post);
+		setContentView(R.layout.activity_create_post);
 		initialize(_savedInstanceState);
 		FirebaseApp.initializeApp(this);
 		
@@ -166,31 +160,20 @@ public class CreatePostActivity extends AppCompatActivity {
 	}
 	
 	private void initialize(Bundle _savedInstanceState) {
-		main = findViewById(R.id.main);
-		top = findViewById(R.id.top);
-		topSpace = findViewById(R.id.topSpace);
-		scroll = findViewById(R.id.scroll);
-		back = findViewById(R.id.back);
-		topSpc = findViewById(R.id.topSpc);
-		postButton = findViewById(R.id.postButton);
-		title = findViewById(R.id.title);
-		scrollBody = findViewById(R.id.scrollBody);
-		PostInfoTop1 = findViewById(R.id.PostInfoTop1);
-		topSpace2 = findViewById(R.id.topSpace2);
-		spc2 = findViewById(R.id.spc2);
-		imageCard = findViewById(R.id.imageCard);
-		postDescription = findViewById(R.id.postDescription);
+		toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		toolbar.setNavigationOnClickListener(v -> onBackPressed());
+
+		scrollView = findViewById(R.id.scrollView);
+		scrollBodyLayout = findViewById(R.id.scrollBodyLayout);
+		postDescriptionEditText = findViewById(R.id.postDescriptionEditText);
+		imageCardView = findViewById(R.id.imageCardView);
+		imagePlaceholderLayout = findViewById(R.id.imagePlaceholderLayout);
 		postImageView = findViewById(R.id.postImageView);
-		imagePlaceholder = findViewById(R.id.imagePlaceholder);
+		postButton = findViewById(R.id.postButton);
 		settingsButton = findViewById(R.id.settingsButton);
 		appSavedData = getSharedPreferences("data", Activity.MODE_PRIVATE);
-		
-		back.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				onBackPressed();
-			}
-		});
 		
 		postButton.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -198,8 +181,15 @@ public class CreatePostActivity extends AppCompatActivity {
 				_createPost();
 			}
 		});
-		
-		imagePlaceholder.setOnClickListener(new View.OnClickListener() {
+
+		settingsButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View _view) {
+				_showPostSettingsBottomSheet();
+			}
+		});
+
+		imagePlaceholderLayout.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
 				_openImagePicker();
@@ -221,7 +211,7 @@ public class CreatePostActivity extends AppCompatActivity {
 							hasImage = false;
 							selectedImagePath = "";
 							postImageView.setVisibility(View.GONE);
-							imagePlaceholder.setVisibility(View.VISIBLE);
+							imagePlaceholderLayout.setVisibility(View.VISIBLE);
 							postImageView.setImageDrawable(null);
 						} else if (items[item].equals("Cancel")) {
 							dialog.dismiss();
@@ -231,46 +221,27 @@ public class CreatePostActivity extends AppCompatActivity {
 				builder.show();
 			}
 		});
-
-		settingsButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View _view) {
-				_showPostSettingsBottomSheet();
-			}
-		});
-		
-		postDescription.addTextChangedListener(new TextWatcher() {
-			@Override
-			public void onTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-				final String _charSeq = _param1.toString();
-				_TransitionManager(PostInfoTop1, 130);
-			}
-			
-			@Override
-			public void beforeTextChanged(CharSequence _param1, int _param2, int _param3, int _param4) {
-				
-			}
-			
-			@Override
-			public void afterTextChanged(Editable _param1) {
-				
-			}
-		});
 	}
 	
 	private void initializeLogic() {
-		_setStatusBarColor(true, 0xFFFFFFFF, 0xFFFFFFFF);
-		_viewGraphics(back, 0xFFFFFFFF, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
-		_viewGraphics(settingsButton, 0xFFFFFFFF, 0xFFE0E0E0, 300, 0, Color.TRANSPARENT);
-		imageCard.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)22, (int)2, 0xFFEEEEEE, 0xFFFFFFFF));
-		postDescription.setBackground(new GradientDrawable() { public GradientDrawable getIns(int a, int b, int c, int d) { this.setCornerRadius(a); this.setStroke(b, c); this.setColor(d); return this; } }.getIns((int)28, (int)3, 0xFFEEEEEE, 0xFFFFFFFF));
-		_viewGraphics(imagePlaceholder, 0xFFFFFFFF, 0xFFEEEEEE, 0, 0, Color.TRANSPARENT);
-		
+		_setStatusBarColor();
 		// Check if we have an image from intent
 		if (getIntent().hasExtra("type") && getIntent().hasExtra("path")) {
 			selectedImagePath = getIntent().getStringExtra("path");
 			hasImage = true;
 			_loadSelectedImage();
+		}
+	}
+
+	private void _setStatusBarColor() {
+		TypedValue typedValue = new TypedValue();
+		getTheme().resolveAttribute(com.google.android.material.R.attr.colorSurface, typedValue, true);
+		int color = typedValue.data;
+		getWindow().setStatusBarColor(color);
+
+		int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+		if (currentNightMode == Configuration.UI_MODE_NIGHT_NO) {
+			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		}
 	}
 	
@@ -325,14 +296,14 @@ public class CreatePostActivity extends AppCompatActivity {
 	
 	private void _loadSelectedImage() {
 		if (hasImage && selectedImagePath != null) {
-			imagePlaceholder.setVisibility(View.GONE);
+			imagePlaceholderLayout.setVisibility(View.GONE);
 			postImageView.setVisibility(View.VISIBLE);
 			Glide.with(getApplicationContext()).load(selectedImagePath).into(postImageView);
 		}
 	}
 	
 	private void _createPost() {
-		if (postDescription.getText().toString().trim().equals("") && !hasImage) {
+		if (postDescriptionEditText.getText().toString().trim().equals("") && !hasImage) {
 			Toast.makeText(getApplicationContext(), "Please add some text or an image to your post", Toast.LENGTH_SHORT).show();
 			return;
 		}
@@ -381,8 +352,8 @@ public class CreatePostActivity extends AppCompatActivity {
 			PostSendMap.put("post_type", "TEXT");
 		}
 		
-		if (!postDescription.getText().toString().trim().equals("")) {
-			PostSendMap.put("post_text", postDescription.getText().toString().trim());
+		if (!postDescriptionEditText.getText().toString().trim().equals("")) {
+			PostSendMap.put("post_text", postDescriptionEditText.getText().toString().trim());
 		}
 		
 		if (appSavedData.contains("user_region_data") && !appSavedData.getString("user_region_data", "").equals("none")) {
@@ -410,7 +381,7 @@ public class CreatePostActivity extends AppCompatActivity {
 			@Override
 			public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 				if (databaseError == null) {
-					_sendNotificationsToFollowers(UniquePostKey);
+					_sendNotificationsToFollowers(UniquePostKey, postDescriptionEditText.getText().toString().trim());
 					Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
 					_LoadingDialog(false);
 					finish();
@@ -422,47 +393,75 @@ public class CreatePostActivity extends AppCompatActivity {
 		});
 	}
 	
-	private void _sendNotificationsToFollowers(String postKey) {
+	private void _sendNotificationsToFollowers(String postKey, final String postText) {
 		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 		if (currentUser == null) {
 			return;
 		}
 		String currentUid = currentUser.getUid();
-		DatabaseReference followersRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("followers");
-		followersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				List<Task<DataSnapshot>> tasks = new ArrayList<>();
-				for (DataSnapshot followerSnapshot : dataSnapshot.getChildren()) {
-					String followerUid = followerSnapshot.getKey();
-					if (followerUid != null) {
-						tasks.add(FirebaseDatabase.getInstance().getReference("skyline/users").child(followerUid).get());
-					}
-				}
-
-				com.google.android.gms.tasks.Tasks.whenAllSuccess(tasks).addOnSuccessListener(new OnSuccessListener<List<Object>>() {
+		com.synapse.social.studioasinc.util.UserUtils.getUserDisplayName(currentUid, new com.synapse.social.studioasinc.util.UserUtils.Callback<String>() {
+			public void onResult(String senderName) {
+				// Send notification to followers
+				DatabaseReference followersRef = FirebaseDatabase.getInstance().getReference("skyline/users").child(currentUid).child("followers");
+				followersRef.addListenerForSingleValueEvent(new ValueEventListener() {
 					@Override
-					public void onSuccess(List<Object> list) {
-						for (Object object : list) {
-							DataSnapshot snapshot = (DataSnapshot) object;
-							String followerUid = snapshot.getKey();
-							String senderName = currentUser.getDisplayName();
-							String message = senderName + " has a new post";
-							HashMap<String, String> data = new HashMap<>();
-							data.put("postId", postKey);
-							NotificationHelper.sendNotification(
-							followerUid,
-							currentUid,
-							message,
-							NotificationConfig.NOTIFICATION_TYPE_NEW_POST,
-							data
-							);
+					public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+						for (DataSnapshot followerSnapshot : dataSnapshot.getChildren()) {
+							String followerUid = followerSnapshot.getKey();
+							if (followerUid != null) {
+								String message = senderName + " has a new post";
+								HashMap<String, String> data = new HashMap<>();
+								data.put("postId", postKey);
+								NotificationHelper.sendNotification(
+									followerUid,
+									currentUid,
+									message,
+									NotificationConfig.NOTIFICATION_TYPE_NEW_POST,
+									data
+								);
+							}
 						}
 					}
+
+					@Override
+					public void onCancelled(@NonNull DatabaseError databaseError) {
+						// Handle error
+					}
 				});
+
+				// Send notification to mentioned users
+				Pattern pattern = Pattern.compile("@(\\w+)");
+				Matcher matcher = pattern.matcher(postText);
+				while (matcher.find()) {
+					String username = matcher.group(1);
+					DatabaseReference usernameRef = FirebaseDatabase.getInstance().getReference("skyline/usernames").child(username);
+					usernameRef.addListenerForSingleValueEvent(new ValueEventListener() {
+						@Override
+						public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+							if (dataSnapshot.exists()) {
+								String recipientUid = dataSnapshot.child("uid").getValue(String.class);
+								if (recipientUid != null && !recipientUid.equals(currentUid)) {
+									String message = senderName + " mentioned you in a post";
+									HashMap<String, String> data = new HashMap<>();
+									data.put("postId", postKey);
+									NotificationHelper.sendNotification(
+										recipientUid,
+										currentUid,
+										message,
+										"mention_post",
+										data
+									);
+								}
+							}
+						}
+
+						@Override
+						public void onCancelled(@NonNull DatabaseError databaseError) {
+						}
+					});
+				}
 			}
 
-			@Override
 			public void onCancelled(@NonNull DatabaseError databaseError) {
 				// Handle error
 			}
@@ -471,16 +470,17 @@ public class CreatePostActivity extends AppCompatActivity {
 
 	private void _showPostSettingsBottomSheet() {
 		BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
-		View bottomSheetView = getLayoutInflater().inflate(R.layout.create_post_settings_bottom_sheet, null);
+		View bottomSheetView = getLayoutInflater().inflate(R.layout.bottomsheet_post_settings, null);
 		bottomSheetDialog.setContentView(bottomSheetView);
 		
 		// Initialize switches
-		SwitchCompat hideViewsSwitch = bottomSheetView.findViewById(R.id.hideViewsSwitch);
-		SwitchCompat hideLikesSwitch = bottomSheetView.findViewById(R.id.hideLikesSwitch);
-		SwitchCompat hideCommentsSwitch = bottomSheetView.findViewById(R.id.hideCommentsSwitch);
-		SwitchCompat hidePostSwitch = bottomSheetView.findViewById(R.id.hidePostSwitch);
-		SwitchCompat disableSaveSwitch = bottomSheetView.findViewById(R.id.disableSaveSwitch);
-		SwitchCompat disableCommentsSwitch = bottomSheetView.findViewById(R.id.disableCommentsSwitch);
+		MaterialSwitch hideViewsSwitch = bottomSheetView.findViewById(R.id.hideViewsSwitch);
+		MaterialSwitch hideLikesSwitch = bottomSheetView.findViewById(R.id.hideLikesSwitch);
+		MaterialSwitch hideCommentsSwitch = bottomSheetView.findViewById(R.id.hideCommentsSwitch);
+		MaterialSwitch hidePostSwitch = bottomSheetView.findViewById(R.id.hidePostSwitch);
+		MaterialSwitch disableSaveSwitch = bottomSheetView.findViewById(R.id.disableSaveSwitch);
+		MaterialSwitch disableCommentsSwitch = bottomSheetView.findViewById(R.id.disableCommentsSwitch);
+		Button doneButton = bottomSheetView.findViewById(R.id.doneButton);
 		
 		// Set current values
 		hideViewsSwitch.setChecked(hideViewsCount);
@@ -539,28 +539,16 @@ public class CreatePostActivity extends AppCompatActivity {
 				disableComments = isChecked;
 			}
 		});
+
+		doneButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				bottomSheetDialog.dismiss();
+			}
+		});
 		
 		bottomSheetDialog.show();
 	}
-
-	public void _setStatusBarColor(final boolean _isLight, final int _stateColor, final int _navigationColor) {
-		if (_isLight) {
-			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-		}
-		getWindow().setStatusBarColor(_stateColor);
-		getWindow().setNavigationBarColor(_navigationColor);
-	}
-	
-	
-	public void _viewGraphics(final View _view, final int _onFocus, final int _onRipple, final double _radius, final double _stroke, final int _strokeColor) {
-		android.graphics.drawable.GradientDrawable GG = new android.graphics.drawable.GradientDrawable();
-		GG.setColor(_onFocus);
-		GG.setCornerRadius((float)_radius);
-		GG.setStroke((int) _stroke, _strokeColor);
-		android.graphics.drawable.RippleDrawable RE = new android.graphics.drawable.RippleDrawable(new android.content.res.ColorStateList(new int[][]{new int[]{}}, new int[]{ _onRipple}), GG, null);
-		_view.setBackground(RE);
-	}
-	
 	
 	public void _LoadingDialog(final boolean _visibility) {
 		if (_visibility) {
@@ -585,14 +573,5 @@ public class CreatePostActivity extends AppCompatActivity {
 				SynapseLoadingDialog.dismiss();
 			}
 		}
-		
 	}
-	
-	
-	public void _TransitionManager(final View _view, final double _duration) {
-		LinearLayout viewgroup =(LinearLayout) _view;
-		
-		android.transition.AutoTransition autoTransition = new android.transition.AutoTransition(); autoTransition.setDuration((long)_duration); android.transition.TransitionManager.beginDelayedTransition(viewgroup, autoTransition);
-	}
-	
 }
