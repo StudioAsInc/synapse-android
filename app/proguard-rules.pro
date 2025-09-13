@@ -11,3 +11,7 @@
 # Keep gRPC classes for Firebase Firestore
 -keep class io.grpc.** { *; }
 -keep class io.grpc.android.** { *; }
+-keep class io.grpc.internal.** { *; }
+-keep class io.grpc.InternalGlobalInterceptors { *; }
+-keep class com.google.firebase.firestore.** { *; }
+-keep class com.google.firebase.firestore.remote.** { *; }

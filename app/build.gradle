@@ -35,6 +35,18 @@ android {
     compileSdk = 36 // Keep 36
 
     useLibrary 'org.apache.http.legacy'
+    
+    // Add dependency resolution strategy to handle gRPC conflicts
+    configurations.all {
+        resolutionStrategy {
+            force 'io.grpc:grpc-core:1.57.2'
+            force 'io.grpc:grpc-stub:1.57.2'
+            force 'io.grpc:grpc-okhttp:1.57.2'
+            force 'io.grpc:grpc-protobuf-lite:1.57.2'
+            force 'io.grpc:grpc-api:1.57.2'
+            force 'io.grpc:grpc-context:1.57.2'
+        }
+    }
 
     signingConfigs {
         release {
@@ -99,23 +111,32 @@ android {
 }
 
 dependencies {
-    // Import the Firebase BoM (downgraded to avoid gRPC conflict)
-    implementation(platform("com.google.firebase:firebase-bom:33.5.0"))
+    // Import the Firebase BoM (latest stable version with better gRPC support)
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
 
     // When using the BoM, don't specify versions in Firebase dependencies
-    // Re-adding -ktx suffixes as they are included in this BoM version
     implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-database-ktx'
     implementation 'com.google.firebase:firebase-storage-ktx'
-    implementation 'com.google.firebase:firebase-firestore-ktx'
+    implementation('com.google.firebase:firebase-firestore-ktx') {
+        exclude group: 'io.grpc', module: 'grpc-core'
+        exclude group: 'io.grpc', module: 'grpc-stub'
+        exclude group: 'io.grpc', module: 'grpc-okhttp'
+        exclude group: 'io.grpc', module: 'grpc-protobuf-lite'
+    }
     implementation 'com.google.firebase:firebase-perf-ktx'
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
     
-    // Add explicit gRPC dependencies to resolve conflicts
-    implementation 'io.grpc:grpc-okhttp:1.58.0'
-    implementation 'io.grpc:grpc-stub:1.58.0'
-    implementation 'io.grpc:grpc-protobuf-lite:1.58.0'
+    // Add compatible gRPC dependencies explicitly
+    implementation 'io.grpc:grpc-core:1.57.2'
+    implementation 'io.grpc:grpc-stub:1.57.2'
+    implementation 'io.grpc:grpc-okhttp:1.57.2'
+    implementation 'io.grpc:grpc-protobuf-lite:1.57.2'
+    implementation 'io.grpc:grpc-api:1.57.2'
+    implementation 'io.grpc:grpc-context:1.57.2'
+    implementation 'io.grpc:grpc-netty-shaded:1.57.2'
+    implementation 'io.grpc:grpc-services:1.57.2'
 
     // AndroidX Core & UI Components
     implementation 'androidx.core:core-ktx:1.17.0-rc01'
