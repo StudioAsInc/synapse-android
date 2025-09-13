@@ -86,6 +86,8 @@ import com.synapse.social.studioasinc.ImageUploader;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import android.content.ClipData;
+import com.synapse.social.studioasinc.database.DatabaseStructure;
+import com.synapse.social.studioasinc.database.ContentManager;
 
 
 public class CreatePostActivity extends AppCompatActivity {
