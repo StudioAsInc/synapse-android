@@ -78,7 +78,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.appcompat.app.AppCompatDelegate;
 import com.bumptech.glide.Glide;
 import com.synapse.social.studioasinc.animations.ShimmerFrameLayout;
-import com.synapse.social.studioasinc.util.AuthStateManager;
+import com.synapse.social.studioasinc.util.AuthUtil;
 
 public class FragInboxChatsActivity extends Fragment {
 
@@ -330,7 +330,7 @@ public class FragInboxChatsActivity extends Fragment {
 		inboxListRecyclerView.setVisibility(View.GONE);
 		
 		// Get current user UID safely
-		String userUid = AuthStateManager.getCurrentUserUidSafely(getContext());
+		String userUid = AuthUtil.getCurrentUserUid();
 		if (userUid == null) {
 			// No authentication available, hide shimmer and show empty state
 			shimmer_view_container.stopShimmer();
@@ -434,7 +434,7 @@ public class FragInboxChatsActivity extends Fragment {
 					last_message.setText(_data.get((int)_position).get("last_message_text").toString());
 				}
 				// Get current user UID safely
-				String currentUserUid = AuthStateManager.getCurrentUserUidSafely(getContext());
+				String currentUserUid = AuthUtil.getCurrentUserUid();
 				
 				if (currentUserUid != null && _data.get((int)_position).get("last_message_uid").toString().equals(currentUserUid)) {
 					if (_data.get((int)_position).get("last_message_state").toString().equals("sended")) {
@@ -458,7 +458,7 @@ public class FragInboxChatsActivity extends Fragment {
 							@Override
 							public void run() {
 								// Get current user UID safely
-								String currentUserUid = AuthStateManager.getCurrentUserUidSafely(getContext());
+								String currentUserUid = AuthUtil.getCurrentUserUid();
 								
 								if (currentUserUid != null) {
 									Query getUnreadMessagesCount = FirebaseDatabase.getInstance().getReference("skyline/chats").child(currentUserUid).child(_data.get((int)_position).get("uid").toString()).orderByChild("message_state").equalTo("sended");

@@ -1,6 +1,8 @@
 package com.synapse.social.studioasinc;
 
-import com.synapse.social.studioasinc.util.AuthStateManager;
+// AuthStateManager removed - using Firebase Auth only
+import com.synapse.social.studioasinc.database.DatabaseStructure;
+import com.synapse.social.studioasinc.database.ChatManager;
 import android.Manifest;
 import android.animation.*;
 import android.app.*;
@@ -85,7 +87,7 @@ import com.synapse.social.studioasinc.ImageUploader;
 import com.synapse.social.studioasinc.OneSignalManager;
 
 
-import com.synapse.social.studioasinc.crypto.E2EEHelper;
+// E2EE disabled - import removed
 
 public class CompleteProfileActivity extends AppCompatActivity {
 
@@ -749,79 +751,84 @@ public class CompleteProfileActivity extends AppCompatActivity {
 		getJoinTime = Calendar.getInstance();
 		createUserMap.clear();
 
+		// Core user data
 		createUserMap.put("uid", currentUser.getUid());
+		createUserMap.put("username", username_input.getText().toString().trim());
+		String nickname = nickname_input.getText().toString().trim();
+		createUserMap.put("nickname", nickname.isEmpty() ? username_input.getText().toString().trim() : nickname);
 		createUserMap.put("email", currentUser.getEmail());
-		createUserMap.put("profile_cover_image", "null");
-
-		String finalAvatarUrl = "null";
+		
+		// Account status
+		if ("mashikahamed0@gmail.com".equals(currentUser.getEmail())) {
+			createUserMap.put("account_type", "admin");
+			createUserMap.put("is_premium", true);
+			createUserMap.put("is_verified", true);
+		} else {
+			createUserMap.put("account_type", "user");
+			createUserMap.put("is_premium", false);
+			createUserMap.put("is_verified", currentUser.isEmailVerified());
+		}
+		createUserMap.put("account_status", "active");
+		createUserMap.put("premium_expiry", null);
+		
+		// Profile data
+		String biography = biography_input.getText().toString().trim();
+		createUserMap.put("biography", biography.isEmpty() ? "" : biography);
+		createUserMap.put("gender", "hidden");
+		createUserMap.put("location", "");
+		createUserMap.put("website_url", "");
+		createUserMap.put("join_date", com.google.firebase.database.ServerValue.TIMESTAMP);
+		
+		// Avatar and cover
+		String finalAvatarUrl = "";
 		if (!thedpurl.equals("null")) {
 			finalAvatarUrl = thedpurl;
 		} else if (getIntent().hasExtra("googleLoginAvatarUri")) {
 			finalAvatarUrl = getIntent().getStringExtra("googleLoginAvatarUri");
 		}
-		createUserMap.put("avatar", finalAvatarUrl);
-		createUserMap.put("avatar_history_type", "local");
+		createUserMap.put("avatar_url", finalAvatarUrl.isEmpty() || finalAvatarUrl.equals("null") ? "" : finalAvatarUrl);
+		createUserMap.put("cover_url", "");
 
-		createUserMap.put("username", username_input.getText().toString().trim());
-
-		String nickname = nickname_input.getText().toString().trim();
-		createUserMap.put("nickname", nickname.isEmpty() ? "null" : nickname);
-
-		String biography = biography_input.getText().toString().trim();
-		createUserMap.put("biography", biography.isEmpty() ? "null" : biography);
-
-		if ("mashikahamed0@gmail.com".equals(currentUser.getEmail())) {
-			createUserMap.put("account_premium", "true");
-			createUserMap.put("user_level_xp", "500");
-			createUserMap.put("verify", "true");
-			createUserMap.put("account_type", "admin");
-			createUserMap.put("gender", "hidden");
-		} else {
-			createUserMap.put("account_premium", "false");
-			createUserMap.put("user_level_xp", "500");
-			createUserMap.put("verify", String.valueOf(currentUser.isEmailVerified()));
-			createUserMap.put("account_type", "user");
-			createUserMap.put("gender", "hidden");
-		}
-		createUserMap.put("banned", "false");
-		createUserMap.put("status", "online");
-		createUserMap.put("join_date", String.valueOf(getJoinTime.getTimeInMillis()));
-
+		// Initialize sub-objects
+		Map<String, Object> presence = new HashMap<>();
+		presence.put("status", "online");
+		presence.put("last_seen", com.google.firebase.database.ServerValue.TIMESTAMP);
+		presence.put("activity", "Setting up profile");
+		createUserMap.put("presence", presence);
+		
+		Map<String, Object> settings = new HashMap<>();
+		settings.put("privacy_profile", "public");
+		settings.put("privacy_activity", "public");
+		settings.put("language", "en");
+		settings.put("theme", "light");
+		settings.put("notifications_enabled", true);
+		createUserMap.put("settings", settings);
+		
+		Map<String, Object> counters = new HashMap<>();
+		counters.put("posts", 0);
+		counters.put("reels", 0);
+		counters.put("followers", 0);
+		counters.put("following", 0);
+		counters.put("groups", 0);
+		counters.put("reel_views", 0);
+		createUserMap.put("counters", counters);
+		
 		main.child("users").child(currentUser.getUid()).updateChildren(createUserMap, new DatabaseReference.CompletionListener() {
 			@Override
 			public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 				if (databaseError == null) {
-					HashMap<String, Object> usernameIndexMap = new HashMap<>();
-					usernameIndexMap.put("uid", currentUser.getUid());
-					usernameIndexMap.put("email", currentUser.getEmail());
-					usernameIndexMap.put("username", username_input.getText().toString().trim());
-					pushusername.child(username_input.getText().toString().trim()).updateChildren(usernameIndexMap);
+					// Update username index (new structure just stores uid)
+					pushusername.child(username_input.getText().toString().trim().toLowerCase()).setValue(currentUser.getUid());
 
 					// Login to OneSignal
 					OneSignalManager.loginUser(currentUser.getUid());
 
-					// Save authentication state to SharedPreferences as backup
-					AuthStateManager.saveAuthenticationState(CompleteProfileActivity.this, currentUser.getUid());
+					// Authentication handled by Firebase Auth only - no local storage
 
-					E2EEHelper e2eeHelper = new E2EEHelper(CompleteProfileActivity.this);
-					e2eeHelper.initializeKeys(new E2EEHelper.KeysInitializationListener() {
-						@Override
-						public void onKeysInitialized() {
-							Log.d("CompleteProfileActivity", "E2EE keys initialized successfully");
-							intent.setClass(getApplicationContext(), HomeActivity.class);
-							startActivity(intent);
-							finish();
-						}
-
-						@Override
-						public void onKeyInitializationFailed(Exception e) {
-							Log.e("CompleteProfileActivity", "Failed to initialize E2EE keys", e);
-							SketchwareUtil.showMessage(getApplicationContext(), "Failed to initialize secure keys. Please try again later.");
-							intent.setClass(getApplicationContext(), HomeActivity.class);
-							startActivity(intent);
-							finish();
-						}
-					});
+					// E2EE disabled - proceed directly to HomeActivity
+					intent.setClass(getApplicationContext(), HomeActivity.class);
+					startActivity(intent);
+					finish();
 				} else {
 					Log.e("CompleteProfileActivity", "Failed to push user data to Firebase: " + databaseError.getMessage(), databaseError.toException());
 					complete_button_title.setVisibility(View.VISIBLE);
