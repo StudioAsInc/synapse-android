@@ -337,6 +337,58 @@ public class FirestoreHelper {
     }
     
     /**
+     * Check if username is available
+     */
+    public static void checkUsernameAvailability(String username, FirestoreCallback<Boolean> callback) {
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .whereEqualTo("username", username)
+            .limit(1)
+            .get()
+            .addOnSuccessListener(querySnapshot -> {
+                // Username is available if no documents found
+                callback.onSuccess(querySnapshot.isEmpty());
+            })
+            .addOnFailureListener(callback::onFailure);
+    }
+    
+    /**
+     * Create a new user profile in Firestore
+     */
+    public static void createUserProfile(String uid, Map<String, Object> userData, FirestoreCallback<Void> callback) {
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(uid)
+            .set(userData)
+            .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+            .addOnFailureListener(callback::onFailure);
+    }
+    
+    /**
+     * Create username index in Firestore
+     */
+    public static void createUsernameIndex(String username, Map<String, Object> usernameData, FirestoreCallback<Void> callback) {
+        FirebaseFirestore.getInstance()
+            .collection("usernames")
+            .document(username)
+            .set(usernameData)
+            .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+            .addOnFailureListener(callback::onFailure);
+    }
+    
+    /**
+     * Update user profile in Firestore
+     */
+    public static void updateUserProfile(String uid, Map<String, Object> updates, FirestoreCallback<Void> callback) {
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(uid)
+            .update(updates)
+            .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+            .addOnFailureListener(callback::onFailure);
+    }
+    
+    /**
      * Commit a batch operation
      */
     public static void commitBatch(WriteBatch batch, FirestoreCallback<Void> callback) {
