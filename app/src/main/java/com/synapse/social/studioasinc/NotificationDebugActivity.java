@@ -82,6 +82,7 @@ public class NotificationDebugActivity extends AppCompatActivity {
                 
                 scrollToBottom();
             });
+            return null;
         });
     }
     
@@ -106,6 +107,7 @@ public class NotificationDebugActivity extends AppCompatActivity {
                 }
                 scrollToBottom();
             });
+            return null;
         });
     }
     
@@ -123,6 +125,7 @@ public class NotificationDebugActivity extends AppCompatActivity {
                 refreshButton.setEnabled(true);
                 scrollToBottom();
             });
+            return null;
         });
     }
     
@@ -146,7 +149,7 @@ public class NotificationDebugActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         
-        NotificationPermissionHelper.handlePermissionResult(requestCode, permissions, grantResults, granted -> {
+        NotificationPermissionHelper.handlePermissionResult(requestCode, permissions, grantResults, (Boolean granted) -> {
             runOnUiThread(() -> {
                 if (granted) {
                     appendToStatus("✅ Notification permission granted!\n");
@@ -159,6 +162,7 @@ public class NotificationDebugActivity extends AppCompatActivity {
                 }
                 scrollToBottom();
             });
+            return null;
         });
     }
     

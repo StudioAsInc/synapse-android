@@ -89,7 +89,7 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
 
         // Set up OneSignal user state change listener to handle Player ID updates
-        OneSignal.User.addObserver(state -> {
+        OneSignal.getUser().addObserver(state -> {
             String currentUserId = state.getCurrent().getExternalId();
             String playerId = state.getCurrent().getOnesignalId();
             

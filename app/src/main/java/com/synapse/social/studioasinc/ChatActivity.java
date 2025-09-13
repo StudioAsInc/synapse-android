@@ -294,12 +294,13 @@ public class ChatActivity extends AppCompatActivity {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		
 		// Handle notification permission result
-		NotificationPermissionHelper.handlePermissionResult(requestCode, permissions, grantResults, granted -> {
+		NotificationPermissionHelper.handlePermissionResult(requestCode, permissions, grantResults, (Boolean granted) -> {
 			if (granted) {
 				Log.i(TAG, "Notification permission granted - notifications will work properly");
 			} else {
 				Log.w(TAG, "Notification permission denied - notifications may not work");
 			}
+			return null;
 		});
 		
 		if (requestCode == 1000) {

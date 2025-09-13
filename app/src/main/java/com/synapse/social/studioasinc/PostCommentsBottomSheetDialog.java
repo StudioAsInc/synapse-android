@@ -2,6 +2,7 @@ package com.synapse.social.studioasinc;
 
 import android.animation.*;
 import android.animation.ObjectAnimator;
+import android.util.Log;
 import android.view.animation.*;
 import android.view.animation.LinearInterpolator;
 import android.view.inputmethod.InputMethodManager;

@@ -25,6 +25,7 @@ object NotificationPermissionHelper {
      * @param context The context to check permissions in
      * @return true if notifications are allowed, false otherwise
      */
+    @JvmStatic
     fun hasNotificationPermission(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
@@ -44,6 +45,7 @@ object NotificationPermissionHelper {
      * @param activity The activity to request permissions from
      * @return true if permission was already granted or not needed, false if permission was requested
      */
+    @JvmStatic
     fun requestNotificationPermissionIfNeeded(activity: Activity): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (!hasNotificationPermission(activity)) {
@@ -68,6 +70,7 @@ object NotificationPermissionHelper {
      * @param grantResults The grant results array from onRequestPermissionsResult
      * @param callback Callback to be called with the result
      */
+    @JvmStatic
     fun handlePermissionResult(
         requestCode: Int,
         permissions: Array<out String>,
