@@ -1,6 +1,7 @@
 package com.synapse.social.studioasinc;
 
-import android.app.ProgressDialog;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,11 +31,10 @@ public class DatabaseMigrationActivity extends AppCompatActivity {
     private TextView migrationDescription;
     private TextView migrationProgressText;
     private ProgressBar migrationProgressBar;
+    private TextView migrationStatusText;
     private Button startMigrationButton;
     private Button retryButton;
     private Button continueButton;
-    
-    private ProgressDialog migrationDialog;
     private boolean migrationInProgress = false;
     
     @Override
@@ -157,12 +157,9 @@ public class DatabaseMigrationActivity extends AppCompatActivity {
         migrationInProgress = true;
         showLoadingBody();
         
-        // Show progress dialog
-        migrationDialog = new ProgressDialog(this);
-        migrationDialog.setTitle("Migrating Database");
-        migrationDialog.setMessage("Please wait while we migrate your data...");
-        migrationDialog.setCancelable(false);
-        migrationDialog.show();
+        // Show progress bar and update status
+        migrationProgressBar.setVisibility(View.VISIBLE);
+        migrationStatusText.setText("Starting migration...");
         
         // Start the migration process
         DatabaseMigrationHelper.runCompleteMigration(new DatabaseMigrationHelper.MigrationCallback() {
@@ -172,7 +169,8 @@ public class DatabaseMigrationActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         migrationInProgress = false;
-                        migrationDialog.dismiss();
+                        migrationProgressBar.setVisibility(View.GONE);
+                        migrationStatusText.setText("Migration completed successfully!");
                         showSuccessBody();
                         Toast.makeText(DatabaseMigrationActivity.this, "Migration completed successfully!", Toast.LENGTH_LONG).show();
                     }
@@ -185,7 +183,8 @@ public class DatabaseMigrationActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         migrationInProgress = false;
-                        migrationDialog.dismiss();
+                        migrationProgressBar.setVisibility(View.GONE);
+                        migrationStatusText.setText("Migration failed: " + e.getMessage());
                         showErrorBody(e.getMessage());
                         Log.e(TAG, "Migration failed", e);
                     }

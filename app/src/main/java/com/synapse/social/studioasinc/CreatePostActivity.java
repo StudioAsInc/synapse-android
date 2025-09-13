@@ -377,14 +377,24 @@ public class CreatePostActivity extends AppCompatActivity {
 		PostSendMap.put("post_disable_comments", disableComments);
 		PostSendMap.put("publish_date", String.valueOf((long)(cc.getTimeInMillis())));
 		
-		// Save to Firestore
-		FirestoreHelper.createPost(UniquePostKey, PostSendMap);
-		
-		// Send notifications to followers
-		_sendNotificationsToFollowers(UniquePostKey, postDescriptionEditText.getText().toString().trim());
-		Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
-		_LoadingDialog(false);
-		finish();
+		// Save to Firestore with callback
+		FirestoreHelper.createPost(UniquePostKey, PostSendMap, new FirestoreHelper.FirestoreCallback<Void>() {
+			@Override
+			public void onSuccess(Void result) {
+				// Send notifications to followers
+				_sendNotificationsToFollowers(UniquePostKey, postDescriptionEditText.getText().toString().trim());
+				Toast.makeText(getApplicationContext(), getResources().getString(R.string.post_publish_success), Toast.LENGTH_SHORT).show();
+				_LoadingDialog(false);
+				finish();
+			}
+
+			@Override
+			public void onFailure(Exception e) {
+				Log.e("CreatePostActivity", "Failed to create post: " + e.getMessage(), e);
+				Toast.makeText(getApplicationContext(), "Failed to publish post. Please try again.", Toast.LENGTH_LONG).show();
+				_LoadingDialog(false);
+			}
+		});
 	}
 	
 	private void _sendNotificationsToFollowers(String postKey, final String postText) {

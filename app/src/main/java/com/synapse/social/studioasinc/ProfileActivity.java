@@ -958,7 +958,7 @@ class c {
 
 			@Override
 			public void onFailure(Exception e) {
-				// Handle error
+				Log.e("ProfileActivity", "Firestore operation failed: " + e.getMessage(), e);
 			}
 		});
 		
@@ -973,7 +973,7 @@ class c {
 
 			@Override
 			public void onFailure(Exception e) {
-				// Handle error
+				Log.e("ProfileActivity", "Firestore operation failed: " + e.getMessage(), e);
 			}
 		});
 		
@@ -1002,15 +1002,15 @@ class c {
 
 			@Override
 			public void onFailure(Exception e) {
-				// Handle error
+				Log.e("ProfileActivity", "Firestore operation failed: " + e.getMessage(), e);
 			}
 		});
 		
-		// Check if current user liked this profile
-		FirestoreHelper.checkProfileLike(getIntent().getStringExtra("uid"), FirebaseAuth.getInstance().getCurrentUser().getUid(), new FirestoreHelper.FirestoreCallback<DocumentSnapshot>() {
+		// Check if current user follows this profile (efficient direct lookup)
+		FirestoreHelper.checkFollowStatus(getIntent().getStringExtra("uid"), FirebaseAuth.getInstance().getCurrentUser().getUid(), new FirestoreHelper.FirestoreCallback<Boolean>() {
 			@Override
-			public void onSuccess(DocumentSnapshot documentSnapshot) {
-				if (documentSnapshot.exists()) {
+			public void onSuccess(Boolean isFollowing) {
+				if (isFollowing) {
 					btnFollow.setText(getResources().getString(R.string.unfollow));
 					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurfaceContainer));
 					btnFollow.setTextColor(0xFF000000);
@@ -1023,7 +1023,7 @@ class c {
 
 			@Override
 			public void onFailure(Exception e) {
-				// Handle error
+				Log.e("ProfileActivity", "Failed to check follow status: " + e.getMessage(), e);
 			}
 		});
 		
@@ -1046,7 +1046,7 @@ class c {
 
 			@Override
 			public void onFailure(Exception e) {
-				// Handle error
+				Log.e("ProfileActivity", "Firestore operation failed: " + e.getMessage(), e);
 			}
 		});
 		
@@ -1061,7 +1061,7 @@ class c {
 
 			@Override
 			public void onFailure(Exception e) {
-				// Handle error
+				Log.e("ProfileActivity", "Firestore operation failed: " + e.getMessage(), e);
 			}
 		});
 	}

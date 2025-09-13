@@ -47,7 +47,7 @@ public class FirebaseConfig {
             // Configure Firestore settings for better performance
             FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                     .setPersistenceEnabled(true) // Enable offline persistence
-                    .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED) // Unlimited cache
+                    .setCacheSizeBytes(100 * 1024 * 1024) // 100MB cache limit
                     .build();
             
             firestore.setFirestoreSettings(settings);

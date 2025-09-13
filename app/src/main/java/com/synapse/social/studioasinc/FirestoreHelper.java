@@ -72,11 +72,17 @@ public class FirestoreHelper {
     /**
      * Create a new post
      */
-    public static void createPost(String postId, Map<String, Object> postData) {
+    public static void createPost(String postId, Map<String, Object> postData, FirestoreCallback<Void> callback) {
         getDocument(COLLECTION_POSTS, postId)
             .set(postData)
-            .addOnSuccessListener(aVoid -> Log.d(TAG, "Post document written successfully"))
-            .addOnFailureListener(e -> Log.e(TAG, "Error writing post document", e));
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Post document written successfully");
+                callback.onSuccess(null);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error writing post document", e);
+                callback.onFailure(e);
+            });
     }
     
     /**
@@ -92,10 +98,65 @@ public class FirestoreHelper {
     }
     
     /**
+     * Update follower count for a user (should be called via Cloud Functions or transactions)
+     */
+    public static void updateFollowerCount(String userId, int delta) {
+        getDocument(COLLECTION_USERS, userId)
+            .update("follower_count", FieldValue.increment(delta))
+            .addOnSuccessListener(aVoid -> Log.d(TAG, "Follower count updated"))
+            .addOnFailureListener(e -> Log.e(TAG, "Error updating follower count", e));
+    }
+    
+    /**
+     * Update following count for a user (should be called via Cloud Functions or transactions)
+     */
+    public static void updateFollowingCount(String userId, int delta) {
+        getDocument(COLLECTION_USERS, userId)
+            .update("following_count", FieldValue.increment(delta))
+            .addOnSuccessListener(aVoid -> Log.d(TAG, "Following count updated"))
+            .addOnFailureListener(e -> Log.e(TAG, "Error updating following count", e));
+    }
+    
+    /**
+     * Get follower count from user document (efficient)
+     */
+    public static void getFollowerCount(String userId, FirestoreCallback<Long> callback) {
+        getDocument(COLLECTION_USERS, userId)
+            .get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    Long count = documentSnapshot.getLong("follower_count");
+                    callback.onSuccess(count != null ? count : 0L);
+                } else {
+                    callback.onSuccess(0L);
+                }
+            })
+            .addOnFailureListener(callback::onFailure);
+    }
+    
+    /**
+     * Get following count from user document (efficient)
+     */
+    public static void getFollowingCount(String userId, FirestoreCallback<Long> callback) {
+        getDocument(COLLECTION_USERS, userId)
+            .get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    Long count = documentSnapshot.getLong("following_count");
+                    callback.onSuccess(count != null ? count : 0L);
+                } else {
+                    callback.onSuccess(0L);
+                }
+            })
+            .addOnFailureListener(callback::onFailure);
+    }
+    
+    /**
      * Add a follower relationship
      */
     public static void addFollower(String userId, String followerId) {
         Map<String, Object> followerData = new HashMap<>();
+        followerData.put("user_id", userId);
         followerData.put("follower_id", followerId);
         followerData.put("followed_at", FieldValue.serverTimestamp());
         
@@ -120,6 +181,7 @@ public class FirestoreHelper {
      */
     public static void addFollowing(String userId, String followingId) {
         Map<String, Object> followingData = new HashMap<>();
+        followingData.put("user_id", userId);
         followingData.put("following_id", followingId);
         followingData.put("followed_at", FieldValue.serverTimestamp());
         
@@ -140,7 +202,19 @@ public class FirestoreHelper {
     }
     
     /**
-     * Get followers for a user
+     * Check if a user follows another user (efficient direct lookup)
+     */
+    public static void checkFollowStatus(String targetUserId, String currentUserId, FirestoreCallback<Boolean> callback) {
+        getDocument(COLLECTION_FOLLOWERS, targetUserId + "_" + currentUserId)
+            .get()
+            .addOnSuccessListener(documentSnapshot -> {
+                callback.onSuccess(documentSnapshot.exists());
+            })
+            .addOnFailureListener(callback::onFailure);
+    }
+    
+    /**
+     * Get followers for a user (for display purposes)
      */
     public static void getFollowers(String userId, FirestoreCallback<QuerySnapshot> callback) {
         getCollection(COLLECTION_FOLLOWERS)
@@ -166,6 +240,7 @@ public class FirestoreHelper {
      */
     public static void likePost(String postId, String userId) {
         Map<String, Object> likeData = new HashMap<>();
+        likeData.put("post_id", postId);
         likeData.put("user_id", userId);
         likeData.put("liked_at", FieldValue.serverTimestamp());
         
@@ -210,6 +285,9 @@ public class FirestoreHelper {
      * Add a comment to a post
      */
     public static void addComment(String postId, String commentId, Map<String, Object> commentData) {
+        // Ensure post_id is included in comment data
+        commentData.put("post_id", postId);
+        
         getDocument(COLLECTION_POST_COMMENTS, commentId)
             .set(commentData)
             .addOnSuccessListener(aVoid -> Log.d(TAG, "Comment added successfully"))
@@ -233,6 +311,7 @@ public class FirestoreHelper {
      */
     public static void likeProfile(String profileUserId, String likerUserId) {
         Map<String, Object> likeData = new HashMap<>();
+        likeData.put("profile_user_id", profileUserId);
         likeData.put("liker_id", likerUserId);
         likeData.put("liked_at", FieldValue.serverTimestamp());
         
@@ -277,6 +356,10 @@ public class FirestoreHelper {
      * Update inbox with last message
      */
     public static void updateInbox(String userId, String otherUserId, Map<String, Object> messageData) {
+        // Ensure user_id is included in message data
+        messageData.put("user_id", userId);
+        messageData.put("other_user_id", otherUserId);
+        
         getDocument(COLLECTION_INBOX, userId + "_" + otherUserId)
             .set(messageData)
             .addOnSuccessListener(aVoid -> Log.d(TAG, "Inbox updated successfully"))
@@ -300,6 +383,7 @@ public class FirestoreHelper {
      */
     public static void addToFavorites(String userId, String postId) {
         Map<String, Object> favoriteData = new HashMap<>();
+        favoriteData.put("user_id", userId);
         favoriteData.put("post_id", postId);
         favoriteData.put("added_at", FieldValue.serverTimestamp());
         
