@@ -89,9 +89,9 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
 
         // Set up OneSignal user state change listener to handle Player ID updates
-        OneSignal.getUser().addObserver(state -> {
-            String currentUserId = state.getCurrent().getExternalId();
-            String playerId = state.getCurrent().getOnesignalId();
+        OneSignal.User.addObserver(state -> {
+            String currentUserId = state.getCurrent().externalId;
+            String playerId = state.getCurrent().pushSubscription.id;
             
             if (currentUserId != null && !currentUserId.isEmpty() && playerId != null && !playerId.isEmpty()) {
                 // Update Player ID in Firebase when it changes

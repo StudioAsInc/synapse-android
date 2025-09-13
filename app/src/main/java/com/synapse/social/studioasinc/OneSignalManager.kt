@@ -49,7 +49,7 @@ object OneSignalManager {
         }
         
         try {
-            val playerId = OneSignal.getUser().onesignalId
+            val playerId = OneSignal.User.pushSubscription.id
             if (playerId?.isNotEmpty() == true) {
                 val userRef = FirebaseDatabase.getInstance()
                     .getReference("skyline/users")
@@ -110,7 +110,7 @@ object OneSignalManager {
     @JvmStatic
     fun getCurrentPlayerId(): String? {
         return try {
-            OneSignal.getUser().onesignalId
+            OneSignal.User.pushSubscription.id
         } catch (e: Exception) {
             Log.e(TAG, "Error getting current OneSignal Player ID", e)
             null
@@ -124,7 +124,7 @@ object OneSignalManager {
     @JvmStatic
     fun isOneSignalReady(): Boolean {
         return try {
-            val playerId = OneSignal.getUser().onesignalId
+            val playerId = OneSignal.User.pushSubscription.id
             playerId?.isNotEmpty() == true
         } catch (e: Exception) {
             Log.e(TAG, "Error checking OneSignal ready state", e)
