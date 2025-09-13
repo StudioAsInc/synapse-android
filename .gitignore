@@ -16,5 +16,8 @@ app/build/
 # Root build folder
 /build/
 
+# Gradle
+.gradle/
+
 # Documentation
 /Docs/
