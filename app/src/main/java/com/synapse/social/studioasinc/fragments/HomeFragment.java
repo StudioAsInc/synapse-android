@@ -75,6 +75,7 @@ import com.synapse.social.studioasinc.ProfileActivity;
 import com.synapse.social.studioasinc.SynapseApp;
 import com.synapse.social.studioasinc.database.DatabaseStructure;
 import com.synapse.social.studioasinc.database.ContentManager;
+import com.synapse.social.studioasinc.util.AuthUtil;
 
 import java.io.*;
 import java.text.*;

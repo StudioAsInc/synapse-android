@@ -65,6 +65,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.R;
+import com.synapse.social.studioasinc.util.AuthUtil;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
 import java.io.*;
@@ -974,7 +975,13 @@ class c {
 
 			}
 		});
-		Query checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+		if (currentUser == null) {
+			// User not logged in, hide follow button
+			btnFollow.setVisibility(View.GONE);
+			return;
+		}
+		Query checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(currentUser.getUid());
 		checkFollowUser.addValueEventListener(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -994,7 +1001,13 @@ class c {
 
 			}
 		});
-		Query checkProfileLike = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+		String myUid = AuthUtil.getCurrentUserUid();
+		if (myUid == null) {
+			// User not logged in, hide like button
+			likeButton.setVisibility(View.GONE);
+			return;
+		}
+		Query checkProfileLike = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(myUid);
 		checkProfileLike.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {

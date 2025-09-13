@@ -91,6 +91,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import android.content.ClipData;
 import com.synapse.social.studioasinc.database.DatabaseStructure;
 import com.synapse.social.studioasinc.database.ContentManager;
+import com.synapse.social.studioasinc.util.AuthUtil;
 
 
 public class CreatePostActivity extends AppCompatActivity {
@@ -147,7 +148,10 @@ public class CreatePostActivity extends AppCompatActivity {
 	protected void onStart() {
 		super.onStart();
 		if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-			PresenceManager.setActivity(FirebaseAuth.getInstance().getCurrentUser().getUid(), "Creating a post");
+			String currentUid = AuthUtil.getCurrentUserUid();
+			if (currentUid != null) {
+				PresenceManager.setActivity(currentUid, "Creating a post");
+			}
 		}
 	}
 
