@@ -823,8 +823,7 @@ public class CompleteProfileActivity extends AppCompatActivity {
 					// Login to OneSignal
 					OneSignalManager.loginUser(currentUser.getUid());
 
-					// Save authentication state to SharedPreferences as backup
-					AuthStateManager.saveAuthenticationState(CompleteProfileActivity.this, currentUser.getUid());
+					// Authentication handled by Firebase Auth only - no local storage
 
 					// E2EE disabled - proceed directly to HomeActivity
 					intent.setClass(getApplicationContext(), HomeActivity.class);

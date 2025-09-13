@@ -34,45 +34,19 @@ public class FirebaseConfig {
     
     /**
      * Clear all encrypted storage data that might cause keystore failures
+     * Note: This method is kept empty as we're not storing any credentials locally
      */
     private static void clearEncryptedStorageData(Context context) {
-        try {
-            // Clear Firebase Auth encrypted storage
-            android.content.SharedPreferences authPrefs = context.getSharedPreferences("com.google.firebase.auth", Context.MODE_PRIVATE);
-            authPrefs.edit().clear().apply();
-            
-            // Clear FirebearStorageCryptoHelper data
-            android.content.SharedPreferences cryptoPrefs = context.getSharedPreferences("firebear_storage_crypto", Context.MODE_PRIVATE);
-            cryptoPrefs.edit().clear().apply();
-            
-            // Clear any other Firebase encrypted storage
-            android.content.SharedPreferences firebasePrefs = context.getSharedPreferences("firebase_storage", Context.MODE_PRIVATE);
-            firebasePrefs.edit().clear().apply();
-            
-            // Clear keystore-related preferences
-            android.content.SharedPreferences keystorePrefs = context.getSharedPreferences("android_keystore", Context.MODE_PRIVATE);
-            keystorePrefs.edit().clear().apply();
-            
-            Log.d(TAG, "Cleared all encrypted storage data");
-            
-        } catch (Exception e) {
-            Log.w(TAG, "Could not clear encrypted storage data", e);
-        }
+        // No local credential storage - authentication handled by Firebase Auth only
+        Log.d(TAG, "No local credential storage to clear");
     }
     
     /**
      * Force Firebase to use regular SharedPreferences instead of encrypted storage
+     * Note: This method is kept empty as we're not storing any credentials locally
      */
     public static void forceRegularStorage(Context context) {
-        try {
-            // Create a dummy SharedPreferences file to force Firebase to use regular storage
-            android.content.SharedPreferences regularPrefs = context.getSharedPreferences("firebase_regular_storage", Context.MODE_PRIVATE);
-            regularPrefs.edit().putBoolean("force_regular_storage", true).apply();
-            
-            Log.d(TAG, "Forced Firebase to use regular storage");
-            
-        } catch (Exception e) {
-            Log.w(TAG, "Could not force regular storage", e);
-        }
+        // No local credential storage - authentication handled by Firebase Auth only
+        Log.d(TAG, "No local storage configuration needed");
     }
 }

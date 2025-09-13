@@ -38,7 +38,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.OneSignalManager;
 import com.synapse.social.studioasinc.animations.layout.layoutshaker;
 import com.synapse.social.studioasinc.animations.textview.TVeffects;
-import com.synapse.social.studioasinc.util.AuthStateManager;
+// AuthStateManager removed - using Firebase Auth only
 
 public class AuthActivity extends AppCompatActivity {
 
@@ -290,7 +290,7 @@ public class AuthActivity extends AppCompatActivity {
         // Save authentication state to SharedPreferences as backup
         FirebaseUser user = fauth.getCurrentUser();
         if (user != null) {
-            AuthStateManager.saveAuthenticationState(this, user.getUid());
+            // Authentication handled by Firebase Auth only - no local storage
         }
 
         Intent intent = new Intent(AuthActivity.this, CompleteProfileActivity.class);
@@ -346,7 +346,7 @@ public class AuthActivity extends AppCompatActivity {
                 }
 
                 // Save authentication state to SharedPreferences as backup
-                AuthStateManager.saveAuthenticationState(AuthActivity.this, uid);
+                // Authentication handled by Firebase Auth only - no local storage
 
                 // Login to OneSignal
                 OneSignalManager.loginUser(uid);
@@ -359,7 +359,7 @@ public class AuthActivity extends AppCompatActivity {
                 showWelcomeMessage("I recognize you! Let's go...");
                 
                 // Save authentication state to SharedPreferences as backup even if username fetch fails
-                AuthStateManager.saveAuthenticationState(AuthActivity.this, uid);
+                // Authentication handled by Firebase Auth only - no local storage
                 
                 // Login to OneSignal for consistent behavior
                 OneSignalManager.loginUser(uid);
