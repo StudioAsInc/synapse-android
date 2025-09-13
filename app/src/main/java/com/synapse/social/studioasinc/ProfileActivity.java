@@ -1004,7 +1004,7 @@ class c {
 		String myUid = AuthUtil.getCurrentUserUid();
 		if (myUid == null) {
 			// User not logged in, hide like button
-			likeButton.setVisibility(View.GONE);
+			likeUserProfileButton.setVisibility(View.GONE);
 			return;
 		}
 		Query checkProfileLike = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(myUid);

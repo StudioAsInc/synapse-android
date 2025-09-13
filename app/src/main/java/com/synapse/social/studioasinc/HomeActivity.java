@@ -28,7 +28,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.synapse.social.studioasinc.adapter.ViewPagerAdapter;
-import com.synapse.social.studioasinc.util.AuthStateManager;
+import com.synapse.social.studioasinc.util.AuthUtil;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -57,7 +57,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         FirebaseApp.initializeApp(this);
         
         // Cache user UID once at startup
-        cachedUserUid = AuthStateManager.getUserUid(this);
+        cachedUserUid = AuthUtil.getCurrentUserUid();
         
         initialize();
         initializeLogic();
@@ -94,7 +94,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void initializeLogic() {
-        if (!AuthStateManager.isUserAuthenticated(this)) {
+        if (!AuthUtil.isLoggedIn()) {
             // User is not signed in and no backup authentication, redirect to AuthActivity
             Intent intent = new Intent(HomeActivity.this, AuthActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -223,7 +223,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Intent callsIntent = new Intent(getApplicationContext(), CallActivity.class);
             startActivity(callsIntent);
         } else if (id == R.id.nav_logout) {
-            AuthStateManager.signOut(this);
+            FirebaseAuth.getInstance().signOut();
             Intent logoutIntent = new Intent(HomeActivity.this, AuthActivity.class);
             logoutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(logoutIntent);

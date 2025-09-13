@@ -1,6 +1,6 @@
 package com.synapse.social.studioasinc;
 
-import com.synapse.social.studioasinc.util.AuthStateManager;
+// AuthStateManager removed - using Firebase Auth only
 import com.synapse.social.studioasinc.database.DatabaseStructure;
 import com.synapse.social.studioasinc.database.ChatManager;
 import android.Manifest;

@@ -37,7 +37,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.synapse.social.studioasinc.CenterCropLinearLayoutNoEffect;
 import com.synapse.social.studioasinc.util.UpdateManager;
-import com.synapse.social.studioasinc.util.AuthStateManager;
+import com.synapse.social.studioasinc.util.AuthUtil;
 import com.theartofdev.edmodo.cropper.*;
 import com.yalantis.ucrop.*;
 import java.io.*;
@@ -294,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
 	// Helper method to encapsulate the delayed auth check logic
 	public void proceedToAuthCheck() {
 		new Handler(Looper.getMainLooper()).postDelayed(() -> {
-			if (AuthStateManager.isUserAuthenticated(this)) {
+			if (AuthUtil.isLoggedIn()) {
 				// User is logged in (either via Firebase or backup), verify the user is still valid
 				FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 				if (currentUser != null) {
@@ -311,12 +311,12 @@ public class MainActivity extends AppCompatActivity {
 				} else {
 					// Firebase user is null but we have backup authentication
 					// Try to get the stored UID and proceed
-					String storedUid = AuthStateManager.getUserUid(this);
+					String storedUid = AuthUtil.getCurrentUserUid();
 					if (storedUid != null) {
 						checkUserBanStatusAndProceed(storedUid);
 					} else {
 						// No stored UID, clear authentication and go to auth
-						AuthStateManager.clearAuthenticationState(this);
+						// No local auth state to clear - handled by Firebase
 						startActivity(new Intent(MainActivity.this, AuthActivity.class));
 						finish();
 					}
@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
 					} else {
 						// Banned, show toast and sign out
 						Toast.makeText(MainActivity.this, "You are banned & Signed Out.", Toast.LENGTH_LONG).show();
-						AuthStateManager.signOut(MainActivity.this);
+						FirebaseAuth.getInstance().signOut();
 						startActivity(new Intent(MainActivity.this, AuthActivity.class));
 						finish();
 					}
