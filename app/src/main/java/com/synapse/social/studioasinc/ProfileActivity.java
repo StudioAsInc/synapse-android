@@ -360,13 +360,22 @@ class c {
 									String notificationMessage = displayName + " liked your profile.";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("sender_uid", senderUid);
-									NotificationHelper.sendNotification(
-										recipientUid,
-										senderUid,
-										notificationMessage,
-										"profile_like",
-										data
-									);
+									// Send notification with validation
+									try {
+										if (NotificationHelper.isNotificationSystemConfigured()) {
+											NotificationHelper.sendNotification(
+												recipientUid,
+												senderUid,
+												notificationMessage,
+												"profile_like",
+												data
+											);
+										} else {
+											Log.e("ProfileActivity", "Notification system not configured properly");
+										}
+									} catch (Exception e) {
+										Log.e("ProfileActivity", "Failed to send profile like notification", e);
+									}
 								}
 							});
 							UserInfoCacheMap.put("profile_like_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("profile_like_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
@@ -429,13 +438,22 @@ class c {
 									String notificationMessage = displayName + " started following you.";
 									HashMap<String, String> data = new HashMap<>();
 									data.put("sender_uid", senderUid);
-									NotificationHelper.sendNotification(
-										recipientUid,
-										senderUid,
-										notificationMessage,
-										"new_follower",
-										data
-									);
+									// Send notification with validation
+									try {
+										if (NotificationHelper.isNotificationSystemConfigured()) {
+											NotificationHelper.sendNotification(
+												recipientUid,
+												senderUid,
+												notificationMessage,
+												"new_follower",
+												data
+											);
+										} else {
+											Log.e("ProfileActivity", "Notification system not configured properly");
+										}
+									} catch (Exception e) {
+										Log.e("ProfileActivity", "Failed to send new follower notification", e);
+									}
 								}
 							});
 							UserInfoCacheMap.put("followers_count".concat(getIntent().getStringExtra("uid")), String.valueOf((long)(Double.parseDouble(UserInfoCacheMap.get("followers_count".concat(getIntent().getStringExtra("uid"))).toString()) + 1)));
