@@ -932,6 +932,19 @@ class c {
 	
 	
 	public void _getUserCountReference() {
+		// Ensure Firebase is initialized before proceeding
+		if (!com.synapse.social.studioasinc.util.FirebaseInitializationHelper.ensureFirebaseInitialized(this)) {
+			Log.e("ProfileActivity", "Firebase not initialized, cannot proceed with _getUserCountReference");
+			return;
+		}
+		
+		// Check if we have a valid current user before proceeding
+		String currentUserUid = com.synapse.social.studioasinc.util.AuthStateManager.getCurrentUserUidSafely(this);
+		if (currentUserUid == null) {
+			Log.w("ProfileActivity", "Current user UID is null in _getUserCountReference, cannot proceed with user-specific operations");
+			// Still fetch public data like follower counts
+		}
+		
 		Query getFollowersCount = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid"));
 		getFollowersCount.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override
@@ -960,58 +973,54 @@ class c {
 
 			}
 		});
-		String currentUserUid = com.synapse.social.studioasinc.util.AuthStateManager.getCurrentUserUidSafely(this);
-		if (currentUserUid == null) {
-			Log.w("ProfileActivity", "Current user UID is null, cannot check follow status");
-			return;
-		}
-		Query checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(currentUserUid);
-		checkFollowUser.addValueEventListener(new ValueEventListener() {
-			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {
-					btnFollow.setText(getResources().getString(R.string.unfollow));
-					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurfaceContainer));
-					btnFollow.setTextColor(0xFF000000);
-				} else {
-					btnFollow.setText(getResources().getString(R.string.follow));
-					btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimaryContainer));
-					btnFollow.setTextColor(0xFFFFFFFF);
+		// Only check follow status if user is authenticated
+		if (currentUserUid != null) {
+			Query checkFollowUser = FirebaseDatabase.getInstance().getReference("skyline/followers").child(getIntent().getStringExtra("uid")).child(currentUserUid);
+			checkFollowUser.addValueEventListener(new ValueEventListener() {
+				@Override
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+					if(dataSnapshot.exists()) {
+						btnFollow.setText(getResources().getString(R.string.unfollow));
+						btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorSurfaceContainer));
+						btnFollow.setTextColor(0xFF000000);
+					} else {
+						btnFollow.setText(getResources().getString(R.string.follow));
+						btnFollow.setBackgroundColor(com.synapse.social.studioasinc.util.ThemeUtils.getThemeColor(ProfileActivity.this, com.google.android.material.R.attr.colorPrimaryContainer));
+						btnFollow.setTextColor(0xFFFFFFFF);
+					}
 				}
-			}
 
-			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
+				@Override
+				public void onCancelled(@NonNull DatabaseError databaseError) {
 
-			}
-		});
-		String currentUserUidForProfileLike = com.synapse.social.studioasinc.util.AuthStateManager.getCurrentUserUidSafely(this);
-		if (currentUserUidForProfileLike == null) {
-			Log.w("ProfileActivity", "Current user UID is null, cannot check profile like status");
-			return;
-		}
-		Query checkProfileLike = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(currentUserUidForProfileLike);
-		checkProfileLike.addListenerForSingleValueEvent(new ValueEventListener() {
-			@Override
-			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-				if(dataSnapshot.exists()) {
-					likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_2);
-					_viewGraphics(likeUserProfileButton, 0xFFF50057, 0xFFC51162, 300, 0, 0xFF9E9E9E);
-					_ImageColor(likeUserProfileButtonIc, 0xFFFFFFFF);
-					likeUserProfileButtonLikeCount.setTextColor(0xFFFFFFFF);
-				} else {
-					likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_1);
-					_viewGraphics(likeUserProfileButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, 0xFF9E9E9E);
-					_ImageColor(likeUserProfileButtonIc, 0xFF000000);
-					likeUserProfileButtonLikeCount.setTextColor(0xFF616161);
 				}
-			}
+			});
+		}
+		// Only check profile like status if user is authenticated
+		if (currentUserUid != null) {
+			Query checkProfileLike = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid")).child(currentUserUid);
+			checkProfileLike.addListenerForSingleValueEvent(new ValueEventListener() {
+				@Override
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+					if(dataSnapshot.exists()) {
+						likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_2);
+						_viewGraphics(likeUserProfileButton, 0xFFF50057, 0xFFC51162, 300, 0, 0xFF9E9E9E);
+						_ImageColor(likeUserProfileButtonIc, 0xFFFFFFFF);
+						likeUserProfileButtonLikeCount.setTextColor(0xFFFFFFFF);
+					} else {
+						likeUserProfileButtonIc.setImageResource(R.drawable.post_icons_1_1);
+						_viewGraphics(likeUserProfileButton, 0xFFFFFFFF, 0xFFEEEEEE, 300, 0, 0xFF9E9E9E);
+						_ImageColor(likeUserProfileButtonIc, 0xFF000000);
+						likeUserProfileButtonLikeCount.setTextColor(0xFF616161);
+					}
+				}
 
-			@Override
-			public void onCancelled(@NonNull DatabaseError databaseError) {
+				@Override
+				public void onCancelled(@NonNull DatabaseError databaseError) {
 
-			}
-		});
+				}
+			});
+		}
 		DatabaseReference getProfileLikesCount = FirebaseDatabase.getInstance().getReference("skyline/profile-likes").child(getIntent().getStringExtra("uid"));
 		getProfileLikesCount.addListenerForSingleValueEvent(new ValueEventListener() {
 			@Override

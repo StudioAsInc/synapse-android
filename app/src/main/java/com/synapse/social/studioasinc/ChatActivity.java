@@ -369,10 +369,16 @@ public class ChatActivity extends AppCompatActivity {
 
 				// Clear the attachment draft from SharedPreferences
 				SharedPreferences drafts = getSharedPreferences("chat_drafts", Context.MODE_PRIVATE);
-				String chatId = getChatId(FirebaseAuth.getInstance().getCurrentUser().getUid(), getIntent().getStringExtra("uid"));
+				String currentUserUid = com.synapse.social.studioasinc.util.AuthStateManager.getCurrentUserUidSafely(this);
+				if (currentUserUid == null) {
+					Log.e("ChatActivity", "Current user UID is null, cannot initialize chat");
+					finish();
+					return;
+				}
+				String chatId = getChatId(currentUserUid, getIntent().getStringExtra("uid"));
 				drafts.edit().remove(chatId + "_attachments").apply();
-				if (auth.getCurrentUser() != null) {
-					PresenceManager.setActivity(auth.getCurrentUser().getUid(), "Idle");
+				if (currentUserUid != null) {
+					PresenceManager.setActivity(currentUserUid, "Idle");
 				}
 			}
 		});
@@ -583,9 +589,21 @@ public class ChatActivity extends AppCompatActivity {
 		ChatMessagesListRecycler.setDrawingCacheEnabled(true);
 		ChatMessagesListRecycler.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
 		
+		// Ensure Firebase is initialized before proceeding
+		if (!com.synapse.social.studioasinc.util.FirebaseInitializationHelper.ensureFirebaseInitialized(this)) {
+			Log.e("ChatActivity", "Firebase not initialized, cannot proceed");
+			finish();
+			return;
+		}
+		
 		// CRITICAL FIX: Set up Firebase reference to listen to the correct chat node
 		// We need to listen to the chat node where messages are being sent/received
-		String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String currentUserUid = com.synapse.social.studioasinc.util.AuthStateManager.getCurrentUserUidSafely(this);
+		if (currentUserUid == null) {
+			Log.e("ChatActivity", "Current user UID is null, cannot proceed");
+			finish();
+			return;
+		}
 		String otherUserUid = getIntent().getStringExtra(UID_KEY);
 		
 		// Set up the chat reference for the current user's perspective
@@ -920,7 +938,11 @@ public class ChatActivity extends AppCompatActivity {
 			return;
 		}
 
-		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String myUid = com.synapse.social.studioasinc.util.AuthStateManager.getCurrentUserUidSafely(this);
+		if (myUid == null) {
+			Log.e("ChatActivity", "Current user UID is null, cannot proceed with chat operations");
+			return;
+		}
 		String theirUid = getIntent().getStringExtra("uid");
 		DatabaseReference chatRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(theirUid);
 
@@ -1585,7 +1607,11 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	private void _fetchRepliedMessageAndThenAdd(String repliedId, final HashMap<String, Object> newMessage) {
-		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String myUid = com.synapse.social.studioasinc.util.AuthStateManager.getCurrentUserUidSafely(this);
+		if (myUid == null) {
+			Log.e("ChatActivity", "Current user UID is null, cannot proceed with chat operations");
+			return;
+		}
 		String theirUid = getIntent().getStringExtra("uid");
 		DatabaseReference chatRef = _firebase.getReference(SKYLINE_REF).child(CHATS_REF).child(myUid).child(theirUid);
 
@@ -2311,7 +2337,11 @@ public class ChatActivity extends AppCompatActivity {
 
 	public void _Unblock_this_user() {
 		DatabaseReference blocklistRef = FirebaseDatabase.getInstance().getReference("skyline/blocklist");
-		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String myUid = com.synapse.social.studioasinc.util.AuthStateManager.getCurrentUserUidSafely(this);
+		if (myUid == null) {
+			Log.e("ChatActivity", "Current user UID is null, cannot proceed with chat operations");
+			return;
+		}
 		String uidToRemove = getIntent().getStringExtra("uid");
 
 		blocklistRef.child(myUid).child(uidToRemove).removeValue()
@@ -2948,7 +2978,11 @@ public class ChatActivity extends AppCompatActivity {
 			return;
 		}
 
-		String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+		String myUid = com.synapse.social.studioasinc.util.AuthStateManager.getCurrentUserUidSafely(this);
+		if (myUid == null) {
+			Log.e("ChatActivity", "Current user UID is null, cannot proceed with chat operations");
+			return;
+		}
 		String otherUid = getIntent().getStringExtra(UID_KEY);
 
 		if (_childKey.equals(otherUid)) {

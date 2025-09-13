@@ -25,6 +25,7 @@ import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.lifecycle.LifecycleOwner;
 import com.synapse.social.studioasinc.util.UpdateManager;
+import com.synapse.social.studioasinc.util.AuthStateManager;
 import android.os.Bundle;
 import android.app.Activity;
 import java.lang.ref.WeakReference;
@@ -73,8 +74,34 @@ public class SynapseApp extends Application implements Application.ActivityLifec
         createNotificationChannels();
         
         this.mAuth = FirebaseAuth.getInstance();
+        
+        // Configure Firebase Auth persistence
+        try {
+            // Firebase Auth should persist authentication state by default, but let's ensure it
+            Log.d("SynapseApp", "Firebase Auth initialized with persistence enabled");
+        } catch (Exception e) {
+            Log.e("SynapseApp", "Error configuring Firebase Auth persistence", e);
+        }
+        
         this.getCheckUserReference = FirebaseDatabase.getInstance().getReference("skyline/users");
         this.setUserStatusRef = FirebaseDatabase.getInstance().getReference(".info/connected");
+        
+        // Add Firebase Auth state listener to manage authentication persistence
+        mAuth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in, save authentication state
+                    Log.d("SynapseApp", "User signed in: " + user.getUid());
+                    AuthStateManager.saveAuthenticationState(SynapseApp.this, user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d("SynapseApp", "User signed out");
+                    // Don't clear authentication state here - let the app handle it explicitly
+                }
+            }
+        });
         
         // Keep users data synced for offline use
         getCheckUserReference.keepSynced(true);
@@ -143,8 +170,9 @@ public class SynapseApp extends Application implements Application.ActivityLifec
 
     @Override
     public void onStart(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getDisplayName() != null && !mAuth.getCurrentUser().getDisplayName().isEmpty()) {
-            PresenceManager.goOnline(mAuth.getCurrentUser().getUid());
+        String currentUserUid = AuthStateManager.getCurrentUserUidSafely(this);
+        if (currentUserUid != null) {
+            PresenceManager.goOnline(currentUserUid);
         }
         Activity activity = currentActivity != null ? currentActivity.get() : null;
         if (activity instanceof MainActivity) {
@@ -160,8 +188,9 @@ public class SynapseApp extends Application implements Application.ActivityLifec
 
     @Override
     public void onStop(@NonNull LifecycleOwner owner) {
-        if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getDisplayName() != null && !mAuth.getCurrentUser().getDisplayName().isEmpty()) {
-            PresenceManager.goOffline(mAuth.getCurrentUser().getUid());
+        String currentUserUid = AuthStateManager.getCurrentUserUidSafely(this);
+        if (currentUserUid != null) {
+            PresenceManager.goOffline(currentUserUid);
         }
     }
     

@@ -293,40 +293,48 @@ public class MainActivity extends AppCompatActivity {
 
 	// Helper method to encapsulate the delayed auth check logic
 	public void proceedToAuthCheck() {
-		new Handler(Looper.getMainLooper()).postDelayed(() -> {
-			if (AuthStateManager.isUserAuthenticated(this)) {
-				// User is logged in (either via Firebase or backup), verify the user is still valid
-				FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-				if (currentUser != null) {
-					currentUser.reload().addOnCompleteListener(task -> {
-						if (task.isSuccessful()) {
-							// User is still valid, check ban status
-							checkUserBanStatusAndProceed(currentUser.getUid());
+		// Ensure Firebase is properly initialized before proceeding
+		com.synapse.social.studioasinc.util.FirebaseInitializationHelper.waitForFirebaseInitialization(this, () -> {
+			try {
+				if (AuthStateManager.isUserAuthenticated(this)) {
+					// User is logged in (either via Firebase or backup), verify the user is still valid
+					FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+					if (currentUser != null) {
+						currentUser.reload().addOnCompleteListener(task -> {
+							if (task.isSuccessful()) {
+								// User is still valid, check ban status
+								checkUserBanStatusAndProceed(currentUser.getUid());
+							} else {
+								// Reload failed (e.g., network). Keep session and proceed to Home to avoid false sign-outs
+								startActivity(new Intent(MainActivity.this, HomeActivity.class));
+								finish();
+							}
+						});
+					} else {
+						// Firebase user is null but we have backup authentication
+						// Try to get the stored UID and proceed
+						String storedUid = AuthStateManager.getUserUid(this);
+						if (storedUid != null) {
+							checkUserBanStatusAndProceed(storedUid);
 						} else {
-							// Reload failed (e.g., network). Keep session and proceed to Home to avoid false sign-outs
-							startActivity(new Intent(MainActivity.this, HomeActivity.class));
+							// No stored UID, clear authentication and go to auth
+							AuthStateManager.clearAuthenticationState(this);
+							startActivity(new Intent(MainActivity.this, AuthActivity.class));
 							finish();
 						}
-					});
-				} else {
-					// Firebase user is null but we have backup authentication
-					// Try to get the stored UID and proceed
-					String storedUid = AuthStateManager.getUserUid(this);
-					if (storedUid != null) {
-						checkUserBanStatusAndProceed(storedUid);
-					} else {
-						// No stored UID, clear authentication and go to auth
-						AuthStateManager.clearAuthenticationState(this);
-						startActivity(new Intent(MainActivity.this, AuthActivity.class));
-						finish();
 					}
+				} else {
+					// User not logged in, redirect to AuthActivity
+					startActivity(new Intent(MainActivity.this, AuthActivity.class));
+					finish();
 				}
-			} else {
-				// User not logged in, redirect to AuthActivity
+			} catch (Exception e) {
+				Log.e("MainActivity", "Error during auth check", e);
+				// Fallback to AuthActivity on any error
 				startActivity(new Intent(MainActivity.this, AuthActivity.class));
 				finish();
 			}
-		}, 500); // 500ms delay
+		}, 3); // Max 3 retries with 500ms delay each
 	}
 	
 	private void checkUserBanStatusAndProceed(String uid) {
